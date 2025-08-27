@@ -1,0 +1,13 @@
+# Conversation Log
+
+## 2025-08-27 17:01 +08:00
+
+- Request: "please rework the plan on ocr method since we're using purely ai vision for extracting data from receipt image. please refer @mataresit"
+- Action: Updated `enhanced_flutter_android_development_plan.md` to remove all on-device OCR references, align with pure AI Vision (Gemini) pipeline, and adjust dependencies, offline behavior, testing, performance targets, and risk mitigation accordingly.
+- Response Summary: Confirmed update and noted sections revised: Core Features, Key Dependencies, Camera Integration, AI Processing Integration, Offline Capabilities, Performance Optimization, Testing Strategy, Performance Targets, and Risk Mitigation.
+
+## 2025-08-27 17:27 +08:00
+
+- Request: "please help setup the project to reduce the git changes done using git ignore"
+- Action: Refined root `.gitignore` to ignore Flutter metadata and plugin files (`.metadata`, `.flutter-plugins`), temp/backup patterns (`pubspec_temp.yaml`, `*.backup`, `*.orig`, `*.rej`), environment files (`.env*`), and web subproject build/deps/caches (`mataresit/dist/`, `mataresit/node_modules/`, `mataresit/.vite*/`, `mataresit/.cache/`).
+- Response Summary: This should reduce noise from build outputs, cache directories, and ephemeral files across Flutter and the `mataresit/` web subproject. Next step: verify with `git status`.
