@@ -33,10 +33,10 @@ class CategoryDisplay extends StatelessWidget {
         vertical: sizeConfig.verticalPadding,
       ),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(sizeConfig.borderRadius),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.3),
+          color: theme.colorScheme.outline.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -118,7 +118,7 @@ class CategoryDisplay extends StatelessWidget {
               '(${category.receiptCount})',
               style: theme.textTheme.bodySmall?.copyWith(
                 fontSize: sizeConfig.fontSize * 0.9,
-                color: theme.colorScheme.onSecondaryContainer.withOpacity(0.7),
+                color: theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.7),
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -210,7 +210,7 @@ class CategorySelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<CategoryModel?>(
-      value: selectedCategory,
+      initialValue: selectedCategory,
       decoration: InputDecoration(
         labelText: 'Category',
         hintText: placeholder ?? 'Select a category',

@@ -35,9 +35,8 @@ class CategoriesState {
 /// Categories notifier
 class CategoriesNotifier extends StateNotifier<CategoriesState> {
   final Logger _logger = Logger();
-  final Ref _ref;
 
-  CategoriesNotifier(this._ref) : super(const CategoriesState());
+  CategoriesNotifier(Ref ref) : super(const CategoriesState());
 
   /// Load categories for the current user or team
   Future<void> loadCategories({String? teamId, bool refresh = false}) async {
@@ -58,6 +57,17 @@ class CategoriesNotifier extends StateNotifier<CategoriesState> {
       );
 
       _logger.d('Categories loaded successfully: ${categories.length} categories, ${displayCategories.length} display categories');
+
+      // Debug: Log first few categories
+      for (int i = 0; i < categories.length && i < 5; i++) {
+        final category = categories[i];
+        _logger.d('🏷️ Category ${category.id}: ${category.name} (${category.color})');
+      }
+
+      // Debug: Check if the specific category ID from receipt exists
+      final testCategoryId = '14269126-d957-4a63-b06b-7fbfe2e017ae';
+      final foundCategory = categories.where((c) => c.id == testCategoryId).firstOrNull;
+      _logger.d('🔍 Looking for category ID $testCategoryId: ${foundCategory?.name ?? 'NOT FOUND'}');
     } catch (error) {
       _logger.e('Error loading categories: $error');
       state = state.copyWith(

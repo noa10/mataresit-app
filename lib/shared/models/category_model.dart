@@ -7,7 +7,7 @@ part 'category_model.g.dart';
 class CategoryModel extends Equatable {
   final String id;
   @JsonKey(name: 'user_id')
-  final String userId;
+  final String? userId;
   @JsonKey(name: 'team_id')
   final String? teamId;
   final String name;
@@ -24,7 +24,7 @@ class CategoryModel extends Equatable {
 
   const CategoryModel({
     required this.id,
-    required this.userId,
+    this.userId,
     this.teamId,
     required this.name,
     required this.color,

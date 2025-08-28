@@ -5,7 +5,7 @@ import '../../core/network/supabase_client.dart';
 
 class CategoryService {
   static final Logger _logger = Logger();
-  static final SupabaseClient _supabase = SupabaseClientManager.client;
+  static final SupabaseClient _supabase = SupabaseService.client;
 
   /// Fetch all categories for the current user or team with receipt counts
   static Future<List<CategoryModel>> fetchUserCategories({
@@ -34,7 +34,22 @@ class CategoryService {
       }
 
       final List<dynamic> data = response as List<dynamic>;
-      final categories = data.map((json) => CategoryModel.fromJson(json as Map<String, dynamic>)).toList();
+
+      // Debug: Log the raw response to understand the structure
+      _logger.d('🔍 Raw RPC response: $data');
+
+      final categories = <CategoryModel>[];
+      for (int i = 0; i < data.length; i++) {
+        try {
+          final json = data[i] as Map<String, dynamic>;
+          _logger.d('🔍 Processing category JSON: $json');
+          final category = CategoryModel.fromJson(json);
+          categories.add(category);
+        } catch (e) {
+          _logger.e('❌ Error parsing category at index $i: $e');
+          _logger.e('❌ Raw data: ${data[i]}');
+        }
+      }
 
       // If user has no categories, create default ones
       if (categories.isEmpty) {
@@ -94,8 +109,32 @@ class CategoryService {
         final teamCategoriesData = futures[0] as List<dynamic>? ?? [];
         final personalCategoriesData = futures[1] as List<dynamic>? ?? [];
 
-        final teamCategories = teamCategoriesData.map((json) => CategoryModel.fromJson(json as Map<String, dynamic>)).toList();
-        final personalCategories = personalCategoriesData.map((json) => CategoryModel.fromJson(json as Map<String, dynamic>)).toList();
+        _logger.d('🔍 Team categories data: $teamCategoriesData');
+        _logger.d('🔍 Personal categories data: $personalCategoriesData');
+
+        final teamCategories = <CategoryModel>[];
+        for (int i = 0; i < teamCategoriesData.length; i++) {
+          try {
+            final json = teamCategoriesData[i] as Map<String, dynamic>;
+            final category = CategoryModel.fromJson(json);
+            teamCategories.add(category);
+          } catch (e) {
+            _logger.e('❌ Error parsing team category at index $i: $e');
+            _logger.e('❌ Raw data: ${teamCategoriesData[i]}');
+          }
+        }
+
+        final personalCategories = <CategoryModel>[];
+        for (int i = 0; i < personalCategoriesData.length; i++) {
+          try {
+            final json = personalCategoriesData[i] as Map<String, dynamic>;
+            final category = CategoryModel.fromJson(json);
+            personalCategories.add(category);
+          } catch (e) {
+            _logger.e('❌ Error parsing personal category at index $i: $e');
+            _logger.e('❌ Raw data: ${personalCategoriesData[i]}');
+          }
+        }
 
         // Combine both, prioritizing team categories
         final allCategories = [...teamCategories, ...personalCategories];
