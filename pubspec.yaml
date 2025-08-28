@@ -33,9 +33,24 @@ dependencies:
   path_provider: ^2.1.5
   permission_handler: ^11.3.1
   
-  # Local Storage
+  # Local Storage & Offline Sync
   shared_preferences: ^2.3.3
-  
+  sqflite: ^2.4.1
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  connectivity_plus: ^6.1.0
+
+  # Push Notifications & Real-time
+  flutter_local_notifications: ^18.0.1
+
+  # Security & Biometrics
+  local_auth: ^2.3.0
+  flutter_secure_storage: ^9.2.2
+  crypto: ^3.0.6
+
+  # Performance & Background Processing
+  workmanager: ^0.9.0
+
   # UI Components
   cached_network_image: ^3.4.1
   
@@ -51,6 +66,7 @@ dependencies:
   timeago: ^3.7.0
   path: ^1.9.0
   http: ^1.2.2
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
