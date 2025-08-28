@@ -50,36 +50,40 @@ export function EmbeddingPerformanceCharts({
     );
   }
 
-  // Use mock data for demonstration when no real data is available
-  const displayHourlyStats = hourlyStats.length > 0 ? hourlyStats : generateMockHourlyStats(24);
-  const displayDailyStats = dailyStats.length > 0 ? dailyStats : generateMockDailyStats(7);
-  const displaySummary = summary || generateMockSummary();
+  // Use real data when available, otherwise show empty state
+  const hasRealData = hourlyStats.length > 0 || dailyStats.length > 0;
+  const displayHourlyStats = hourlyStats.length > 0 ? hourlyStats : [];
+  const displayDailyStats = dailyStats.length > 0 ? dailyStats : [];
+  const displaySummary = summary || {
+    total_attempts: 0,
+    success_rate: 0,
+    avg_duration_ms: 0,
+    error_rate: 0
+  };
 
   // Calculate some basic stats for display
   const totalHourlyAttempts = displayHourlyStats.reduce((sum, stat) => sum + stat.total_attempts, 0);
   const totalDailyAttempts = displayDailyStats.reduce((sum, stat) => sum + stat.total_attempts, 0);
   const avgSuccessRate = displayDailyStats.length > 0
     ? displayDailyStats.reduce((sum, stat) => sum + stat.success_rate, 0) / displayDailyStats.length
-    : 0;
+    : displaySummary.success_rate;
   const avgDuration = displayDailyStats.length > 0
     ? displayDailyStats.reduce((sum, stat) => sum + stat.avg_duration_ms, 0) / displayDailyStats.length
-    : 0;
-
-  const isUsingMockData = hourlyStats.length === 0;
+    : displaySummary.avg_duration_ms;
 
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      {/* Demo Data Notice */}
-      {isUsingMockData && (
-        <Card className="border-blue-200 bg-blue-50">
+      {/* No Data Notice */}
+      {!hasRealData && (
+        <Card className="border-gray-200 bg-gray-50">
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-blue-600" />
-              <p className="text-blue-800 font-medium">Demo Mode</p>
+              <BarChart3 className="h-5 w-5 text-gray-600" />
+              <p className="text-gray-800 font-medium">No Data Available</p>
             </div>
-            <p className="text-blue-700 text-sm mt-1">
-              Displaying sample data for demonstration. Real metrics will appear once embedding generation begins.
+            <p className="text-gray-700 text-sm mt-1">
+              No embedding performance data found. Metrics will appear once embedding generation begins.
             </p>
           </CardContent>
         </Card>

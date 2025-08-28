@@ -1,4 +1,22 @@
 
+/**
+ * Mock Data Utilities
+ *
+ * ⚠️ WARNING: This file contains mock data for testing and development purposes only.
+ * These utilities should NOT be used in production dashboard components.
+ *
+ * Main dashboard components should use real data from Supabase via:
+ * - receiptService.fetchReceipts()
+ * - analyticsService.getUserAnalytics()
+ * - Other real data services
+ *
+ * This mock data is only appropriate for:
+ * - Unit tests
+ * - Component development/testing
+ * - Demo/prototype components
+ * - Storybook stories
+ */
+
 // Sample receipt images - replace with your own assets
 const sampleImages = [
   "/placeholder.svg",
