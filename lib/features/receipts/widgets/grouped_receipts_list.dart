@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../shared/models/grouped_receipts.dart';
 import '../../../shared/models/receipt_model.dart';
 import '../../../core/constants/app_constants.dart';
-import '../providers/receipts_provider.dart';
+
+import 'pagination_widget.dart';
 
 /// Widget that displays receipts grouped by date
 class GroupedReceiptsList extends ConsumerStatefulWidget {
@@ -50,24 +51,35 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
 
   @override
   Widget build(BuildContext context) {
-    final receiptsState = ref.watch(receiptsProvider);
-
     if (widget.groupedReceipts.isEmpty) {
       return _buildEmptyState();
     }
 
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(AppConstants.defaultPadding),
-      itemCount: widget.groupedReceipts.length + (receiptsState.isLoading ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index >= widget.groupedReceipts.length) {
-          return _buildLoadingIndicator();
-        }
+    return Column(
+      children: [
+        // Pagination info at the top
+        const PaginationInfoWidget(),
 
-        final group = widget.groupedReceipts[index];
-        return _buildDateGroup(group);
-      },
+        // Main list
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(AppConstants.defaultPadding),
+            itemCount: widget.groupedReceipts.length + 1, // +1 for pagination widget
+            itemBuilder: (context, index) {
+              if (index >= widget.groupedReceipts.length) {
+                return PaginationWidget(
+                  onLoadMore: widget.onLoadMore,
+                  showLoadMoreButton: false, // Use automatic loading
+                );
+              }
+
+              final group = widget.groupedReceipts[index];
+              return _buildDateGroup(group);
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -92,7 +104,7 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -286,12 +298,7 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
     return '$displayHour:$minute $period';
   }
 
-  Widget _buildLoadingIndicator() {
-    return const Padding(
-      padding: EdgeInsets.all(AppConstants.defaultPadding),
-      child: Center(child: CircularProgressIndicator()),
-    );
-  }
+
 
   Widget _buildEmptyState() {
     return Center(

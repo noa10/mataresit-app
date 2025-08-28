@@ -5,6 +5,14 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/constants/app_constants.dart';
 import '../providers/receipts_provider.dart';
 import '../../../shared/models/receipt_model.dart';
+import '../../../shared/models/team_model.dart';
+
+import '../../categories/providers/categories_provider.dart';
+import '../../teams/providers/teams_provider.dart';
+import '../../../shared/widgets/category_display.dart';
+import '../widgets/date_filter_bar.dart';
+import '../widgets/grouped_receipts_list.dart';
+import '../widgets/pagination_widget.dart';
 
 class ReceiptsScreen extends ConsumerStatefulWidget {
   const ReceiptsScreen({super.key});
@@ -16,11 +24,18 @@ class ReceiptsScreen extends ConsumerStatefulWidget {
 class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  late final WidgetRef _ref;
 
   @override
   void initState() {
     super.initState();
+    _ref = ref;
     _scrollController.addListener(_onScroll);
+    // Load categories when the screen initializes with team context
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final currentTeam = _ref.read(currentTeamModelProvider);
+      _ref.read(categoriesProvider.notifier).loadCategories(teamId: currentTeam?.id);
+    });
   }
 
   @override
@@ -31,9 +46,20 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= 
+    if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      ref.read(receiptsProvider.notifier).loadReceipts();
+      ref.read(receiptsProvider.notifier).loadMore();
+    }
+  }
+
+  void _handleMenuAction(String action) {
+    switch (action) {
+      case 'refresh':
+        ref.read(receiptsProvider.notifier).refresh();
+        break;
+      case 'clear_filters':
+        ref.read(receiptsProvider.notifier).clearAllFilters();
+        break;
     }
   }
 
@@ -41,91 +67,168 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
   Widget build(BuildContext context) {
     final receiptsState = ref.watch(receiptsProvider);
 
+    // Listen for team changes and reload categories
+    ref.listen<TeamModel?>(currentTeamModelProvider, (previous, next) {
+      if (previous?.id != next?.id) {
+        // Team changed, reload categories with new team context
+        ref.read(categoriesProvider.notifier).loadCategories(teamId: next?.id);
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Receipts'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Receipts'),
+            if (receiptsState.hasActiveFilters)
+              Text(
+                '${receiptsState.totalCount} receipts • ${receiptsState.totalAmount.toStringAsFixed(2)} MYR',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: _showSearchDialog,
           ),
           IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: _showFilterDialog,
+            icon: Icon(
+              receiptsState.isGroupedView ? Icons.view_list : Icons.view_agenda,
+            ),
+            onPressed: () => ref.read(receiptsProvider.notifier).toggleGroupedView(),
+            tooltip: receiptsState.isGroupedView ? 'List view' : 'Grouped view',
+          ),
+          PopupMenuButton<String>(
+            onSelected: _handleMenuAction,
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'refresh',
+                child: ListTile(
+                  leading: Icon(Icons.refresh),
+                  title: Text('Refresh'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'clear_filters',
+                child: ListTile(
+                  leading: Icon(Icons.clear_all),
+                  title: Text('Clear Filters'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: () => ref.read(receiptsProvider.notifier).refresh(),
-        child: receiptsState.receipts.isEmpty && !receiptsState.isLoading
-            ? _buildEmptyState()
-            : _buildReceiptsList(receiptsState),
+      body: Column(
+        children: [
+          // Date filter bar
+          DateFilterBar(
+            onFilterChanged: () {
+              // Optional: Add any additional logic when filters change
+            },
+          ),
+
+          // Main content
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () => ref.read(receiptsProvider.notifier).refresh(),
+              child: _buildMainContent(receiptsState),
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  Widget _buildMainContent(ReceiptsState receiptsState) {
+    if (receiptsState.receipts.isEmpty && !receiptsState.isLoading) {
+      return _buildEmptyState();
+    }
+
+    if (receiptsState.isGroupedView) {
+      return GroupedReceiptsList(
+        groupedReceipts: receiptsState.groupedReceipts,
+        scrollController: _scrollController,
+        onLoadMore: () => ref.read(receiptsProvider.notifier).loadMore(),
+      );
+    } else {
+      return _buildFlatReceiptsList(receiptsState);
+    }
   }
 
   Widget _buildEmptyState() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.receipt_long_outlined,
-            size: 64,
-            color: Colors.grey,
-          ),
-          SizedBox(height: AppConstants.defaultPadding),
-          Text(
-            'No receipts yet',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
+    final receiptsState = ref.watch(receiptsProvider);
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppConstants.defaultPadding * 2),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.receipt_long_outlined,
+              size: 64,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
-          ),
-          SizedBox(height: AppConstants.smallPadding),
-          Text(
-            'Tap the camera button to capture your first receipt',
-            style: TextStyle(
-              color: Colors.grey,
+            const SizedBox(height: AppConstants.defaultPadding),
+            Text(
+              receiptsState.hasActiveFilters
+                  ? 'No receipts match your filters'
+                  : 'No receipts yet',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              receiptsState.hasActiveFilters
+                  ? 'Try adjusting your date range or search terms'
+                  : 'Start by capturing your first receipt',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (receiptsState.hasActiveFilters) ...[
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => ref.read(receiptsProvider.notifier).clearAllFilters(),
+                child: const Text('Clear Filters'),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildReceiptsList(ReceiptsState state) {
+  Widget _buildFlatReceiptsList(ReceiptsState receiptsState) {
     return Column(
       children: [
-        // Error display
-        if (state.error != null)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(AppConstants.defaultPadding),
-            color: Colors.red.withValues(alpha: 0.1),
-            child: Text(
-              state.error!,
-              style: const TextStyle(color: Colors.red),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        
-        // Receipts list
+        // Pagination info at the top
+        const PaginationInfoWidget(),
+
+        // Main list
         Expanded(
           child: ListView.builder(
             controller: _scrollController,
             padding: const EdgeInsets.all(AppConstants.defaultPadding),
-            itemCount: state.receipts.length + (state.isLoading ? 1 : 0),
+            itemCount: receiptsState.receipts.length + 1, // +1 for pagination widget
             itemBuilder: (context, index) {
-              if (index >= state.receipts.length) {
-                return const Padding(
-                  padding: EdgeInsets.all(AppConstants.defaultPadding),
-                  child: Center(child: CircularProgressIndicator()),
+              if (index >= receiptsState.receipts.length) {
+                return PaginationWidget(
+                  onLoadMore: () => ref.read(receiptsProvider.notifier).loadMore(),
+                  showLoadMoreButton: false, // Use automatic loading
                 );
               }
-              
-              final receipt = state.receipts[index];
+
+              final receipt = receiptsState.receipts[index];
               return _buildReceiptCard(receipt);
             },
           ),
@@ -133,6 +236,8 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
       ],
     );
   }
+
+
 
   Widget _buildReceiptCard(ReceiptModel receipt) {
     return Card(
@@ -174,27 +279,22 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
               // Details row
               Row(
                 children: [
-                  // Category
-                  if (receipt.category != null) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppConstants.smallPadding,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        receipt.category!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppConstants.smallPadding),
-                  ],
+                  // Category - Use real category data with fallback
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final category = receipt.customCategoryId != null
+                          ? ref.watch(categoryByIdProvider(receipt.customCategoryId!))
+                          : null;
+
+
+
+                      return CategoryDisplay(
+                        category: category,
+                        size: CategoryDisplaySize.small,
+                      );
+                    },
+                  ),
+                  const SizedBox(width: AppConstants.smallPadding),
                   
                   // Processing status
                   _buildStatusChip(receipt.processingStatus),
@@ -287,6 +387,9 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
   }
 
   void _showSearchDialog() {
+    final receiptsState = ref.read(receiptsProvider);
+    _searchController.text = receiptsState.searchQuery;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -298,20 +401,24 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
             prefixIcon: Icon(Icons.search),
           ),
           autofocus: true,
+          onSubmitted: (value) {
+            Navigator.of(context).pop();
+            ref.read(receiptsProvider.notifier).setSearchQuery(value);
+          },
         ),
         actions: [
           TextButton(
             onPressed: () {
               _searchController.clear();
               Navigator.of(context).pop();
-              ref.read(receiptsProvider.notifier).searchReceipts('');
+              ref.read(receiptsProvider.notifier).setSearchQuery('');
             },
             child: const Text('Clear'),
           ),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              ref.read(receiptsProvider.notifier).searchReceipts(_searchController.text);
+              ref.read(receiptsProvider.notifier).setSearchQuery(_searchController.text);
             },
             child: const Text('Search'),
           ),
@@ -320,45 +427,5 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
     );
   }
 
-  void _showFilterDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Filter Receipts'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: const Text('All Receipts'),
-              onTap: () {
-                Navigator.of(context).pop();
-                ref.read(receiptsProvider.notifier).filterByStatus(null);
-              },
-            ),
-            ListTile(
-              title: const Text('Active'),
-              onTap: () {
-                Navigator.of(context).pop();
-                ref.read(receiptsProvider.notifier).filterByStatus(ReceiptStatus.active);
-              },
-            ),
-            ListTile(
-              title: const Text('Draft'),
-              onTap: () {
-                Navigator.of(context).pop();
-                ref.read(receiptsProvider.notifier).filterByStatus(ReceiptStatus.draft);
-              },
-            ),
-            ListTile(
-              title: const Text('Archived'),
-              onTap: () {
-                Navigator.of(context).pop();
-                ref.read(receiptsProvider.notifier).filterByStatus(ReceiptStatus.archived);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 }

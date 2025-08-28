@@ -50,7 +50,7 @@ class _DateFilterWidgetState extends ConsumerState<DateFilterWidget> {
                           ),
                         ),
                         Text(
-                          DateUtils.formatDateRange(currentFilter),
+                          AppDateUtils.formatDateRange(currentFilter),
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Theme.of(context).colorScheme.primary,
                           ),
@@ -157,7 +157,7 @@ class _DateFilterWidgetState extends ConsumerState<DateFilterWidget> {
       children: quickFilters.map((option) {
         final isSelected = currentFilter.option == option;
         return FilterChip(
-          label: Text(DateUtils.getFilterOptionDisplayName(option)),
+          label: Text(AppDateUtils.getFilterOptionDisplayName(option)),
           selected: isSelected,
           onSelected: (selected) => _applyQuickFilter(option),
           selectedColor: Theme.of(context).colorScheme.primaryContainer,
@@ -217,7 +217,7 @@ class _DateFilterWidgetState extends ConsumerState<DateFilterWidget> {
             const SizedBox(height: 4),
             Text(
               date != null 
-                  ? DateUtils.formatDisplayDate(date)
+                  ? AppDateUtils.formatDisplayDate(date)
                   : 'Select date',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: date != null 

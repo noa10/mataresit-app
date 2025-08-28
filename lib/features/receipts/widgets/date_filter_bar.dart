@@ -43,7 +43,7 @@ class DateFilterBar extends ConsumerWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  DateUtils.getFilterOptionDisplayName(currentFilter.option),
+                  AppDateUtils.getFilterOptionDisplayName(currentFilter.option),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.bold,
@@ -96,7 +96,7 @@ class DateFilterBar extends ConsumerWidget {
         padding: const EdgeInsets.only(right: 8),
         child: FilterChip(
           label: Text(
-            DateUtils.getFilterOptionDisplayName(option),
+            AppDateUtils.getFilterOptionDisplayName(option),
             style: TextStyle(
               fontSize: 12,
               color: isSelected 
@@ -107,7 +107,7 @@ class DateFilterBar extends ConsumerWidget {
           selected: isSelected,
           onSelected: (selected) => _applyQuickFilter(ref, option),
           selectedColor: Theme.of(context).colorScheme.primaryContainer,
-          backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+          backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
           checkmarkColor: Theme.of(context).colorScheme.primary,
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           visualDensity: VisualDensity.compact,
@@ -256,7 +256,7 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
       children: allOptions.map((option) {
         final isSelected = currentFilter.option == option;
         return FilterChip(
-          label: Text(DateUtils.getFilterOptionDisplayName(option)),
+          label: Text(AppDateUtils.getFilterOptionDisplayName(option)),
           selected: isSelected,
           onSelected: (selected) => _applyFilter(option),
           selectedColor: Theme.of(context).colorScheme.primaryContainer,
@@ -315,8 +315,8 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
             ),
             const SizedBox(height: 4),
             Text(
-              date != null 
-                  ? DateUtils.formatDisplayDate(date)
+              date != null
+                  ? AppDateUtils.formatDisplayDate(date)
                   : 'Select date',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: date != null 
