@@ -1,8 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mataresit/features/receipts/providers/receipts_provider.dart';
-import 'package:mataresit/shared/utils/date_utils.dart';
-import 'package:mataresit/shared/models/receipt_model.dart';
+import 'package:mataresit_app/features/receipts/providers/receipts_provider.dart';
+import 'package:mataresit_app/shared/utils/date_utils.dart';
+import 'package:mataresit_app/shared/models/receipt_model.dart';
+import 'package:mataresit_app/shared/models/grouped_receipts.dart';
 
 void main() {
   group('ReceiptsProvider Tests', () {
@@ -33,7 +34,7 @@ void main() {
 
     test('date filter should update correctly', () async {
       final notifier = container.read(receiptsProvider.notifier);
-      final todayFilter = DateUtils.getDateRangeForOption(DateFilterOption.today);
+      final todayFilter = AppDateUtils.getDateRangeForOption(DateFilterOption.today);
       
       // This would normally trigger a network call, but we're testing state changes
       // In a real test, you'd mock the Supabase client
@@ -115,15 +116,15 @@ void main() {
     });
   });
 
-  group('DateUtils Tests', () {
+  group('AppDateUtils Tests', () {
     test('getDateRangeForOption should return correct ranges', () {
-      final today = DateUtils.getDateRangeForOption(DateFilterOption.today);
+      final today = AppDateUtils.getDateRangeForOption(DateFilterOption.today);
       expect(today.option, DateFilterOption.today);
       expect(today.startDate, isNotNull);
       expect(today.endDate, isNotNull);
-      expect(DateUtils.isSameDay(today.startDate!, today.endDate!), true);
+      expect(AppDateUtils.isSameDay(today.startDate!, today.endDate!), true);
 
-      final last7Days = DateUtils.getDateRangeForOption(DateFilterOption.last7Days);
+      final last7Days = AppDateUtils.getDateRangeForOption(DateFilterOption.last7Days);
       expect(last7Days.option, DateFilterOption.last7Days);
       expect(last7Days.startDate, isNotNull);
       expect(last7Days.endDate, isNotNull);
@@ -138,9 +139,9 @@ void main() {
       final yesterday = today.subtract(const Duration(days: 1));
       final lastWeek = today.subtract(const Duration(days: 7));
       
-      expect(DateUtils.formatDisplayDate(today), 'Today');
-      expect(DateUtils.formatDisplayDate(yesterday), 'Yesterday');
-      expect(DateUtils.formatDisplayDate(lastWeek), contains(RegExp(r'[A-Za-z]{3} \d{1,2}')));
+      expect(AppDateUtils.formatDisplayDate(today), 'Today');
+      expect(AppDateUtils.formatDisplayDate(yesterday), 'Yesterday');
+      expect(AppDateUtils.formatDisplayDate(lastWeek), contains(RegExp(r'[A-Za-z]{3} \d{1,2}')));
     });
 
     test('isDateInRange should work correctly', () {
@@ -150,9 +151,9 @@ void main() {
         option: DateFilterOption.custom,
       );
       
-      expect(DateUtils.isDateInRange(DateTime(2024, 1, 15), range), true);
-      expect(DateUtils.isDateInRange(DateTime(2024, 2, 1), range), false);
-      expect(DateUtils.isDateInRange(DateTime(2023, 12, 31), range), false);
+      expect(AppDateUtils.isDateInRange(DateTime(2024, 1, 15), range), true);
+      expect(AppDateUtils.isDateInRange(DateTime(2024, 2, 1), range), false);
+      expect(AppDateUtils.isDateInRange(DateTime(2023, 12, 31), range), false);
     });
   });
 

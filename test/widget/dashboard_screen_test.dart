@@ -17,11 +17,12 @@ void main() {
           currentUserProvider.overrideWith((ref) => UserModel(
             id: 'test-user',
             email: 'test@example.com',
-            fullName: 'Test User',
-            emailVerified: true,
-            phoneVerified: false,
-            role: UserRole.user,
-            status: UserStatus.active,
+            firstName: 'Test',
+            lastName: 'User',
+            subscriptionTier: 'free',
+            subscriptionStatus: 'active',
+            receiptsUsedThisMonth: 0,
+            preferredLanguage: 'en',
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
           )),
@@ -53,8 +54,8 @@ void main() {
 
     testWidgets('should display welcome message with user name', (WidgetTester tester) async {
       await tester.pumpWidget(
-        UncontainerizedProviderScope(
-          container: container,
+        ProviderScope(
+          overrides: [],
           child: MaterialApp(
             home: const DashboardScreen(),
           ),
@@ -69,8 +70,8 @@ void main() {
 
     testWidgets('should display quick stats cards', (WidgetTester tester) async {
       await tester.pumpWidget(
-        UncontainerizedProviderScope(
-          container: container,
+        ProviderScope(
+          overrides: [],
           child: MaterialApp(
             home: const DashboardScreen(),
           ),
@@ -95,8 +96,8 @@ void main() {
 
     testWidgets('should display quick actions', (WidgetTester tester) async {
       await tester.pumpWidget(
-        UncontainerizedProviderScope(
-          container: container,
+        ProviderScope(
+          overrides: [],
           child: MaterialApp(
             home: const DashboardScreen(),
           ),
@@ -112,8 +113,8 @@ void main() {
 
     testWidgets('should display recent activity section', (WidgetTester tester) async {
       await tester.pumpWidget(
-        UncontainerizedProviderScope(
-          container: container,
+        ProviderScope(
+          overrides: [],
           child: MaterialApp(
             home: const DashboardScreen(),
           ),
@@ -128,8 +129,8 @@ void main() {
 
     testWidgets('should display category breakdown when available', (WidgetTester tester) async {
       await tester.pumpWidget(
-        UncontainerizedProviderScope(
-          container: container,
+        ProviderScope(
+          overrides: [],
           child: MaterialApp(
             home: const DashboardScreen(),
           ),
@@ -146,8 +147,8 @@ void main() {
 
     testWidgets('should handle refresh gesture', (WidgetTester tester) async {
       await tester.pumpWidget(
-        UncontainerizedProviderScope(
-          container: container,
+        ProviderScope(
+          overrides: [],
           child: MaterialApp(
             home: const DashboardScreen(),
           ),
@@ -172,8 +173,8 @@ void main() {
       bool captureNavigationCalled = false;
 
       await tester.pumpWidget(
-        UncontainerizedProviderScope(
-          container: container,
+        ProviderScope(
+          overrides: [],
           child: MaterialApp(
             home: const DashboardScreen(),
             onGenerateRoute: (settings) {
@@ -204,8 +205,8 @@ void main() {
       bool analyticsNavigationCalled = false;
 
       await tester.pumpWidget(
-        UncontainerizedProviderScope(
-          container: container,
+        ProviderScope(
+          overrides: [],
           child: MaterialApp(
             home: const DashboardScreen(),
             onGenerateRoute: (settings) {
@@ -234,8 +235,8 @@ void main() {
 
     testWidgets('should display user avatar with correct initial', (WidgetTester tester) async {
       await tester.pumpWidget(
-        UncontainerizedProviderScope(
-          container: container,
+        ProviderScope(
+          overrides: [],
           child: MaterialApp(
             home: const DashboardScreen(),
           ),
@@ -258,11 +259,12 @@ void main() {
           currentUserProvider.overrideWith((ref) => UserModel(
             id: 'test-user',
             email: 'test@example.com',
-            fullName: 'Test User',
-            emailVerified: true,
-            phoneVerified: false,
-            role: UserRole.user,
-            status: UserStatus.active,
+            firstName: 'Test',
+            lastName: 'User',
+            subscriptionTier: 'free',
+            subscriptionStatus: 'active',
+            receiptsUsedThisMonth: 0,
+            preferredLanguage: 'en',
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
           )),
@@ -271,8 +273,8 @@ void main() {
       );
 
       await tester.pumpWidget(
-        UncontainerizedProviderScope(
-          container: emptyContainer,
+        ProviderScope(
+          overrides: [],
           child: MaterialApp(
             home: const DashboardScreen(),
           ),
@@ -290,8 +292,8 @@ void main() {
 
     testWidgets('should be accessible', (WidgetTester tester) async {
       await tester.pumpWidget(
-        UncontainerizedProviderScope(
-          container: container,
+        ProviderScope(
+          overrides: [],
           child: MaterialApp(
             home: const DashboardScreen(),
           ),

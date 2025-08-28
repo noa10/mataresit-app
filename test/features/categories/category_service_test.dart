@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mataresit/shared/models/category_model.dart';
-import 'package:mataresit/shared/services/category_service.dart';
+import 'package:mataresit_app/shared/models/category_model.dart';
+import 'package:mataresit_app/shared/services/category_service.dart';
 
 void main() {
   group('CategoryService', () {
