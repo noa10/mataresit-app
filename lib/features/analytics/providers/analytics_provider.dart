@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../receipts/providers/receipts_provider.dart';
+import '../services/analytics_service.dart';
+import '../../auth/providers/auth_provider.dart';
 
 /// Analytics data for charts and reports
 class AnalyticsData {
@@ -56,95 +57,203 @@ class AnalyticsData {
   }
 }
 
-/// Analytics provider that computes detailed statistics and chart data
-final analyticsProvider = Provider<AnalyticsData>((ref) {
-  final receiptsState = ref.watch(receiptsProvider);
-  final receipts = receiptsState.receipts;
+/// Analytics state for async data loading
+class AnalyticsState {
+  final AnalyticsData data;
+  final bool isLoading;
+  final String? error;
+  final DateTime? lastUpdated;
 
-  if (receipts.isEmpty) {
-    return const AnalyticsData();
+  const AnalyticsState({
+    this.data = const AnalyticsData(),
+    this.isLoading = false,
+    this.error,
+    this.lastUpdated,
+  });
+
+  AnalyticsState copyWith({
+    AnalyticsData? data,
+    bool? isLoading,
+    String? error,
+    DateTime? lastUpdated,
+  }) {
+    return AnalyticsState(
+      data: data ?? this.data,
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+      lastUpdated: lastUpdated ?? this.lastUpdated,
+    );
+  }
+}
+
+/// Analytics notifier that fetches data from Supabase using the analytics service
+class AnalyticsNotifier extends StateNotifier<AnalyticsState> {
+  final Ref ref;
+
+  AnalyticsNotifier(this.ref) : super(const AnalyticsState()) {
+    loadAnalytics();
   }
 
-  // Filter receipts with valid amounts
-  final validReceipts = receipts.where((r) => r.totalAmount != null && r.totalAmount! > 0).toList();
-  
-  if (validReceipts.isEmpty) {
-    return const AnalyticsData();
+  /// Load analytics data from Supabase
+  Future<void> loadAnalytics({String? startDate, String? endDate}) async {
+    try {
+      state = state.copyWith(isLoading: true, error: null);
+
+      final user = ref.read(currentUserProvider);
+      if (user == null) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'User not authenticated',
+        );
+        return;
+      }
+
+      final analyticsService = ref.read(analyticsServiceProvider);
+
+      // Fetch data using the analytics service (matching React web version)
+      final futures = await Future.wait([
+        analyticsService.fetchDailyExpenses(
+          startDateISO: startDate,
+          endDateISO: endDate,
+          userId: user.id,
+        ),
+        analyticsService.fetchExpensesByCategory(
+          startDateISO: startDate,
+          endDateISO: endDate,
+          userId: user.id,
+        ),
+        analyticsService.fetchReceiptDetailsForRange(
+          startDateISO: startDate,
+          endDateISO: endDate,
+          userId: user.id,
+        ),
+      ]);
+
+      final dailyExpenses = futures[0] as List<DailyExpenseData>;
+      final categoryExpenses = futures[1] as List<CategoryExpenseData>;
+      final receiptSummaries = futures[2] as List<ReceiptSummary>;
+
+      // Transform data to match the existing AnalyticsData structure
+      final analyticsData = _transformToAnalyticsData(
+        dailyExpenses,
+        categoryExpenses,
+        receiptSummaries,
+      );
+
+      state = state.copyWith(
+        data: analyticsData,
+        isLoading: false,
+        lastUpdated: DateTime.now(),
+      );
+
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to load analytics: ${e.toString()}',
+      );
+    }
   }
 
-  // Calculate category spending
-  final categorySpending = <String, double>{};
-  final categoryCount = <String, int>{};
-  
-  for (final receipt in validReceipts) {
-    final category = receipt.category ?? 'Uncategorized';
-    categorySpending[category] = (categorySpending[category] ?? 0.0) + receipt.totalAmount!;
-    categoryCount[category] = (categoryCount[category] ?? 0) + 1;
+  /// Transform service data to AnalyticsData structure
+  AnalyticsData _transformToAnalyticsData(
+    List<DailyExpenseData> dailyExpenses,
+    List<CategoryExpenseData> categoryExpenses,
+    List<ReceiptSummary> receiptSummaries,
+  ) {
+    // Calculate category spending and counts
+    final categorySpending = <String, double>{};
+    final categoryCount = <String, int>{};
+
+    for (final category in categoryExpenses) {
+      categorySpending[category.category] = category.totalSpent;
+      // Count receipts for each category from receipt summaries
+      categoryCount[category.category] = receiptSummaries
+          .where((r) => _getCategoryForReceipt(r) == category.category)
+          .length;
+    }
+
+    // Calculate monthly spending from daily expenses
+    final monthlySpending = <String, double>{};
+    final now = DateTime.now();
+
+    for (final daily in dailyExpenses) {
+      final date = DateTime.parse(daily.date);
+      final monthName = _getMonthName(date.month);
+      monthlySpending[monthName] = (monthlySpending[monthName] ?? 0.0) + daily.total;
+    }
+
+    // Calculate spending trend for chart
+    final spendingTrend = <FlSpot>[];
+    final sortedMonths = monthlySpending.entries.toList()
+      ..sort((a, b) => _getMonthIndex(a.key).compareTo(_getMonthIndex(b.key)));
+
+    for (int i = 0; i < sortedMonths.length; i++) {
+      spendingTrend.add(FlSpot(i.toDouble(), sortedMonths[i].value));
+    }
+
+    // Calculate payment method breakdown from receipt summaries
+    final paymentMethodBreakdown = <String, double>{};
+    for (final receipt in receiptSummaries) {
+      final method = receipt.paymentMethod ?? 'Unknown';
+      paymentMethodBreakdown[method] = (paymentMethodBreakdown[method] ?? 0.0) + (receipt.total ?? 0.0);
+    }
+
+    // Calculate summary statistics
+    final totalSpending = receiptSummaries.fold<double>(0.0, (sum, receipt) => sum + (receipt.total ?? 0.0));
+    final validReceipts = receiptSummaries.where((r) => r.total != null && r.total! > 0).toList();
+    final averageTransaction = validReceipts.isNotEmpty ? totalSpending / validReceipts.length : 0.0;
+    final totalTransactions = validReceipts.length;
+
+    // Find top category
+    final topCategory = categorySpending.isNotEmpty
+        ? categorySpending.entries.reduce((a, b) => a.value > b.value ? a : b).key
+        : 'N/A';
+
+    // Calculate month-over-month growth
+    final currentMonth = monthlySpending[_getMonthName(now.month)] ?? 0.0;
+    final lastMonth = monthlySpending[_getMonthName(now.month - 1)] ?? 0.0;
+    final monthOverMonthGrowth = lastMonth > 0
+        ? ((currentMonth - lastMonth) / lastMonth) * 100
+        : 0.0;
+
+    return AnalyticsData(
+      categorySpending: categorySpending,
+      monthlySpending: monthlySpending,
+      categoryCount: categoryCount,
+      spendingTrend: spendingTrend,
+      totalSpending: totalSpending,
+      averageTransaction: averageTransaction,
+      totalTransactions: totalTransactions,
+      topCategory: topCategory,
+      monthOverMonthGrowth: monthOverMonthGrowth,
+      paymentMethodBreakdown: paymentMethodBreakdown,
+    );
   }
 
-  // Calculate monthly spending (last 12 months)
-  final monthlySpending = <String, double>{};
-  final now = DateTime.now();
-  
-  for (int i = 0; i < 12; i++) {
-    final month = DateTime(now.year, now.month - i);
-    final monthName = _getMonthName(month.month);
-    
-    final monthReceipts = validReceipts.where((receipt) {
-      return receipt.createdAt.year == month.year &&
-          receipt.createdAt.month == month.month;
-    });
-    
-    final monthTotal = monthReceipts.fold<double>(0.0, (sum, receipt) => sum + receipt.totalAmount!);
-    monthlySpending[monthName] = monthTotal;
+  /// Get category for a receipt (simplified - would need more logic for custom categories)
+  String _getCategoryForReceipt(ReceiptSummary receipt) {
+    // This is a simplified version - in a real implementation, you'd need to
+    // fetch the category information for each receipt
+    return 'General'; // Placeholder
   }
 
-  // Calculate spending trend for chart
-  final spendingTrend = <FlSpot>[];
-  final sortedMonths = monthlySpending.entries.toList()
-    ..sort((a, b) => _getMonthIndex(a.key).compareTo(_getMonthIndex(b.key)));
-  
-  for (int i = 0; i < sortedMonths.length; i++) {
-    spendingTrend.add(FlSpot(i.toDouble(), sortedMonths[i].value));
+  /// Refresh analytics data
+  Future<void> refresh() async {
+    await loadAnalytics();
   }
+}
 
-  // Calculate payment method breakdown
-  final paymentMethodBreakdown = <String, double>{};
-  for (final receipt in validReceipts) {
-    final method = receipt.paymentMethod ?? 'Unknown';
-    paymentMethodBreakdown[method] = (paymentMethodBreakdown[method] ?? 0.0) + receipt.totalAmount!;
-  }
-
-  // Calculate summary statistics
-  final totalSpending = validReceipts.fold<double>(0.0, (sum, receipt) => sum + receipt.totalAmount!);
-  final averageTransaction = totalSpending / validReceipts.length;
-  final totalTransactions = validReceipts.length;
-  
-  // Find top category
-  final topCategory = categorySpending.entries
-      .reduce((a, b) => a.value > b.value ? a : b)
-      .key;
-
-  // Calculate month-over-month growth
-  final currentMonth = monthlySpending[_getMonthName(now.month)] ?? 0.0;
-  final lastMonth = monthlySpending[_getMonthName(now.month - 1)] ?? 0.0;
-  final monthOverMonthGrowth = lastMonth > 0 
-      ? ((currentMonth - lastMonth) / lastMonth) * 100 
-      : 0.0;
-
-  return AnalyticsData(
-    categorySpending: categorySpending,
-    monthlySpending: monthlySpending,
-    categoryCount: categoryCount,
-    spendingTrend: spendingTrend,
-    totalSpending: totalSpending,
-    averageTransaction: averageTransaction,
-    totalTransactions: totalTransactions,
-    topCategory: topCategory,
-    monthOverMonthGrowth: monthOverMonthGrowth,
-    paymentMethodBreakdown: paymentMethodBreakdown,
-  );
+/// Analytics provider that uses the new service-based approach
+final analyticsProvider = StateNotifierProvider<AnalyticsNotifier, AnalyticsState>((ref) {
+  return AnalyticsNotifier(ref);
 });
+
+/// Convenience provider for just the analytics data
+final analyticsDataProvider = Provider<AnalyticsData>((ref) {
+  return ref.watch(analyticsProvider).data;
+});
+
+
 
 /// Get month name from month number
 String _getMonthName(int month) {
@@ -172,9 +281,9 @@ int _getMonthIndex(String monthName) {
 
 /// Provider for category pie chart data
 final categoryPieChartProvider = Provider<List<PieChartSectionData>>((ref) {
-  final analytics = ref.watch(analyticsProvider);
-  
-  if (analytics.categorySpending.isEmpty) {
+  final analyticsData = ref.watch(analyticsDataProvider);
+
+  if (analyticsData.categorySpending.isEmpty) {
     return [];
   }
 
@@ -190,12 +299,12 @@ final categoryPieChartProvider = Provider<List<PieChartSectionData>>((ref) {
   ];
 
   final sections = <PieChartSectionData>[];
-  final entries = analytics.categorySpending.entries.toList()
+  final entries = analyticsData.categorySpending.entries.toList()
     ..sort((a, b) => b.value.compareTo(a.value));
 
   for (int i = 0; i < entries.length && i < colors.length; i++) {
     final entry = entries[i];
-    final percentage = (entry.value / analytics.totalSpending) * 100;
+    final percentage = (entry.value / analyticsData.totalSpending) * 100;
     
     sections.add(
       PieChartSectionData(
@@ -217,9 +326,9 @@ final categoryPieChartProvider = Provider<List<PieChartSectionData>>((ref) {
 
 /// Provider for spending trend line chart data
 final spendingTrendChartProvider = Provider<LineChartData>((ref) {
-  final analytics = ref.watch(analyticsProvider);
-  
-  if (analytics.spendingTrend.isEmpty) {
+  final analyticsData = ref.watch(analyticsDataProvider);
+
+  if (analyticsData.spendingTrend.isEmpty) {
     return LineChartData(lineBarsData: []);
   }
 
@@ -260,7 +369,7 @@ final spendingTrendChartProvider = Provider<LineChartData>((ref) {
     borderData: FlBorderData(show: true),
     lineBarsData: [
       LineChartBarData(
-        spots: analytics.spendingTrend,
+        spots: analyticsData.spendingTrend,
         isCurved: true,
         color: const Color(0xFF2563EB),
         barWidth: 3,

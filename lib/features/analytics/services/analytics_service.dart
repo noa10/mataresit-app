@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/supabase_client.dart';
 import '../../../core/services/app_logger.dart';
-import '../../../features/auth/providers/auth_provider.dart';
 
 /// Daily expense data structure matching React web version
 class DailyExpenseData {
@@ -116,11 +115,9 @@ class AnalyticsService {
       }
 
       // Order by date for easier processing
-      query = query.order('date', ascending: true);
+      final response = await query.order('date', ascending: true);
 
-      final response = await query;
-
-      if (response == null) {
+      if (response.isEmpty) {
         AppLogger.warning('⚠️ No data returned from daily expenses query');
         return [];
       }
@@ -128,13 +125,13 @@ class AnalyticsService {
       // Aggregate data client-side (matching React implementation)
       final aggregated = <String, Map<String, dynamic>>{};
 
-      for (final item in response as List) {
+      for (final item in response) {
         // Ensure date is handled correctly (without time part for grouping)
         final dateKey = (item['date'] as String).split('T')[0];
         if (!aggregated.containsKey(dateKey)) {
           aggregated[dateKey] = {'total': 0.0, 'receiptIds': <String>[]};
         }
-        aggregated[dateKey]!['total'] = 
+        aggregated[dateKey]!['total'] =
             (aggregated[dateKey]!['total'] as double) + ((item['total'] as num?)?.toDouble() ?? 0.0);
         (aggregated[dateKey]!['receiptIds'] as List<String>).add(item['id'] as String);
       }
@@ -192,15 +189,15 @@ class AnalyticsService {
 
       final response = await query;
 
-      if (response == null) {
+      if (response.isEmpty) {
         AppLogger.warning('⚠️ No data returned from category expenses query');
         return [];
       }
 
       // Aggregate client-side (matching React implementation)
       final aggregated = <String, double>{};
-      
-      for (final item in response as List) {
+
+      for (final item in response) {
         // Priority: custom category name → predicted category → 'Uncategorized'
         final customCategory = item['custom_categories'];
         final categoryKey = (customCategory != null && customCategory['name'] != null)
@@ -257,16 +254,14 @@ class AnalyticsService {
       }
 
       // Order by date for easier processing
-      query = query.order('date', ascending: true);
+      final response = await query.order('date', ascending: true);
 
-      final response = await query;
-
-      if (response == null) {
+      if (response.isEmpty) {
         AppLogger.warning('⚠️ No data returned from receipt details query');
         return [];
       }
 
-      final result = (response as List).map((item) {
+      final result = response.map((item) {
         return ReceiptSummary.fromJson(item);
       }).toList();
 

@@ -1,7 +1,5 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:isolate';
-import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
@@ -10,7 +8,6 @@ import 'package:workmanager/workmanager.dart';
 /// Service for performance optimizations and background processing
 class PerformanceService {
   static final Logger _logger = Logger();
-  static const String _imageCompressionTask = 'imageCompression';
   static const String _dataSyncTask = 'dataSync';
   static const String _cacheCleanupTask = 'cacheCleanup';
 
@@ -20,7 +17,6 @@ class PerformanceService {
       // Initialize WorkManager for background tasks
       await Workmanager().initialize(
         _callbackDispatcher,
-        isInDebugMode: false, // Set to false in production
       );
 
       // Schedule periodic tasks
@@ -42,7 +38,6 @@ class PerformanceService {
         _cacheCleanupTask,
         frequency: const Duration(hours: 24),
         constraints: Constraints(
-          networkType: NetworkType.not_required,
           requiresBatteryNotLow: true,
         ),
       );
@@ -150,7 +145,7 @@ class PerformanceService {
   static Future<File> optimizeImageForUpload(File imageFile) async {
     try {
       final fileSize = await imageFile.length();
-      _logger.d('Original image size: ${fileSize / 1024 / 1024:.2f} MB');
+      _logger.d('Original image size: ${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB');
 
       // Determine compression settings based on file size
       int quality = 85;
@@ -176,7 +171,7 @@ class PerformanceService {
         );
 
         final optimizedSize = await optimizedFile.length();
-        _logger.d('Optimized image size: ${optimizedSize / 1024 / 1024:.2f} MB');
+        _logger.d('Optimized image size: ${(optimizedSize / 1024 / 1024).toStringAsFixed(2)} MB');
         
         return optimizedFile;
       }
