@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../receipts/providers/receipts_provider.dart';
 import '../../../shared/models/receipt_model.dart';
+import '../../../core/services/app_logger.dart';
 
 /// Dashboard statistics
 class DashboardStats {
@@ -48,23 +49,27 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
   final receiptsState = ref.watch(receiptsProvider);
   final receipts = receiptsState.receipts;
 
+  AppLogger.info('📊 Dashboard calculating stats from ${receipts.length} receipts');
+
   if (receipts.isEmpty) {
+    AppLogger.warning('📊 No receipts found, returning empty stats');
     return const DashboardStats();
   }
 
   // Calculate total receipts
   final totalReceipts = receipts.length;
 
-  // Calculate this month's receipts
+  // Calculate this month's receipts using transaction date if available
   final now = DateTime.now();
   final thisMonth = DateTime(now.year, now.month);
   final thisMonthReceipts = receipts.where((receipt) {
-    return receipt.createdAt.isAfter(thisMonth);
+    final dateToCheck = receipt.transactionDate ?? receipt.createdAt;
+    return dateToCheck.isAfter(thisMonth);
   }).length;
 
-  // Calculate total amount
+  // Calculate total amount (filter out null and zero values)
   final totalAmount = receipts
-      .where((receipt) => receipt.totalAmount != null)
+      .where((receipt) => receipt.totalAmount != null && receipt.totalAmount! > 0)
       .fold<double>(0.0, (sum, receipt) => sum + receipt.totalAmount!);
 
   // Get recent receipts (last 5)
@@ -93,6 +98,8 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
     
     monthlySpending[monthName] = monthTotal;
   }
+
+  AppLogger.info('📈 Dashboard stats calculated: Total: $totalReceipts, This month: $thisMonthReceipts, Amount: \$${totalAmount.toStringAsFixed(2)}');
 
   return DashboardStats(
     totalReceipts: totalReceipts,

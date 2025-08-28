@@ -37,11 +37,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           SnackBar(
             content: Text(next.error!),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Dismiss',
+              textColor: Colors.white,
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
+            ),
           ),
         );
       }
-      
-      if (next.isAuthenticated) {
+
+      if (next.isAuthenticated && next.user != null) {
         context.go(AppRoutes.dashboard);
       }
     });

@@ -6,7 +6,7 @@ class AppConstants {
   
   // Supabase Configuration - Use environment variables in production
   static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: 'https://mpmkbtsufihzdelrlszs.supabase.co');
-  static const String supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: '');
+  static const String supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wbWtidHN1ZmloemRlbHJsc3pzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwMTIzODksImV4cCI6MjA1ODU4ODM4OX0.25ZyBSIl0TQxXFZsaT1R55118Tn8b6Ri8N556gOQyPY');
   static const String supabaseProjectId = String.fromEnvironment('SUPABASE_PROJECT_ID', defaultValue: 'mpmkbtsufihzdelrlszs');
 
   // Stripe Configuration - Use environment variables in production

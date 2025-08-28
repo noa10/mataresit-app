@@ -22,6 +22,9 @@ class SupabaseService {
     _client = Supabase.instance.client;
   }
 
+  /// Check if Supabase is initialized
+  static bool get isInitialized => _client != null;
+
   /// Get Supabase client instance
   static SupabaseClient get client {
     if (_client == null) {
@@ -94,20 +97,69 @@ class SupabaseService {
   /// Get user profile
   static Future<Map<String, dynamic>?> getUserProfile(String userId) async {
     final response = await client
-        .from(AppConstants.usersTable)
+        .from('profiles')
         .select()
         .eq('id', userId)
         .maybeSingle();
     return response;
   }
 
-  /// Update user profile
-  static Future<void> updateUserProfile(String userId, Map<String, dynamic> data) async {
-    await client
-        .from(AppConstants.usersTable)
-        .update(data)
-        .eq('id', userId);
+  /// Create user profile
+  static Future<Map<String, dynamic>?> createUserProfile({
+    required String userId,
+    String? email,
+    String? firstName,
+    String? lastName,
+    String? googleAvatarUrl,
+    String? preferredLanguage,
+  }) async {
+    final profileData = {
+      'id': userId,
+      'email': email,
+      'first_name': firstName ?? '',
+      'last_name': lastName ?? '',
+      'google_avatar_url': googleAvatarUrl,
+      'preferred_language': preferredLanguage ?? 'en',
+      'subscription_tier': 'free',
+      'subscription_status': 'active',
+      'receipts_used_this_month': 0,
+      'monthly_reset_date': DateTime.now().add(const Duration(days: 30)).toIso8601String(),
+      'created_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+
+    final response = await client
+        .from('profiles')
+        .insert(profileData)
+        .select()
+        .single();
+
+    return response;
   }
+
+  /// Update user profile
+  static Future<Map<String, dynamic>?> updateUserProfile({
+    required String userId,
+    Map<String, dynamic>? updates,
+  }) async {
+    if (updates == null || updates.isEmpty) return null;
+
+    final updateData = {
+      ...updates,
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+
+    final response = await client
+        .from('profiles')
+        .update(updateData)
+        .eq('id', userId)
+        .select()
+        .single();
+
+    return response;
+  }
+
+
 
   /// Upload file to storage
   static Future<String> uploadFile({

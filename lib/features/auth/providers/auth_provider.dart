@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/network/supabase_client.dart';
 import '../../../core/services/app_logger.dart';
+import '../../../core/services/sync_service.dart';
 import '../../../shared/models/user_model.dart';
 
 /// Authentication state
@@ -42,14 +43,35 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Initialize authentication state
   void _initializeAuth() async {
     try {
+      AppLogger.info('🔧 Initializing authentication state...');
+
+      // Check if Supabase is initialized
+      if (!SupabaseService.isInitialized) {
+        AppLogger.warning('⚠️ Supabase not yet initialized, waiting...');
+        // Wait a bit and try again
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (!SupabaseService.isInitialized) {
+          AppLogger.error('❌ Supabase still not initialized after waiting');
+          state = state.copyWith(
+            isLoading: false,
+            error: 'Supabase initialization failed',
+            isAuthenticated: false,
+          );
+          return;
+        }
+      }
+
       final currentUser = SupabaseService.currentUser;
       if (currentUser != null) {
+        AppLogger.info('✅ Found existing user session: ${currentUser.email}');
         await _loadUserProfile(currentUser.id);
       } else {
+        AppLogger.info('ℹ️ No existing user session found');
         // No user is logged in, set loading to false
         state = state.copyWith(isLoading: false, isAuthenticated: false);
       }
     } catch (e) {
+      AppLogger.error('❌ Authentication initialization failed', e);
       state = state.copyWith(
         isLoading: false,
         error: 'Initialization failed: ${e.toString()}',
@@ -57,61 +79,138 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
     }
 
-    // Listen to auth state changes
-    SupabaseService.authStateStream.listen((authState) {
-      if (authState.event == AuthChangeEvent.signedIn) {
-        final user = authState.session?.user;
-        if (user != null) {
-          _loadUserProfile(user.id);
+    // Listen to auth state changes (only if Supabase is initialized)
+    if (SupabaseService.isInitialized) {
+      SupabaseService.authStateStream.listen((authState) {
+        AppLogger.info('🔄 Auth state change detected: ${authState.event}');
+        if (authState.event == AuthChangeEvent.signedIn) {
+          final user = authState.session?.user;
+          if (user != null) {
+            AppLogger.info('👤 User signed in via auth state change: ${user.email}');
+            _loadUserProfile(user.id);
+          } else {
+            AppLogger.warning('⚠️ SignedIn event but no user in session');
+          }
+        } else if (authState.event == AuthChangeEvent.signedOut) {
+          AppLogger.info('👋 User signed out');
+          state = const AuthState(isLoading: false, isAuthenticated: false);
         }
-      } else if (authState.event == AuthChangeEvent.signedOut) {
-        state = const AuthState(isLoading: false, isAuthenticated: false);
-      }
-    });
+      });
+    } else {
+      AppLogger.warning('⚠️ Cannot set up auth state listener - Supabase not initialized');
+    }
   }
 
   /// Load user profile from database
   Future<void> _loadUserProfile(String userId) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       // Try to get user profile from database
+      Map<String, dynamic>? profileData;
       try {
-        final profileData = await SupabaseService.getUserProfile(userId);
-        if (profileData != null) {
+        profileData = await SupabaseService.getUserProfile(userId);
+      } catch (e) {
+        AppLogger.warning('Database error loading profile', e);
+      }
+
+      // If profile exists, use it
+      if (profileData != null) {
+        try {
+          AppLogger.info('Profile data found for user $userId, parsing...');
+          AppLogger.debug('Profile data: $profileData');
           final user = UserModel.fromJson(profileData);
+          AppLogger.info('Successfully parsed profile for user: ${user.email}');
           state = state.copyWith(
             user: user,
             isLoading: false,
             isAuthenticated: true,
           );
           return;
+        } catch (e, stackTrace) {
+          AppLogger.error('Error parsing profile data for user $userId', e);
+          AppLogger.debug('Profile data that failed to parse: $profileData');
+          AppLogger.debug('Stack trace: $stackTrace');
+          // Continue to profile creation fallback
         }
-      } catch (e) {
-        // Database table might not exist or other database error
-        AppLogger.warning('Database error loading profile', e);
+      } else {
+        AppLogger.info('No profile data found for user $userId, will create new profile');
       }
-      
-      // If no profile exists or database error, create minimal user from auth data
+
+      // If no profile exists, try to create one from auth data
       final authUser = SupabaseService.currentUser;
       if (authUser != null) {
-        final minimalUser = UserModel(
-          id: authUser.id,
-          email: authUser.email ?? '',
-          fullName: authUser.userMetadata?['full_name'],
-          emailVerified: authUser.emailConfirmedAt != null,
-          phoneVerified: authUser.phoneConfirmedAt != null,
-          role: UserRole.user,
-          status: UserStatus.active,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-        
-        state = state.copyWith(
-          user: minimalUser,
-          isLoading: false,
-          isAuthenticated: true,
-        );
+        try {
+          // Extract user data from auth metadata
+          final fullName = authUser.userMetadata?['full_name'] as String?;
+          final nameParts = fullName?.split(' ') ?? [];
+
+          final firstName = authUser.userMetadata?['given_name'] as String? ??
+                           (nameParts.isNotEmpty ? nameParts.first : null);
+          final lastName = authUser.userMetadata?['family_name'] as String? ??
+                          (nameParts.length > 1 ? nameParts.skip(1).join(' ') : null);
+          final googleAvatarUrl = authUser.userMetadata?['avatar_url'] as String?;
+
+          // Try to create profile in database
+          try {
+            AppLogger.info('Creating new profile in database for user: ${authUser.email}');
+            profileData = await SupabaseService.createUserProfile(
+              userId: authUser.id,
+              email: authUser.email,
+              firstName: firstName,
+              lastName: lastName,
+              googleAvatarUrl: googleAvatarUrl,
+              preferredLanguage: 'en',
+            );
+
+            if (profileData != null) {
+              AppLogger.info('Successfully created profile in database for user: ${authUser.email}');
+              final user = UserModel.fromJson(profileData);
+              state = state.copyWith(
+                user: user,
+                isLoading: false,
+                isAuthenticated: true,
+              );
+              return;
+            } else {
+              AppLogger.warning('Profile creation returned null for user: ${authUser.email}');
+            }
+          } catch (e, stackTrace) {
+            AppLogger.error('Failed to create profile in database for user: ${authUser.email}', e);
+            AppLogger.debug('Profile creation error stack trace: $stackTrace');
+          }
+
+          // If database creation fails, create minimal user from auth data
+          final minimalUser = UserModel(
+            id: authUser.id,
+            email: authUser.email,
+            firstName: firstName,
+            lastName: lastName,
+            googleAvatarUrl: googleAvatarUrl,
+            subscriptionTier: 'free',
+            subscriptionStatus: 'active',
+            receiptsUsedThisMonth: 0,
+            preferredLanguage: 'en',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+
+          state = state.copyWith(
+            user: minimalUser,
+            isLoading: false,
+            isAuthenticated: true,
+          );
+
+          // Trigger data migration for first-time users
+          _triggerDataMigration(authUser.id);
+        } catch (e) {
+          AppLogger.error('Error creating user from auth data', e);
+          state = state.copyWith(
+            isLoading: false,
+            error: 'Failed to create user profile',
+            isAuthenticated: false,
+          );
+        }
       } else {
         state = state.copyWith(
           isLoading: false,
@@ -120,6 +219,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         );
       }
     } catch (e) {
+      AppLogger.error('Unexpected error in _loadUserProfile', e);
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -134,6 +234,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String password,
   }) async {
     try {
+      AppLogger.info('🔐 Starting sign-in process for: $email');
       state = state.copyWith(isLoading: true, error: null);
 
       final response = await SupabaseService.signInWithEmailAndPassword(
@@ -142,22 +243,27 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
 
       if (response.user != null) {
+        AppLogger.info('✅ Supabase authentication successful for: ${response.user!.email}');
+        AppLogger.info('🔄 Loading user profile for ID: ${response.user!.id}');
         await _loadUserProfile(response.user!.id);
       } else {
+        AppLogger.warning('❌ Sign in failed - no user returned from Supabase');
         state = state.copyWith(
           isLoading: false,
-          error: 'Sign in failed',
+          error: 'Sign in failed - no user returned',
         );
       }
     } on AuthException catch (e) {
+      AppLogger.error('❌ Supabase authentication error: ${e.message}', e);
       state = state.copyWith(
         isLoading: false,
         error: e.message,
       );
     } catch (e) {
+      AppLogger.error('❌ Unexpected sign-in error', e);
       state = state.copyWith(
         isLoading: false,
-        error: 'An unexpected error occurred',
+        error: 'An unexpected error occurred: ${e.toString()}',
       );
     }
   }
@@ -223,7 +329,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       'last_login_at': DateTime.now().toIso8601String(),
     };
 
-    await SupabaseService.updateUserProfile(user.id, profileData);
+    await SupabaseService.updateUserProfile(
+      userId: user.id,
+      updates: profileData,
+    );
   }
 
   /// Sign out
@@ -261,10 +370,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
       
       if (state.user != null) {
         try {
-          await SupabaseService.updateUserProfile(state.user!.id, {
-            ...data,
-            'updated_at': DateTime.now().toIso8601String(),
-          });
+          await SupabaseService.updateUserProfile(
+            userId: state.user!.id,
+            updates: {
+              ...data,
+              'updated_at': DateTime.now().toIso8601String(),
+            },
+          );
         } catch (e) {
           AppLogger.warning('Failed to update profile in database', e);
           // Continue anyway - update local state
@@ -278,6 +390,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
         error: 'Profile update failed',
       );
     }
+  }
+
+  /// Trigger data migration from offline storage to Supabase
+  void _triggerDataMigration(String userId) {
+    // Run migration in background without blocking UI
+    Future.microtask(() async {
+      try {
+        AppLogger.info('Triggering data migration for user: $userId');
+        await SyncService.migrateUserDataToSupabase(userId);
+        AppLogger.info('Data migration completed for user: $userId');
+      } catch (e) {
+        AppLogger.warning('Data migration failed for user: $userId', e);
+        // Don't fail authentication if migration fails
+      }
+    });
   }
 
   /// Clear error
