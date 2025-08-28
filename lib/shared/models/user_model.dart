@@ -6,45 +6,105 @@ part 'user_model.g.dart';
 @JsonSerializable()
 class UserModel extends Equatable {
   final String id;
-  final String email;
-  final String? fullName;
+  final String? email;
+  @JsonKey(name: 'first_name')
+  final String? firstName;
+  @JsonKey(name: 'last_name')
+  final String? lastName;
+  @JsonKey(name: 'avatar_url')
   final String? avatarUrl;
-  final String? phone;
-  final DateTime? dateOfBirth;
-  final String? address;
-  final String? city;
-  final String? country;
-  final String? timezone;
-  final String? language;
-  final bool emailVerified;
-  final bool phoneVerified;
-  final UserRole role;
-  final UserStatus status;
-  final Map<String, dynamic>? metadata;
+  @JsonKey(name: 'google_avatar_url')
+  final String? googleAvatarUrl;
+  @JsonKey(name: 'avatar_updated_at')
+  final DateTime? avatarUpdatedAt;
+  @JsonKey(name: 'subscription_tier')
+  final String? subscriptionTier;
+  @JsonKey(name: 'subscription_status')
+  final String? subscriptionStatus;
+  @JsonKey(name: 'stripe_customer_id')
+  final String? stripeCustomerId;
+  @JsonKey(name: 'stripe_subscription_id')
+  final String? stripeSubscriptionId;
+  @JsonKey(name: 'subscription_start_date')
+  final DateTime? subscriptionStartDate;
+  @JsonKey(name: 'subscription_end_date')
+  final DateTime? subscriptionEndDate;
+  @JsonKey(name: 'trial_end_date')
+  final DateTime? trialEndDate;
+  @JsonKey(name: 'receipts_used_this_month')
+  final int? receiptsUsedThisMonth;
+  @JsonKey(name: 'monthly_reset_date')
+  final DateTime? monthlyResetDate;
+  @JsonKey(name: 'preferred_language')
+  final String? preferredLanguage;
+  @JsonKey(name: 'auto_renewal_enabled')
+  final bool? autoRenewalEnabled;
+  @JsonKey(name: 'auto_renewal_frequency')
+  final String? autoRenewalFrequency;
+  @JsonKey(name: 'billing_email_enabled')
+  final bool? billingEmailEnabled;
+  @JsonKey(name: 'payment_retry_attempts')
+  final int? paymentRetryAttempts;
+  @JsonKey(name: 'grace_period_end_date')
+  final DateTime? gracePeriodEndDate;
+  @JsonKey(name: 'last_payment_attempt')
+  final DateTime? lastPaymentAttempt;
+  @JsonKey(name: 'next_billing_date')
+  final DateTime? nextBillingDate;
+  @JsonKey(name: 'billing_address')
+  final Map<String, dynamic>? billingAddress;
+  @JsonKey(name: 'payment_method_last_four')
+  final String? paymentMethodLastFour;
+  @JsonKey(name: 'payment_method_brand')
+  final String? paymentMethodBrand;
+  @JsonKey(name: 'created_at')
   final DateTime createdAt;
+  @JsonKey(name: 'updated_at')
   final DateTime updatedAt;
-  final DateTime? lastLoginAt;
+
+  // Computed properties for backward compatibility
+  String? get fullName {
+    if (firstName != null && lastName != null) {
+      return '${firstName!} ${lastName!}'.trim();
+    }
+    return firstName ?? lastName;
+  }
+
+  bool get emailVerified => email != null;
+  bool get phoneVerified => false; // Not implemented in profiles table
+  UserRole get role => UserRole.user; // Default role
+  UserStatus get status => UserStatus.active; // Default status
 
   const UserModel({
     required this.id,
-    required this.email,
-    this.fullName,
+    this.email,
+    this.firstName,
+    this.lastName,
     this.avatarUrl,
-    this.phone,
-    this.dateOfBirth,
-    this.address,
-    this.city,
-    this.country,
-    this.timezone,
-    this.language,
-    required this.emailVerified,
-    required this.phoneVerified,
-    required this.role,
-    required this.status,
-    this.metadata,
+    this.googleAvatarUrl,
+    this.avatarUpdatedAt,
+    this.subscriptionTier,
+    this.subscriptionStatus,
+    this.stripeCustomerId,
+    this.stripeSubscriptionId,
+    this.subscriptionStartDate,
+    this.subscriptionEndDate,
+    this.trialEndDate,
+    this.receiptsUsedThisMonth,
+    this.monthlyResetDate,
+    this.preferredLanguage,
+    this.autoRenewalEnabled,
+    this.autoRenewalFrequency,
+    this.billingEmailEnabled,
+    this.paymentRetryAttempts,
+    this.gracePeriodEndDate,
+    this.lastPaymentAttempt,
+    this.nextBillingDate,
+    this.billingAddress,
+    this.paymentMethodLastFour,
+    this.paymentMethodBrand,
     required this.createdAt,
     required this.updatedAt,
-    this.lastLoginAt,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);
@@ -54,44 +114,64 @@ class UserModel extends Equatable {
   UserModel copyWith({
     String? id,
     String? email,
-    String? fullName,
+    String? firstName,
+    String? lastName,
     String? avatarUrl,
-    String? phone,
-    DateTime? dateOfBirth,
-    String? address,
-    String? city,
-    String? country,
-    String? timezone,
-    String? language,
-    bool? emailVerified,
-    bool? phoneVerified,
-    UserRole? role,
-    UserStatus? status,
-    Map<String, dynamic>? metadata,
+    String? googleAvatarUrl,
+    DateTime? avatarUpdatedAt,
+    String? subscriptionTier,
+    String? subscriptionStatus,
+    String? stripeCustomerId,
+    String? stripeSubscriptionId,
+    DateTime? subscriptionStartDate,
+    DateTime? subscriptionEndDate,
+    DateTime? trialEndDate,
+    int? receiptsUsedThisMonth,
+    DateTime? monthlyResetDate,
+    String? preferredLanguage,
+    bool? autoRenewalEnabled,
+    String? autoRenewalFrequency,
+    bool? billingEmailEnabled,
+    int? paymentRetryAttempts,
+    DateTime? gracePeriodEndDate,
+    DateTime? lastPaymentAttempt,
+    DateTime? nextBillingDate,
+    Map<String, dynamic>? billingAddress,
+    String? paymentMethodLastFour,
+    String? paymentMethodBrand,
     DateTime? createdAt,
     DateTime? updatedAt,
-    DateTime? lastLoginAt,
   }) {
     return UserModel(
       id: id ?? this.id,
       email: email ?? this.email,
-      fullName: fullName ?? this.fullName,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
       avatarUrl: avatarUrl ?? this.avatarUrl,
-      phone: phone ?? this.phone,
-      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
-      address: address ?? this.address,
-      city: city ?? this.city,
-      country: country ?? this.country,
-      timezone: timezone ?? this.timezone,
-      language: language ?? this.language,
-      emailVerified: emailVerified ?? this.emailVerified,
-      phoneVerified: phoneVerified ?? this.phoneVerified,
-      role: role ?? this.role,
-      status: status ?? this.status,
-      metadata: metadata ?? this.metadata,
+      googleAvatarUrl: googleAvatarUrl ?? this.googleAvatarUrl,
+      avatarUpdatedAt: avatarUpdatedAt ?? this.avatarUpdatedAt,
+      subscriptionTier: subscriptionTier ?? this.subscriptionTier,
+      subscriptionStatus: subscriptionStatus ?? this.subscriptionStatus,
+      stripeCustomerId: stripeCustomerId ?? this.stripeCustomerId,
+      stripeSubscriptionId: stripeSubscriptionId ?? this.stripeSubscriptionId,
+      subscriptionStartDate: subscriptionStartDate ?? this.subscriptionStartDate,
+      subscriptionEndDate: subscriptionEndDate ?? this.subscriptionEndDate,
+      trialEndDate: trialEndDate ?? this.trialEndDate,
+      receiptsUsedThisMonth: receiptsUsedThisMonth ?? this.receiptsUsedThisMonth,
+      monthlyResetDate: monthlyResetDate ?? this.monthlyResetDate,
+      preferredLanguage: preferredLanguage ?? this.preferredLanguage,
+      autoRenewalEnabled: autoRenewalEnabled ?? this.autoRenewalEnabled,
+      autoRenewalFrequency: autoRenewalFrequency ?? this.autoRenewalFrequency,
+      billingEmailEnabled: billingEmailEnabled ?? this.billingEmailEnabled,
+      paymentRetryAttempts: paymentRetryAttempts ?? this.paymentRetryAttempts,
+      gracePeriodEndDate: gracePeriodEndDate ?? this.gracePeriodEndDate,
+      lastPaymentAttempt: lastPaymentAttempt ?? this.lastPaymentAttempt,
+      nextBillingDate: nextBillingDate ?? this.nextBillingDate,
+      billingAddress: billingAddress ?? this.billingAddress,
+      paymentMethodLastFour: paymentMethodLastFour ?? this.paymentMethodLastFour,
+      paymentMethodBrand: paymentMethodBrand ?? this.paymentMethodBrand,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      lastLoginAt: lastLoginAt ?? this.lastLoginAt,
     );
   }
 
@@ -99,23 +179,33 @@ class UserModel extends Equatable {
   List<Object?> get props => [
         id,
         email,
-        fullName,
+        firstName,
+        lastName,
         avatarUrl,
-        phone,
-        dateOfBirth,
-        address,
-        city,
-        country,
-        timezone,
-        language,
-        emailVerified,
-        phoneVerified,
-        role,
-        status,
-        metadata,
+        googleAvatarUrl,
+        avatarUpdatedAt,
+        subscriptionTier,
+        subscriptionStatus,
+        stripeCustomerId,
+        stripeSubscriptionId,
+        subscriptionStartDate,
+        subscriptionEndDate,
+        trialEndDate,
+        receiptsUsedThisMonth,
+        monthlyResetDate,
+        preferredLanguage,
+        autoRenewalEnabled,
+        autoRenewalFrequency,
+        billingEmailEnabled,
+        paymentRetryAttempts,
+        gracePeriodEndDate,
+        lastPaymentAttempt,
+        nextBillingDate,
+        billingAddress,
+        paymentMethodLastFour,
+        paymentMethodBrand,
         createdAt,
         updatedAt,
-        lastLoginAt,
       ];
 }
 

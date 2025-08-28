@@ -53,11 +53,10 @@ class DateRange {
 }
 
 /// Utility class for date operations
-class DateUtils {
+class AppDateUtils {
   static final DateFormat _dayFormat = DateFormat('yyyy-MM-dd');
   static final DateFormat _displayFormat = DateFormat('MMM d, yyyy');
   static final DateFormat _shortDisplayFormat = DateFormat('MMM d');
-  static final DateFormat _timeFormat = DateFormat('HH:mm');
 
   /// Get current date without time
   static DateTime get today {

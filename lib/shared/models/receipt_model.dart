@@ -21,6 +21,8 @@ class ReceiptModel extends Equatable {
   final String? currency;
   final String? paymentMethod;
   final String? category;
+  @JsonKey(name: 'custom_category_id')
+  final String? customCategoryId;
   final String? description;
   final String? notes;
   final String? imageUrl;
@@ -58,6 +60,7 @@ class ReceiptModel extends Equatable {
     this.currency,
     this.paymentMethod,
     this.category,
+    this.customCategoryId,
     this.description,
     this.notes,
     this.imageUrl,
@@ -100,6 +103,7 @@ class ReceiptModel extends Equatable {
     String? currency,
     String? paymentMethod,
     String? category,
+    String? customCategoryId,
     String? description,
     String? notes,
     String? imageUrl,
@@ -137,6 +141,7 @@ class ReceiptModel extends Equatable {
       currency: currency ?? this.currency,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       category: category ?? this.category,
+      customCategoryId: customCategoryId ?? this.customCategoryId,
       description: description ?? this.description,
       notes: notes ?? this.notes,
       imageUrl: imageUrl ?? this.imageUrl,
@@ -177,6 +182,7 @@ class ReceiptModel extends Equatable {
         currency,
         paymentMethod,
         category,
+        customCategoryId,
         description,
         notes,
         imageUrl,

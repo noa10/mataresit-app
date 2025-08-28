@@ -65,7 +65,7 @@ class GroupedReceipts extends Equatable {
 
   /// Get formatted total amount
   String getFormattedTotal([String currency = 'MYR']) {
-    return '${currency} ${totalAmount.toStringAsFixed(2)}';
+    return '$currency ${totalAmount.toStringAsFixed(2)}';
   }
 
   /// Copy with new values
