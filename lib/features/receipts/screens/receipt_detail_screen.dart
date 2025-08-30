@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../shared/widgets/loading_widget.dart';
+import '../../../shared/widgets/enhanced_image_viewer.dart';
 import '../providers/receipts_provider.dart';
 import '../../../shared/models/receipt_model.dart';
+import '../../categories/providers/categories_provider.dart';
+import '../../teams/providers/teams_provider.dart';
+import '../../../shared/models/team_model.dart';
 
 class ReceiptDetailScreen extends ConsumerWidget {
   final String receiptId;
@@ -19,6 +21,20 @@ class ReceiptDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final receipt = ref.watch(receiptProvider(receiptId));
+
+    // Load categories when the widget is first built with team context
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final currentTeam = ref.read(currentTeamModelProvider);
+      ref.read(categoriesProvider.notifier).loadCategories(teamId: currentTeam?.id);
+    });
+
+    // Listen for team changes and reload categories
+    ref.listen<TeamModel?>(currentTeamModelProvider, (previous, next) {
+      if (previous?.id != next?.id) {
+        // Team changed, reload categories with new team context
+        ref.read(categoriesProvider.notifier).loadCategories(teamId: next?.id);
+      }
+    });
 
     if (receipt == null) {
       return Scaffold(
@@ -92,31 +108,21 @@ class ReceiptDetailScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Receipt Image
+            // Receipt Image with Enhanced Viewer
             if (receipt.imageUrl != null) ...[
               Card(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-                  child: CachedNetworkImage(
+                child: SizedBox(
+                  height: 300,
+                  child: EnhancedImageViewer(
                     imageUrl: receipt.imageUrl!,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => const AspectRatio(
-                      aspectRatio: 16 / 9,
-                      child: LoadingWidget(),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      height: 200,
-                      color: Colors.grey[200],
-                      child: const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.image_not_supported, size: 48, color: Colors.grey),
-                          SizedBox(height: 8),
-                          Text('Image not available', style: TextStyle(color: Colors.grey)),
-                        ],
-                      ),
-                    ),
+                    title: 'Receipt from ${receipt.merchantName ?? 'Unknown Merchant'}',
+                    heroTag: 'receipt_${receipt.id}',
+                    showControls: true,
+                    enableRotation: true,
+                    enableFullscreen: true,
+                    minScale: 0.5,
+                    maxScale: 4.0,
+                    initialScale: 1.0,
                   ),
                 ),
               ),

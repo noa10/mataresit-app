@@ -10,6 +10,7 @@ import 'core/services/connectivity_service.dart';
 import 'core/services/sync_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/performance_service.dart';
+import 'core/services/workspace_preferences_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +44,10 @@ void main() async {
     // Initialize performance optimizations
     await PerformanceService.initialize();
     logger.i('✅ Performance services initialized');
+
+    // Initialize workspace preferences
+    await WorkspacePreferencesService.initialize();
+    logger.i('✅ Workspace preferences initialized');
 
     logger.i('🎉 All services initialized successfully');
   } catch (e) {

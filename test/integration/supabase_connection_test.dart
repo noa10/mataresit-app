@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../lib/core/network/supabase_client.dart';
-import '../../lib/core/constants/app_constants.dart';
-import '../../lib/features/auth/providers/auth_provider.dart';
-import '../../lib/shared/models/user_model.dart';
+import 'package:mataresit_app/core/network/supabase_client.dart';
+import 'package:mataresit_app/core/constants/app_constants.dart';
+import 'package:mataresit_app/features/auth/providers/auth_provider.dart';
+import 'package:mataresit_app/shared/models/user_model.dart';
 
 void main() {
   group('Authentication Flow Tests', () {
@@ -14,19 +14,25 @@ void main() {
       // Initialize Flutter bindings
       TestWidgetsFlutterBinding.ensureInitialized();
 
-      // Mock method channels
-      const MethodChannel('plugins.flutter.io/path_provider')
-          .setMockMethodCallHandler((MethodCall methodCall) async {
-        return '/tmp';
-      });
+      // Mock method channels using the new API
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+        const MethodChannel('plugins.flutter.io/path_provider'),
+        (MethodCall methodCall) async {
+          return '/tmp';
+        },
+      );
 
-      const MethodChannel('plugins.flutter.io/shared_preferences')
-          .setMockMethodCallHandler((MethodCall methodCall) async {
-        if (methodCall.method == 'getAll') {
-          return <String, Object>{};
-        }
-        return null;
-      });
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+        const MethodChannel('plugins.flutter.io/shared_preferences'),
+        (MethodCall methodCall) async {
+          if (methodCall.method == 'getAll') {
+            return <String, Object>{};
+          }
+          return null;
+        },
+      );
     });
 
     setUp(() {
@@ -41,7 +47,7 @@ void main() {
       expect(AppConstants.supabaseUrl, equals('https://mpmkbtsufihzdelrlszs.supabase.co'));
       expect(AppConstants.supabaseAnonKey, isNotEmpty);
       expect(AppConstants.supabaseAnonKey.startsWith('eyJ'), isTrue);
-      print('✅ Supabase configuration is correct');
+      // Supabase configuration verified through assertions above
     });
 
     test('should initialize authentication provider', () async {
@@ -50,7 +56,7 @@ void main() {
 
       expect(authNotifier, isNotNull);
       expect(authState, isNotNull);
-      print('✅ Authentication provider initialized');
+      // Authentication provider verified through assertions above
     });
 
     test('should handle user model creation from auth data', () {
@@ -74,7 +80,7 @@ void main() {
       expect(user.emailVerified, isTrue);
       expect(user.role, equals(UserRole.user));
       expect(user.status, equals(UserStatus.active));
-      print('✅ User model creation works correctly');
+      // User model creation verified through assertions above
     });
 
     test('should handle profile data conversion from database format', () {
@@ -102,7 +108,7 @@ void main() {
         expect(user.subscriptionStatus, equals('active'));
         expect(user.receiptsUsedThisMonth, equals(0));
         expect(user.preferredLanguage, equals('en'));
-        print('✅ Profile data conversion from database format works correctly');
+        // Profile data conversion verified through assertions above
       } catch (e) {
         fail('Profile data conversion failed: $e');
       }
@@ -124,7 +130,7 @@ void main() {
         expect(user.firstName, isNull);
         expect(user.lastName, isNull);
         expect(user.fullName, isNull);
-        print('✅ Profile data with missing fields works correctly');
+        // Profile data with missing fields verified through assertions above
       } catch (e) {
         fail('Profile data with missing fields failed: $e');
       }
@@ -140,7 +146,7 @@ void main() {
       expect(AppConstants.supabaseUrl, isNotEmpty);
       expect(AppConstants.supabaseAnonKey, isNotEmpty);
 
-      print('✅ All authentication components are available');
+      // All authentication components verified through assertions above
     });
   });
 }

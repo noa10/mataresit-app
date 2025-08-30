@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/models/grouped_receipts.dart';
 import '../../../shared/models/receipt_model.dart';
+import '../../../shared/models/category_model.dart';
 import '../../../core/constants/app_constants.dart';
 
+import '../../categories/providers/categories_provider.dart';
+import '../../../shared/widgets/category_display.dart';
 import 'pagination_widget.dart';
 
 /// Widget that displays receipts grouped by date
@@ -184,23 +187,52 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
               // Details row
               Row(
                 children: [
-                  // Category
-                  if (receipt.category != null) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.secondaryContainer,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        receipt.category!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSecondaryContainer,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                  ],
+                  // Category - Use real category data with fallback
+                  Consumer(
+                    builder: (context, ref, child) {
+                      // Watch the categories state to ensure they're loaded
+                      final categoriesState = ref.watch(categoriesProvider);
+
+                      // Find the category from display categories (includes both team and personal)
+                      CategoryModel? category;
+                      if (receipt.customCategoryId != null) {
+                        category = categoriesState.displayCategories
+                            .where((cat) => cat.id == receipt.customCategoryId)
+                            .firstOrNull;
+
+                        // If category not found by ID, try to find by name (case-insensitive)
+                        if (category == null && receipt.category != null) {
+                          category = categoriesState.displayCategories
+                              .where((cat) => cat.name.toLowerCase() == receipt.category!.toLowerCase())
+                              .firstOrNull;
+                        }
+
+                        // If still not found, try partial name matching for common variations
+                        if (category == null && receipt.category != null) {
+                          final categoryName = receipt.category!.toLowerCase();
+
+                          // Handle common category name mappings
+                          if (categoryName.contains('grocer') || categoryName.contains('food')) {
+                            category = categoriesState.displayCategories
+                                .where((cat) => cat.name.toLowerCase().contains('food') ||
+                                              cat.name.toLowerCase().contains('dining') ||
+                                              cat.name.toLowerCase().contains('grocer'))
+                                .firstOrNull;
+                          } else if (categoryName.contains('shop')) {
+                            category = categoriesState.displayCategories
+                                .where((cat) => cat.name.toLowerCase().contains('shop'))
+                                .firstOrNull;
+                          }
+                        }
+                      }
+
+                      return CategoryDisplay(
+                        category: category,
+                        size: CategoryDisplaySize.small,
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8),
                   
                   // Payment method
                   if (receipt.paymentMethod != null) ...[
@@ -226,16 +258,9 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
                 ],
               ),
               
-              // Time if available
-              if (receipt.transactionDate != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  _formatTime(receipt.transactionDate!),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+              // Review status badge
+              const SizedBox(height: 4),
+              _buildReviewStatusBadge(receipt.status),
             ],
           ),
         ),
@@ -289,13 +314,49 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
     }
   }
 
-  String _formatTime(DateTime dateTime) {
-    final hour = dateTime.hour;
-    final minute = dateTime.minute.toString().padLeft(2, '0');
-    final period = hour >= 12 ? 'PM' : 'AM';
-    final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-    
-    return '$displayHour:$minute $period';
+  Widget _buildReviewStatusBadge(ReceiptStatus status) {
+    String text;
+    Color backgroundColor;
+    Color textColor;
+
+    switch (status) {
+      case ReceiptStatus.active: // This maps to "reviewed"
+        text = 'Reviewed';
+        backgroundColor = Colors.blue.withValues(alpha: 0.1);
+        textColor = Colors.blue.shade700;
+        break;
+      case ReceiptStatus.draft: // This maps to "unreviewed"
+        text = 'Unreviewed';
+        backgroundColor = Colors.orange.withValues(alpha: 0.1);
+        textColor = Colors.orange.shade700;
+        break;
+      case ReceiptStatus.archived:
+        text = 'Archived';
+        backgroundColor = Colors.grey.withValues(alpha: 0.1);
+        textColor = Colors.grey.shade700;
+        break;
+      case ReceiptStatus.deleted:
+        text = 'Deleted';
+        backgroundColor = Colors.red.withValues(alpha: 0.1);
+        textColor = Colors.red.shade700;
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: textColor,
+          fontWeight: FontWeight.w600,
+          fontSize: 11,
+        ),
+      ),
+    );
   }
 
 

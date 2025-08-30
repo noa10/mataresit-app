@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'line_item_model.dart';
 
 part 'receipt_model.g.dart';
 
@@ -42,6 +43,8 @@ class ReceiptModel extends Equatable {
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? processedAt;
+  @JsonKey(name: 'line_items')
+  final List<LineItemModel>? lineItems;
 
   const ReceiptModel({
     required this.id,
@@ -80,6 +83,7 @@ class ReceiptModel extends Equatable {
     required this.createdAt,
     required this.updatedAt,
     this.processedAt,
+    this.lineItems,
   });
 
   factory ReceiptModel.fromJson(Map<String, dynamic> json) => _$ReceiptModelFromJson(json);
@@ -123,6 +127,7 @@ class ReceiptModel extends Equatable {
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? processedAt,
+    List<LineItemModel>? lineItems,
   }) {
     return ReceiptModel(
       id: id ?? this.id,
@@ -161,6 +166,7 @@ class ReceiptModel extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       processedAt: processedAt ?? this.processedAt,
+      lineItems: lineItems ?? this.lineItems,
     );
   }
 
@@ -202,6 +208,7 @@ class ReceiptModel extends Equatable {
         createdAt,
         updatedAt,
         processedAt,
+        lineItems,
       ];
 }
 

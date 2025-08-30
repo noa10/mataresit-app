@@ -2,9 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/supabase_client.dart';
 import '../../../core/services/app_logger.dart';
 import '../../../shared/models/receipt_model.dart';
+import '../../../shared/models/line_item_model.dart';
 import '../../../shared/models/grouped_receipts.dart';
 import '../../../shared/utils/date_utils.dart';
 import '../../../features/auth/providers/auth_provider.dart';
+import '../../teams/providers/teams_provider.dart';
 
 /// Receipts state
 class ReceiptsState {
@@ -81,6 +83,15 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
   final Ref ref;
 
   ReceiptsNotifier(this.ref) : super(const ReceiptsState()) {
+    // Listen to workspace changes and refresh receipts when workspace switches
+    ref.listen<CurrentTeamState>(currentTeamProvider, (previous, next) {
+      // Only refresh if the current team actually changed
+      if (previous?.currentTeam?.id != next.currentTeam?.id) {
+        AppLogger.info('🔄 Workspace changed from ${previous?.currentTeam?.name ?? "Personal"} to ${next.currentTeam?.name ?? "Personal"}, refreshing receipts');
+        loadReceipts(refresh: true);
+      }
+    });
+
     loadReceipts();
   }
 
@@ -111,14 +122,31 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
         return;
       }
 
-      AppLogger.info('🔐 Authenticated user: ${user.id} (${user.email})');
+      // Enhanced authentication check - verify session is still valid
+      final currentUser = SupabaseService.client.auth.currentUser;
+      final session = SupabaseService.client.auth.currentSession;
+
+      AppLogger.info('🔐 Enhanced auth check: user: ${user.id} (${user.email}), currentUser: ${currentUser?.id}, hasSession: ${session != null}');
+
+      if (currentUser == null || session == null) {
+        AppLogger.error('❌ Session invalid or expired');
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Session expired. Please login again.',
+        );
+        return;
+      }
 
       // Try to load from database
       List<ReceiptModel> newReceipts = [];
       try {
-        AppLogger.info('🔍 Fetching receipts for user: ${user.id}');
+        // Get current workspace context
+        final currentTeamState = ref.read(currentTeamProvider);
+        final currentTeam = currentTeamState.currentTeam;
 
-        // Build query with date filtering
+        AppLogger.info('🔍 Fetching receipts for user: ${user.id} in workspace: ${currentTeam?.name ?? "Personal"}');
+
+        // Build query with date filtering - Fix duplicate foreign key relationship issue
         var query = SupabaseService.client
             .from('receipts')
             .select('''
@@ -128,9 +156,27 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
                 name,
                 color,
                 icon
+              ),
+              line_items!line_items_receipt_id_fkey (
+                id,
+                receipt_id,
+                description,
+                amount,
+                created_at,
+                updated_at
               )
-            ''')
-            .eq('user_id', user.id);
+            ''');
+
+        // Apply workspace-based filtering
+        if (currentTeam?.id != null) {
+          // When in team context, fetch team receipts using RLS policies
+          AppLogger.info('🧾 Fetching team receipts for team: ${currentTeam!.id} (${currentTeam.name})');
+          query = query.eq('team_id', currentTeam.id);
+        } else {
+          // When in personal workspace, fetch personal receipts (team_id is null)
+          AppLogger.info('🧾 Fetching personal receipts for user: ${user.email}');
+          query = query.eq('user_id', user.id).isFilter('team_id', null);
+        }
 
         // Apply date filtering
         if (state.dateFilter.hasDateRange) {
@@ -162,11 +208,22 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
 
         AppLogger.info('🔍 Raw database response: ${response.toString()}');
 
-        AppLogger.info('📊 Loaded ${(response as List).length} receipts from database');
+        AppLogger.info('📊 Loaded ${(response as List).length} receipts from database for ${currentTeam?.name ?? "Personal"} workspace');
 
         newReceipts = (response as List)
             .map((json) => _mapDatabaseToModel(json))
             .toList();
+
+        // Debug: Log filtering results
+        AppLogger.info('🔍 Workspace filtering results:');
+        AppLogger.info('  - Current workspace: ${currentTeam?.name ?? "Personal"}');
+        AppLogger.info('  - Team ID filter: ${currentTeam?.id ?? "null (personal)"}');
+        AppLogger.info('  - Receipts found: ${newReceipts.length}');
+        if (newReceipts.isNotEmpty) {
+          final teamReceipts = newReceipts.where((r) => r.teamId != null).length;
+          final personalReceipts = newReceipts.where((r) => r.teamId == null).length;
+          AppLogger.info('  - Team receipts: $teamReceipts, Personal receipts: $personalReceipts');
+        }
 
         // Debug: Log category information
         final receiptsWithCategories = newReceipts.where((r) => r.customCategoryId != null).length;
@@ -220,6 +277,15 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
 
   /// Map database JSON to ReceiptModel
   ReceiptModel _mapDatabaseToModel(Map<String, dynamic> json) {
+    // Parse line items if they exist
+    List<LineItemModel>? lineItems;
+    if (json['line_items'] != null) {
+      final lineItemsData = json['line_items'] as List;
+      lineItems = lineItemsData
+          .map((item) => LineItemModel.fromJson(item as Map<String, dynamic>))
+          .toList();
+    }
+
     return ReceiptModel(
       id: json['id'] ?? '',
       userId: json['user_id'] ?? '',
@@ -242,6 +308,7 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
       updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at']) : DateTime.now(),
       ocrData: json['ai_suggestions'],
       metadata: json['fullText'] != null ? {'fullText': json['fullText']} : null,
+      lineItems: lineItems,
     );
   }
 
@@ -296,6 +363,40 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
         isReimbursable: true,
         createdAt: now.subtract(const Duration(days: 1)),
         updatedAt: now.subtract(const Duration(days: 1)),
+        lineItems: [
+          LineItemModel(
+            id: 'line-1-1',
+            receiptId: 'mock-1',
+            description: 'Grande Latte',
+            amount: 5.25,
+            createdAt: now.subtract(const Duration(days: 1)),
+            updatedAt: now.subtract(const Duration(days: 1)),
+          ),
+          LineItemModel(
+            id: 'line-1-2',
+            receiptId: 'mock-1',
+            description: 'Blueberry Muffin',
+            amount: 3.75,
+            createdAt: now.subtract(const Duration(days: 1)),
+            updatedAt: now.subtract(const Duration(days: 1)),
+          ),
+          LineItemModel(
+            id: 'line-1-3',
+            receiptId: 'mock-1',
+            description: 'Americano',
+            amount: 4.50,
+            createdAt: now.subtract(const Duration(days: 1)),
+            updatedAt: now.subtract(const Duration(days: 1)),
+          ),
+          LineItemModel(
+            id: 'line-1-4',
+            receiptId: 'mock-1',
+            description: 'Tax',
+            amount: 2.00,
+            createdAt: now.subtract(const Duration(days: 1)),
+            updatedAt: now.subtract(const Duration(days: 1)),
+          ),
+        ],
       ),
       ReceiptModel(
         id: 'mock-2',
@@ -311,6 +412,24 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
         isReimbursable: false,
         createdAt: now.subtract(const Duration(days: 3)),
         updatedAt: now.subtract(const Duration(days: 3)),
+        lineItems: [
+          LineItemModel(
+            id: 'line-2-1',
+            receiptId: 'mock-2',
+            description: 'Regular Gasoline',
+            amount: 42.50,
+            createdAt: now.subtract(const Duration(days: 3)),
+            updatedAt: now.subtract(const Duration(days: 3)),
+          ),
+          LineItemModel(
+            id: 'line-2-2',
+            receiptId: 'mock-2',
+            description: 'Car Wash',
+            amount: 2.70,
+            createdAt: now.subtract(const Duration(days: 3)),
+            updatedAt: now.subtract(const Duration(days: 3)),
+          ),
+        ],
       ),
       ReceiptModel(
         id: 'mock-3',

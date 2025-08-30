@@ -7,7 +7,7 @@ import '../../features/auth/screens/register_screen.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/dashboard/screens/dashboard_screen.dart';
 import '../../features/receipts/screens/receipts_screen.dart';
-import '../../features/receipts/screens/receipt_detail_screen.dart';
+import '../../features/receipts/screens/modern_receipt_detail_screen.dart';
 import '../../features/receipts/screens/receipt_capture_screen.dart';
 import '../../features/teams/screens/teams_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
@@ -118,7 +118,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: ':id',
                 builder: (context, state) {
                   final receiptId = state.pathParameters['id']!;
-                  return ReceiptDetailScreen(receiptId: receiptId);
+                  return ModernReceiptDetailScreen(receiptId: receiptId);
                 },
               ),
             ],

@@ -50,6 +50,9 @@ ReceiptModel _$ReceiptModelFromJson(Map<String, dynamic> json) => ReceiptModel(
   processedAt: json['processedAt'] == null
       ? null
       : DateTime.parse(json['processedAt'] as String),
+  lineItems: (json['line_items'] as List<dynamic>?)
+      ?.map((e) => LineItemModel.fromJson(e as Map<String, dynamic>))
+      .toList(),
 );
 
 Map<String, dynamic> _$ReceiptModelToJson(ReceiptModel instance) =>
@@ -90,6 +93,7 @@ Map<String, dynamic> _$ReceiptModelToJson(ReceiptModel instance) =>
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
       'processedAt': instance.processedAt?.toIso8601String(),
+      'line_items': instance.lineItems,
     };
 
 const _$ReceiptStatusEnumMap = {
