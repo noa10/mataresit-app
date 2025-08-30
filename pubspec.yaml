@@ -53,6 +53,7 @@ dependencies:
 
   # UI Components
   cached_network_image: ^3.4.1
+  photo_view: ^0.15.0
   
   # AI & Analytics
   google_generative_ai: ^0.4.6
