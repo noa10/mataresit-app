@@ -7,44 +7,76 @@ part 'receipt_model.g.dart';
 @JsonSerializable()
 class ReceiptModel extends Equatable {
   final String id;
+  @JsonKey(name: 'user_id')
   final String userId;
+  @JsonKey(name: 'team_id')
   final String? teamId;
+  @JsonKey(name: 'merchant')
   final String? merchantName;
+  @JsonKey(name: 'merchant_address')
   final String? merchantAddress;
+  @JsonKey(name: 'merchant_phone')
   final String? merchantPhone;
+  @JsonKey(name: 'merchant_email')
   final String? merchantEmail;
+  @JsonKey(name: 'receipt_number')
   final String? receiptNumber;
+  @JsonKey(name: 'date')
   final DateTime? transactionDate;
+  @JsonKey(name: 'total')
   final double? totalAmount;
+  @JsonKey(name: 'tax')
   final double? taxAmount;
+  @JsonKey(name: 'discount_amount')
   final double? discountAmount;
+  @JsonKey(name: 'tip_amount')
   final double? tipAmount;
   final String? currency;
+  @JsonKey(name: 'payment_method')
   final String? paymentMethod;
+  @JsonKey(name: 'predicted_category')
   final String? category;
   @JsonKey(name: 'custom_category_id')
   final String? customCategoryId;
   final String? description;
   final String? notes;
+  @JsonKey(name: 'image_url')
   final String? imageUrl;
+  @JsonKey(name: 'thumbnail_url')
   final String? thumbnailUrl;
+  @JsonKey(name: 'original_file_name')
   final String? originalFileName;
+  @JsonKey(name: 'file_size')
   final int? fileSize;
+  @JsonKey(name: 'mime_type')
   final String? mimeType;
   final ReceiptStatus status;
+  @JsonKey(name: 'processing_status')
   final ProcessingStatus processingStatus;
+  @JsonKey(name: 'ocr_data')
   final Map<String, dynamic>? ocrData;
   final Map<String, dynamic>? metadata;
   final List<String>? tags;
+  @JsonKey(name: 'is_expense')
   final bool isExpense;
+  @JsonKey(name: 'is_reimbursable')
   final bool isReimbursable;
+  @JsonKey(name: 'project_id')
   final String? projectId;
+  @JsonKey(name: 'client_id')
   final String? clientId;
+  @JsonKey(name: 'created_at')
   final DateTime createdAt;
+  @JsonKey(name: 'updated_at')
   final DateTime updatedAt;
+  @JsonKey(name: 'processed_at')
   final DateTime? processedAt;
   @JsonKey(name: 'line_items')
   final List<LineItemModel>? lineItems;
+  @JsonKey(name: 'confidence_scores')
+  final Map<String, dynamic>? confidenceScores;
+  @JsonKey(name: 'ai_suggestions')
+  final Map<String, dynamic>? aiSuggestions;
 
   const ReceiptModel({
     required this.id,
@@ -84,6 +116,8 @@ class ReceiptModel extends Equatable {
     required this.updatedAt,
     this.processedAt,
     this.lineItems,
+    this.confidenceScores,
+    this.aiSuggestions,
   });
 
   factory ReceiptModel.fromJson(Map<String, dynamic> json) => _$ReceiptModelFromJson(json);
@@ -128,6 +162,8 @@ class ReceiptModel extends Equatable {
     DateTime? updatedAt,
     DateTime? processedAt,
     List<LineItemModel>? lineItems,
+    Map<String, dynamic>? confidenceScores,
+    Map<String, dynamic>? aiSuggestions,
   }) {
     return ReceiptModel(
       id: id ?? this.id,
@@ -167,6 +203,8 @@ class ReceiptModel extends Equatable {
       updatedAt: updatedAt ?? this.updatedAt,
       processedAt: processedAt ?? this.processedAt,
       lineItems: lineItems ?? this.lineItems,
+      confidenceScores: confidenceScores ?? this.confidenceScores,
+      aiSuggestions: aiSuggestions ?? this.aiSuggestions,
     );
   }
 
@@ -209,6 +247,8 @@ class ReceiptModel extends Equatable {
         updatedAt,
         processedAt,
         lineItems,
+        confidenceScores,
+        aiSuggestions,
       ];
 }
 

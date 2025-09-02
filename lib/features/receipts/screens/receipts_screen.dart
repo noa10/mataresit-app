@@ -10,10 +10,15 @@ import '../../../shared/models/category_model.dart';
 
 import '../../categories/providers/categories_provider.dart';
 import '../../teams/providers/teams_provider.dart';
+import '../../../shared/utils/currency_utils.dart';
+import '../../../shared/utils/confidence_utils.dart';
 import '../../../shared/widgets/category_display.dart';
+import '../../../shared/widgets/confidence_indicator.dart';
 import '../widgets/date_filter_bar.dart';
 import '../widgets/grouped_receipts_list.dart';
 import '../widgets/pagination_widget.dart';
+import '../widgets/selection_mode_bar.dart';
+import '../widgets/bulk_actions_bar.dart';
 
 class ReceiptsScreen extends ConsumerStatefulWidget {
   const ReceiptsScreen({super.key});
@@ -128,10 +133,21 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
       ),
       body: Column(
         children: [
-          // Date filter bar
-          DateFilterBar(
-            onFilterChanged: () {
-              // Optional: Add any additional logic when filters change
+          // Selection mode bar
+          const AdaptiveSelectionModeBar(),
+
+          // Date filter bar (only show when not in selection mode)
+          Consumer(
+            builder: (context, ref, child) {
+              final receiptsState = ref.watch(receiptsProvider);
+              if (receiptsState.isSelectionMode) {
+                return const SizedBox.shrink();
+              }
+              return DateFilterBar(
+                onFilterChanged: () {
+                  // Optional: Add any additional logic when filters change
+                },
+              );
             },
           ),
 
@@ -142,6 +158,9 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
               child: _buildMainContent(receiptsState),
             ),
           ),
+
+          // Bulk actions bar (only show when items are selected)
+          const BulkActionsBar(),
         ],
       ),
     );
@@ -241,42 +260,112 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
 
 
   Widget _buildReceiptCard(ReceiptModel receipt) {
+    final receiptsState = ref.watch(receiptsProvider);
+    final receiptsNotifier = ref.read(receiptsProvider.notifier);
+    final isSelected = receiptsNotifier.isReceiptSelected(receipt.id);
+
     return Card(
       margin: const EdgeInsets.only(bottom: AppConstants.defaultPadding),
-      child: InkWell(
-        onTap: () => context.push('/receipts/${receipt.id}'),
-        borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-        child: Padding(
-          padding: const EdgeInsets.all(AppConstants.defaultPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header row
-              Row(
-                children: [
-                  // Merchant name or placeholder
-                  Expanded(
-                    child: Text(
-                      receipt.merchantName ?? 'Unknown Merchant',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+      elevation: isSelected ? 4 : 1,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+          border: isSelected
+              ? Border.all(
+                  color: Theme.of(context).colorScheme.primary,
+                  width: 2,
+                )
+              : null,
+        ),
+        child: InkWell(
+          onTap: receiptsState.isSelectionMode
+              ? () => receiptsNotifier.toggleReceiptSelection(receipt.id)
+              : () => context.push('/receipts/${receipt.id}'),
+          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+          child: Padding(
+            padding: const EdgeInsets.all(AppConstants.defaultPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header row
+                Row(
+                  children: [
+                    // Selection checkbox (only show in selection mode)
+                    if (receiptsState.isSelectionMode) ...[
+                      Checkbox(
+                        value: isSelected,
+                        onChanged: (value) => receiptsNotifier.toggleReceiptSelection(receipt.id),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+
+                    // Merchant name or placeholder
+                    Expanded(
+                      child: Text(
+                        receipt.merchantName ?? 'Unknown Merchant',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                  // Amount
-                  if (receipt.totalAmount != null)
-                    Text(
-                      '\$${receipt.totalAmount!.toStringAsFixed(2)}',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).primaryColor,
+
+                    // Amount with standardized currency formatting
+                    if (receipt.totalAmount != null)
+                      Text(
+                        CurrencyUtils.formatCurrencySafe(
+                          receipt.totalAmount,
+                          receipt.currency,
+                          fallbackCurrency: 'MYR',
+                        ),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                  ],
+                ),
+
+                const SizedBox(height: 8),
+
+                // Second row with confidence score (matching React web version layout)
+                Row(
+                  children: [
+                    // Store icon and merchant name (smaller version)
+                    Icon(
+                      Icons.store,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        receipt.merchantName ?? 'Unknown Merchant',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                ],
-              ),
-              
+
+                    // Confidence score indicator (match React web aggregate + ai_suggestions fallback)
+                    Builder(
+                      builder: (context) {
+                        final hasConfidence =
+                            (receipt.aiSuggestions != null && receipt.aiSuggestions!.containsKey('confidence')) ||
+                            (receipt.confidenceScores != null && receipt.confidenceScores!.isNotEmpty);
+                        return CompactConfidenceIndicator(
+                          score: hasConfidence ? ConfidenceUtils.calculateAggregateConfidence(receipt) : null,
+                          loading: !hasConfidence && receipt.processingStatus == ProcessingStatus.processing,
+                        );
+                      },
+                    ),
+                  ],
+                ),
+
               const SizedBox(height: AppConstants.smallPadding),
-              
+
               // Details row
               Row(
                 children: [
@@ -311,12 +400,12 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
                     },
                   ),
                   const SizedBox(width: AppConstants.smallPadding),
-                  
+
                   // Processing status
                   _buildStatusChip(receipt.processingStatus),
-                  
+
                   const Spacer(),
-                  
+
                   // Date
                   Text(
                     timeago.format(receipt.createdAt),
@@ -326,7 +415,7 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
                   ),
                 ],
               ),
-              
+
               // Description if available
               if (receipt.description != null) ...[
                 const SizedBox(height: AppConstants.smallPadding),
@@ -341,13 +430,14 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
           ),
         ),
       ),
+      ),
     );
   }
 
   Widget _buildStatusChip(ProcessingStatus status) {
     Color color;
     IconData icon;
-    
+
     switch (status) {
       case ProcessingStatus.completed:
         color = Colors.green;

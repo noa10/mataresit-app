@@ -3,11 +3,14 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path;
+import '../../../core/constants/app_constants.dart';
 import '../../../core/network/supabase_client.dart';
 import '../../../core/services/app_logger.dart';
-import '../../../core/services/gemini_vision_service.dart';
+import '../../../core/services/ai_vision_service.dart';
+import '../../../core/services/ai_vision_service_manager.dart';
 import '../../../shared/models/receipt_model.dart';
 import '../../../features/auth/providers/auth_provider.dart';
+import '../../teams/providers/teams_provider.dart';
 
 /// Receipt capture state
 class ReceiptCaptureState {
@@ -69,7 +72,66 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
 
       // Step 1: Process image with Gemini Vision
       state = state.copyWith(processingStep: 'Analyzing receipt with AI...');
-      final extractedData = await GeminiVisionService.processReceiptImage(imageFile);
+      
+      ReceiptData extractedData;
+      try {
+        // Check if any AI vision service is configured
+        if (!AIVisionServiceManager.hasConfiguredServices()) {
+          throw Exception('No AI vision services are configured. Please check your API keys (GEMINI_API_KEY or OPENROUTER_API_KEY).');
+        }
+
+        extractedData = await AIVisionServiceManager.processReceiptImage(imageFile);
+        
+        // Log the extraction results
+        AppLogger.info('Receipt processing completed', {
+          'confidence': extractedData.confidence,
+          'hasError': extractedData.hasError,
+          'merchantName': extractedData.merchantName,
+          'totalAmount': extractedData.totalAmount,
+          'lineItemsCount': extractedData.items?.length ?? 0,
+        });
+        
+        // If there's an error in processing, throw an exception
+        if (extractedData.hasError) {
+          throw Exception(extractedData.error ?? 'Unknown processing error');
+        }
+        
+        // Log successful extraction
+        AppLogger.info('AI extraction successful', {
+          'merchant': extractedData.merchantName,
+          'amount': extractedData.totalAmount,
+          'confidence': extractedData.confidence,
+          'lineItems': extractedData.items?.map((item) => {
+            'name': item.name,
+            'totalPrice': item.totalPrice,
+          }).toList() ?? [],
+        });
+        
+      } catch (e) {
+        AppLogger.error('Gemini Vision processing failed', e);
+        
+        // Provide more specific error messages
+        String errorMessage = 'AI processing failed';
+        if (e.toString().contains('API key') || e.toString().contains('not configured')) {
+          errorMessage = 'AI vision services not configured. Please set GEMINI_API_KEY or OPENROUTER_API_KEY environment variable.';
+        } else if (e.toString().contains('UnsupportedUserLocation') || e.toString().contains('geographic restriction') || e.toString().contains('not available in your region')) {
+          errorMessage = 'AI vision services are not available in your region. Fallback services were attempted but also failed.';
+        } else if (e.toString().contains('quota') || e.toString().contains('limit')) {
+          errorMessage = 'AI service quotas exceeded. Please try again later.';
+        } else if (e.toString().contains('network') || e.toString().contains('connection')) {
+          errorMessage = 'Network error. Please check your internet connection.';
+        } else if (e.toString().contains('image')) {
+          errorMessage = 'Image processing failed. Please try with a clearer image.';
+        }
+        
+        state = state.copyWith(
+          isLoading: false,
+          isProcessing: false,
+          error: '$errorMessage: ${e.toString()}',
+          processingStep: null,
+        );
+        rethrow;
+      }
 
       state = state.copyWith(
         extractedData: extractedData,
@@ -85,7 +147,7 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
 
       final imageBytes = await imageFile.readAsBytes();
       final imageUrl = await SupabaseService.uploadFile(
-        bucket: 'receipt-images',
+        bucket: AppConstants.receiptImagesBucket,
         path: filePath,
         bytes: Uint8List.fromList(imageBytes),
         contentType: _getContentType(fileExtension),
@@ -161,47 +223,79 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
 
   /// Save receipt to database
   Future<void> _saveReceiptToDatabase(ReceiptModel receipt) async {
+    // Get current team for team_id
+    final currentTeamState = ref.read(currentTeamProvider);
+
     final receiptData = {
       'id': receipt.id,
       'user_id': receipt.userId,
-      'team_id': receipt.teamId,
-      'merchant_name': receipt.merchantName,
-      'merchant_address': receipt.merchantAddress,
-      'merchant_phone': receipt.merchantPhone,
-      'merchant_email': receipt.merchantEmail,
-      'receipt_number': receipt.receiptNumber,
-      'transaction_date': receipt.transactionDate?.toIso8601String(),
-      'total_amount': receipt.totalAmount,
-      'tax_amount': receipt.taxAmount,
-      'discount_amount': receipt.discountAmount,
-      'tip_amount': receipt.tipAmount,
-      'currency': receipt.currency,
+      'team_id': currentTeamState.currentTeam?.id,
+      'merchant': receipt.merchantName ?? 'Unknown Merchant',
+      'date': receipt.transactionDate?.toIso8601String().split('T')[0] ?? DateTime.now().toIso8601String().split('T')[0],
+      'total': receipt.totalAmount ?? 0.0,
+      'tax': receipt.taxAmount,
+      'currency': receipt.currency ?? 'USD',
       'payment_method': receipt.paymentMethod,
-      'category': receipt.category,
-      'description': receipt.description,
-      'notes': receipt.notes,
-      'image_url': receipt.imageUrl,
-      'thumbnail_url': receipt.thumbnailUrl,
-      'original_file_name': receipt.originalFileName,
-      'file_size': receipt.fileSize,
-      'mime_type': receipt.mimeType,
+      'predicted_category': receipt.category,
       'status': receipt.status.name,
+      'image_url': receipt.imageUrl,
+      'fullText': receipt.notes,
+      'ai_suggestions': receipt.ocrData,
+      'confidence_scores': state.extractedData?.confidence != null ? {
+        'merchant': (state.extractedData!.confidence * 100).round(),
+        'date': (state.extractedData!.confidence * 100).round(),
+        'total': (state.extractedData!.confidence * 100).round(),
+        'tax': (state.extractedData!.confidence * 100).round(),
+        'payment_method': (state.extractedData!.confidence * 100).round(),
+        'line_items': (state.extractedData!.confidence * 100).round(),
+      } : null,
       'processing_status': receipt.processingStatus.name,
-      'ocr_data': receipt.ocrData,
-      'metadata': receipt.metadata,
-      'tags': receipt.tags,
-      'is_expense': receipt.isExpense,
-      'is_reimbursable': receipt.isReimbursable,
-      'project_id': receipt.projectId,
-      'client_id': receipt.clientId,
       'created_at': receipt.createdAt.toIso8601String(),
       'updated_at': receipt.updatedAt.toIso8601String(),
-      'processed_at': receipt.processedAt?.toIso8601String(),
     };
 
+    // Insert receipt first
     await SupabaseService.client
         .from('receipts')
         .insert(receiptData);
+
+    // Insert line items if available from extracted data
+    final extractedData = state.extractedData;
+    if (extractedData?.items != null && extractedData!.items!.isNotEmpty) {
+      AppLogger.info('Saving ${extractedData.items!.length} line items to database');
+
+      final lineItemsData = extractedData.items!.map((item) {
+        return {
+          'receipt_id': receipt.id,
+          'description': item.name,
+          'amount': item.totalPrice ?? item.unitPrice ?? 0.0,
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        };
+      }).where((item) =>
+        // Filter out invalid line items
+        item['description'] != null &&
+        (item['description'] as String).trim().isNotEmpty &&
+        (item['amount'] as double) > 0
+      ).toList();
+
+      if (lineItemsData.isNotEmpty) {
+        try {
+          await SupabaseService.client
+              .from('line_items')
+              .insert(lineItemsData);
+
+          AppLogger.info('Successfully saved ${lineItemsData.length} line items');
+        } catch (e) {
+          AppLogger.error('Failed to save line items', e);
+          // Don't fail the whole operation, just log the error
+        }
+      } else {
+        AppLogger.warning('No valid line items to save after filtering');
+      }
+    } else {
+      AppLogger.info('No line items extracted from AI vision processing');
+    }
   }
 
   /// Get content type from file extension

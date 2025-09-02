@@ -31,6 +31,12 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
       route: AppRoutes.receipts,
     ),
     NavigationItem(
+      icon: Icons.request_page_outlined,
+      selectedIcon: Icons.request_page,
+      label: 'Claims',
+      route: AppRoutes.claims,
+    ),
+    NavigationItem(
       icon: Icons.groups_outlined,
       selectedIcon: Icons.groups,
       label: 'Teams',

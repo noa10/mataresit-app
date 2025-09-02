@@ -27,7 +27,7 @@ class CurrencyConfigs {
   static const Map<String, CurrencyConfig> _configs = {
     'MYR': CurrencyConfig(
       code: 'MYR',
-      symbol: 'RM',
+      symbol: 'MYR',  // Changed from 'RM' to 'MYR' to match React version
       name: 'Malaysian Ringgit',
       decimals: 2,
       locale: 'ms_MY',
@@ -152,6 +152,49 @@ class ValidationResult {
 
 /// Comprehensive currency utilities
 class CurrencyUtils {
+  /// Safely formats currency with proper error handling
+  /// Matches the React web version's formatCurrencySafe function
+  ///
+  /// [amount] - The amount to format
+  /// [currencyCode] - The currency code to use
+  /// [locale] - The locale for formatting (default: 'en_US')
+  /// [fallbackCurrency] - Fallback currency if the provided one fails
+  ///
+  /// Returns formatted currency string
+  static String formatCurrencySafe(
+    double? amount,
+    String? currencyCode, {
+    String locale = 'en_US',
+    String fallbackCurrency = 'MYR',
+  }) {
+    final safeAmount = amount ?? 0.0;
+    final normalizedCurrency = normalizeCurrencyCode(currencyCode);
+
+    try {
+      final config = CurrencyConfigs.getConfig(normalizedCurrency);
+      final formatter = NumberFormat.currency(
+        locale: locale,
+        symbol: config.symbol,
+        decimalDigits: config.decimals,
+      );
+      return formatter.format(safeAmount);
+    } catch (error) {
+      // Try with fallback currency
+      try {
+        final fallbackConfig = CurrencyConfigs.getConfig(fallbackCurrency);
+        final fallbackFormatter = NumberFormat.currency(
+          locale: locale,
+          symbol: fallbackConfig.symbol,
+          decimalDigits: fallbackConfig.decimals,
+        );
+        return fallbackFormatter.format(safeAmount);
+      } catch (fallbackError) {
+        // Last resort: return a simple formatted number with currency symbol
+        return '$fallbackCurrency ${safeAmount.toStringAsFixed(2)}';
+      }
+    }
+  }
+
   /// Enhanced currency formatting with multiple options
   static String formatCurrency(
     double amount,
@@ -355,10 +398,42 @@ class CurrencyUtils {
     return amount;
   }
 
-  /// Normalize currency code
+  /// Normalize currency code to ISO 4217 with common symbol mappings
   static String normalizeCurrencyCode(String? currency) {
-    if (currency == null || currency.isEmpty) return 'MYR';
-    return currency.toUpperCase().trim();
+    if (currency == null) return 'MYR';
+    final trimmed = currency.trim();
+    if (trimmed.isEmpty) return 'MYR';
+    final upper = trimmed.toUpperCase();
+
+    switch (upper) {
+      case 'RM':
+        return 'MYR';
+      case r'$':
+        return 'USD';
+      case 'S\$':
+        return 'SGD';
+      case '€':
+        return 'EUR';
+      case '£':
+        return 'GBP';
+      case '¥':
+        // Ambiguous between JPY/CNY; prefer JPY for symbols
+        return 'JPY';
+      case 'RMB':
+        return 'CNY';
+      case '฿':
+        return 'THB';
+      case 'RP':
+        return 'IDR';
+      case '₱':
+        return 'PHP';
+      case '₫':
+        return 'VND';
+      default:
+        final regex = RegExp(r'^[A-Z]{3}$');
+        if (regex.hasMatch(upper)) return upper;
+        return 'MYR';
+    }
   }
 
   /// Get currency symbol

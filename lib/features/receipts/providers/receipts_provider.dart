@@ -7,6 +7,7 @@ import '../../../shared/models/grouped_receipts.dart';
 import '../../../shared/utils/date_utils.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../teams/providers/teams_provider.dart';
+import '../../categories/providers/categories_provider.dart';
 
 /// Receipts state
 class ReceiptsState {
@@ -21,6 +22,11 @@ class ReceiptsState {
   final ReceiptStatus? statusFilter;
   final bool isGroupedView;
 
+  // Selection mode properties
+  final bool isSelectionMode;
+  final Set<String> selectedReceiptIds;
+  final bool isPerformingBulkOperation;
+
   const ReceiptsState({
     this.receipts = const [],
     this.groupedReceipts = const [],
@@ -32,6 +38,9 @@ class ReceiptsState {
     this.searchQuery = '',
     this.statusFilter,
     this.isGroupedView = true,
+    this.isSelectionMode = false,
+    this.selectedReceiptIds = const {},
+    this.isPerformingBulkOperation = false,
   }) : dateFilter = dateFilter ?? const DateRange(option: DateFilterOption.last7Days);
 
   ReceiptsState copyWith({
@@ -45,6 +54,9 @@ class ReceiptsState {
     String? searchQuery,
     ReceiptStatus? statusFilter,
     bool? isGroupedView,
+    bool? isSelectionMode,
+    Set<String>? selectedReceiptIds,
+    bool? isPerformingBulkOperation,
     bool clearError = false,
     bool clearStatusFilter = false,
   }) {
@@ -59,6 +71,9 @@ class ReceiptsState {
       searchQuery: searchQuery ?? this.searchQuery,
       statusFilter: clearStatusFilter ? null : (statusFilter ?? this.statusFilter),
       isGroupedView: isGroupedView ?? this.isGroupedView,
+      isSelectionMode: isSelectionMode ?? this.isSelectionMode,
+      selectedReceiptIds: selectedReceiptIds ?? this.selectedReceiptIds,
+      isPerformingBulkOperation: isPerformingBulkOperation ?? this.isPerformingBulkOperation,
     );
   }
 
@@ -309,6 +324,8 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
       ocrData: json['ai_suggestions'],
       metadata: json['fullText'] != null ? {'fullText': json['fullText']} : null,
       lineItems: lineItems,
+      confidenceScores: json['confidence_scores'] as Map<String, dynamic>?,
+      aiSuggestions: json['ai_suggestions'] as Map<String, dynamic>?,
     );
   }
 
@@ -582,6 +599,148 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
   /// Get receipt count for a specific date
   int getReceiptCountForDate(DateTime date) {
     return getReceiptsForDate(date).length;
+  }
+
+  // Selection Mode Methods
+
+  /// Toggle selection mode on/off
+  void toggleSelectionMode() {
+    state = state.copyWith(
+      isSelectionMode: !state.isSelectionMode,
+      selectedReceiptIds: const {}, // Clear selections when toggling
+    );
+  }
+
+  /// Select or deselect a receipt
+  void toggleReceiptSelection(String receiptId) {
+    final selectedIds = Set<String>.from(state.selectedReceiptIds);
+
+    if (selectedIds.contains(receiptId)) {
+      selectedIds.remove(receiptId);
+    } else {
+      selectedIds.add(receiptId);
+    }
+
+    state = state.copyWith(selectedReceiptIds: selectedIds);
+  }
+
+  /// Select all visible receipts
+  void selectAllReceipts() {
+    final allReceiptIds = state.receipts.map((receipt) => receipt.id).toSet();
+    state = state.copyWith(selectedReceiptIds: allReceiptIds);
+  }
+
+  /// Clear all selections
+  void clearSelection() {
+    state = state.copyWith(selectedReceiptIds: const {});
+  }
+
+  /// Get count of selected receipts
+  int get selectedCount => state.selectedReceiptIds.length;
+
+  /// Check if all receipts are selected
+  bool get isAllSelected =>
+      state.receipts.isNotEmpty &&
+      state.selectedReceiptIds.length == state.receipts.length;
+
+  /// Check if a receipt is selected
+  bool isReceiptSelected(String receiptId) {
+    return state.selectedReceiptIds.contains(receiptId);
+  }
+
+  // Bulk Operations
+
+  /// Bulk delete selected receipts
+  Future<void> bulkDeleteReceipts() async {
+    if (state.selectedReceiptIds.isEmpty) return;
+
+    state = state.copyWith(isPerformingBulkOperation: true);
+
+    try {
+      final receiptIds = state.selectedReceiptIds.toList();
+      int successCount = 0;
+      int failureCount = 0;
+
+      // Delete receipts one by one and count results
+      for (final receiptId in receiptIds) {
+        try {
+          await SupabaseService.client
+              .from('receipts')
+              .delete()
+              .eq('id', receiptId);
+          successCount++;
+        } catch (e) {
+          AppLogger.error('Failed to delete receipt $receiptId: $e');
+          failureCount++;
+        }
+      }
+
+      // Remove successfully deleted receipts from state
+      if (successCount > 0) {
+        final updatedReceipts = state.receipts
+            .where((receipt) => !receiptIds.contains(receipt.id))
+            .toList();
+
+        final groupedReceipts = state.isGroupedView
+            ? ReceiptGrouper.groupReceiptsByDate(updatedReceipts)
+            : <GroupedReceipts>[];
+
+        state = state.copyWith(
+          receipts: updatedReceipts,
+          groupedReceipts: groupedReceipts,
+          isSelectionMode: false,
+          selectedReceiptIds: const {},
+          isPerformingBulkOperation: false,
+        );
+
+        AppLogger.info('✅ Successfully deleted $successCount receipt(s)');
+      }
+
+      if (failureCount > 0) {
+        AppLogger.warning('⚠️ Failed to delete $failureCount receipt(s)');
+      }
+    } catch (e) {
+      AppLogger.error('❌ Bulk delete failed: $e');
+      state = state.copyWith(
+        isPerformingBulkOperation: false,
+        error: 'Failed to delete receipts: $e',
+      );
+    }
+  }
+
+  /// Bulk assign category to selected receipts
+  Future<void> bulkAssignCategory(String? categoryId) async {
+    if (state.selectedReceiptIds.isEmpty) return;
+
+    state = state.copyWith(isPerformingBulkOperation: true);
+
+    try {
+      final receiptIds = state.selectedReceiptIds.toList();
+      final updatedCount = await ref.read(categoriesProvider.notifier)
+          .bulkAssignCategory(receiptIds, categoryId: categoryId);
+
+      if (updatedCount > 0) {
+        // Refresh receipts to get updated category assignments
+        await loadReceipts(refresh: true);
+
+        state = state.copyWith(
+          isSelectionMode: false,
+          selectedReceiptIds: const {},
+          isPerformingBulkOperation: false,
+        );
+
+        AppLogger.info('✅ Successfully assigned category to $updatedCount receipt(s)');
+      } else {
+        state = state.copyWith(isPerformingBulkOperation: false);
+        AppLogger.warning('⚠️ No receipts were updated');
+      }
+    } catch (e) {
+      AppLogger.error('❌ Bulk category assignment failed: $e');
+      state = state.copyWith(
+        isPerformingBulkOperation: false,
+        error: 'Failed to assign category: $e',
+      );
+    }
   }
 }
 

@@ -7,7 +7,11 @@ import '../../../shared/models/category_model.dart';
 import '../../../core/constants/app_constants.dart';
 
 import '../../categories/providers/categories_provider.dart';
+import '../providers/receipts_provider.dart';
+import '../../../shared/utils/currency_utils.dart';
+import '../../../shared/utils/confidence_utils.dart';
 import '../../../shared/widgets/category_display.dart';
+import '../../../shared/widgets/confidence_indicator.dart';
 import 'pagination_widget.dart';
 
 /// Widget that displays receipts grouped by date
@@ -46,7 +50,7 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= 
+    if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       widget.onLoadMore?.call();
     }
@@ -92,12 +96,12 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
       children: [
         // Date header
         _buildDateHeader(group),
-        
+
         const SizedBox(height: 12),
-        
+
         // Receipts for this date
         ...group.receipts.map((receipt) => _buildReceiptCard(receipt)),
-        
+
         const SizedBox(height: 24),
       ],
     );
@@ -149,41 +153,73 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
   }
 
   Widget _buildReceiptCard(ReceiptModel receipt) {
+    final receiptsState = ref.watch(receiptsProvider);
+    final receiptsNotifier = ref.read(receiptsProvider.notifier);
+    final isSelected = receiptsNotifier.isReceiptSelected(receipt.id);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: () => context.push('/receipts/${receipt.id}'),
-        borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-        child: Padding(
-          padding: const EdgeInsets.all(AppConstants.defaultPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header row
-              Row(
-                children: [
-                  // Merchant name or placeholder
-                  Expanded(
-                    child: Text(
-                      receipt.merchantName ?? 'Unknown Merchant',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+      elevation: isSelected ? 4 : 1,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+          border: isSelected
+              ? Border.all(
+                  color: Theme.of(context).colorScheme.primary,
+                  width: 2,
+                )
+              : null,
+        ),
+        child: InkWell(
+          onTap: receiptsState.isSelectionMode
+              ? () => receiptsNotifier.toggleReceiptSelection(receipt.id)
+              : () => context.push('/receipts/${receipt.id}'),
+          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+          child: Padding(
+            padding: const EdgeInsets.all(AppConstants.defaultPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header row
+                Row(
+                  children: [
+                    // Selection checkbox (only show in selection mode)
+                    if (receiptsState.isSelectionMode) ...[
+                      Checkbox(
+                        value: isSelected,
+                        onChanged: (value) => receiptsNotifier.toggleReceiptSelection(receipt.id),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+
+                    // Merchant name or placeholder
+                    Expanded(
+                      child: Text(
+                        receipt.merchantName ?? 'Unknown Merchant',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                  // Amount
-                  Text(
-                    '${receipt.currency ?? 'MYR'} ${receipt.totalAmount?.toStringAsFixed(2) ?? '0.00'}',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
+
+                    // Amount with standardized currency formatting
+                    Text(
+                      CurrencyUtils.formatCurrencySafe(
+                        receipt.totalAmount,
+                        receipt.currency,
+                        fallbackCurrency: 'MYR',
+                      ),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              
+                  ],
+                ),
+
               const SizedBox(height: 8),
-              
+
               // Details row
               Row(
                 children: [
@@ -233,7 +269,7 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
                     },
                   ),
                   const SizedBox(width: 8),
-                  
+
                   // Payment method
                   if (receipt.paymentMethod != null) ...[
                     Icon(
@@ -250,14 +286,33 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
                     ),
                     const SizedBox(width: 8),
                   ],
-                  
+
                   const Spacer(),
-                  
+
+                  // Confidence score indicator (match React web aggregate + ai_suggestions fallback)
+                  Builder(
+                    builder: (context) {
+                      final hasConfidence =
+                          (receipt.aiSuggestions != null && receipt.aiSuggestions!.containsKey('confidence')) ||
+                          (receipt.confidenceScores != null && receipt.confidenceScores!.isNotEmpty);
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CompactConfidenceIndicator(
+                            score: hasConfidence ? ConfidenceUtils.calculateAggregateConfidence(receipt) : null,
+                            loading: !hasConfidence && receipt.processingStatus == ProcessingStatus.processing,
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                      );
+                    },
+                  ),
+
                   // Status indicator
                   _buildStatusIndicator(receipt.status),
                 ],
               ),
-              
+
               // Review status badge
               const SizedBox(height: 4),
               _buildReviewStatusBadge(receipt.status),
@@ -265,13 +320,14 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
           ),
         ),
       ),
+      ),
     );
   }
 
   Widget _buildStatusIndicator(ReceiptStatus status) {
     Color color;
     IconData icon;
-    
+
     switch (status) {
       case ReceiptStatus.active:
         color = Colors.green;
@@ -290,7 +346,7 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
         icon = Icons.delete;
         break;
     }
-    
+
     return Icon(
       icon,
       size: 16,

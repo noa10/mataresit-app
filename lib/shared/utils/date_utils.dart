@@ -270,6 +270,44 @@ class AppDateUtils {
     }
   }
 
+  /// Format date for display (e.g., "Jan 15, 2024")
+  static String formatDate(DateTime date) {
+    return _displayFormat.format(date);
+  }
+
+  /// Format date and time for display (e.g., "Jan 15, 2024 at 2:30 PM")
+  static String formatDateTime(DateTime dateTime) {
+    final dateFormat = DateFormat('MMM d, yyyy');
+    final timeFormat = DateFormat('h:mm a');
+    return '${dateFormat.format(dateTime)} at ${timeFormat.format(dateTime)}';
+  }
+
+  /// Format relative date (e.g., "2 days ago", "Today", "Yesterday")
+  static String formatRelativeDate(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dateOnly = DateTime(date.year, date.month, date.day);
+
+    final difference = today.difference(dateOnly).inDays;
+
+    if (difference == 0) {
+      return 'Today';
+    } else if (difference == 1) {
+      return 'Yesterday';
+    } else if (difference < 7) {
+      return '$difference days ago';
+    } else if (difference < 30) {
+      final weeks = (difference / 7).floor();
+      return '$weeks week${weeks == 1 ? '' : 's'} ago';
+    } else if (difference < 365) {
+      final months = (difference / 30).floor();
+      return '$months month${months == 1 ? '' : 's'} ago';
+    } else {
+      final years = (difference / 365).floor();
+      return '$years year${years == 1 ? '' : 's'} ago';
+    }
+  }
+
   /// Get default date range (last 7 days)
   static DateRange get defaultDateRange => getDateRangeForOption(DateFilterOption.last7Days);
 }

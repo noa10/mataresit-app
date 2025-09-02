@@ -127,9 +127,11 @@ class SyncService {
     switch (operation) {
       case 'create':
       case 'update':
+        // Map the data to match database schema
+        final mappedData = _mapReceiptDataForDatabase(data);
         await SupabaseService.client
             .from('receipts')
-            .upsert(data);
+            .upsert(mappedData);
         break;
       case 'delete':
         await SupabaseService.client
@@ -138,6 +140,39 @@ class SyncService {
             .eq('id', entityId);
         break;
     }
+  }
+
+  /// Map receipt data from model format to database format
+  static Map<String, dynamic> _mapReceiptDataForDatabase(Map<String, dynamic> data) {
+    final mappedData = Map<String, dynamic>.from(data);
+
+    // Map category to predicted_category
+    if (mappedData.containsKey('category')) {
+      mappedData['predicted_category'] = mappedData.remove('category');
+    }
+
+    // Map other fields that might have different names
+    if (mappedData.containsKey('merchantName')) {
+      mappedData['merchant'] = mappedData.remove('merchantName');
+    }
+
+    if (mappedData.containsKey('transactionDate')) {
+      mappedData['date'] = mappedData.remove('transactionDate');
+    }
+
+    if (mappedData.containsKey('totalAmount')) {
+      mappedData['total'] = mappedData.remove('totalAmount');
+    }
+
+    if (mappedData.containsKey('taxAmount')) {
+      mappedData['tax'] = mappedData.remove('taxAmount');
+    }
+
+    if (mappedData.containsKey('paymentMethod')) {
+      mappedData['payment_method'] = mappedData.remove('paymentMethod');
+    }
+
+    return mappedData;
   }
 
   /// Sync team operation
@@ -308,7 +343,7 @@ class SyncService {
           .eq('user_id', userId);
 
       // Create maps for easier comparison
-      final localReceiptMap = {for (var r in localReceipts) r.id: r.toJson()};
+      final localReceiptMap = {for (var r in localReceipts) r.id: _mapReceiptDataForDatabase(r.toJson())};
       final remoteReceiptMap = {for (var r in remoteReceipts) r['id']: r};
 
       // Find receipts that exist locally but not remotely
@@ -363,20 +398,32 @@ class SyncService {
   /// Sync remote receipts to local storage
   static Future<void> _syncRemoteReceipts(DateTime lastSync) async {
     try {
-      final response = await SupabaseService.client
+      // Get current user to filter receipts properly
+      final user = SupabaseService.client.auth.currentUser;
+      if (user == null) {
+        _logger.w('No authenticated user found, skipping receipt sync');
+        return;
+      }
+
+      // Build query with proper user filtering (similar to React app)
+      var query = SupabaseService.client
           .from('receipts')
           .select()
+          .eq('user_id', user.id)  // Filter by current user
           .gte('updated_at', lastSync.toIso8601String())
           .order('updated_at', ascending: false);
+
+      final response = await query;
 
       for (final receiptData in response as List) {
         final receipt = ReceiptModel.fromJson(receiptData);
         await OfflineDatabaseService.saveReceipt(receipt);
       }
 
-      _logger.d('Synced ${response.length} receipts from remote');
+      _logger.d('Synced ${response.length} receipts from remote for user ${user.email}');
     } catch (e) {
       _logger.e('Failed to sync remote receipts: $e');
+      rethrow;
     }
   }
 

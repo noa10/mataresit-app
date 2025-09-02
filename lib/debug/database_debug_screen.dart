@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../features/teams/providers/teams_provider.dart';
+import '../core/services/ai_vision_service_manager.dart';
+import '../core/constants/app_constants.dart';
 
 class DatabaseDebugScreen extends ConsumerStatefulWidget {
   const DatabaseDebugScreen({super.key});
@@ -20,6 +23,58 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
     });
   }
 
+  Future<void> _testGeminiService() async {
+    setState(() {
+      _isLoading = true;
+      _debugOutput = '';
+    });
+
+    try {
+      _addOutput('Testing Gemini Vision Service...');
+      
+      // Check environment variables
+      _addOutput('\n=== Environment Check ===');
+      _addOutput('Raw .env GEMINI_API_KEY: ${dotenv.env['GEMINI_API_KEY']?.isNotEmpty == true ? 'SET' : 'NOT SET'}');
+      _addOutput('AppConstants.geminiApiKey: ${AppConstants.geminiApiKey.isNotEmpty ? 'SET (${AppConstants.geminiApiKey.substring(0, 10)}...)' : 'NOT SET'}');
+      
+      // Check service status
+      final status = AIVisionServiceManager.getServicesStatus();
+      _addOutput('\n=== AI Vision Services Status ===');
+      _addOutput('Services Status: $status');
+
+      if (!AIVisionServiceManager.hasConfiguredServices()) {
+        _addOutput('❌ No AI vision services are configured');
+        _addOutput('Please ensure GEMINI_API_KEY or OPENROUTER_API_KEY is set in .env file');
+        return;
+      }
+      
+      _addOutput('✅ Gemini service is configured');
+      
+      // Test basic connection
+      try {
+        _addOutput('\n=== Connection Test ===');
+        _addOutput('Testing all configured services...');
+        final testResults = await AIVisionServiceManager.testAllConnections();
+        for (final entry in testResults.entries) {
+          if (entry.value.startsWith('OK:')) {
+            _addOutput('✅ ${entry.key}: ${entry.value}');
+          } else {
+            _addOutput('❌ ${entry.key}: ${entry.value}');
+          }
+        }
+      } catch (e) {
+        _addOutput('❌ Connection test failed: $e');
+      }
+      
+    } catch (e) {
+      _addOutput('Gemini test failed: $e');
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
   Future<void> _testDatabaseConnection() async {
     setState(() {
       _isLoading = true;
@@ -31,7 +86,7 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
       _addOutput('Testing database connection...');
 
       // Test basic connection
-      _addOutput('Supabase client initialized: ${client.supabaseUrl}');
+      _addOutput('Supabase client initialized');
       _addOutput('Auth user: ${client.auth.currentUser?.id ?? 'Not authenticated'}');
 
       // Test current team
@@ -62,8 +117,8 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
             '_limit': 5,
             '_offset': 0,
           });
-          _addOutput('RPC get_team_claims exists, returned: ${rpcResponse.runtimeType}');
           _addOutput('RPC response: $rpcResponse');
+          _addOutput('RPC response length: ${rpcResponse.length}');
         } catch (e) {
           _addOutput('RPC get_team_claims failed: $e');
         }
@@ -76,8 +131,8 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
               .eq('team_id', teamId)
               .limit(5);
           _addOutput('Direct claims query returned: ${directResponse.runtimeType}');
-          _addOutput('Direct response length: ${directResponse is List ? directResponse.length : 'Not a list'}');
-          if (directResponse is List && directResponse.isNotEmpty) {
+          _addOutput('Direct response length: ${directResponse.length}');
+          if (directResponse.isNotEmpty) {
             _addOutput('First claim: ${directResponse.first}');
           }
         } catch (e) {
@@ -91,8 +146,8 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
               .select('*')
               .limit(5);
           _addOutput('All claims query returned: ${allClaimsResponse.runtimeType}');
-          _addOutput('All claims length: ${allClaimsResponse is List ? allClaimsResponse.length : 'Not a list'}');
-          if (allClaimsResponse is List && allClaimsResponse.isNotEmpty) {
+          _addOutput('All claims length: ${allClaimsResponse.length}');
+          if (allClaimsResponse.isNotEmpty) {
             _addOutput('First claim (any team): ${allClaimsResponse.first}');
           }
         } catch (e) {
@@ -126,6 +181,17 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            ElevatedButton(
+              onPressed: _isLoading ? null : _testGeminiService,
+              child: _isLoading 
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Test Gemini Vision Service'),
+            ),
+            const SizedBox(height: 8),
             ElevatedButton(
               onPressed: _isLoading ? null : _testDatabaseConnection,
               child: _isLoading 

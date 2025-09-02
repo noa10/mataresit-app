@@ -12,6 +12,9 @@ import '../services/receipt_service.dart';
 import '../../categories/providers/categories_provider.dart';
 import '../../teams/providers/teams_provider.dart';
 import '../../../shared/models/team_model.dart';
+import '../../../shared/models/category_model.dart';
+import '../../../shared/widgets/category_display.dart';
+import '../../../shared/utils/currency_utils.dart';
 
 class ModernReceiptDetailScreen extends ConsumerStatefulWidget {
   final String receiptId;
@@ -79,7 +82,8 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
     _paymentMethodController.text = receipt.paymentMethod ?? '';
     _notesController.text = receipt.notes ?? '';
     _selectedDate = receipt.transactionDate;
-    _selectedCurrency = receipt.currency ?? 'MYR';
+    // Normalize to ISO currency codes so dropdown value always matches items
+    _selectedCurrency = CurrencyUtils.normalizeCurrencyCode(receipt.currency);
   }
 
   void _toggleEdit() {
@@ -99,7 +103,7 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
         'total_amount': double.tryParse(_totalController.text) ?? 0.0,
         'tax_amount': double.tryParse(_taxController.text) ?? 0.0,
         'transaction_date': _selectedDate?.toIso8601String(),
-        'currency': _selectedCurrency ?? 'MYR',
+        'currency': CurrencyUtils.normalizeCurrencyCode(_selectedCurrency),
         'payment_method': _paymentMethodController.text.trim(),
         'notes': _notesController.text.trim(),
         'status': ReceiptStatus.active,
@@ -412,8 +416,7 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
                               children: [
                                 _buildStatusChip(receipt.status),
                                 const SizedBox(width: 8),
-                                if (receipt.category != null)
-                                  _buildCategoryChip(receipt.category!),
+                                _buildCategoryWidget(receipt),
                               ],
                             ),
                           ),
@@ -655,33 +658,32 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
     );
   }
 
-  Widget _buildCategoryChip(String category) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: colorScheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.tag,
-            size: 14,
-            color: colorScheme.onSecondaryContainer,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            category,
-            style: TextStyle(
-              color: colorScheme.onSecondaryContainer,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
+  Widget _buildCategoryWidget(ReceiptModel receipt) {
+    return Consumer(
+      builder: (context, ref, child) {
+        // Watch the categories state to ensure they're loaded
+        final categoriesState = ref.watch(categoriesProvider);
+
+        // Find the category from display categories (includes both team and personal)
+        CategoryModel? category;
+        if (receipt.customCategoryId != null) {
+          category = categoriesState.displayCategories
+              .where((cat) => cat.id == receipt.customCategoryId)
+              .firstOrNull;
+
+          // If category not found by ID, try to find by name (case-insensitive)
+          if (category == null && receipt.category != null) {
+            category = categoriesState.displayCategories
+                .where((cat) => cat.name.toLowerCase() == receipt.category!.toLowerCase())
+                .firstOrNull;
+          }
+        }
+
+        return CategoryDisplay(
+          category: category,
+          size: CategoryDisplaySize.small,
+        );
+      },
     );
   }
 
@@ -781,7 +783,11 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
                   const SizedBox(width: 16),
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      initialValue: _selectedCurrency ?? 'MYR',
+                      initialValue: (() {
+                        const allowed = ['MYR', 'USD', 'EUR', 'GBP', 'SGD'];
+                        final normalized = CurrencyUtils.normalizeCurrencyCode(_selectedCurrency);
+                        return allowed.contains(normalized) ? normalized : 'MYR';
+                      })(),
                       style: theme.textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w500,
                       ),

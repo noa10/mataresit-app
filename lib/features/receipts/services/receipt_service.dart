@@ -5,6 +5,39 @@ import '../../../shared/models/line_item_model.dart';
 class ReceiptService {
   static final _supabase = Supabase.instance.client;
 
+  /// Map receipt data from model format to database format
+  static Map<String, dynamic> _mapReceiptDataForDatabase(Map<String, dynamic> data) {
+    final mappedData = Map<String, dynamic>.from(data);
+
+    // Map category to predicted_category
+    if (mappedData.containsKey('category')) {
+      mappedData['predicted_category'] = mappedData.remove('category');
+    }
+
+    // Map other fields that might have different names
+    if (mappedData.containsKey('merchantName')) {
+      mappedData['merchant'] = mappedData.remove('merchantName');
+    }
+
+    if (mappedData.containsKey('transactionDate')) {
+      mappedData['date'] = mappedData.remove('transactionDate');
+    }
+
+    if (mappedData.containsKey('totalAmount')) {
+      mappedData['total'] = mappedData.remove('totalAmount');
+    }
+
+    if (mappedData.containsKey('taxAmount')) {
+      mappedData['tax'] = mappedData.remove('taxAmount');
+    }
+
+    if (mappedData.containsKey('paymentMethod')) {
+      mappedData['payment_method'] = mappedData.remove('paymentMethod');
+    }
+
+    return mappedData;
+  }
+
   /// Update a receipt with its line items
   static Future<ReceiptModel> updateReceiptWithLineItems({
     required String receiptId,
@@ -16,10 +49,11 @@ class ReceiptService {
       await _supabase.rpc('begin_transaction');
 
       // Update the receipt
+      final mappedReceiptData = _mapReceiptDataForDatabase(receiptData);
       await _supabase
           .from('receipts')
           .update({
-            ...receiptData,
+            ...mappedReceiptData,
             'updated_at': DateTime.now().toIso8601String(),
           })
           .eq('id', receiptId)
