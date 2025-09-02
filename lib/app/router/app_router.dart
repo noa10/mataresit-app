@@ -9,11 +9,14 @@ import '../../features/dashboard/screens/dashboard_screen.dart';
 import '../../features/receipts/screens/receipts_screen.dart';
 import '../../features/receipts/screens/modern_receipt_detail_screen.dart';
 import '../../features/receipts/screens/receipt_capture_screen.dart';
+import '../../features/claims/screens/claims_screen.dart';
+import '../../features/claims/screens/claim_detail_screen.dart';
 import '../../features/teams/screens/teams_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../features/analytics/screens/analytics_screen.dart';
 import '../../shared/widgets/main_navigation_wrapper.dart';
 import '../../shared/widgets/splash_screen.dart';
+import '../../debug/database_debug_screen.dart';
 
 /// App routes
 class AppRoutes {
@@ -28,6 +31,8 @@ class AppRoutes {
   static const String receipts = '/receipts';
   static const String receiptDetail = '/receipts/:id';
   static const String receiptCapture = '/receipts/capture';
+  static const String claims = '/claims';
+  static const String claimDetail = '/claims/:id';
   static const String teams = '/teams';
   static const String settings = '/settings';
   static const String analytics = '/analytics';
@@ -38,6 +43,9 @@ class AppRoutes {
   static const String adminUsers = '/admin/users';
   static const String adminReceipts = '/admin/receipts';
   static const String adminAnalytics = '/admin/analytics';
+
+  // Debug routes
+  static const String debugDatabase = '/debug/database';
 }
 
 /// Router provider
@@ -124,6 +132,19 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
           GoRoute(
+            path: AppRoutes.claims,
+            builder: (context, state) => const ClaimsScreen(),
+            routes: [
+              GoRoute(
+                path: ':id',
+                builder: (context, state) {
+                  final claimId = state.pathParameters['id']!;
+                  return ClaimDetailScreen(claimId: claimId);
+                },
+              ),
+            ],
+          ),
+          GoRoute(
             path: AppRoutes.teams,
             builder: (context, state) => const TeamsScreen(),
           ),
@@ -136,6 +157,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const AnalyticsScreen(),
           ),
         ],
+      ),
+
+      // Debug routes (outside shell for easier access)
+      GoRoute(
+        path: AppRoutes.debugDatabase,
+        builder: (context, state) => const DatabaseDebugScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

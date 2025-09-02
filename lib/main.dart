@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:logger/logger.dart';
 import 'app/app.dart';
 import 'core/network/supabase_client.dart';
-import 'core/services/gemini_vision_service.dart';
+import 'core/services/ai_vision_service_manager.dart';
 import 'core/services/offline_database_service.dart';
 import 'core/services/connectivity_service.dart';
 import 'core/services/sync_service.dart';
@@ -18,13 +19,40 @@ void main() async {
   final logger = Logger();
 
   try {
+    // Load environment variables from .env file
+    logger.i('🔧 Loading environment variables...');
+    try {
+      await dotenv.load(fileName: ".env");
+      logger.i('✅ Environment variables loaded successfully');
+      logger.i('📋 GEMINI_API_KEY loaded: ${dotenv.env['GEMINI_API_KEY']?.isNotEmpty == true ? 'YES' : 'NO'}');
+    } catch (envError) {
+      logger.w('⚠️ Failed to load .env file: $envError');
+      logger.i('ℹ️ Will use default environment variables');
+    }
+
     // Initialize core services first (required for app to function)
     logger.i('🔧 Initializing core services...');
     await SupabaseService.initialize();
     logger.i('✅ Supabase initialized');
 
-    GeminiVisionService.initialize();
-    logger.i('✅ Gemini Vision initialized');
+    // Initialize AI Vision Services (optional service)
+    try {
+      AIVisionServiceManager.initialize();
+      logger.i('✅ AI Vision Service Manager initialized');
+
+      // Check configuration status
+      if (AIVisionServiceManager.hasConfiguredServices()) {
+        final services = AIVisionServiceManager.getConfiguredServiceNames();
+        logger.i('✅ AI Vision services configured: ${services.join(', ')}');
+      } else {
+        logger.w('⚠️ No AI Vision services are configured - receipt processing will not work');
+        logger.w('ℹ️ Please set GEMINI_API_KEY or OPENROUTER_API_KEY environment variable');
+      }
+    } catch (e) {
+      logger.e('❌ AI Vision Service Manager initialization failed: $e');
+      logger.w('ℹ️ Receipt AI processing will not be available');
+      // Continue anyway - app should still work without AI processing
+    }
 
     // Initialize offline capabilities
     await OfflineDatabaseService.initialize();

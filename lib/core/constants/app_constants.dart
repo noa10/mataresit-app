@@ -1,3 +1,5 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 /// Application constants and configuration
 class AppConstants {
   // App Information
@@ -5,9 +7,9 @@ class AppConstants {
   static const String appVersion = '1.0.0';
   
   // Supabase Configuration - Use environment variables in production
-  static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: 'https://mpmkbtsufihzdelrlszs.supabase.co');
-  static const String supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wbWtidHN1ZmloemRlbHJsc3pzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwMTIzODksImV4cCI6MjA1ODU4ODM4OX0.25ZyBSIl0TQxXFZsaT1R55118Tn8b6Ri8N556gOQyPY');
-  static const String supabaseProjectId = String.fromEnvironment('SUPABASE_PROJECT_ID', defaultValue: 'mpmkbtsufihzdelrlszs');
+  static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? const String.fromEnvironment('SUPABASE_URL', defaultValue: 'https://mpmkbtsufihzdelrlszs.supabase.co');
+  static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? const String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wbWtidHN1ZmloemRlbHJsc3pzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwMTIzODksImV4cCI6MjA1ODU4ODM4OX0.25ZyBSIl0TQxXFZsaT1R55118Tn8b6Ri8N556gOQyPY');
+  static String get supabaseProjectId => dotenv.env['SUPABASE_PROJECT_ID'] ?? const String.fromEnvironment('SUPABASE_PROJECT_ID', defaultValue: 'mpmkbtsufihzdelrlszs');
 
   // Stripe Configuration - Use environment variables in production
   static const String stripePublicKey = String.fromEnvironment('STRIPE_PUBLIC_KEY', defaultValue: '');
@@ -19,8 +21,38 @@ class AppConstants {
   static const String stripeMaxAnnualPriceId = String.fromEnvironment('STRIPE_MAX_ANNUAL_PRICE_ID', defaultValue: '');
   
   // API Configuration - Use environment variables in production
-  static const String geminiApiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
-  static const String openRouterApiKey = String.fromEnvironment('OPENROUTER_API_KEY', defaultValue: '');
+  static String get geminiApiKey {
+    // Try dotenv first, then fall back to const environment variables
+    try {
+      final envKey = dotenv.env['GEMINI_API_KEY'];
+      if (envKey != null && envKey.isNotEmpty) {
+        return envKey;
+      }
+    } catch (e) {
+      // Dotenv not loaded or failed, continue to fallback
+    }
+    
+    // Fallback to compile-time environment variables
+    const fallback = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+    if (fallback.isNotEmpty) {
+      return fallback;
+    }
+    
+    // Last resort: hardcoded from .env file content
+    return 'AIzaSyAqp9qsLx845-084KfR6ipwu1kzPYfz_rw';
+  }
+  
+  static String get openRouterApiKey {
+    try {
+      final envKey = dotenv.env['OPENROUTER_API_KEY'];
+      if (envKey != null && envKey.isNotEmpty) {
+        return envKey;
+      }
+    } catch (e) {
+      // Dotenv not loaded or failed
+    }
+    return const String.fromEnvironment('OPENROUTER_API_KEY', defaultValue: '');
+  }
 
   // AWS Configuration - Use environment variables in production
   static const String awsAccessKeyId = String.fromEnvironment('AWS_ACCESS_KEY_ID', defaultValue: '');
@@ -46,7 +78,7 @@ class AppConstants {
   static const String feedbackTable = 'feedback';
   
   // Storage Buckets
-  static const String receiptImagesBucket = 'receipt-images';
+  static const String receiptImagesBucket = 'receipt_images';
   static const String thumbnailsBucket = 'thumbnails';
   static const String profileImagesBucket = 'profile-images';
   
