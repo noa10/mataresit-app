@@ -21,7 +21,7 @@ TeamInvitationModel _$TeamInvitationModelFromJson(Map<String, dynamic> json) =>
           : DateTime.parse(json['accepted_at'] as String),
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
-      invitationAttempts: json['invitation_attempts'] as int?,
+      invitationAttempts: (json['invitation_attempts'] as num?)?.toInt(),
       lastSentAt: json['last_sent_at'] == null
           ? null
           : DateTime.parse(json['last_sent_at'] as String),
@@ -33,27 +33,27 @@ TeamInvitationModel _$TeamInvitationModelFromJson(Map<String, dynamic> json) =>
     );
 
 Map<String, dynamic> _$TeamInvitationModelToJson(
-        TeamInvitationModel instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'team_id': instance.teamId,
-      'email': instance.email,
-      'role': _$TeamRoleEnumMap[instance.role]!,
-      'invited_by': instance.invitedBy,
-      'status': _$InvitationStatusEnumMap[instance.status]!,
-      'token': instance.token,
-      'expires_at': instance.expiresAt.toIso8601String(),
-      'accepted_at': instance.acceptedAt?.toIso8601String(),
-      'created_at': instance.createdAt.toIso8601String(),
-      'updated_at': instance.updatedAt.toIso8601String(),
-      'invitation_attempts': instance.invitationAttempts,
-      'last_sent_at': instance.lastSentAt?.toIso8601String(),
-      'custom_message': instance.customMessage,
-      'permissions': instance.permissions,
-      'metadata': instance.metadata,
-      'team_name': instance.teamName,
-      'invited_by_name': instance.invitedByName,
-    };
+  TeamInvitationModel instance,
+) => <String, dynamic>{
+  'id': instance.id,
+  'team_id': instance.teamId,
+  'email': instance.email,
+  'role': _$TeamRoleEnumMap[instance.role]!,
+  'invited_by': instance.invitedBy,
+  'status': _$InvitationStatusEnumMap[instance.status]!,
+  'token': instance.token,
+  'expires_at': instance.expiresAt.toIso8601String(),
+  'accepted_at': instance.acceptedAt?.toIso8601String(),
+  'created_at': instance.createdAt.toIso8601String(),
+  'updated_at': instance.updatedAt.toIso8601String(),
+  'invitation_attempts': instance.invitationAttempts,
+  'last_sent_at': instance.lastSentAt?.toIso8601String(),
+  'custom_message': instance.customMessage,
+  'permissions': instance.permissions,
+  'metadata': instance.metadata,
+  'team_name': instance.teamName,
+  'invited_by_name': instance.invitedByName,
+};
 
 const _$TeamRoleEnumMap = {
   TeamRole.owner: 'owner',

@@ -19,10 +19,12 @@ class AppErrorWidget extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
               icon ?? Icons.error_outline,
               size: 64,
               color: Theme.of(context).colorScheme.error,
@@ -53,6 +55,7 @@ class AppErrorWidget extends StatelessWidget {
               ),
             ],
           ],
+        ),
         ),
       ),
     );

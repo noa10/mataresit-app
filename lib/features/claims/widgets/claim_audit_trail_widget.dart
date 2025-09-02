@@ -195,6 +195,10 @@ class ClaimAuditTrailWidget extends ConsumerWidget {
         backgroundColor = Colors.grey.shade100;
         textColor = Colors.grey.shade700;
         break;
+      case ClaimStatus.submitted:
+        backgroundColor = Colors.blue.shade100;
+        textColor = Colors.blue.shade700;
+        break;
       case ClaimStatus.pending:
         backgroundColor = Colors.orange.shade100;
         textColor = Colors.orange.shade700;

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/models/claim_model.dart';
 import '../../../shared/models/claim_requests.dart';
 import '../providers/claims_provider.dart';
+import '../../../shared/utils/currency_utils.dart';
 
 class EditClaimDialog extends ConsumerStatefulWidget {
   final ClaimModel claim;
@@ -36,7 +37,7 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
     _descriptionController = TextEditingController(text: widget.claim.description ?? '');
     _amountController = TextEditingController(text: widget.claim.amount.toString());
     _categoryController = TextEditingController(text: widget.claim.category ?? '');
-    _currency = widget.claim.currency;
+    _currency = CurrencyUtils.normalizeCurrencyCode(widget.claim.currency);
     _priority = widget.claim.priority;
   }
 
@@ -214,12 +215,16 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: _currency,
+                              initialValue: (() {
+                                const allowed = ['MYR', 'USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'SGD'];
+                                final normalized = CurrencyUtils.normalizeCurrencyCode(_currency);
+                                return allowed.contains(normalized) ? normalized : 'MYR';
+                              })(),
                               decoration: const InputDecoration(
                                 labelText: 'Currency',
                                 border: OutlineInputBorder(),
                               ),
-                              items: ['USD', 'EUR', 'GBP', 'CAD', 'AUD']
+                              items: ['MYR', 'USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'SGD']
                                   .map((currency) => DropdownMenuItem(
                                         value: currency,
                                         child: Text(currency),
@@ -228,7 +233,7 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
                               onChanged: (value) {
                                 if (value != null) {
                                   setState(() {
-                                    _currency = value;
+                                    _currency = CurrencyUtils.normalizeCurrencyCode(value);
                                   });
                                 }
                               },
@@ -253,7 +258,7 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
 
                       // Priority dropdown
                       DropdownButtonFormField<ClaimPriority>(
-                        value: _priority,
+                        initialValue: _priority,
                         decoration: const InputDecoration(
                           labelText: 'Priority',
                           border: OutlineInputBorder(),

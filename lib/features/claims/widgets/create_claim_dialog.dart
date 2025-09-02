@@ -6,6 +6,7 @@ import '../../../shared/models/receipt_model.dart';
 import '../providers/claims_provider.dart';
 import '../../teams/providers/teams_provider.dart';
 import '../../receipts/providers/receipts_provider.dart';
+import '../../../shared/utils/currency_utils.dart';
 
 class CreateClaimDialog extends ConsumerStatefulWidget {
   final VoidCallback? onClaimCreated;
@@ -55,13 +56,13 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
     if (_selectedReceipts.isNotEmpty) {
       final total = _selectedReceipts.fold<double>(
         0.0,
-        (sum, receipt) => sum + receipt.total,
+        (sum, receipt) => sum + (receipt.totalAmount ?? 0.0),
       );
       _amountController.text = total.toStringAsFixed(2);
-      
+
       // Set currency from first receipt if available
-      if (_selectedReceipts.first.currency.isNotEmpty) {
-        _currency = _selectedReceipts.first.currency;
+      if (_selectedReceipts.first.currency != null && _selectedReceipts.first.currency!.isNotEmpty) {
+        _currency = CurrencyUtils.normalizeCurrencyCode(_selectedReceipts.first.currency!);
       }
     }
   }
@@ -84,8 +85,8 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
   Future<void> _createClaim() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final currentTeam = ref.read(currentTeamProvider);
-    if (currentTeam == null) {
+    final currentTeamState = ref.read(currentTeamProvider);
+    if (currentTeamState.currentTeam == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a team first'),
@@ -107,16 +108,16 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
           'receiptId': receipt.id,
           'url': receipt.imageUrl,
           'metadata': {
-            'merchant': receipt.merchant,
-            'date': receipt.date.toIso8601String(),
-            'total': receipt.total,
+            'merchant': receipt.merchantName,
+            'date': receipt.transactionDate?.toIso8601String(),
+            'total': receipt.totalAmount,
             'currency': receipt.currency,
           }
         };
       }).map((attachment) => attachment.toString()).toList();
 
       final request = CreateClaimRequest(
-        teamId: currentTeam.id,
+        teamId: currentTeamState.currentTeam!.id,
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim().isEmpty 
             ? null 
@@ -274,12 +275,16 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: _currency,
+                              initialValue: (() {
+                                const allowed = ['MYR', 'USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'SGD'];
+                                final normalized = CurrencyUtils.normalizeCurrencyCode(_currency);
+                                return allowed.contains(normalized) ? normalized : 'MYR';
+                              })(),
                               decoration: const InputDecoration(
                                 labelText: 'Currency',
                                 border: OutlineInputBorder(),
                               ),
-                              items: ['USD', 'EUR', 'GBP', 'CAD', 'AUD']
+                              items: ['MYR', 'USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'SGD']
                                   .map((currency) => DropdownMenuItem(
                                         value: currency,
                                         child: Text(currency),
@@ -288,7 +293,7 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
                               onChanged: (value) {
                                 if (value != null) {
                                   setState(() {
-                                    _currency = value;
+                                    _currency = CurrencyUtils.normalizeCurrencyCode(value);
                                   });
                                 }
                               },
@@ -313,7 +318,7 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
 
                       // Priority dropdown
                       DropdownButtonFormField<ClaimPriority>(
-                        value: _priority,
+                        initialValue: _priority,
                         decoration: const InputDecoration(
                           labelText: 'Priority',
                           border: OutlineInputBorder(),
@@ -424,9 +429,9 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
           ...(_selectedReceipts.map((receipt) => Card(
                 child: ListTile(
                   leading: const Icon(Icons.receipt),
-                  title: Text(receipt.merchant),
+                  title: Text(receipt.merchantName ?? 'Unknown Merchant'),
                   subtitle: Text(
-                    '${receipt.date.day}/${receipt.date.month}/${receipt.date.year} • ${receipt.currency} ${receipt.total.toStringAsFixed(2)}',
+                    '${receipt.transactionDate?.day ?? ''}/${receipt.transactionDate?.month ?? ''}/${receipt.transactionDate?.year ?? ''} • ${receipt.currency ?? 'USD'} ${(receipt.totalAmount ?? 0.0).toStringAsFixed(2)}',
                   ),
                   trailing: IconButton(
                     icon: const Icon(Icons.remove_circle, color: Colors.red),
@@ -472,9 +477,9 @@ class _ReceiptPickerDialog extends ConsumerWidget {
                   final isSelected = selectedReceipts.contains(receipt);
                   
                   return CheckboxListTile(
-                    title: Text(receipt.merchant),
+                    title: Text(receipt.merchantName ?? 'Unknown Merchant'),
                     subtitle: Text(
-                      '${receipt.date.day}/${receipt.date.month}/${receipt.date.year} • ${receipt.currency} ${receipt.total.toStringAsFixed(2)}',
+                      '${receipt.transactionDate?.day ?? ''}/${receipt.transactionDate?.month ?? ''}/${receipt.transactionDate?.year ?? ''} • ${receipt.currency ?? 'USD'} ${(receipt.totalAmount ?? 0.0).toStringAsFixed(2)}',
                     ),
                     value: isSelected,
                     onChanged: (selected) {
