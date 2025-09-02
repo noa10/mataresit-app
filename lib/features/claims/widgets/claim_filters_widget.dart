@@ -196,7 +196,7 @@ class _ClaimFiltersWidgetState extends State<ClaimFiltersWidget> {
             return FilterChip(
               label: Text(priority.name.toUpperCase()),
               selected: isSelected,
-              selectedColor: chipColor.withOpacity(0.2),
+              selectedColor: chipColor.withValues(alpha: 0.2),
               checkmarkColor: chipColor,
               onSelected: (selected) {
                 setState(() {

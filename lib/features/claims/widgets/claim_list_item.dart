@@ -177,6 +177,11 @@ class ClaimListItem extends StatelessWidget {
         textColor = Colors.grey.shade700;
         icon = Icons.edit;
         break;
+      case ClaimStatus.submitted:
+        backgroundColor = Colors.blue.shade100;
+        textColor = Colors.blue.shade700;
+        icon = Icons.send;
+        break;
       case ClaimStatus.pending:
         backgroundColor = Colors.orange.shade100;
         textColor = Colors.orange.shade700;
@@ -254,9 +259,9 @@ class ClaimListItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

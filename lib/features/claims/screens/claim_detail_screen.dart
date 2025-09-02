@@ -5,7 +5,6 @@ import '../../../shared/widgets/app_bar_with_actions.dart';
 import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
 import '../../../shared/models/claim_model.dart';
-import '../../../shared/models/claim_requests.dart';
 import '../../../shared/utils/currency_utils.dart';
 import '../../../shared/utils/date_utils.dart';
 import '../providers/claims_provider.dart';
@@ -457,6 +456,11 @@ class _ClaimDetailScreenState extends ConsumerState<ClaimDetailScreen> {
         textColor = Colors.grey.shade700;
         icon = Icons.edit;
         break;
+      case ClaimStatus.submitted:
+        backgroundColor = Colors.blue.shade100;
+        textColor = Colors.blue.shade700;
+        icon = Icons.send;
+        break;
       case ClaimStatus.pending:
         backgroundColor = Colors.orange.shade100;
         textColor = Colors.orange.shade700;
@@ -534,9 +538,9 @@ class _ClaimDetailScreenState extends ConsumerState<ClaimDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
