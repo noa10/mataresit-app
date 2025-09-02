@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logger/logger.dart';
 import '../../../shared/widgets/app_bar_with_actions.dart';
 import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
@@ -23,6 +24,7 @@ class ClaimsScreen extends ConsumerStatefulWidget {
 
 class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
   final ScrollController _scrollController = ScrollController();
+  final Logger _logger = Logger();
   bool _showFilters = false;
 
   @override
@@ -33,7 +35,11 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
     // Load claims when screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(claimsProvider.notifier).loadClaims(refresh: true);
-      ref.read(claimsProvider.notifier).loadClaimStats();
+      // Load stats but don't fail if it doesn't work
+      ref.read(claimsProvider.notifier).loadClaimStats().catchError((error) {
+        // Silently ignore stats loading errors for now
+        _logger.w('Stats loading failed (expected if database not set up): $error');
+      });
     });
   }
 
@@ -75,9 +81,9 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
   @override
   Widget build(BuildContext context) {
     final claimsState = ref.watch(claimsProvider);
-    final currentTeam = ref.watch(currentTeamProvider);
+    final currentTeamState = ref.watch(currentTeamProvider);
 
-    if (currentTeam == null) {
+    if (currentTeamState.currentTeam == null) {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Claims'),
@@ -94,7 +100,7 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
     return Scaffold(
       appBar: AppBarWithActions(
         title: 'Claims',
-        subtitle: currentTeam.name,
+        subtitle: currentTeamState.currentTeam!.name,
         actions: [
           IconButton(
             icon: Icon(
@@ -110,7 +116,10 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: () {
               ref.read(claimsProvider.notifier).loadClaims(refresh: true);
-              ref.read(claimsProvider.notifier).loadClaimStats();
+              ref.read(claimsProvider.notifier).loadClaimStats().catchError((error) {
+                // Silently ignore stats loading errors for now
+                _logger.w('Stats loading failed (expected if database not set up): $error');
+              });
             },
             tooltip: 'Refresh',
           ),
@@ -157,6 +166,13 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
     }
 
     if (state.error != null && state.claims.isEmpty) {
+      // Check if this is a database setup issue
+      if (state.error!.contains('relation "public.claims" does not exist') ||
+          state.error!.contains('get_team_claim_stats') ||
+          state.error!.contains('PGRST202')) {
+        return _buildDatabaseSetupMessage();
+      }
+
       return AppErrorWidget(
         error: state.error!,
         onRetry: () {
@@ -183,7 +199,12 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
     return RefreshIndicator(
       onRefresh: () async {
         await ref.read(claimsProvider.notifier).loadClaims(refresh: true);
-        await ref.read(claimsProvider.notifier).loadClaimStats();
+        try {
+          await ref.read(claimsProvider.notifier).loadClaimStats();
+        } catch (error) {
+          // Silently ignore stats loading errors for now
+          _logger.w('Stats loading failed (expected if database not set up): $error');
+        }
       },
       child: ListView.builder(
         controller: _scrollController,
@@ -210,10 +231,11 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
                 // TODO: Show edit dialog
               },
               onSubmit: (claim) async {
+                final messenger = ScaffoldMessenger.of(context);
                 try {
                   await ref.read(claimsProvider.notifier).submitClaim(claim.id);
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       const SnackBar(
                         content: Text('Claim submitted for review'),
                         backgroundColor: Colors.green,
@@ -222,7 +244,7 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
                   }
                 } catch (e) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       SnackBar(
                         content: Text('Failed to submit claim: $e'),
                         backgroundColor: Colors.red,
@@ -232,12 +254,13 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
                 }
               },
               onApprove: (claim) async {
+                final messenger = ScaffoldMessenger.of(context);
                 try {
                   await ref.read(claimsProvider.notifier).approveClaim(
                     ClaimApprovalRequest(claimId: claim.id),
                   );
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       const SnackBar(
                         content: Text('Claim approved'),
                         backgroundColor: Colors.green,
@@ -246,7 +269,7 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
                   }
                 } catch (e) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       SnackBar(
                         content: Text('Failed to approve claim: $e'),
                         backgroundColor: Colors.red,
@@ -259,6 +282,7 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
                 // TODO: Show rejection dialog with reason
               },
               onDelete: (claim) async {
+                final messenger = ScaffoldMessenger.of(context);
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
@@ -286,7 +310,7 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
                   try {
                     await ref.read(claimsProvider.notifier).deleteClaim(claim.id);
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      messenger.showSnackBar(
                         const SnackBar(
                           content: Text('Claim deleted'),
                           backgroundColor: Colors.green,
@@ -295,7 +319,7 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
                     }
                   } catch (e) {
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      messenger.showSnackBar(
                         SnackBar(
                           content: Text('Failed to delete claim: $e'),
                           backgroundColor: Colors.red,
@@ -308,6 +332,83 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildDatabaseSetupMessage() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.construction,
+              size: 80,
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Claims Database Setup Required',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'The claims feature requires database tables and functions to be set up in Supabase.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Next Steps:',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '1. Set up the claims table in Supabase\n'
+                    '2. Create the necessary RPC functions\n'
+                    '3. Configure row-level security policies\n'
+                    '4. Refresh this screen',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                ref.read(claimsProvider.notifier).clearError();
+                ref.read(claimsProvider.notifier).loadClaims(refresh: true);
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try Again'),
+            ),
+          ],
+        ),
       ),
     );
   }

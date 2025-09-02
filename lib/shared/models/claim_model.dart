@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:logger/logger.dart';
 
 part 'claim_model.g.dart';
 
@@ -7,6 +9,8 @@ part 'claim_model.g.dart';
 enum ClaimStatus {
   @JsonValue('draft')
   draft,
+  @JsonValue('submitted')
+  submitted,
   @JsonValue('pending')
   pending,
   @JsonValue('under_review')
@@ -34,6 +38,7 @@ enum ClaimPriority {
 /// Main claim model matching React app structure
 @JsonSerializable()
 class ClaimModel extends Equatable {
+  static final Logger _logger = Logger();
   final String id;
   @JsonKey(name: 'team_id')
   final String teamId;
@@ -80,6 +85,12 @@ class ClaimModel extends Equatable {
   final String? reviewerName;
   @JsonKey(name: 'approver_name')
   final String? approverName;
+  
+  // Multilingual fields (optional)
+  @JsonKey(name: 'title_ms')
+  final String? titleMs;
+  @JsonKey(name: 'description_ms')
+  final String? descriptionMs;
 
   const ClaimModel({
     required this.id,
@@ -98,18 +109,85 @@ class ClaimModel extends Equatable {
     this.approvedBy,
     this.approvedAt,
     this.rejectionReason,
-    required this.metadata,
-    required this.attachments,
+    this.metadata = const {},
+    this.attachments = const [],
     required this.createdAt,
     required this.updatedAt,
     this.claimantName,
     this.claimantEmail,
     this.reviewerName,
     this.approverName,
+    this.titleMs,
+    this.descriptionMs,
   });
 
-  factory ClaimModel.fromJson(Map<String, dynamic> json) =>
-      _$ClaimModelFromJson(json);
+  factory ClaimModel.fromJson(Map<String, dynamic> json) {
+    _logger.i('  Parsing claim JSON for: ${json['id']}');
+
+    // Handle attachments field that might be stored as JSON string or array
+    List<dynamic> attachments = const [];
+    if (json['attachments'] != null) {
+      _logger.i('    Raw attachments: ${json['attachments']} (${json['attachments'].runtimeType})');
+      if (json['attachments'] is String) {
+        try {
+          // Try to parse JSON string
+          final parsed = jsonDecode(json['attachments']);
+          if (parsed is List) {
+            attachments = List<dynamic>.from(parsed);
+          } else {
+            _logger.w('    Warning: Parsed attachments is not a list: $parsed');
+            attachments = const [];
+          }
+        } catch (e) {
+          // If parsing fails, treat as empty array
+          _logger.w('    Warning: Failed to parse attachments JSON: $e');
+          attachments = const [];
+        }
+      } else if (json['attachments'] is List) {
+        attachments = List<dynamic>.from(json['attachments']);
+      } else {
+        _logger.w('    Warning: Unexpected attachments type: ${json['attachments'].runtimeType}');
+        attachments = const [];
+      }
+    }
+    _logger.i('    Processed attachments: $attachments');
+    
+    // Handle metadata field that might be stored as JSON string or map
+    Map<String, dynamic> metadata = const {};
+    if (json['metadata'] != null) {
+      _logger.i('    Raw metadata: ${json['metadata']} (${json['metadata'].runtimeType})');
+      if (json['metadata'] is String) {
+        try {
+          // Try to parse JSON string
+          final parsed = jsonDecode(json['metadata']);
+          if (parsed is Map) {
+            metadata = Map<String, dynamic>.from(parsed);
+          } else {
+            _logger.w('    Warning: Parsed metadata is not a map: $parsed');
+            metadata = const {};
+          }
+        } catch (e) {
+          // If parsing fails, treat as empty map
+          _logger.w('    Warning: Failed to parse metadata JSON: $e');
+          metadata = const {};
+        }
+      } else if (json['metadata'] is Map) {
+        metadata = Map<String, dynamic>.from(json['metadata']);
+      } else {
+        _logger.w('    Warning: Unexpected metadata type: ${json['metadata'].runtimeType}');
+        metadata = const {};
+      }
+    }
+    _logger.i('    Processed metadata: $metadata');
+
+    // Create a modified JSON object for the generated parser
+    final modifiedJson = Map<String, dynamic>.from(json);
+    modifiedJson['attachments'] = attachments;
+    modifiedJson['metadata'] = metadata;
+
+    _logger.i('    Calling generated parser with processed data');
+    return _$ClaimModelFromJson(modifiedJson);
+  }
 
   Map<String, dynamic> toJson() => _$ClaimModelToJson(this);
 
@@ -139,6 +217,8 @@ class ClaimModel extends Equatable {
     String? claimantEmail,
     String? reviewerName,
     String? approverName,
+    String? titleMs,
+    String? descriptionMs,
   }) {
     return ClaimModel(
       id: id ?? this.id,
@@ -165,6 +245,8 @@ class ClaimModel extends Equatable {
       claimantEmail: claimantEmail ?? this.claimantEmail,
       reviewerName: reviewerName ?? this.reviewerName,
       approverName: approverName ?? this.approverName,
+      titleMs: titleMs ?? this.titleMs,
+      descriptionMs: descriptionMs ?? this.descriptionMs,
     );
   }
 
@@ -175,16 +257,18 @@ class ClaimModel extends Equatable {
   bool get canSubmit => status == ClaimStatus.draft && title.isNotEmpty && amount > 0;
 
   /// Check if claim can be approved
-  bool get canApprove => status == ClaimStatus.pending || status == ClaimStatus.underReview;
+  bool get canApprove => status == ClaimStatus.submitted || status == ClaimStatus.pending || status == ClaimStatus.underReview;
 
   /// Check if claim can be rejected
-  bool get canReject => status == ClaimStatus.pending || status == ClaimStatus.underReview;
+  bool get canReject => status == ClaimStatus.submitted || status == ClaimStatus.pending || status == ClaimStatus.underReview;
 
   /// Get status display name
   String get statusDisplayName {
     switch (status) {
       case ClaimStatus.draft:
         return 'Draft';
+      case ClaimStatus.submitted:
+        return 'Submitted';
       case ClaimStatus.pending:
         return 'Pending Review';
       case ClaimStatus.underReview:
@@ -238,6 +322,8 @@ class ClaimModel extends Equatable {
         claimantEmail,
         reviewerName,
         approverName,
+        titleMs,
+        descriptionMs,
       ];
 }
 
@@ -273,7 +359,7 @@ class ClaimAuditTrailModel extends Equatable {
     this.oldStatus,
     this.newStatus,
     this.comment,
-    required this.metadata,
+    this.metadata = const {},
     required this.createdAt,
     this.userName,
     this.userEmail,

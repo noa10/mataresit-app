@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:equatable/equatable.dart';
+import 'package:logger/logger.dart';
 import '../../../shared/models/claim_model.dart';
 import '../../../shared/models/claim_requests.dart';
 import '../services/claim_service.dart';
 import '../../teams/providers/teams_provider.dart';
+import '../../auth/providers/auth_provider.dart';
 
 /// Claims state
 class ClaimsState extends Equatable {
@@ -79,14 +81,30 @@ class ClaimsState extends Equatable {
 class ClaimsNotifier extends StateNotifier<ClaimsState> {
   final ClaimService _claimService;
   final Ref _ref;
+  final Logger _logger = Logger();
   static const int _pageSize = 20;
 
   ClaimsNotifier(this._claimService, this._ref) : super(const ClaimsState());
 
   /// Load claims for current team
   Future<void> loadClaims({bool refresh = false}) async {
-    final currentTeam = _ref.read(currentTeamProvider);
-    if (currentTeam == null) return;
+    final currentTeamState = _ref.read(currentTeamProvider);
+    final currentUser = _ref.read(currentUserProvider);
+    
+    if (currentTeamState.currentTeam == null) {
+      _logger.w('❌ No current team selected');
+      return;
+    }
+
+    if (currentUser == null) {
+      _logger.w('❌ No current user authenticated');
+      return;
+    }
+
+    _logger.i('Loading claims for team: ${currentTeamState.currentTeam!.id} - ${currentTeamState.currentTeam!.name}');
+    _logger.i('Current user: ${_ref.read(currentUserProvider)?.email}');
+    _logger.i('Filter status: ${state.filters.status?.name ?? 'none'}');
+    _logger.i('Refresh mode: $refresh, Current claims count: ${state.claims.length}');
 
     if (refresh) {
       state = state.copyWith(
@@ -103,14 +121,20 @@ class ClaimsNotifier extends StateNotifier<ClaimsState> {
 
     try {
       final offset = refresh ? 0 : state.claims.length;
+      _logger.i('Fetching claims: offset=$offset, limit=$_pageSize');
+
       final claims = await _claimService.getTeamClaims(
-        currentTeam.id,
+        currentTeamState.currentTeam!.id,
         filters: state.filters.hasFilters ? state.filters : null,
         limit: _pageSize,
         offset: offset,
       );
 
+      _logger.i('Service returned ${claims.length} claims');
+      _logger.i('Claims IDs: ${claims.map((c) => '${c.id.substring(0, 8)}...${c.title}').join(', ')}');
+
       if (refresh) {
+        _logger.i('Refreshing claims list with ${claims.length} claims');
         state = state.copyWith(
           claims: claims,
           isLoading: false,
@@ -118,20 +142,25 @@ class ClaimsNotifier extends StateNotifier<ClaimsState> {
           hasMore: claims.length == _pageSize,
           currentPage: 1,
         );
+        _logger.i('State updated: ${state.claims.length} claims in state');
       } else {
+        _logger.i('Appending ${claims.length} claims to existing ${state.claims.length} claims');
         state = state.copyWith(
           claims: [...state.claims, ...claims],
           isLoadingMore: false,
           hasMore: claims.length == _pageSize,
           currentPage: state.currentPage + 1,
         );
+        _logger.i('State updated: ${state.claims.length} claims in state');
       }
     } catch (e) {
+      _logger.e('Error loading claims: $e');
       state = state.copyWith(
         isLoading: false,
         isLoadingMore: false,
         error: e.toString(),
       );
+      _logger.e('State updated with error: ${state.error}');
     }
   }
 
@@ -324,11 +353,11 @@ class ClaimsNotifier extends StateNotifier<ClaimsState> {
 
   /// Load claim statistics
   Future<void> loadClaimStats() async {
-    final currentTeam = _ref.read(currentTeamProvider);
-    if (currentTeam == null) return;
+    final currentTeamState = _ref.read(currentTeamProvider);
+    if (currentTeamState.currentTeam == null) return;
 
     try {
-      final stats = await _claimService.getTeamClaimStats(currentTeam.id);
+      final stats = await _claimService.getTeamClaimStats(currentTeamState.currentTeam!.id);
       state = state.copyWith(stats: stats);
     } catch (e) {
       state = state.copyWith(error: e.toString());

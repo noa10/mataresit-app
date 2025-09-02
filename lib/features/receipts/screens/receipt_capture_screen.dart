@@ -5,9 +5,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logger/logger.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/widgets/loading_widget.dart';
 import '../providers/receipt_capture_provider.dart';
+import '../providers/receipts_provider.dart';
 
 class ReceiptCaptureScreen extends ConsumerStatefulWidget {
   const ReceiptCaptureScreen({super.key});
@@ -18,6 +20,7 @@ class ReceiptCaptureScreen extends ConsumerStatefulWidget {
 
 class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
   final ImagePicker _picker = ImagePicker();
+  final Logger _logger = Logger();
   File? _selectedImage;
   bool _isProcessing = false;
 
@@ -97,26 +100,7 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
               // Error Display
               if (captureState.error != null) ...[
                 const SizedBox(height: AppConstants.defaultPadding),
-                Container(
-                  padding: const EdgeInsets.all(AppConstants.defaultPadding),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-                    border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.error_outline, color: Colors.red),
-                      const SizedBox(width: AppConstants.smallPadding),
-                      Expanded(
-                        child: Text(
-                          captureState.error!,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                _buildErrorDisplay(captureState.error!),
               ],
             ],
           ),
@@ -364,7 +348,7 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
 
     try {
       await ref.read(receiptCaptureProvider.notifier).uploadReceipt(_selectedImage!);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -372,7 +356,22 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        context.pop();
+
+        // Add a small delay to ensure database transaction is committed
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        // Refresh the receipts list to show the newly uploaded receipt
+        try {
+          await ref.read(receiptsProvider.notifier).refresh();
+          _logger.i('✅ Receipts list refreshed after upload');
+        } catch (refreshError) {
+          _logger.e('❌ Failed to refresh receipts list: $refreshError');
+          // Don't block navigation if refresh fails
+        }
+
+        if (mounted) {
+          context.pop();
+        }
       }
     } catch (e) {
       _showErrorSnackBar('Failed to upload receipt: ${e.toString()}');
@@ -396,6 +395,174 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
               openAppSettings();
             },
             child: const Text('Settings'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorDisplay(String error) {
+    // Check if this is a geographic restriction error
+    final isGeographicRestriction = error.contains('UnsupportedUserLocation') ||
+        error.contains('geographic restriction') ||
+        error.contains('not available in your region') ||
+        error.contains('not available in your current location');
+
+    if (isGeographicRestriction) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(AppConstants.defaultPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.location_off,
+                    color: Colors.orange,
+                    size: 24,
+                  ),
+                  const SizedBox(width: AppConstants.smallPadding),
+                  Expanded(
+                    child: Text(
+                      'AI Processing Not Available',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange[800],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppConstants.defaultPadding),
+              Text(
+                'Gemini AI Vision is not available in your geographic region. This is a restriction by Google.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: AppConstants.defaultPadding),
+              Text(
+                'Available options:',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: AppConstants.smallPadding),
+              _buildSolutionOption(
+                Icons.vpn_key,
+                'Use VPN',
+                'Connect to a supported region (US, Europe, etc.)',
+              ),
+              _buildSolutionOption(
+                Icons.edit,
+                'Manual Entry',
+                'Enter receipt details manually',
+              ),
+              const SizedBox(height: AppConstants.defaultPadding),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        // Clear error and continue with manual entry
+                        ref.read(receiptCaptureProvider.notifier).clearError();
+                        _showManualEntryDialog();
+                      },
+                      icon: const Icon(Icons.edit),
+                      label: const Text('Enter Manually'),
+                    ),
+                  ),
+                  const SizedBox(width: AppConstants.smallPadding),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        // Clear error and try again (user might have enabled VPN)
+                        ref.read(receiptCaptureProvider.notifier).clearError();
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Try Again'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Default error display for other errors
+    return Container(
+      padding: const EdgeInsets.all(AppConstants.defaultPadding),
+      decoration: BoxDecoration(
+        color: Colors.red.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline, color: Colors.red),
+          const SizedBox(width: AppConstants.smallPadding),
+          Expanded(
+            child: Text(
+              error,
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSolutionOption(IconData icon, String title, String description) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppConstants.smallPadding),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: Theme.of(context).primaryColor,
+          ),
+          const SizedBox(width: AppConstants.smallPadding),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  description,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showManualEntryDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Manual Receipt Entry'),
+        content: const Text(
+          'Manual receipt entry feature will be available soon. For now, you can:\n\n'
+          '• Use a VPN to connect to a supported region\n'
+          '• Try the web version of Mataresit\n'
+          '• Contact support for assistance',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
           ),
         ],
       ),
