@@ -35,6 +35,22 @@ enum ClaimPriority {
   urgent,
 }
 
+/// Extension for ClaimPriority display names
+extension ClaimPriorityExtension on ClaimPriority {
+  String get displayName {
+    switch (this) {
+      case ClaimPriority.low:
+        return 'Low';
+      case ClaimPriority.medium:
+        return 'Medium';
+      case ClaimPriority.high:
+        return 'High';
+      case ClaimPriority.urgent:
+        return 'Urgent';
+    }
+  }
+}
+
 /// Main claim model matching React app structure
 @JsonSerializable()
 class ClaimModel extends Equatable {

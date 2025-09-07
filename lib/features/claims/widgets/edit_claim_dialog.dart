@@ -215,11 +215,7 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              initialValue: (() {
-                                const allowed = ['MYR', 'USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'SGD'];
-                                final normalized = CurrencyUtils.normalizeCurrencyCode(_currency);
-                                return allowed.contains(normalized) ? normalized : 'MYR';
-                              })(),
+                              initialValue: _currency,
                               decoration: const InputDecoration(
                                 labelText: 'Currency',
                                 border: OutlineInputBorder(),
