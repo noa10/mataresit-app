@@ -7,7 +7,7 @@ type: "always_apply"
 - Mataresit project uses Google Gemini AI Vision API for receipt image analysis and data extraction instead of traditional OCR methods, with the existing Gemini API key from configuration.
 
 # Platform Development
-- Use the React app implementation in mataresit folder as a reference point to understand how the app works.
+- Use the React app implementation in mataresit folder (/Users/khairulanwar/dev/mataresit/mataresit) as a reference point to understand how the app works.
 - The Flutter app should achieve feature parity with the React web version.
 - Never touch the react app in Mataresit folder. Use it only as reference point for flutter development
 - When debugging Flutter app features, use the React web app implementation in mataresit folder only as reference without modifying it, and ensure Flutter achieves feature parity with the React version.
