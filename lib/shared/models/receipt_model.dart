@@ -57,9 +57,9 @@ class ReceiptModel extends Equatable {
   final Map<String, dynamic>? ocrData;
   final Map<String, dynamic>? metadata;
   final List<String>? tags;
-  @JsonKey(name: 'is_expense')
+  @JsonKey(name: 'is_expense', defaultValue: true)
   final bool isExpense;
-  @JsonKey(name: 'is_reimbursable')
+  @JsonKey(name: 'is_reimbursable', defaultValue: true)
   final bool isReimbursable;
   @JsonKey(name: 'project_id')
   final String? projectId;
