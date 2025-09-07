@@ -14,7 +14,9 @@ import '../../teams/providers/teams_provider.dart';
 import '../../../shared/models/team_model.dart';
 import '../../../shared/models/category_model.dart';
 import '../../../shared/widgets/category_display.dart';
+
 import '../../../shared/utils/currency_utils.dart';
+import '../../claims/widgets/claim_from_receipt_dialog.dart';
 
 class ModernReceiptDetailScreen extends ConsumerStatefulWidget {
   final String receiptId;
@@ -44,6 +46,7 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
   final _notesController = TextEditingController();
   DateTime? _selectedDate;
   String? _selectedCurrency;
+  CategoryModel? _selectedCategory;
 
   @override
   void initState() {
@@ -84,6 +87,16 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
     _selectedDate = receipt.transactionDate;
     // Normalize to ISO currency codes so dropdown value always matches items
     _selectedCurrency = CurrencyUtils.normalizeCurrencyCode(receipt.currency);
+
+    // Initialize selected category
+    final categoriesState = ref.read(categoriesProvider);
+    if (receipt.customCategoryId != null) {
+      _selectedCategory = categoriesState.displayCategories
+          .where((cat) => cat.id == receipt.customCategoryId)
+          .firstOrNull;
+    } else {
+      _selectedCategory = null;
+    }
   }
 
   void _toggleEdit() {
@@ -105,8 +118,11 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
         'transaction_date': _selectedDate?.toIso8601String(),
         'currency': CurrencyUtils.normalizeCurrencyCode(_selectedCurrency),
         'payment_method': _paymentMethodController.text.trim(),
-        'notes': _notesController.text.trim(),
-        'status': ReceiptStatus.active,
+        // Note: 'notes' field removed as it doesn't exist in the receipts table
+        // Notes should be handled via receipt_comments table in future implementation
+        'status': 'active', // Convert enum to string value
+        'custom_category_id': _selectedCategory?.id,
+        'category': _selectedCategory?.name,
       };
 
       final validationErrors = ReceiptService.validateReceiptData(receiptData);
@@ -413,6 +429,7 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
                           SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 _buildStatusChip(receipt.status),
                                 const SizedBox(width: 8),
@@ -524,6 +541,12 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
                   // Basic Metadata Card
                   _buildBasicMetadataCard(receipt, theme),
 
+                  // Create Claim Button
+                  if (!_isEditing) ...[
+                    const SizedBox(height: AppConstants.defaultPadding),
+                    _buildCreateClaimButton(receipt),
+                  ],
+
                   // Add bottom padding for safe area
                   const SizedBox(height: AppConstants.largePadding),
                 ]),
@@ -531,6 +554,75 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCreateClaimButton(ReceiptModel receipt) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppConstants.defaultPadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.receipt_long,
+                  color: colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Create Expense Claim',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Convert this receipt into an expense claim for reimbursement.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _showCreateClaimDialog(receipt),
+                icon: const Icon(Icons.add),
+                label: const Text('Create Claim'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCreateClaimDialog(ReceiptModel receipt) {
+    showDialog(
+      context: context,
+      builder: (context) => ClaimFromReceiptDialog(
+        receipt: receipt,
+        onClaimCreated: () {
+          // Optionally refresh data or show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Claim created successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        },
       ),
     );
   }
@@ -664,26 +756,255 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
         // Watch the categories state to ensure they're loaded
         final categoriesState = ref.watch(categoriesProvider);
 
-        // Find the category from display categories (includes both team and personal)
-        CategoryModel? category;
-        if (receipt.customCategoryId != null) {
-          category = categoriesState.displayCategories
-              .where((cat) => cat.id == receipt.customCategoryId)
-              .firstOrNull;
-
-          // If category not found by ID, try to find by name (case-insensitive)
-          if (category == null && receipt.category != null) {
+        if (_isEditing) {
+          // Show category selector button that opens a modal
+          return InkWell(
+            onTap: () => _showCategorySelector(context, ref),
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                border: Border.all(color: Theme.of(context).colorScheme.outline),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_selectedCategory != null) ...[
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: _parseColor(_selectedCategory!.color),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      _selectedCategory!.name,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ] else ...[
+                    Text(
+                      'Select category...',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(width: 6),
+                  Icon(
+                    Icons.keyboard_arrow_down,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+          );
+        } else {
+          // Show category display in view mode
+          // Find the category from display categories (includes both team and personal)
+          CategoryModel? category;
+          if (receipt.customCategoryId != null) {
             category = categoriesState.displayCategories
-                .where((cat) => cat.name.toLowerCase() == receipt.category!.toLowerCase())
+                .where((cat) => cat.id == receipt.customCategoryId)
                 .firstOrNull;
-          }
-        }
 
-        return CategoryDisplay(
-          category: category,
-          size: CategoryDisplaySize.small,
-        );
+            // If category not found by ID, try to find by name (case-insensitive)
+            if (category == null && receipt.category != null) {
+              category = categoriesState.displayCategories
+                  .where((cat) => cat.name.toLowerCase() == receipt.category!.toLowerCase())
+                  .firstOrNull;
+            }
+          }
+
+          return CategoryDisplay(
+            category: category,
+            size: CategoryDisplaySize.small,
+          );
+        }
       },
+    );
+  }
+
+  Color _parseColor(String colorString) {
+    try {
+      final cleanColor = colorString.replaceFirst('#', '');
+      return Color(int.parse('FF$cleanColor', radix: 16));
+    } catch (e) {
+      return Colors.grey;
+    }
+  }
+
+  void _showCategorySelector(BuildContext context, WidgetRef ref) {
+    final categoriesState = ref.read(categoriesProvider);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        maxChildSize: 0.9,
+        minChildSize: 0.3,
+        expand: false,
+        builder: (context, scrollController) => Column(
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Text(
+                    'Select Category',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+            ),
+
+            // Categories list
+            Expanded(
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  // Uncategorized option
+                  _buildCategoryModalItem(
+                    context: context,
+                    category: null,
+                    isSelected: _selectedCategory == null,
+                    onTap: () {
+                      setState(() {
+                        _selectedCategory = null;
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+
+                  // Category items
+                  ...categoriesState.displayCategories.map((category) =>
+                    _buildCategoryModalItem(
+                      context: context,
+                      category: category,
+                      isSelected: _selectedCategory?.id == category.id,
+                      onTap: () {
+                        setState(() {
+                          _selectedCategory = category;
+                        });
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryModalItem({
+    required BuildContext context,
+    required CategoryModel? category,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        margin: const EdgeInsets.only(bottom: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? colorScheme.primaryContainer.withValues(alpha: 0.3) : null,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            if (category != null) ...[
+              Container(
+                width: 16,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: _parseColor(category.color),
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  category.name,
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+              if (category.receiptCount != null) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${category.receiptCount}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ] else ...[
+              Icon(
+                Icons.remove_circle_outline,
+                size: 16,
+                color: colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Uncategorized',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+            if (isSelected) ...[
+              const SizedBox(width: 8),
+              Icon(
+                Icons.check,
+                size: 20,
+                color: colorScheme.primary,
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -783,11 +1104,7 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
                   const SizedBox(width: 16),
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      initialValue: (() {
-                        const allowed = ['MYR', 'USD', 'EUR', 'GBP', 'SGD'];
-                        final normalized = CurrencyUtils.normalizeCurrencyCode(_selectedCurrency);
-                        return allowed.contains(normalized) ? normalized : 'MYR';
-                      })(),
+                      initialValue: _selectedCurrency,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
