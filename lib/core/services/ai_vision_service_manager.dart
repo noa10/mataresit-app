@@ -159,7 +159,7 @@ class AIVisionServiceManager {
       totalAmount: null,
       transactionDate: DateTime.now(),
       category: 'Uncategorized',
-      currency: 'USD',
+      currency: 'MYR',
       confidence: 0.0,
       rawResponse: 'Failed with all services: ${attemptedServices.join(', ')}',
       error: errorMessage,

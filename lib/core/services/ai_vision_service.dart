@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../../shared/utils/currency_utils.dart';
 
 /// Data class for receipt information extracted by AI Vision services
 class ReceiptData {
@@ -133,7 +134,7 @@ class ReceiptData {
         taxAmount: parseAmount(json['taxAmount']),
         discountAmount: parseAmount(json['discountAmount']),
         tipAmount: parseAmount(json['tipAmount']),
-        currency: json['currency']?.toString() ?? 'USD',
+        currency: CurrencyUtils.normalizeCurrencyCode(json['currency']?.toString() ?? 'MYR'),
         paymentMethod: json['paymentMethod']?.toString(),
         category: json['category']?.toString(),
         items: items,
@@ -147,7 +148,7 @@ class ReceiptData {
         totalAmount: null,
         transactionDate: DateTime.now(),
         category: 'Uncategorized',
-        currency: 'USD',
+        currency: 'MYR',
         confidence: 0.0,
         rawResponse: rawResponse,
         error: 'JSON parsing failed: ${e.toString()}',

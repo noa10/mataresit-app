@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import '../constants/app_constants.dart';
 import 'ai_vision_service.dart';
+import '../../shared/utils/currency_utils.dart';
 
 /// Service for processing receipt images using OpenRouter Vision API
 class OpenRouterVisionService implements AIVisionService {
@@ -398,7 +399,7 @@ Important guidelines:
         taxAmount: parseAmount(jsonData['taxAmount']),
         discountAmount: parseAmount(jsonData['discountAmount']),
         tipAmount: parseAmount(jsonData['tipAmount']),
-        currency: jsonData['currency']?.toString() ?? 'USD',
+        currency: CurrencyUtils.normalizeCurrencyCode(jsonData['currency']?.toString() ?? 'MYR'),
         paymentMethod: jsonData['paymentMethod']?.toString(),
         category: jsonData['category']?.toString(),
         items: items,
@@ -416,7 +417,7 @@ Important guidelines:
         totalAmount: null,
         transactionDate: DateTime.now(),
         category: 'Uncategorized',
-        currency: 'USD',
+        currency: 'MYR',
         confidence: 0.0,
         rawResponse: response,
         error: 'Failed to parse receipt data: ${e.toString()}',
