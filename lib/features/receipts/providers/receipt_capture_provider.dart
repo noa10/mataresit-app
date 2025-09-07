@@ -1,18 +1,24 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/network/supabase_client.dart';
 import '../../../core/services/app_logger.dart';
 import '../../../core/services/ai_vision_service.dart';
-import '../../../core/services/ai_vision_service_manager.dart';
+import '../../../core/services/performance_service.dart';
+
+import '../../../core/services/processing_logs_service.dart';
 import '../../../shared/models/receipt_model.dart';
+import '../../../shared/models/processing_log_model.dart';
+
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../teams/providers/teams_provider.dart';
 
-/// Receipt capture state
+/// Receipt capture state with enhanced processing tracking
 class ReceiptCaptureState {
   final bool isLoading;
   final bool isProcessing;
@@ -21,6 +27,15 @@ class ReceiptCaptureState {
   final ReceiptData? extractedData;
   final String? processingStep;
 
+  // Enhanced processing fields
+  final ReceiptUploadState? uploadState;
+  final List<ProcessingLogModel> processLogs;
+  final String? currentStage;
+  final List<String> stageHistory;
+  final int uploadProgress;
+  final DateTime? startTime;
+  final bool isProgressUpdating;
+
   const ReceiptCaptureState({
     this.isLoading = false,
     this.isProcessing = false,
@@ -28,6 +43,13 @@ class ReceiptCaptureState {
     this.uploadedReceipt,
     this.extractedData,
     this.processingStep,
+    this.uploadState,
+    this.processLogs = const [],
+    this.currentStage,
+    this.stageHistory = const [],
+    this.uploadProgress = 0,
+    this.startTime,
+    this.isProgressUpdating = false,
   });
 
   ReceiptCaptureState copyWith({
@@ -37,6 +59,13 @@ class ReceiptCaptureState {
     ReceiptModel? uploadedReceipt,
     ReceiptData? extractedData,
     String? processingStep,
+    ReceiptUploadState? uploadState,
+    List<ProcessingLogModel>? processLogs,
+    String? currentStage,
+    List<String>? stageHistory,
+    int? uploadProgress,
+    DateTime? startTime,
+    bool? isProgressUpdating,
   }) {
     return ReceiptCaptureState(
       isLoading: isLoading ?? this.isLoading,
@@ -45,19 +74,111 @@ class ReceiptCaptureState {
       uploadedReceipt: uploadedReceipt ?? this.uploadedReceipt,
       extractedData: extractedData ?? this.extractedData,
       processingStep: processingStep ?? this.processingStep,
+      uploadState: uploadState ?? this.uploadState,
+      processLogs: processLogs ?? this.processLogs,
+      currentStage: currentStage ?? this.currentStage,
+      stageHistory: stageHistory ?? this.stageHistory,
+      uploadProgress: uploadProgress ?? this.uploadProgress,
+      startTime: startTime ?? this.startTime,
+      isProgressUpdating: isProgressUpdating ?? this.isProgressUpdating,
     );
   }
 }
 
-/// Receipt capture notifier
+/// Receipt capture notifier with enhanced processing tracking
 class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
   final Ref ref;
+  Timer? _progressTimer;
+  final ProcessingLogsService _logsService = ProcessingLogsService();
+  StreamSubscription? _logsSubscription;
 
   ReceiptCaptureNotifier(this.ref) : super(const ReceiptCaptureState());
+
+  @override
+  void dispose() {
+    _progressTimer?.cancel();
+    _logsSubscription?.cancel();
+    super.dispose();
+  }
+
+  /// Add a processing log entry
+  void _addLog(String stepName, String message, {int? progress, String? receiptId}) {
+    final log = ProcessingLogModel(
+      id: const Uuid().v4(),
+      receiptId: receiptId ?? 'pending',
+      createdAt: DateTime.now(),
+      statusMessage: message,
+      stepName: stepName,
+      progress: progress,
+    );
+
+    final updatedLogs = [...state.processLogs, log];
+    state = state.copyWith(
+      processLogs: updatedLogs,
+      currentStage: stepName,
+      isProgressUpdating: true,
+    );
+
+    // Update stage history if this is a new stage
+    if (!state.stageHistory.contains(stepName)) {
+      final updatedHistory = [...state.stageHistory, stepName];
+      state = state.copyWith(stageHistory: updatedHistory);
+    }
+
+    // Save to real-time service if receipt ID is available
+    if (receiptId != null && receiptId != 'pending') {
+      _logsService.addLocalLog(receiptId, stepName, message, progress: progress);
+      _logsService.saveProcessingLog(receiptId, stepName, message, progress: progress);
+    }
+
+    // Auto-stop progress updating after a delay
+    Timer(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        state = state.copyWith(isProgressUpdating: false);
+      }
+    });
+  }
+
+  /// Update upload progress
+  void _updateProgress(int progress, {String? message}) {
+    state = state.copyWith(
+      uploadProgress: progress,
+      isProgressUpdating: true,
+    );
+
+    if (message != null) {
+      _addLog(state.currentStage ?? 'PROCESSING', message, progress: progress);
+    }
+  }
+
+
+
+  /// Start processing with initial setup
+  void _startProcessing() {
+    final uploadState = ReceiptUploadState(
+      id: const Uuid().v4(),
+      status: 'uploading',
+      startTime: DateTime.now(),
+    );
+
+    state = state.copyWith(
+      uploadState: uploadState,
+      startTime: DateTime.now(),
+      currentStage: 'START',
+      stageHistory: ['START'],
+      uploadProgress: 0,
+      processLogs: [],
+    );
+
+    _addLog('START', 'Initializing receipt upload...');
+  }
 
   /// Upload receipt image and create receipt record with AI processing
   Future<void> uploadReceipt(File imageFile) async {
     try {
+      // Initialize processing state
+      _startProcessing();
+
       state = state.copyWith(
         isLoading: true,
         isProcessing: true,
@@ -70,233 +191,184 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
         throw Exception('User not authenticated');
       }
 
-      // Step 1: Process image with Gemini Vision
-      state = state.copyWith(processingStep: 'Analyzing receipt with AI...');
-      
-      ReceiptData extractedData;
-      try {
-        // Check if any AI vision service is configured
-        if (!AIVisionServiceManager.hasConfiguredServices()) {
-          throw Exception('No AI vision services are configured. Please check your API keys (GEMINI_API_KEY or OPENROUTER_API_KEY).');
-        }
+      // Step 1: Upload image to Supabase Storage first
+      _addLog('FETCH', 'Starting file upload to cloud storage...');
+      _updateProgress(10, message: 'Uploading image to cloud storage...');
 
-        extractedData = await AIVisionServiceManager.processReceiptImage(imageFile);
-        
-        // Log the extraction results
-        AppLogger.info('Receipt processing completed', {
-          'confidence': extractedData.confidence,
-          'hasError': extractedData.hasError,
-          'merchantName': extractedData.merchantName,
-          'totalAmount': extractedData.totalAmount,
-          'lineItemsCount': extractedData.items?.length ?? 0,
-        });
-        
-        // If there's an error in processing, throw an exception
-        if (extractedData.hasError) {
-          throw Exception(extractedData.error ?? 'Unknown processing error');
-        }
-        
-        // Log successful extraction
-        AppLogger.info('AI extraction successful', {
-          'merchant': extractedData.merchantName,
-          'amount': extractedData.totalAmount,
-          'confidence': extractedData.confidence,
-          'lineItems': extractedData.items?.map((item) => {
-            'name': item.name,
-            'totalPrice': item.totalPrice,
-          }).toList() ?? [],
-        });
-        
-      } catch (e) {
-        AppLogger.error('Gemini Vision processing failed', e);
-        
-        // Provide more specific error messages
-        String errorMessage = 'AI processing failed';
-        if (e.toString().contains('API key') || e.toString().contains('not configured')) {
-          errorMessage = 'AI vision services not configured. Please set GEMINI_API_KEY or OPENROUTER_API_KEY environment variable.';
-        } else if (e.toString().contains('UnsupportedUserLocation') || e.toString().contains('geographic restriction') || e.toString().contains('not available in your region')) {
-          errorMessage = 'AI vision services are not available in your region. Fallback services were attempted but also failed.';
-        } else if (e.toString().contains('quota') || e.toString().contains('limit')) {
-          errorMessage = 'AI service quotas exceeded. Please try again later.';
-        } else if (e.toString().contains('network') || e.toString().contains('connection')) {
-          errorMessage = 'Network error. Please check your internet connection.';
-        } else if (e.toString().contains('image')) {
-          errorMessage = 'Image processing failed. Please try with a clearer image.';
-        }
-        
-        state = state.copyWith(
-          isLoading: false,
-          isProcessing: false,
-          error: '$errorMessage: ${e.toString()}',
-          processingStep: null,
-        );
-        rethrow;
-      }
-
-      state = state.copyWith(
-        extractedData: extractedData,
-        processingStep: 'Uploading image...'
-      );
-
-      // Step 2: Upload image to Supabase Storage
       final uuid = const Uuid();
       final receiptId = uuid.v4();
       final fileExtension = path.extension(imageFile.path);
       final fileName = 'receipt_$receiptId$fileExtension';
       final filePath = '${user.id}/$fileName';
 
-      final imageBytes = await imageFile.readAsBytes();
+      // Optimize image before upload (match React app behavior)
+      _updateProgress(15, message: 'Optimizing image...');
+      final optimizedFile = await PerformanceService.optimizeImageForUpload(imageFile);
+
+      final imageBytes = await optimizedFile.readAsBytes();
+
+      _updateProgress(25, message: 'Upload progress: 25% complete');
       final imageUrl = await SupabaseService.uploadFile(
         bucket: AppConstants.receiptImagesBucket,
         path: filePath,
         bytes: Uint8List.fromList(imageBytes),
-        contentType: _getContentType(fileExtension),
+        contentType: 'image/jpeg', // Always JPEG after optimization (match React app)
       );
 
+      _addLog('FETCH', 'Image uploaded successfully', receiptId: receiptId);
+      _updateProgress(40, message: 'Image upload completed');
+
+      // Step 2: Create initial receipt record
       state = state.copyWith(processingStep: 'Creating receipt record...');
+      _addLog('SAVE', 'Creating initial receipt record...', receiptId: receiptId);
 
-      // Step 3: Create receipt record with extracted data
-      final receipt = ReceiptModel(
-        id: receiptId,
-        userId: user.id,
-        merchantName: extractedData.merchantName,
-        merchantAddress: extractedData.merchantAddress,
-        merchantPhone: extractedData.merchantPhone,
-        receiptNumber: extractedData.receiptNumber,
-        transactionDate: extractedData.transactionDate,
-        totalAmount: extractedData.totalAmount,
-        taxAmount: extractedData.taxAmount,
-        discountAmount: extractedData.discountAmount,
-        tipAmount: extractedData.tipAmount,
-        currency: extractedData.currency ?? 'USD',
-        paymentMethod: extractedData.paymentMethod,
-        category: extractedData.category,
-        notes: extractedData.notes,
-        imageUrl: imageUrl,
-        originalFileName: path.basename(imageFile.path),
-        fileSize: imageBytes.length,
-        mimeType: _getContentType(fileExtension),
-        status: ReceiptStatus.active,
-        processingStatus: extractedData.hasError
-            ? ProcessingStatus.failed
-            : extractedData.isHighConfidence
-                ? ProcessingStatus.completed
-                : ProcessingStatus.manualReview,
-        ocrData: {
-          'gemini_response': extractedData.rawResponse,
-          'confidence': extractedData.confidence,
-          'processing_time': DateTime.now().toIso8601String(),
-          'ai_model': 'gemini-1.5-flash',
-        },
-        isExpense: true,
-        isReimbursable: false,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        processedAt: DateTime.now(),
-      );
+      // Get current team for team_id
+      final currentTeamState = ref.read(currentTeamProvider);
 
-      // Step 4: Save receipt to database
-      state = state.copyWith(processingStep: 'Saving to database...');
+      // Create initial receipt record with minimal data
+      final initialReceiptData = {
+        'id': receiptId,
+        'user_id': user.id,
+        'team_id': currentTeamState.currentTeam?.id,
+        'image_url': imageUrl,
+        'status': 'unreviewed',
+        'processing_status': 'processing',
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      await SupabaseService.client
+          .from('receipts')
+          .insert(initialReceiptData);
+
+      _addLog('SAVE', 'Initial receipt record created', receiptId: receiptId);
+      _updateProgress(50, message: 'Receipt record created');
+
+      // Step 3: Call process-receipt edge function for AI processing and embedding generation
+      state = state.copyWith(processingStep: 'Processing with AI...');
+      _addLog('PROCESSING', 'Starting AI processing with edge function...', receiptId: receiptId);
+      _updateProgress(60, message: 'Starting AI analysis...');
+
       try {
-        await _saveReceiptToDatabase(receipt);
+        final response = await SupabaseService.client.functions.invoke(
+          'process-receipt',
+          body: {
+            'receiptId': receiptId,
+            'imageUrl': imageUrl,
+            'modelId': 'gemini-2.5-flash-lite', // Match React app default model
+          },
+        );
+
+        final responseData = response.data;
+        if (responseData == null || responseData['success'] != true) {
+          throw Exception('Processing failed: ${responseData?['error'] ?? 'Unknown error'}');
+        }
+
+        _addLog('PROCESSING', 'AI processing completed successfully', receiptId: receiptId);
+        _updateProgress(85, message: 'AI processing completed');
+
+        // Extract the processed data from the response
+        final result = responseData['result'];
+        if (result != null) {
+          // Create a ReceiptData object from the processed result for UI display
+          final extractedData = ReceiptData(
+            merchantName: result['merchant']?.toString(),
+            totalAmount: _parseDouble(result['total']),
+            transactionDate: result['date'] != null ? DateTime.tryParse(result['date']) : null,
+            currency: result['currency']?.toString() ?? 'MYR',
+            paymentMethod: result['payment_method']?.toString(),
+            category: result['predicted_category']?.toString(),
+            notes: result['fullText']?.toString(),
+            confidence: _parseDouble(result['confidence']?['total']) ?? 0.8,
+            rawResponse: responseData.toString(),
+          );
+
+          state = state.copyWith(extractedData: extractedData);
+
+          AppLogger.info('Receipt processing completed via edge function', {
+            'receiptId': receiptId,
+            'merchant': extractedData.merchantName,
+            'amount': extractedData.totalAmount,
+            'confidence': extractedData.confidence,
+          });
+        }
+
       } catch (e) {
-        AppLogger.error('Failed to save receipt to database', e);
-        // Continue anyway - we have the uploaded image and extracted data
+        _addLog('ERROR', 'Edge function processing failed: ${e.toString()}');
+        AppLogger.error('Process-receipt edge function failed', e);
+
+        // Enhanced error categorization and user-friendly messages
+        String errorMessage = 'AI processing failed';
+        String errorCategory = 'unknown';
+
+        final errorString = e.toString().toLowerCase();
+
+        if (errorString.contains('api key') || errorString.contains('not configured') || errorString.contains('unauthorized')) {
+          errorMessage = 'AI vision services not configured on server. Please contact support.';
+          errorCategory = 'configuration';
+        } else if (errorString.contains('quota') || errorString.contains('limit') || errorString.contains('rate limit')) {
+          errorMessage = 'AI service quotas exceeded. Please try again later.';
+          errorCategory = 'quota';
+        } else if (errorString.contains('network') || errorString.contains('connection') || errorString.contains('fetch')) {
+          errorMessage = 'Network error. Please check your internet connection and try again.';
+          errorCategory = 'network';
+        } else if (errorString.contains('timeout') || errorString.contains('time out')) {
+          errorMessage = 'Processing timeout. Please try again with a smaller or clearer image.';
+          errorCategory = 'timeout';
+        } else if (errorString.contains('image') || errorString.contains('format') || errorString.contains('invalid')) {
+          errorMessage = 'Image processing failed. Please try with a different image format or clearer photo.';
+          errorCategory = 'image';
+        } else if (errorString.contains('server') || errorString.contains('internal') || errorString.contains('500')) {
+          errorMessage = 'Server error occurred. Please try again in a few moments.';
+          errorCategory = 'server';
+        } else if (errorString.contains('function') || errorString.contains('edge')) {
+          errorMessage = 'Processing service temporarily unavailable. Please try again.';
+          errorCategory = 'service';
+        }
+
+        // Log detailed error information for debugging
+        AppLogger.error('Receipt processing failed', {
+          'error': e.toString(),
+          'category': errorCategory,
+          'receiptId': receiptId,
+          'userMessage': errorMessage,
+        });
+
+        state = state.copyWith(
+          isLoading: false,
+          isProcessing: false,
+          error: errorMessage,
+          processingStep: null,
+          currentStage: 'ERROR',
+          uploadProgress: 100,
+        );
+        rethrow;
       }
 
-      state = state.copyWith(
-        isLoading: false,
-        isProcessing: false,
-        uploadedReceipt: receipt,
-        processingStep: null,
-      );
+      state = state.copyWith(processingStep: 'Finalizing...');
+
+      // Step 4: Set up real-time subscription to listen for processing completion
+      _updateProgress(90, message: 'Waiting for processing completion...');
+      _addLog('PROCESSING', 'Setting up real-time subscription for processing updates...', receiptId: receiptId);
+
+      // Subscribe to receipt updates for processing status changes
+      await _subscribeToProcessingUpdates(receiptId, imageFile, imageBytes, imageUrl);
+
     } catch (e) {
+      _addLog('ERROR', 'Processing failed: ${e.toString()}');
       state = state.copyWith(
         isLoading: false,
         isProcessing: false,
         error: e.toString(),
         processingStep: null,
+        currentStage: 'ERROR',
+        uploadProgress: 100,
       );
       rethrow;
     }
   }
 
-  /// Save receipt to database
-  Future<void> _saveReceiptToDatabase(ReceiptModel receipt) async {
-    // Get current team for team_id
-    final currentTeamState = ref.read(currentTeamProvider);
 
-    final receiptData = {
-      'id': receipt.id,
-      'user_id': receipt.userId,
-      'team_id': currentTeamState.currentTeam?.id,
-      'merchant': receipt.merchantName ?? 'Unknown Merchant',
-      'date': receipt.transactionDate?.toIso8601String().split('T')[0] ?? DateTime.now().toIso8601String().split('T')[0],
-      'total': receipt.totalAmount ?? 0.0,
-      'tax': receipt.taxAmount,
-      'currency': receipt.currency ?? 'USD',
-      'payment_method': receipt.paymentMethod,
-      'predicted_category': receipt.category,
-      'status': receipt.status.name,
-      'image_url': receipt.imageUrl,
-      'fullText': receipt.notes,
-      'ai_suggestions': receipt.ocrData,
-      'confidence_scores': state.extractedData?.confidence != null ? {
-        'merchant': (state.extractedData!.confidence * 100).round(),
-        'date': (state.extractedData!.confidence * 100).round(),
-        'total': (state.extractedData!.confidence * 100).round(),
-        'tax': (state.extractedData!.confidence * 100).round(),
-        'payment_method': (state.extractedData!.confidence * 100).round(),
-        'line_items': (state.extractedData!.confidence * 100).round(),
-      } : null,
-      'processing_status': receipt.processingStatus.name,
-      'created_at': receipt.createdAt.toIso8601String(),
-      'updated_at': receipt.updatedAt.toIso8601String(),
-    };
-
-    // Insert receipt first
-    await SupabaseService.client
-        .from('receipts')
-        .insert(receiptData);
-
-    // Insert line items if available from extracted data
-    final extractedData = state.extractedData;
-    if (extractedData?.items != null && extractedData!.items!.isNotEmpty) {
-      AppLogger.info('Saving ${extractedData.items!.length} line items to database');
-
-      final lineItemsData = extractedData.items!.map((item) {
-        return {
-          'receipt_id': receipt.id,
-          'description': item.name,
-          'amount': item.totalPrice ?? item.unitPrice ?? 0.0,
-          'created_at': DateTime.now().toIso8601String(),
-          'updated_at': DateTime.now().toIso8601String(),
-        };
-      }).where((item) =>
-        // Filter out invalid line items
-        item['description'] != null &&
-        (item['description'] as String).trim().isNotEmpty &&
-        (item['amount'] as double) > 0
-      ).toList();
-
-      if (lineItemsData.isNotEmpty) {
-        try {
-          await SupabaseService.client
-              .from('line_items')
-              .insert(lineItemsData);
-
-          AppLogger.info('Successfully saved ${lineItemsData.length} line items');
-        } catch (e) {
-          AppLogger.error('Failed to save line items', e);
-          // Don't fail the whole operation, just log the error
-        }
-      } else {
-        AppLogger.warning('No valid line items to save after filtering');
-      }
-    } else {
-      AppLogger.info('No line items extracted from AI vision processing');
-    }
-  }
 
   /// Get content type from file extension
   String _getContentType(String extension) {
@@ -318,6 +390,336 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
   /// Clear error
   void clearError() {
     state = state.copyWith(error: null);
+  }
+
+  /// Subscribe to real-time processing updates
+  Future<void> _subscribeToProcessingUpdates(
+    String receiptId,
+    File imageFile,
+    Uint8List imageBytes,
+    String imageUrl
+  ) async {
+    try {
+      // Set up real-time subscription for receipt processing status updates
+      final channel = SupabaseService.client
+          .channel('receipt-processing-$receiptId')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.update,
+            schema: 'public',
+            table: 'receipts',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'id',
+              value: receiptId,
+            ),
+            callback: (payload) {
+              _handleProcessingStatusUpdate(payload.newRecord, receiptId, imageFile, imageBytes, imageUrl);
+            },
+          )
+          .subscribe();
+
+      // Set a timeout for processing completion (5 minutes max)
+      Timer(const Duration(minutes: 5), () {
+        _addLog('WARNING', 'Processing timeout reached, checking final status...', receiptId: receiptId);
+        _finalizeProcessing(receiptId, imageFile, imageBytes, imageUrl);
+        SupabaseService.client.removeChannel(channel);
+      });
+
+    } catch (e) {
+      _addLog('ERROR', 'Failed to set up real-time subscription: ${e.toString()}');
+      AppLogger.error('Real-time subscription failed', {
+        'error': e.toString(),
+        'receiptId': receiptId,
+        'fallbackMethod': 'polling'
+      });
+
+      // Fallback to polling with user notification
+      _addLog('INFO', 'Falling back to polling method for status updates...', receiptId: receiptId);
+      await _fallbackToPolling(receiptId, imageFile, imageBytes, imageUrl);
+    }
+  }
+
+  /// Handle processing status updates from real-time subscription
+  void _handleProcessingStatusUpdate(
+    Map<String, dynamic> newData,
+    String receiptId,
+    File imageFile,
+    Uint8List imageBytes,
+    String imageUrl
+  ) {
+    try {
+      if (newData.isEmpty) return;
+
+      final processingStatus = newData['processing_status']?.toString();
+      final processingError = newData['processing_error']?.toString();
+
+      _addLog('UPDATE', 'Processing status updated: $processingStatus', receiptId: receiptId);
+
+      if (processingError != null && processingError.isNotEmpty) {
+        _addLog('ERROR', 'Processing error: $processingError', receiptId: receiptId);
+        _handleProcessingError(processingError, receiptId, imageFile, imageBytes, imageUrl);
+        return;
+      }
+
+      switch (processingStatus?.toLowerCase()) {
+        case 'processing':
+          _updateProgress(95, message: 'AI processing in progress...');
+          state = state.copyWith(processingStep: 'AI processing in progress...');
+          break;
+        case 'complete':
+        case 'completed':
+          _addLog('SUCCESS', 'Processing completed successfully!', receiptId: receiptId);
+          _finalizeProcessing(receiptId, imageFile, imageBytes, imageUrl);
+          break;
+        case 'failed':
+        case 'failed_ai':
+        case 'failed_ocr':
+          _addLog('ERROR', 'Processing failed with status: $processingStatus', receiptId: receiptId);
+          _handleProcessingError('Processing failed', receiptId, imageFile, imageBytes, imageUrl);
+          break;
+      }
+    } catch (e) {
+      _addLog('ERROR', 'Error handling status update: ${e.toString()}');
+      AppLogger.error('Error handling processing status update', e);
+    }
+  }
+
+  /// Finalize processing by fetching the completed receipt
+  Future<void> _finalizeProcessing(
+    String receiptId,
+    File imageFile,
+    Uint8List imageBytes,
+    String imageUrl
+  ) async {
+    try {
+      _updateProgress(98, message: 'Fetching processed receipt...');
+      _addLog('FETCH', 'Fetching processed receipt from database...', receiptId: receiptId);
+
+      final response = await SupabaseService.client
+          .from('receipts')
+          .select('*')
+          .eq('id', receiptId)
+          .single();
+
+      final receiptData = response;
+      final user = ref.read(currentUserProvider);
+
+      // Create receipt model from the processed data
+      final receipt = ReceiptModel(
+        id: receiptId,
+        userId: user!.id,
+        merchantName: receiptData['merchant']?.toString() ?? 'Unknown Merchant',
+        merchantAddress: null, // Not available from edge function
+        merchantPhone: null, // Not available from edge function
+        receiptNumber: null, // Not available from edge function
+        transactionDate: receiptData['date'] != null ? DateTime.tryParse(receiptData['date']) : null,
+        totalAmount: _parseAmount(receiptData['total']) ?? 0.0,
+        taxAmount: _parseAmount(receiptData['tax']),
+        discountAmount: null, // Not available from edge function
+        tipAmount: null, // Not available from edge function
+        currency: receiptData['currency']?.toString() ?? 'MYR',
+        paymentMethod: receiptData['payment_method']?.toString(),
+        category: receiptData['predicted_category']?.toString(),
+        notes: receiptData['fullText']?.toString(),
+        imageUrl: imageUrl,
+        originalFileName: path.basename(imageFile.path),
+        fileSize: imageBytes.length,
+        mimeType: _getContentType(path.extension(imageFile.path)),
+        status: ReceiptStatus.active,
+        processingStatus: _mapProcessingStatusFromString(receiptData['processing_status']?.toString() ?? 'completed'),
+        ocrData: receiptData['ai_suggestions'] ?? {},
+        isExpense: true,
+        isReimbursable: false,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        processedAt: DateTime.now(),
+      );
+
+      _addLog('SUCCESS', 'Receipt processing completed successfully!', receiptId: receiptId);
+
+      // Complete processing
+      _updateProgress(100, message: 'Processing completed successfully');
+      _addLog('COMPLETE', 'Receipt processing completed successfully', receiptId: receiptId);
+
+      state = state.copyWith(
+        isLoading: false,
+        isProcessing: false,
+        uploadedReceipt: receipt,
+        processingStep: null,
+        currentStage: 'COMPLETE',
+        uploadProgress: 100,
+      );
+
+      // Auto-reset state after showing completion for 3 seconds
+      Future.delayed(const Duration(seconds: 3), () {
+        if (state.currentStage == 'COMPLETE') {
+          reset();
+        }
+      });
+
+    } catch (e) {
+      _addLog('ERROR', 'Failed to fetch processed receipt: ${e.toString()}');
+      AppLogger.error('Failed to fetch processed receipt', {
+        'error': e.toString(),
+        'receiptId': receiptId,
+        'stage': 'finalization'
+      });
+
+      // Provide more specific error message based on the error type
+      String errorMessage = 'Failed to fetch processed receipt';
+      if (e.toString().toLowerCase().contains('not found')) {
+        errorMessage = 'Receipt not found in database. Processing may have failed.';
+      } else if (e.toString().toLowerCase().contains('network')) {
+        errorMessage = 'Network error while fetching processed receipt. Please check your connection.';
+      }
+
+      _handleProcessingError(errorMessage, receiptId, imageFile, imageBytes, imageUrl);
+    }
+  }
+
+  /// Handle processing errors
+  void _handleProcessingError(
+    String error,
+    String receiptId,
+    File imageFile,
+    Uint8List imageBytes,
+    String imageUrl
+  ) {
+    final user = ref.read(currentUserProvider);
+
+    // Create a minimal receipt object for UI purposes
+    final receipt = ReceiptModel(
+      id: receiptId,
+      userId: user!.id,
+      merchantName: 'Processing Failed',
+      transactionDate: DateTime.now(),
+      totalAmount: 0.0,
+      currency: 'MYR',
+      imageUrl: imageUrl,
+      originalFileName: path.basename(imageFile.path),
+      fileSize: imageBytes.length,
+      mimeType: _getContentType(path.extension(imageFile.path)),
+      status: ReceiptStatus.active,
+      processingStatus: ProcessingStatus.failed,
+      ocrData: {},
+      isExpense: true,
+      isReimbursable: false,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      processedAt: DateTime.now(),
+    );
+
+    state = state.copyWith(
+      isLoading: false,
+      isProcessing: false,
+      uploadedReceipt: receipt,
+      error: error,
+      processingStep: null,
+      currentStage: 'ERROR',
+      uploadProgress: 100,
+    );
+  }
+
+  /// Fallback to polling if real-time subscription fails
+  Future<void> _fallbackToPolling(
+    String receiptId,
+    File imageFile,
+    Uint8List imageBytes,
+    String imageUrl
+  ) async {
+    _addLog('INFO', 'Using polling fallback for processing status...', receiptId: receiptId);
+
+    const maxAttempts = 30; // 5 minutes with 10-second intervals
+    int attempts = 0;
+
+    while (attempts < maxAttempts) {
+      await Future.delayed(const Duration(seconds: 10));
+      attempts++;
+
+      try {
+        final response = await SupabaseService.client
+            .from('receipts')
+            .select('processing_status, processing_error')
+            .eq('id', receiptId)
+            .single();
+
+        final processingStatus = response['processing_status']?.toString();
+        final processingError = response['processing_error']?.toString();
+
+        _addLog('POLL', 'Polling attempt $attempts: status = $processingStatus', receiptId: receiptId);
+
+        if (processingError != null && processingError.isNotEmpty) {
+          _handleProcessingError(processingError, receiptId, imageFile, imageBytes, imageUrl);
+          return;
+        }
+
+        if (processingStatus == 'complete' || processingStatus == 'completed') {
+          await _finalizeProcessing(receiptId, imageFile, imageBytes, imageUrl);
+          return;
+        } else if (processingStatus?.startsWith('failed') == true) {
+          _handleProcessingError('Processing failed', receiptId, imageFile, imageBytes, imageUrl);
+          return;
+        }
+
+        // Update progress based on attempts
+        final progress = 90 + (attempts * 8 ~/ maxAttempts);
+        _updateProgress(progress, message: 'Processing... (attempt $attempts/$maxAttempts)');
+
+      } catch (e) {
+        _addLog('WARNING', 'Polling attempt $attempts failed: ${e.toString()}');
+        AppLogger.warning('Polling attempt failed', {
+          'attempt': attempts,
+          'maxAttempts': maxAttempts,
+          'receiptId': receiptId,
+          'error': e.toString(),
+        });
+
+        // If we're getting consistent errors, fail faster
+        if (attempts >= 3 && e.toString().toLowerCase().contains('not found')) {
+          _addLog('ERROR', 'Receipt not found after multiple attempts, stopping polling');
+          _handleProcessingError('Receipt not found in database', receiptId, imageFile, imageBytes, imageUrl);
+          return;
+        }
+      }
+    }
+
+    // Timeout reached
+    _addLog('ERROR', 'Processing timeout reached after $maxAttempts attempts');
+    _handleProcessingError('Processing timeout', receiptId, imageFile, imageBytes, imageUrl);
+  }
+
+  /// Parse amount from dynamic value
+  double? _parseAmount(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      return double.tryParse(value);
+    }
+    return null;
+  }
+
+  /// Parse double from dynamic value
+  double? _parseDouble(dynamic value) {
+    return _parseAmount(value);
+  }
+
+  /// Map processing status from string
+  ProcessingStatus _mapProcessingStatusFromString(String status) {
+    switch (status.toLowerCase()) {
+      case 'processing':
+        return ProcessingStatus.processing;
+      case 'completed':
+      case 'complete':
+        return ProcessingStatus.completed;
+      case 'failed':
+        return ProcessingStatus.failed;
+      case 'manual_review':
+      case 'manualreview':
+        return ProcessingStatus.manualReview;
+      default:
+        return ProcessingStatus.completed;
+    }
   }
 
   /// Reset state

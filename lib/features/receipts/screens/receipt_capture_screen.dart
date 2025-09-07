@@ -7,7 +7,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:go_router/go_router.dart';
 import 'package:logger/logger.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../shared/widgets/loading_widget.dart';
+
+import '../widgets/processing_timeline_widget.dart';
+import '../widgets/processing_logs_widget.dart';
 import '../providers/receipt_capture_provider.dart';
 import '../providers/receipts_provider.dart';
 
@@ -24,6 +26,7 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
   File? _selectedImage;
   bool _isProcessing = false;
 
+
   @override
   Widget build(BuildContext context) {
     final captureState = ref.watch(receiptCaptureProvider);
@@ -36,31 +39,29 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
           onPressed: () => context.pop(),
         ),
       ),
-      body: LoadingOverlay(
-        isLoading: _isProcessing || captureState.isLoading || captureState.isProcessing,
-        loadingMessage: _isProcessing
-            ? 'Processing image...'
-            : captureState.processingStep ?? 'Uploading receipt...',
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppConstants.defaultPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Image Preview Section
-              if (_selectedImage != null) ...[
-                Card(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppConstants.defaultPadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Image Preview Section
+            if (_selectedImage != null) ...[
+              Card(
+                child: SizedBox(
+                  height: 300,
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                    borderRadius: BorderRadius.circular(8),
                     child: Image.file(
                       _selectedImage!,
-                      height: 300,
-                      fit: BoxFit.cover,
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),
-                const SizedBox(height: AppConstants.defaultPadding),
-                
-                // Action Buttons for Selected Image
+              ),
+              const SizedBox(height: AppConstants.defaultPadding),
+
+              // Action Buttons for Selected Image
+              if (!captureState.isProcessing) ...[
                 Row(
                   children: [
                     Expanded(
@@ -80,9 +81,8 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
                     ),
                   ],
                 ),
-                
                 const SizedBox(height: AppConstants.largePadding),
-                
+
                 // Upload Button
                 ElevatedButton.icon(
                   onPressed: _uploadReceipt,
@@ -92,18 +92,68 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
                     padding: const EdgeInsets.symmetric(vertical: AppConstants.defaultPadding),
                   ),
                 ),
-              ] else ...[
-                // Capture Options
-                _buildCaptureOptions(),
               ],
-              
-              // Error Display
-              if (captureState.error != null) ...[
-                const SizedBox(height: AppConstants.defaultPadding),
-                _buildErrorDisplay(captureState.error!),
+
+              // Processing Timeline and Logs
+              if (captureState.isProcessing || captureState.processLogs.isNotEmpty) ...[
+                const SizedBox(height: AppConstants.largePadding),
+                ProcessingTimelineWidget(
+                  currentStage: captureState.currentStage,
+                  stageHistory: captureState.stageHistory,
+                  uploadProgress: captureState.uploadProgress,
+                  fileSize: _selectedImage?.lengthSync(),
+                  processingMethod: 'ai-vision',
+                  modelId: 'gemini-1.5-flash',
+                  startTime: captureState.startTime,
+                  isProgressUpdating: captureState.isProgressUpdating,
+                ),
+                // Only show processing logs during active processing, not after completion
+                if (captureState.isProcessing)
+                  ProcessingLogsWidget(
+                    processLogs: captureState.processLogs,
+                    currentStage: captureState.currentStage,
+                    showDetailedLogs: true,
+                    startTime: captureState.startTime,
+                  ),
+                // Show success message when completed
+                if (captureState.currentStage == 'COMPLETE' && !captureState.isProcessing) ...[
+                  const SizedBox(height: AppConstants.defaultPadding),
+                  Container(
+                    padding: const EdgeInsets.all(AppConstants.defaultPadding),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.green, size: 24),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Receipt processed successfully! You can now capture another receipt.',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.green.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
+            ] else ...[
+              // Capture Options
+              _buildCaptureOptions(),
             ],
-          ),
+
+            // Error Display
+            if (captureState.error != null) ...[
+              const SizedBox(height: AppConstants.defaultPadding),
+              _buildErrorDisplay(captureState.error!),
+            ],
+          ],
         ),
       ),
     );
@@ -166,9 +216,27 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
             ),
           ],
         ),
-        
+
         const SizedBox(height: AppConstants.largePadding),
-        
+
+        // Batch Upload Option
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () => context.push('/receipts/batch-upload'),
+            icon: const Icon(Icons.upload_file),
+            label: const Text('Upload Multiple Receipts'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: AppConstants.defaultPadding),
+              side: BorderSide(
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: AppConstants.largePadding),
+
         // Tips Section
         Card(
           child: Padding(
@@ -283,9 +351,9 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
 
       final XFile? image = await _picker.pickImage(
         source: source,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: AppConstants.imageQuality,
+        maxWidth: 1500, // Match React app optimization
+        maxHeight: 1500, // Match React app optimization
+        imageQuality: 80, // Match React app quality (80%)
       );
 
       if (image != null) {
@@ -357,16 +425,32 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
           ),
         );
 
-        // Add a small delay to ensure database transaction is committed
-        await Future.delayed(const Duration(milliseconds: 500));
+        // Add a longer delay to ensure database transaction is committed and replicated
+        _logger.i('⏳ Waiting for database consistency before refresh...');
+        await Future.delayed(const Duration(milliseconds: 1500));
 
         // Refresh the receipts list to show the newly uploaded receipt
         try {
+          _logger.i('🔄 Starting receipts list refresh after upload...');
           await ref.read(receiptsProvider.notifier).refresh();
-          _logger.i('✅ Receipts list refreshed after upload');
+          _logger.i('✅ Receipts list refreshed successfully after upload');
+
+          // Double-check by loading more to ensure the new receipt appears
+          await Future.delayed(const Duration(milliseconds: 500));
+          await ref.read(receiptsProvider.notifier).loadReceipts(refresh: true);
+          _logger.i('✅ Secondary refresh completed');
         } catch (refreshError) {
           _logger.e('❌ Failed to refresh receipts list: $refreshError');
-          // Don't block navigation if refresh fails
+          // Don't block navigation if refresh fails, but show a warning
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Receipt uploaded but list refresh failed. Pull to refresh manually.'),
+                backgroundColor: Colors.orange,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
         }
 
         if (mounted) {
