@@ -9,6 +9,7 @@ import '../../features/dashboard/screens/dashboard_screen.dart';
 import '../../features/receipts/screens/receipts_screen.dart';
 import '../../features/receipts/screens/modern_receipt_detail_screen.dart';
 import '../../features/receipts/screens/receipt_capture_screen.dart';
+import '../../features/receipts/screens/batch_upload_screen.dart';
 import '../../features/claims/screens/claims_screen.dart';
 import '../../features/claims/screens/claim_detail_screen.dart';
 import '../../features/teams/screens/teams_screen.dart';
@@ -31,6 +32,7 @@ class AppRoutes {
   static const String receipts = '/receipts';
   static const String receiptDetail = '/receipts/:id';
   static const String receiptCapture = '/receipts/capture';
+  static const String batchUpload = '/receipts/batch-upload';
   static const String claims = '/claims';
   static const String claimDetail = '/claims/:id';
   static const String teams = '/teams';
@@ -121,6 +123,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'capture',
                 builder: (context, state) => const ReceiptCaptureScreen(),
+              ),
+              GoRoute(
+                path: 'batch-upload',
+                builder: (context, state) => const BatchUploadScreen(),
               ),
               GoRoute(
                 path: ':id',
