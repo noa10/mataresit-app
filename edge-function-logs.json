@@ -1,0 +1,802 @@
+[
+  {
+    "event_message": "shutdown",
+    "event_type": "Shutdown",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "54ffc886-cac2-422b-8d35-2a61a8b1b47d",
+    "level": "log",
+    "timestamp": 1757234947552000
+  },
+  {
+    "event_message": "[COMPLETE] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Receipt processing completed successfully\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "e1e66ea4-8173-4f22-9f88-99c7307823ec",
+    "level": "info",
+    "timestamp": 1757234885019000
+  },
+  {
+    "event_message": "[NOTIFICATION] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Notifications will be handled by database trigger when status changes\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "15bc8c42-264c-4669-8f23-04ea1e968868",
+    "level": "info",
+    "timestamp": 1757234884994000
+  },
+  {
+    "event_message": "[EMBEDDING] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Receipt marked as having embeddings\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "3031eaef-0106-4f5c-9aac-0e888a211693",
+    "level": "info",
+    "timestamp": 1757234884967000
+  },
+  {
+    "event_message": "[EMBEDDING] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Also generated embeddings for 2 line items\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "2f42acb7-c9b1-411c-aa44-4153953c2e2d",
+    "level": "info",
+    "timestamp": 1757234884890000
+  },
+  {
+    "event_message": "[EMBEDDING] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Successfully generated 0 embeddings\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "b86433dd-d32d-4ac1-8bcf-6222f422acda",
+    "level": "info",
+    "timestamp": 1757234884856000
+  },
+  {
+    "event_message": "[EMBEDDING] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Using direct embedding processing\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "95fad7d3-6b2d-4691-92c1-c638f159dc12",
+    "level": "info",
+    "timestamp": 1757234883001000
+  },
+  {
+    "event_message": "Determining embedding processing method...\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "220d9e1c-98fe-4581-99d7-961381223de3",
+    "level": "info",
+    "timestamp": 1757234882870000
+  },
+  {
+    "event_message": "[EMBEDDING] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Triggering embedding generation\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "6f8a19f5-eeb2-4b8b-9c2a-afe437d396cd",
+    "level": "info",
+    "timestamp": 1757234882772000
+  },
+  {
+    "event_message": "[SAVE] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Processing results saved successfully\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "6243975f-7783-4382-a8f8-6bc538308070",
+    "level": "info",
+    "timestamp": 1757234882695000
+  },
+  {
+    "event_message": "[DEBUG] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Verification: Found 1 line items in database after insert\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "63eaaa53-bce5-40de-acc7-480dc4ba616a",
+    "level": "info",
+    "timestamp": 1757234882667000
+  },
+  {
+    "event_message": "Stored 2 line items for receipt 2e322b49-0cac-471e-96be-7e387f857423\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "d649dbbb-34d3-4854-8f5c-6ea388d33991",
+    "level": "info",
+    "timestamp": 1757234882594000
+  },
+  {
+    "event_message": "[SAVE] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Successfully saved 2 line items to database\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "1e9165a2-489a-4493-a885-3497f11caf40",
+    "level": "info",
+    "timestamp": 1757234882563000
+  },
+  {
+    "event_message": "DEBUG: Valid line items after filtering: [\n  {\n    description: \"THAI KING SIAM RIC\",\n    amount: 29.9,\n    receipt_id: \"2e322b49-0cac-471e-96be-7e387f857423\"\n  },\n  {\n    description: \"EXTRAJOSS GRAPE 6S\",\n    amount: 2.4,\n    receipt_id: \"2e322b49-0cac-471e-96be-7e387f857423\"\n  }\n]\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "97a03e4f-b4be-4e47-831d-c896e0db7707",
+    "level": "info",
+    "timestamp": 1757234882509000
+  },
+  {
+    "event_message": "DEBUG: Formatted line items: [\n  {\n    description: \"THAI KING SIAM RIC\",\n    amount: 29.9,\n    receipt_id: \"2e322b49-0cac-471e-96be-7e387f857423\"\n  },\n  {\n    description: \"EXTRAJOSS GRAPE 6S\",\n    amount: 2.4,\n    receipt_id: \"2e322b49-0cac-471e-96be-7e387f857423\"\n  }\n]\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "3d009c43-4c6b-4667-9fdc-1bb2d389d1cb",
+    "level": "info",
+    "timestamp": 1757234882509000
+  },
+  {
+    "event_message": "DEBUG: Raw line items: [\n  { description: \"THAI KING SIAM RIC\", amount: 29.9 },\n  { description: \"EXTRAJOSS GRAPE 6S\", amount: 2.4 }\n]\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "c57a3871-d736-4850-9815-cec0ee4f6ac3",
+    "level": "info",
+    "timestamp": 1757234882508000
+  },
+  {
+    "event_message": "[SAVE] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Storing 2 line items in database\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "8784eacb-b4fa-458a-a9c0-e8895252d073",
+    "level": "info",
+    "timestamp": 1757234882415000
+  },
+  {
+    "event_message": "DEBUG: Checking line items - extractedData.line_items exists: true, length: 2\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "3799d91a-5d2e-4862-bc74-7fd77918c3e3",
+    "level": "info",
+    "timestamp": 1757234882376000
+  },
+  {
+    "event_message": "[DEBUG] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) DEBUG: Line items check - exists: true, length: 2\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "f8478ede-b53a-474b-a89a-9b76ae848295",
+    "level": "info",
+    "timestamp": 1757234882376000
+  },
+  {
+    "event_message": "Date before validation: 2025-08-25\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "5ad7bbc7-215b-4d02-9c19-78d2c83c80ac",
+    "level": "info",
+    "timestamp": 1757234882215000
+  },
+  {
+    "event_message": "Date is already in correct format: 2025-08-25\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "97c018cf-a52c-4706-848b-44415da768ed",
+    "level": "info",
+    "timestamp": 1757234882215000
+  },
+  {
+    "event_message": "[SAVE] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Saving processing results to database\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "144d3f72-a265-49da-9a3f-f2cd8ee60efb",
+    "level": "info",
+    "timestamp": 1757234880993000
+  },
+  {
+    "event_message": "[AI] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Data extraction completed successfully\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "7f0bd481-b090-4944-a0e7-c8b63b81f580",
+    "level": "info",
+    "timestamp": 1757234880895000
+  },
+  {
+    "event_message": "Data extraction complete\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "77197221-05dd-479b-86ab-bf75a1c5770b",
+    "level": "info",
+    "timestamp": 1757234880895000
+  },
+  {
+    "event_message": "[COMPLETE] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Processing complete in 6.81 seconds\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "b6e6f5e1-273f-4e54-aa01-10d187123441",
+    "level": "info",
+    "timestamp": 1757234880863000
+  },
+  {
+    "event_message": "🔍 AI Vision response: {\n  success: true,\n  model_used: \"gemini-2.5-flash-lite\",\n  result_merchant: \"ECON SAVE CASH & CARRY (KBS) SDN. BHD.\",\n  result_total: 32.3,\n  result_line_items_count: 2,\n  result_line_items: [\n    { description: \"THAI KING SIAM RIC\", amount: 29.9 },\n    { description: \"EXTRAJOSS GRAPE 6S\", amount: 2.4 }\n  ]\n}\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "283b3052-afb0-4fb6-9374-65b55f9460c4",
+    "level": "info",
+    "timestamp": 1757234880806000
+  },
+  {
+    "event_message": "🔍 AI Vision request completed in 6.67 seconds\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "328e32e4-afcf-43c7-8354-a684c91e414b",
+    "level": "info",
+    "timestamp": 1757234880806000
+  },
+  {
+    "event_message": "Received data from AI Vision: {\n  success: true,\n  result: {\n    merchant: \"ECON SAVE CASH & CARRY (KBS) SDN. BHD.\",\n    date: \"2025-08-25\",\n    total: 32.3,\n    tax: 0,\n    currency: \"RM\",\n    payment_method: \"BANKKARD\",\n    predicted_category: \"Groceries\",\n    line_items: [\n      { description: \"THAI KING SIAM RIC\", amount: 29.9 },\n      { description: \"EXTRAJOSS GRAPE 6S\", amount: 2.4 }\n    ],\n    confidence: {\n      merchant: 100,\n      date: 100,\n      total: 100,\n      tax: 0,\n      currency: 100,\n      payment_method: 100,\n      predicted_category: 95,\n      line_items: 100,\n      malaysian_tax_info: 100,\n      structured_data: 95,\n      line_items_analysis: 90,\n      spending_patterns: 90\n    },\n    detected_tax_type: \"EXEMPT\",\n    detected_tax_rate: 0,\n    tax_breakdown: {\n      subtotal: 32.3,\n      tax_amount: 0,\n      tax_rate: 0,\n      total: 32.3,\n      is_inclusive: true,\n      calculation_method: \"exempt\"\n    },\n    is_tax_inclusive: true,\n    malaysian_business_category: \"Unknown\"\n  },\n  model_used: \"gemini-2.5-flash-lite\",\n  model_requested: \"gemini-2.5-flash-lite\"\n}\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "e862e947-c76c-49fd-a59e-cb449f3aec54",
+    "level": "info",
+    "timestamp": 1757234880806000
+  },
+  {
+    "event_message": "[AI] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) AI Vision processing complete\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "08384e4a-3c73-49ee-a80e-6a6c7d5f81f7",
+    "level": "info",
+    "timestamp": 1757234880806000
+  },
+  {
+    "event_message": "🔍 Calling enhance-receipt-data with payload: {\n  receiptId: \"2e322b49-0cac-471e-96be-7e387f857423\",\n  modelId: \"gemini-2.5-flash-lite\",\n  imageDataSize: 116480,\n  mimeType: \"image/jpeg\",\n  isBase64: true\n}\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "3726e917-4584-418d-b9bd-f4b313a44746",
+    "level": "info",
+    "timestamp": 1757234874172000
+  },
+  {
+    "event_message": "🔍 imageData.data: present (type: string, length: 116480)\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "3c36e67f-b630-4f26-a4e4-472339698b8c",
+    "level": "info",
+    "timestamp": 1757234874170000
+  },
+  {
+    "event_message": "🔍 modelId: gemini-2.5-flash-lite (type: string)\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "cd46d115-fbb2-4546-8dc7-a591f6caee56",
+    "level": "info",
+    "timestamp": 1757234874170000
+  },
+  {
+    "event_message": "🔍 imageData.isBase64: true\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "f9c94b5f-d07a-4fb3-82b1-b9f566f1321e",
+    "level": "info",
+    "timestamp": 1757234874170000
+  },
+  {
+    "event_message": "🔍 imageData.mimeType: image/jpeg\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "d0551392-0527-4db6-a197-d024e276b856",
+    "level": "info",
+    "timestamp": 1757234874170000
+  },
+  {
+    "event_message": "🔍 receiptId: 2e322b49-0cac-471e-96be-7e387f857423 (type: string)\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "718b49e9-908d-4878-81af-ef7683f1498e",
+    "level": "info",
+    "timestamp": 1757234874170000
+  },
+  {
+    "event_message": "🔍 PROCESS-RECEIPT PAYLOAD VALIDATION:\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "49d98217-1452-4a42-a68a-b0b0576a4984",
+    "level": "info",
+    "timestamp": 1757234874170000
+  },
+  {
+    "event_message": "[DEBUG] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Encoded image size for AI Vision: 116480 bytes\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "c77b3b9d-e6bb-493a-95c2-39543a69ea9f",
+    "level": "info",
+    "timestamp": 1757234874142000
+  },
+  {
+    "event_message": "🔍 Encoded image size: 116480 characters\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "0c9871d2-4cc6-4167-a6e4-ec19c1bcc721",
+    "level": "info",
+    "timestamp": 1757234874142000
+  },
+  {
+    "event_message": "🔍 EDGE FUNCTION DEBUG - Starting AI Vision processing at 2025-09-07T08:47:54.140Z\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "6dcba65f-9a3d-43d2-bff8-5e955f358708",
+    "level": "info",
+    "timestamp": 1757234874140000
+  },
+  {
+    "event_message": "🔍 Receipt ID: 2e322b49-0cac-471e-96be-7e387f857423\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "85ad8f65-a452-4ea2-a069-141686f60090",
+    "level": "info",
+    "timestamp": 1757234874140000
+  },
+  {
+    "event_message": "🔍 Encoding image bytes: 87360 bytes\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "1d7630d6-8495-4f31-bf8c-75cd25fbdd22",
+    "level": "info",
+    "timestamp": 1757234874140000
+  },
+  {
+    "event_message": "🔍 Model ID: gemini-2.5-flash-lite\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "14793f15-827a-42b3-84c9-3a9c8b7a38de",
+    "level": "info",
+    "timestamp": 1757234874140000
+  },
+  {
+    "event_message": "Calling AI Vision for direct image processing...\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "3d2bc086-7835-4422-a6f2-1d4e0421aced",
+    "level": "info",
+    "timestamp": 1757234874109000
+  },
+  {
+    "event_message": "Attempting to call enhance-receipt-data at: https://mpmkbtsufihzdelrlszs.supabase.co/functions/v1/enhance-receipt-data\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "33d7c9f2-2e9c-4b1c-b21c-d85afc214a58",
+    "level": "info",
+    "timestamp": 1757234874109000
+  },
+  {
+    "event_message": "[DEBUG] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Calling enhance-receipt-data at: https://mpmkbtsufihzdelrlszs.supabase.co/functions/v1/enhance-receipt-data\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "c911d38c-9c8d-4d3f-929b-876298430636",
+    "level": "info",
+    "timestamp": 1757234874109000
+  },
+  {
+    "event_message": "[METHOD] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Using AI Vision for processing\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "194710ce-d5ee-48b7-93ce-a3ae4880fca5",
+    "level": "info",
+    "timestamp": 1757234874049000
+  },
+  {
+    "event_message": "[AI] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Starting data processing with optimized image\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "d88ddb81-1e69-484b-bcee-30a230c4715b",
+    "level": "info",
+    "timestamp": 1757234874019000
+  },
+  {
+    "event_message": "Thumbnail uploaded successfully: https://mpmkbtsufihzdelrlszs.supabase.co/storage/v1/object/public/receipt_images/thumbnails/2e322b49-0cac-471e-96be-7e387f857423_thumb.jpg\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "0865d680-0d83-4df5-bcd8-ef6291d9e145",
+    "level": "info",
+    "timestamp": 1757234873989000
+  },
+  {
+    "event_message": "[THUMBNAIL] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Thumbnail uploaded: https://mpmkbtsufihzdelrlszs.supabase.co/storage/v1/object/public/receipt_images/thumbnails/2e322b49-0cac-471e-96be-7e387f857423_thumb.jpg\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "30e91f24-7941-4bd1-824d-32de1d09f009",
+    "level": "info",
+    "timestamp": 1757234873989000
+  },
+  {
+    "event_message": "Uploading thumbnail to storage path: thumbnails/2e322b49-0cac-471e-96be-7e387f857423_thumb.jpg\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "1c8a7b10-6814-49bb-8d4e-b1dc7ab5168d",
+    "level": "info",
+    "timestamp": 1757234873834000
+  },
+  {
+    "event_message": "[THUMBNAIL] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Uploading thumbnail to thumbnails/2e322b49-0cac-471e-96be-7e387f857423_thumb.jpg\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "44ff1a73-4910-4f72-8559-fdf5e39a99b2",
+    "level": "info",
+    "timestamp": 1757234873793000
+  },
+  {
+    "event_message": "Thumbnail encoded as JPEG, size: 38349 bytes\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "a88c754d-aecf-45a1-ac61-71f21b3a2114",
+    "level": "info",
+    "timestamp": 1757234873793000
+  },
+  {
+    "event_message": "Resized dimensions: 300x775\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "a656c754-6edd-4115-859f-94958ac7baf0",
+    "level": "info",
+    "timestamp": 1757234873764000
+  },
+  {
+    "event_message": "Original dimensions: 495x1280\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "e8000d1e-fe93-4eac-ab5e-14c5345d07ef",
+    "level": "info",
+    "timestamp": 1757234873724000
+  },
+  {
+    "event_message": "Decoding image for thumbnail...\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "155ae16b-5a3c-42ad-8013-211eaddd6ecb",
+    "level": "info",
+    "timestamp": 1757234873451000
+  },
+  {
+    "event_message": "[THUMBNAIL] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Starting thumbnail generation\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "2e75aeb1-5d7e-4a75-adf1-135e5ee96524",
+    "level": "info",
+    "timestamp": 1757234873420000
+  },
+  {
+    "event_message": "🔍 CLIENT OPTIMIZATION: Image was optimized by Flutter client\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "91a61589-4012-4d0a-8ee2-b7cf500e16f1",
+    "level": "info",
+    "timestamp": 1757234873420000
+  },
+  {
+    "event_message": "[DEBUG] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Client performed image optimization before upload\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "d4a64b95-5e7c-4a52-b7b7-428cced70458",
+    "level": "info",
+    "timestamp": 1757234873387000
+  },
+  {
+    "event_message": "🔍 OPTIMIZATION SKIPPED: Client-optimized image, using as-is\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "47924981-7cc4-4860-bac6-a6163f1f8b06",
+    "level": "info",
+    "timestamp": 1757234873387000
+  },
+  {
+    "event_message": "[OPTIMIZE] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Skipping server-side optimization - client has already optimized the image\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "5013c88e-0a3a-4d97-83ff-f65a99f7fd31",
+    "level": "info",
+    "timestamp": 1757234873343000
+  },
+  {
+    "event_message": "[FETCH] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Image fetched successfully, size: 87360 bytes\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "d127f617-2b39-4dfe-8d72-26cfdcdd9c4f",
+    "level": "info",
+    "timestamp": 1757234873296000
+  },
+  {
+    "event_message": "Fetching image from URL: https://mpmkbtsufihzdelrlszs.supabase.co/storage/v1/object/public/receipt_images/feecc208-3282-49d2-8e15-0c64b0ee4abb/receipt_2e322b49-0cac-471e-96be-7e387f857423.jpeg\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "2303364c-3a46-4d57-a6dd-6e5b2bc17340",
+    "level": "info",
+    "timestamp": 1757234873120000
+  },
+  {
+    "event_message": "[FETCH] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Fetching receipt image\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "ed8ec246-0b3a-4380-b64f-1c3151c855e7",
+    "level": "info",
+    "timestamp": 1757234873086000
+  },
+  {
+    "event_message": "[NOTIFICATION] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Skipping processing started notification - filtered out for noise reduction\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "aa4e38b7-21ed-42e2-bcd0-ed9b5408a0c3",
+    "level": "info",
+    "timestamp": 1757234873056000
+  },
+  {
+    "event_message": "[START] (Receipt: 2e322b49-0cac-471e-96be-7e387f857423) Starting receipt processing\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "29683388-d25f-4c18-9341-db7b5ae39cd0",
+    "level": "info",
+    "timestamp": 1757234872684000
+  },
+  {
+    "event_message": "Request data received: {\"receiptId\":\"2e322b49-0cac-471e-96be-7e387f857423\",\"imageUrl\":\"https://mpmkbtsufihzdelrlszs.supabase.co/storage/v1/object/public/receipt_images/feecc208-3282-49d2-8e15-0c64b0ee4abb/receipt_2e322b49-0...\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "1ab10fd5-bc0b-4f9f-813a-25137169815b",
+    "level": "info",
+    "timestamp": 1757234872680000
+  },
+  {
+    "event_message": "Received request to process receipt\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "af0540ea-7821-4412-b43a-4359f8e51a1f",
+    "level": "info",
+    "timestamp": 1757234872680000
+  },
+  {
+    "event_message": "Authorization header present: true\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "fd42402f-f15a-4c5f-85fb-79b83c27ce26",
+    "level": "info",
+    "timestamp": 1757234872680000
+  },
+  {
+    "event_message": "API key header present: true\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "c64fbc99-4001-4a9f-a193-c11197d0e65d",
+    "level": "info",
+    "timestamp": 1757234872680000
+  },
+  {
+    "event_message": "Listening on http://localhost:9999/\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "3e7aeb48-353f-4a47-ab7d-2114d31de6a3",
+    "level": "info",
+    "timestamp": 1757234872677000
+  },
+  {
+    "event_message": "booted (time: 47ms)",
+    "event_type": "Boot",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "c8ddd39f-a803-4048-8075-55d8215cb6c9",
+    "level": "log",
+    "timestamp": 1757234872528000
+  },
+  {
+    "event_message": "shutdown",
+    "event_type": "Shutdown",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "224911b2-87b3-4eff-88d0-d2800f992b8d",
+    "level": "log",
+    "timestamp": 1757234770645000
+  },
+  {
+    "event_message": "[COMPLETE] (Receipt: e3665488-0fdf-4562-b5a0-2242e6c2016e) Receipt processing completed successfully\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "85f4fe7f-e062-404b-933a-c2539edc8581",
+    "level": "info",
+    "timestamp": 1757234750306000
+  },
+  {
+    "event_message": "[NOTIFICATION] (Receipt: e3665488-0fdf-4562-b5a0-2242e6c2016e) Notifications will be handled by database trigger when status changes\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "c200ee5f-59e7-41c2-890b-f8fa9b3c8d6a",
+    "level": "info",
+    "timestamp": 1757234750276000
+  },
+  {
+    "event_message": "[EMBEDDING] (Receipt: e3665488-0fdf-4562-b5a0-2242e6c2016e) Receipt marked as having embeddings\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "c88becd7-30c7-4ea7-84a7-85bf9a288c1b",
+    "level": "info",
+    "timestamp": 1757234750238000
+  },
+  {
+    "event_message": "[EMBEDDING] (Receipt: e3665488-0fdf-4562-b5a0-2242e6c2016e) Also generated embeddings for 4 line items\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "c6c09857-a55b-48d6-8ccf-405f641e1cb8",
+    "level": "info",
+    "timestamp": 1757234750171000
+  },
+  {
+    "event_message": "[EMBEDDING] (Receipt: e3665488-0fdf-4562-b5a0-2242e6c2016e) Successfully generated 0 embeddings\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "cae14948-39c9-4b2e-b95f-bcbc9862b4d8",
+    "level": "info",
+    "timestamp": 1757234750133000
+  },
+  {
+    "event_message": "[EMBEDDING] (Receipt: e3665488-0fdf-4562-b5a0-2242e6c2016e) Using direct embedding processing\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "36939d3c-af2a-4718-8eae-d2aa0222d98b",
+    "level": "info",
+    "timestamp": 1757234746916000
+  },
+  {
+    "event_message": "Determining embedding processing method...\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "d6cb806b-cd7d-488c-b446-aa1f1ba26da7",
+    "level": "info",
+    "timestamp": 1757234746859000
+  },
+  {
+    "event_message": "[EMBEDDING] (Receipt: e3665488-0fdf-4562-b5a0-2242e6c2016e) Triggering embedding generation\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "b203a469-c33f-4ce5-b516-e2330e8df5b7",
+    "level": "info",
+    "timestamp": 1757234746809000
+  },
+  {
+    "event_message": "[SAVE] (Receipt: e3665488-0fdf-4562-b5a0-2242e6c2016e) Processing results saved successfully\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "56007a31-ac65-4214-bc76-4d85dbb3b704",
+    "level": "info",
+    "timestamp": 1757234746780000
+  },
+  {
+    "event_message": "[DEBUG] (Receipt: e3665488-0fdf-4562-b5a0-2242e6c2016e) Verification: Found 1 line items in database after insert\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "38376c92-5708-4ca6-9f73-04d48e16c0c3",
+    "level": "info",
+    "timestamp": 1757234746754000
+  },
+  {
+    "event_message": "Stored 4 line items for receipt e3665488-0fdf-4562-b5a0-2242e6c2016e\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "91379cf3-d2ea-47d6-9fc5-555e45bab3bb",
+    "level": "info",
+    "timestamp": 1757234746722000
+  },
+  {
+    "event_message": "[SAVE] (Receipt: e3665488-0fdf-4562-b5a0-2242e6c2016e) Successfully saved 4 line items to database\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "53702d88-6364-43e7-8718-ae82bc46d27d",
+    "level": "info",
+    "timestamp": 1757234746662000
+  },
+  {
+    "event_message": "DEBUG: Raw line items: [\n  { description: \"TIMUN JEPUN\", amount: 8.11 },\n  { description: \"MINYAK MASAK CAP ABA\", amount: 2.5 },\n  { description: \"MINYAK MASAK CAP ABA\", amount: 2.5 },\n  { description: \"SEGAR FRIES 1KG SH\", amount: 7.99 }\n]\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "294f1d4f-4bb1-4127-9869-e952c4021ae2",
+    "level": "info",
+    "timestamp": 1757234746622000
+  },
+  {
+    "event_message": "DEBUG: Valid line items after filtering: [\n  {\n    description: \"TIMUN JEPUN\",\n    amount: 8.11,\n    receipt_id: \"e3665488-0fdf-4562-b5a0-2242e6c2016e\"\n  },\n  {\n    description: \"MINYAK MASAK CAP ABA\",\n    amount: 2.5,\n    receipt_id: \"e3665488-0fdf-4562-b5a0-2242e6c2016e\"\n  },\n  {\n    description: \"MINYAK MASAK CAP ABA\",\n    amount: 2.5,\n    receipt_id: \"e3665488-0fdf-4562-b5a0-2242e6c2016e\"\n  },\n  {\n    description: \"SEGAR FRIES 1KG SH\",\n    amount: 7.99,\n    receipt_id: \"e3665488-0fdf-4562-b5a0-2242e6c2016e\"\n  }\n]\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "15226aac-fad0-448b-8150-9c6a25623194",
+    "level": "info",
+    "timestamp": 1757234746622000
+  },
+  {
+    "event_message": "DEBUG: Formatted line items: [\n  {\n    description: \"TIMUN JEPUN\",\n    amount: 8.11,\n    receipt_id: \"e3665488-0fdf-4562-b5a0-2242e6c2016e\"\n  },\n  {\n    description: \"MINYAK MASAK CAP ABA\",\n    amount: 2.5,\n    receipt_id: \"e3665488-0fdf-4562-b5a0-2242e6c2016e\"\n  },\n  {\n    description: \"MINYAK MASAK CAP ABA\",\n    amount: 2.5,\n    receipt_id: \"e3665488-0fdf-4562-b5a0-2242e6c2016e\"\n  },\n  {\n    description: \"SEGAR FRIES 1KG SH\",\n    amount: 7.99,\n    receipt_id: \"e3665488-0fdf-4562-b5a0-2242e6c2016e\"\n  }\n]\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "eef9cdd5-153a-46be-a4ab-add2bf9b9170",
+    "level": "info",
+    "timestamp": 1757234746622000
+  },
+  {
+    "event_message": "[SAVE] (Receipt: e3665488-0fdf-4562-b5a0-2242e6c2016e) Storing 4 line items in database\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "736de30d-cd35-4357-9fdd-866c1ee1fcd0",
+    "level": "info",
+    "timestamp": 1757234746550000
+  },
+  {
+    "event_message": "DEBUG: Checking line items - extractedData.line_items exists: true, length: 4\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "d7bf40a0-5a4c-4503-a410-d6660b042105",
+    "level": "info",
+    "timestamp": 1757234746515000
+  },
+  {
+    "event_message": "[DEBUG] (Receipt: e3665488-0fdf-4562-b5a0-2242e6c2016e) DEBUG: Line items check - exists: true, length: 4\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "4b249bbd-5f6d-4b9e-b8e5-2a0e0f6de573",
+    "level": "info",
+    "timestamp": 1757234746515000
+  },
+  {
+    "event_message": "Date before validation: 2025-08-15\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "49a43fe7-063c-403e-b340-adf947636e74",
+    "level": "info",
+    "timestamp": 1757234746418000
+  },
+  {
+    "event_message": "Date is already in correct format: 2025-08-15\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "52145d64-2c57-4c6d-83c4-debabb6f3d72",
+    "level": "info",
+    "timestamp": 1757234746418000
+  },
+  {
+    "event_message": "[SAVE] (Receipt: e3665488-0fdf-4562-b5a0-2242e6c2016e) Saving processing results to database\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "09fbe766-ded7-418b-975f-c6a0fd7a06da",
+    "level": "info",
+    "timestamp": 1757234746371000
+  },
+  {
+    "event_message": "[AI] (Receipt: e3665488-0fdf-4562-b5a0-2242e6c2016e) Data extraction completed successfully\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "a4cb533a-73d0-48b0-9db8-a0821a72be6b",
+    "level": "info",
+    "timestamp": 1757234746320000
+  },
+  {
+    "event_message": "Data extraction complete\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "bb8f6587-2eaf-4344-bc16-6a35b360c82a",
+    "level": "info",
+    "timestamp": 1757234746320000
+  },
+  {
+    "event_message": "[COMPLETE] (Receipt: e3665488-0fdf-4562-b5a0-2242e6c2016e) Processing complete in 7.14 seconds\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "c0ee860d-c815-4767-adba-6f667ff1da8f",
+    "level": "info",
+    "timestamp": 1757234746289000
+  },
+  {
+    "event_message": "[AI] (Receipt: e3665488-0fdf-4562-b5a0-2242e6c2016e) AI Vision processing complete\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "e6024bcc-058a-4d02-89ce-6b9ff5744807",
+    "level": "info",
+    "timestamp": 1757234746258000
+  },
+  {
+    "event_message": "🔍 AI Vision request completed in 6.96 seconds\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "39234a2c-6156-4a71-ba51-cfacdc6823e0",
+    "level": "info",
+    "timestamp": 1757234746258000
+  },
+  {
+    "event_message": "🔍 AI Vision response: {\n  success: true,\n  model_used: \"gemini-2.5-flash-lite\",\n  result_merchant: \"SUPER SEVEN CASH & CARRY SDN BHD\",\n  result_total: 21.1,\n  result_line_items_count: 4,\n  result_line_items: [\n    { description: \"TIMUN JEPUN\", amount: 8.11 },\n    { description: \"MINYAK MASAK CAP ABA\", amount: 2.5 },\n    { description: \"MINYAK MASAK CAP ABA\", amount: 2.5 },\n    { description: \"SEGAR FRIES 1KG SH\", amount: 7.99 }\n  ]\n}\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "ba2eeecc-2203-4a02-80bb-7f541953723f",
+    "level": "info",
+    "timestamp": 1757234746258000
+  },
+  {
+    "event_message": "Received data from AI Vision: {\n  success: true,\n  result: {\n    merchant: \"SUPER SEVEN CASH & CARRY SDN BHD\",\n    date: \"2025-08-15\",\n    total: 21.1,\n    tax: 0,\n    currency: \"MYR\",\n    payment_method: \"ATM CARD\",\n    predicted_category: \"Groceries\",\n    line_items: [\n      { description: \"TIMUN JEPUN\", amount: 8.11 },\n      { description: \"MINYAK MASAK CAP ABA\", amount: 2.5 },\n      { description: \"MINYAK MASAK CAP ABA\", amount: 2.5 },\n      { description: \"SEGAR FRIES 1KG SH\", amount: 7.99 }\n    ],\n    confidence: {\n      merchant: 95,\n      date: 98,\n      total: 99,\n      tax: 90,\n      currency: 99,\n      payment_method: 95,\n      predicted_category: 95,\n      line_items: 95,\n      malaysian_tax_info: 90,\n      structured_data: 90,\n      line_items_analysis: 85,\n      spending_patterns: 80\n    },\n    detected_tax_type: \"EXEMPT\",\n    detected_tax_rate: 0,\n    tax_breakdown: {\n      subtotal: 21.1,\n      tax_amount: 0,\n      tax_rate: 0,\n      total: 21.1,\n      is_inclusive: true,\n      calculation_method: \"exempt\"\n    },\n    is_tax_inclusive: true,\n    malaysian_business_category: \"Unknown\"\n  },\n  model_used: \"gemini-2.5-flash-lite\",\n  model_requested: \"gemini-2.5-flash-lite\"\n}\n",
+    "event_type": "Log",
+    "function_id": "bd9a324b-67a1-42b9-b47f-ddbb7df4b433",
+    "id": "a259701b-412a-4ff7-8833-fe57653b5228",
+    "level": "info",
+    "timestamp": 1757234746258000
+  }
+]
