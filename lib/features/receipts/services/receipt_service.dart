@@ -19,20 +19,86 @@ class ReceiptService {
       mappedData['merchant'] = mappedData.remove('merchantName');
     }
 
+    // Handle underscore format field names from Flutter
+    if (mappedData.containsKey('merchant_name')) {
+      mappedData['merchant'] = mappedData.remove('merchant_name');
+    }
+
     if (mappedData.containsKey('transactionDate')) {
       mappedData['date'] = mappedData.remove('transactionDate');
+    }
+
+    // Handle underscore format field names from Flutter
+    if (mappedData.containsKey('transaction_date')) {
+      mappedData['date'] = mappedData.remove('transaction_date');
     }
 
     if (mappedData.containsKey('totalAmount')) {
       mappedData['total'] = mappedData.remove('totalAmount');
     }
 
+    // Handle underscore format field names from Flutter
+    if (mappedData.containsKey('total_amount')) {
+      mappedData['total'] = mappedData.remove('total_amount');
+    }
+
     if (mappedData.containsKey('taxAmount')) {
       mappedData['tax'] = mappedData.remove('taxAmount');
     }
 
+    // Handle underscore format field names from Flutter
+    if (mappedData.containsKey('tax_amount')) {
+      mappedData['tax'] = mappedData.remove('tax_amount');
+    }
+
     if (mappedData.containsKey('paymentMethod')) {
       mappedData['payment_method'] = mappedData.remove('paymentMethod');
+    }
+
+    // payment_method is already in the correct format, no need to map
+
+    // Handle custom_category_id - it's already in the correct format for the database
+    // No mapping needed for custom_category_id
+
+    // Handle enum conversion for status
+    if (mappedData.containsKey('status') && mappedData['status'] is ReceiptStatus) {
+      final status = mappedData['status'] as ReceiptStatus;
+      switch (status) {
+        case ReceiptStatus.draft:
+          mappedData['status'] = 'draft';
+          break;
+        case ReceiptStatus.active:
+          mappedData['status'] = 'active';
+          break;
+        case ReceiptStatus.archived:
+          mappedData['status'] = 'archived';
+          break;
+        case ReceiptStatus.deleted:
+          mappedData['status'] = 'deleted';
+          break;
+      }
+    }
+
+    // Handle enum conversion for processing_status
+    if (mappedData.containsKey('processing_status') && mappedData['processing_status'] is ProcessingStatus) {
+      final processingStatus = mappedData['processing_status'] as ProcessingStatus;
+      switch (processingStatus) {
+        case ProcessingStatus.pending:
+          mappedData['processing_status'] = 'pending';
+          break;
+        case ProcessingStatus.processing:
+          mappedData['processing_status'] = 'processing';
+          break;
+        case ProcessingStatus.completed:
+          mappedData['processing_status'] = 'completed';
+          break;
+        case ProcessingStatus.failed:
+          mappedData['processing_status'] = 'failed';
+          break;
+        case ProcessingStatus.manualReview:
+          mappedData['processing_status'] = 'manual_review';
+          break;
+      }
     }
 
     return mappedData;
@@ -45,88 +111,113 @@ class ReceiptService {
     required List<LineItemModel> lineItems,
   }) async {
     try {
-      // Start a transaction-like operation
-      await _supabase.rpc('begin_transaction');
+      print('🔄 Updating receipt $receiptId with ${lineItems.length} line items');
 
-      // Update the receipt
+      // Map receipt data to database format
       final mappedReceiptData = _mapReceiptDataForDatabase(receiptData);
+      print('📝 Mapped receipt data: ${mappedReceiptData.keys.join(', ')}');
+
+      // First update the receipt data
+      print('📊 Updating receipt data...');
       await _supabase
           .from('receipts')
           .update({
             ...mappedReceiptData,
             'updated_at': DateTime.now().toIso8601String(),
           })
-          .eq('id', receiptId)
-          .select()
-          .single();
+          .eq('id', receiptId);
+      print('✅ Receipt data updated successfully');
 
-      // Delete existing line items
-      await _supabase
-          .from('line_items')
-          .delete()
-          .eq('receipt_id', receiptId);
-
-      // Insert new line items
+      // Update line items if provided
       if (lineItems.isNotEmpty) {
-        final lineItemsData = lineItems.map((item) {
-          final data = item.toJson();
-          data['receipt_id'] = receiptId;
-          data['created_at'] = DateTime.now().toIso8601String();
-          data['updated_at'] = DateTime.now().toIso8601String();
-          
-          // Remove temp IDs
-          if (data['id']?.toString().startsWith('temp-') == true) {
-            data.remove('id');
+        print('🗑️ Deleting existing line items...');
+        // Delete existing line items first
+        await _supabase
+            .from('line_items')
+            .delete()
+            .eq('receipt_id', receiptId);
+        print('✅ Existing line items deleted');
+
+        // Filter out items with empty descriptions and format for insertion
+        final formattedLineItems = lineItems
+            .where((item) => item.description.trim().isNotEmpty)
+            .map((item) {
+          final data = <String, dynamic>{
+            'description': item.description.trim(),
+            'amount': item.amount,
+            'receipt_id': receiptId,
+            'created_at': DateTime.now().toIso8601String(),
+            'updated_at': DateTime.now().toIso8601String(),
+          };
+
+          // Don't include temp IDs
+          if (!item.id.startsWith('temp-')) {
+            data['id'] = item.id;
           }
-          
+
           return data;
         }).toList();
 
+        if (formattedLineItems.isNotEmpty) {
+          print('➕ Inserting ${formattedLineItems.length} line items...');
+          await _supabase
+              .from('line_items')
+              .insert(formattedLineItems);
+          print('✅ Line items inserted successfully');
+        }
+      } else {
+        print('🗑️ Deleting all line items (empty array provided)...');
+        // If empty array is explicitly passed, delete all line items
         await _supabase
             .from('line_items')
-            .insert(lineItemsData);
+            .delete()
+            .eq('receipt_id', receiptId);
+        print('✅ All line items deleted');
       }
-
-      // Commit the transaction
-      await _supabase.rpc('commit_transaction');
 
       // Fetch the updated receipt with line items
-      return await getReceiptWithLineItems(receiptId);
+      print('🔍 Fetching updated receipt with line items...');
+      final result = await getReceiptWithLineItems(receiptId);
+      print('✅ Receipt update completed successfully');
+      return result;
     } catch (error) {
-      // Rollback on error
-      try {
-        await _supabase.rpc('rollback_transaction');
-      } catch (_) {
-        // Ignore rollback errors
-      }
+      print('❌ Error updating receipt: $error');
       rethrow;
     }
   }
 
   /// Get a receipt with its line items
   static Future<ReceiptModel> getReceiptWithLineItems(String receiptId) async {
-    final response = await _supabase
-        .from('receipts')
-        .select('''
-          *,
-          line_items (*)
-        ''')
-        .eq('id', receiptId)
-        .single();
+    try {
+      print('🔍 Fetching receipt $receiptId with line items...');
+      final response = await _supabase
+          .from('receipts')
+          .select('''
+            *,
+            line_items (*)
+          ''')
+          .eq('id', receiptId)
+          .single();
 
-    final receipt = ReceiptModel.fromJson(response);
-    
-    // Parse line items if they exist
-    if (response['line_items'] != null) {
-      final lineItemsData = response['line_items'] as List;
-      final lineItems = lineItemsData
-          .map((item) => LineItemModel.fromJson(item))
-          .toList();
-      
-      return receipt.copyWith(lineItems: lineItems);
+      final receipt = ReceiptModel.fromJson(response);
+
+      // Parse line items if they exist
+      if (response['line_items'] != null) {
+        final lineItemsData = response['line_items'] as List;
+        final lineItems = lineItemsData
+            .map((item) => LineItemModel.fromJson(item))
+            .toList();
+
+        print('✅ Receipt fetched successfully with ${lineItems.length} line items');
+        return receipt.copyWith(lineItems: lineItems);
+      }
+
+      print('✅ Receipt fetched successfully with 0 line items');
+      return receipt;
+    } catch (error) {
+      print('❌ Error fetching receipt with line items: $error');
+      rethrow;
     }
-
-    return receipt;
   }
 
   /// Validate receipt data before saving

@@ -60,7 +60,20 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
 
   void _handleMenuAction(String action) {
     switch (action) {
+      case 'add_receipt':
+        context.push('/receipts/capture');
+        break;
+      case 'batch_upload':
+        context.push('/receipts/batch-upload');
+        break;
       case 'refresh':
+        // Show a snackbar to indicate refresh is happening
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Refreshing receipts...'),
+            duration: Duration(seconds: 2),
+          ),
+        );
         ref.read(receiptsProvider.notifier).refresh();
         break;
       case 'clear_filters':
@@ -111,6 +124,22 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
           PopupMenuButton<String>(
             onSelected: _handleMenuAction,
             itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'add_receipt',
+                child: ListTile(
+                  leading: Icon(Icons.add_a_photo),
+                  title: Text('Add Receipt'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'batch_upload',
+                child: ListTile(
+                  leading: Icon(Icons.upload_file),
+                  title: Text('Batch Upload'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
               const PopupMenuItem(
                 value: 'refresh',
                 child: ListTile(

@@ -5,6 +5,7 @@ import '../../../shared/models/receipt_model.dart';
 import '../../../shared/models/line_item_model.dart';
 import '../../../shared/models/grouped_receipts.dart';
 import '../../../shared/utils/date_utils.dart';
+import '../../../shared/utils/currency_utils.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../teams/providers/teams_provider.dart';
 import '../../categories/providers/categories_provider.dart';
@@ -103,7 +104,8 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
       // Only refresh if the current team actually changed
       if (previous?.currentTeam?.id != next.currentTeam?.id) {
         AppLogger.info('🔄 Workspace changed from ${previous?.currentTeam?.name ?? "Personal"} to ${next.currentTeam?.name ?? "Personal"}, refreshing receipts');
-        loadReceipts(refresh: true);
+        // Pass the new team state to ensure we use the updated context
+        loadReceipts(refresh: true, teamContext: next);
       }
     });
 
@@ -111,7 +113,7 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
   }
 
   /// Load receipts for the current user
-  Future<void> loadReceipts({bool refresh = false}) async {
+  Future<void> loadReceipts({bool refresh = false, CurrentTeamState? teamContext}) async {
     try {
       if (refresh) {
         state = state.copyWith(
@@ -155,9 +157,9 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
       // Try to load from database
       List<ReceiptModel> newReceipts = [];
       try {
-        // Get current workspace context
-        final currentTeamState = ref.read(currentTeamProvider);
-        final currentTeam = currentTeamState.currentTeam;
+        // Get current workspace context - use provided context if available
+        final currentTeamState = teamContext ?? ref.read(currentTeamProvider);
+        final currentTeam = currentTeamState?.currentTeam;
 
         AppLogger.info('🔍 Fetching receipts for user: ${user.id} in workspace: ${currentTeam?.name ?? "Personal"}');
 
@@ -309,7 +311,7 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
       transactionDate: json['date'] != null ? DateTime.parse(json['date']) : null,
       totalAmount: json['total'] != null ? double.tryParse(json['total'].toString()) : null,
       taxAmount: json['tax'] != null ? double.tryParse(json['tax'].toString()) : null,
-      currency: json['currency'] ?? 'MYR',
+      currency: CurrencyUtils.normalizeCurrencyCode(json['currency'] ?? 'MYR'),
       paymentMethod: json['payment_method'],
       category: json['predicted_category'],
       customCategoryId: json['custom_category_id'], // Add the missing custom_category_id field
@@ -564,7 +566,9 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
 
   /// Refresh receipts
   Future<void> refresh() async {
+    AppLogger.info('🔄 Manual refresh triggered - clearing cache and reloading receipts');
     await loadReceipts(refresh: true);
+    AppLogger.info('✅ Manual refresh completed - ${state.receipts.length} receipts loaded');
   }
 
   /// Load more receipts (for pagination)
