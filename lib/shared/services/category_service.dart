@@ -238,7 +238,7 @@ class CategoryService {
 
       final updatedCount = response as int? ?? 0;
       if (updatedCount > 0) {
-        final action = categoryId != null ? "assigned to category" : "removed from category";
+        final action = categoryId != null ? 'assigned to category' : 'removed from category';
         _logger.d('$updatedCount receipt(s) $action');
       }
 
@@ -290,17 +290,17 @@ class CategoryService {
 
     if (data is CreateCategoryRequest) {
       if (data.name.trim().isEmpty) {
-        errors.add("Category name is required");
+        errors.add('Category name is required');
       } else if (data.name.trim().length > 50) {
-        errors.add("Category name cannot exceed 50 characters");
+        errors.add('Category name cannot exceed 50 characters');
       }
     }
 
     if (data is UpdateCategoryRequest && data.name != null) {
       if (data.name!.trim().isEmpty) {
-        errors.add("Category name is required");
+        errors.add('Category name is required');
       } else if (data.name!.trim().length > 50) {
-        errors.add("Category name cannot exceed 50 characters");
+        errors.add('Category name cannot exceed 50 characters');
       }
     }
 
@@ -313,7 +313,7 @@ class CategoryService {
     }
 
     if (color != null && !RegExp(r'^#[0-9A-Fa-f]{6}$').hasMatch(color)) {
-      errors.add("Color must be a valid hex color (e.g., #3B82F6)");
+      errors.add('Color must be a valid hex color (e.g., #3B82F6)');
     }
 
     return errors;
