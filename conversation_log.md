@@ -11,3 +11,9 @@
 - Request: "please help setup the project to reduce the git changes done using git ignore"
 - Action: Refined root `.gitignore` to ignore Flutter metadata and plugin files (`.metadata`, `.flutter-plugins`), temp/backup patterns (`pubspec_temp.yaml`, `*.backup`, `*.orig`, `*.rej`), environment files (`.env*`), and web subproject build/deps/caches (`mataresit/dist/`, `mataresit/node_modules/`, `mataresit/.vite*/`, `mataresit/.cache/`).
 - Response Summary: This should reduce noise from build outputs, cache directories, and ephemeral files across Flutter and the `mataresit/` web subproject. Next step: verify with `git status`.
+
+## 2025-09-08 23:45 +08:00
+
+- Request: "how can we build the android apk from the flutter app to test?"
+- Action: Provided step-by-step guidance and commands to build Debug and Release APKs with Flutter, including `--split-per-abi`, signing notes for release builds, flavor usage, and APK output paths. Offered to run the build commands upon approval.
+- Response Summary: Use `flutter build apk --debug` for a quick test APK, or `flutter build apk --release --split-per-abi` for production-like artifacts. Outputs are under `build/app/outputs/flutter-apk/`. For release signing, configure `android/app/key.properties` and signing configs in `android/app/build.gradle.kts`.
