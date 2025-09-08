@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/services/profile_service.dart';
 import '../../../features/auth/providers/auth_provider.dart';
+import '../../subscription/widgets/subscription_status_card.dart';
+import '../../profile/providers/profile_provider.dart';
+import '../../../core/providers/language_provider.dart';
+import '../../../shared/providers/currency_provider.dart';
+import '../../../shared/providers/theme_provider.dart';
+
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -9,10 +18,14 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final profileState = ref.watch(profileProvider);
+    final languageState = ref.watch(languageProvider);
+    final currencyState = ref.watch(currencyProvider);
+    final themeState = ref.watch(themeProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text('settings.title'.tr()),
       ),
       body: ListView(
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
@@ -26,14 +39,21 @@ class SettingsScreen extends ConsumerWidget {
                   CircleAvatar(
                     radius: 30,
                     backgroundColor: Theme.of(context).primaryColor,
-                    child: Text(
-                      user?.fullName?.substring(0, 1).toUpperCase() ?? 'U',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    backgroundImage: profileState.profile != null &&
+                        ProfileService.getAvatarUrl(profileState.profile!) != null
+                        ? NetworkImage(ProfileService.getAvatarUrl(profileState.profile!)!)
+                        : null,
+                    child: profileState.profile != null &&
+                        ProfileService.getAvatarUrl(profileState.profile!) == null
+                        ? Text(
+                            ProfileService.getUserInitials(profileState.profile!),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
+                        : null,
                   ),
                   const SizedBox(width: AppConstants.defaultPadding),
                   Expanded(
@@ -41,13 +61,15 @@ class SettingsScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          user?.fullName ?? 'User',
+                          profileState.profile != null
+                              ? ProfileService.getFullName(profileState.profile!)
+                              : user?.fullName ?? 'User',
                           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
-                          user?.email ?? '',
+                          profileState.profile?.email ?? user?.email ?? '',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Colors.grey[600],
                           ),
@@ -58,7 +80,7 @@ class SettingsScreen extends ConsumerWidget {
                   IconButton(
                     icon: const Icon(Icons.edit),
                     onPressed: () {
-                      // TODO: Navigate to profile edit
+                      context.push('/profile');
                     },
                   ),
                 ],
@@ -67,8 +89,34 @@ class SettingsScreen extends ConsumerWidget {
           ),
           
           const SizedBox(height: AppConstants.largePadding),
-          
+
+          // Subscription Section
+          const SubscriptionStatusCard(),
+
+          const SizedBox(height: AppConstants.largePadding),
+
           // Settings Sections
+          _buildSettingsSection(
+            context,
+            'settings.tabs.billing'.tr(),
+            [
+              _buildSettingsTile(
+                context,
+                'common.labels.subscription'.tr(),
+                Icons.credit_card_outlined,
+                () => context.push('/pricing'),
+              ),
+              _buildSettingsTile(
+                context,
+                'common.labels.billing'.tr(),
+                Icons.receipt_outlined,
+                () => context.push('/billing'),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: AppConstants.largePadding),
+
           _buildSettingsSection(
             context,
             'Account',
@@ -78,7 +126,7 @@ class SettingsScreen extends ConsumerWidget {
                 'Profile',
                 Icons.person_outline,
                 () {
-                  // TODO: Navigate to profile
+                  context.push('/profile');
                 },
               ),
               _buildSettingsTile(
@@ -86,7 +134,7 @@ class SettingsScreen extends ConsumerWidget {
                 'Security',
                 Icons.security_outlined,
                 () {
-                  // TODO: Navigate to security
+                  context.push('/settings/security');
                 },
               ),
               _buildSettingsTile(
@@ -94,7 +142,7 @@ class SettingsScreen extends ConsumerWidget {
                 'Notifications',
                 Icons.notifications_outlined,
                 () {
-                  // TODO: Navigate to notifications
+                  context.push('/settings/notifications');
                 },
               ),
             ],
@@ -104,31 +152,34 @@ class SettingsScreen extends ConsumerWidget {
           
           _buildSettingsSection(
             context,
-            'Preferences',
+            'settings.tabs.general'.tr(),
             [
               _buildSettingsTile(
                 context,
-                'Language',
+                'settings.general.language.title'.tr(),
                 Icons.language_outlined,
                 () {
-                  // TODO: Navigate to language
+                  context.push('/settings/language');
                 },
+                subtitle: languageState.currentLanguage.name,
               ),
               _buildSettingsTile(
                 context,
-                'Theme',
+                'settings.general.theme.title'.tr(),
                 Icons.palette_outlined,
                 () {
-                  // TODO: Navigate to theme
+                  context.push('/settings/theme');
                 },
+                subtitle: '${themeState.config.mode.displayName} • ${themeState.config.variant.displayName}',
               ),
               _buildSettingsTile(
                 context,
-                'Currency',
+                'settings.general.currency.title'.tr(),
                 Icons.attach_money_outlined,
                 () {
-                  // TODO: Navigate to currency
+                  context.push('/settings/currency');
                 },
+                subtitle: currencyState.userPreferredCurrency ?? 'MYR',
               ),
             ],
           ),
@@ -137,11 +188,11 @@ class SettingsScreen extends ConsumerWidget {
           
           _buildSettingsSection(
             context,
-            'Support',
+            'navigation.help'.tr(),
             [
               _buildSettingsTile(
                 context,
-                'Help Center',
+                'navigation.help'.tr(),
                 Icons.help_outline,
                 () {
                   // TODO: Navigate to help
@@ -172,9 +223,9 @@ class SettingsScreen extends ConsumerWidget {
           Card(
             child: ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text(
-                'Sign Out',
-                style: TextStyle(color: Colors.red),
+              title: Text(
+                'navigation.logout'.tr(),
+                style: const TextStyle(color: Colors.red),
               ),
               onTap: () {
                 _showLogoutDialog(context, ref);
@@ -228,11 +279,13 @@ class SettingsScreen extends ConsumerWidget {
     BuildContext context,
     String title,
     IconData icon,
-    VoidCallback onTap,
-  ) {
+    VoidCallback onTap, {
+    String? subtitle,
+  }) {
     return ListTile(
       leading: Icon(icon),
       title: Text(title),
+      subtitle: subtitle != null ? Text(subtitle) : null,
       trailing: const Icon(Icons.chevron_right),
       onTap: onTap,
     );
@@ -242,19 +295,19 @@ class SettingsScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Sign Out'),
-        content: const Text('Are you sure you want to sign out?'),
+        title: Text('navigation.logout'.tr()),
+        content: Text('common.messages.confirmDelete'.tr()),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text('common.buttons.cancel'.tr()),
           ),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               ref.read(authProvider.notifier).signOut();
             },
-            child: const Text('Sign Out'),
+            child: Text('navigation.logout'.tr()),
           ),
         ],
       ),
