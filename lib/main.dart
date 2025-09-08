@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 import 'package:logger/logger.dart';
 import 'app/app.dart';
@@ -12,6 +13,7 @@ import 'core/services/sync_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/performance_service.dart';
 import 'core/services/workspace_preferences_service.dart';
+import 'core/services/currency_cache_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,7 +24,7 @@ void main() async {
     // Load environment variables from .env file
     logger.i('🔧 Loading environment variables...');
     try {
-      await dotenv.load(fileName: ".env");
+      await dotenv.load(fileName: '.env');
       logger.i('✅ Environment variables loaded successfully');
       logger.i('📋 GEMINI_API_KEY loaded: ${dotenv.env['GEMINI_API_KEY']?.isNotEmpty == true ? 'YES' : 'NO'}');
     } catch (envError) {
@@ -77,6 +79,14 @@ void main() async {
     await WorkspacePreferencesService.initialize();
     logger.i('✅ Workspace preferences initialized');
 
+    // Initialize currency cache service
+    await CurrencyCacheService.initialize();
+    logger.i('✅ Currency cache service initialized');
+
+    // Initialize EasyLocalization
+    await EasyLocalization.ensureInitialized();
+    logger.i('✅ EasyLocalization initialized');
+
     logger.i('🎉 All services initialized successfully');
   } catch (e) {
     logger.e('❌ Critical service initialization failed: $e');
@@ -84,8 +94,16 @@ void main() async {
   }
 
   runApp(
-    const ProviderScope(
-      child: MataresitApp(),
+    EasyLocalization(
+      supportedLocales: const [
+        Locale('en'),
+        Locale('ms'),
+      ],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('en'),
+      child: const ProviderScope(
+        child: MataresitApp(),
+      ),
     ),
   );
 }

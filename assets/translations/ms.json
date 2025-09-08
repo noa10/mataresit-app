@@ -1,0 +1,219 @@
+{
+  "common": {
+    "buttons": {
+      "save": "Simpan",
+      "cancel": "Batal",
+      "delete": "Padam",
+      "edit": "Edit",
+      "add": "Tambah",
+      "upload": "Muat Naik",
+      "download": "Muat Turun",
+      "export": "Eksport",
+      "import": "Import",
+      "search": "Cari",
+      "filter": "Tapis",
+      "clear": "Kosongkan",
+      "reset": "Set Semula",
+      "submit": "Hantar",
+      "confirm": "Sahkan",
+      "close": "Tutup",
+      "back": "Kembali",
+      "next": "Seterusnya",
+      "previous": "Sebelumnya",
+      "continue": "Teruskan",
+      "finish": "Selesai",
+      "retry": "Cuba Lagi",
+      "refresh": "Muat Semula",
+      "loading": "Memuatkan...",
+      "viewDetails": "Lihat Butiran",
+      "getStarted": "Mula Sekarang"
+    },
+    "labels": {
+      "name": "Nama",
+      "email": "E-mel",
+      "password": "Kata Laluan",
+      "confirmPassword": "Sahkan Kata Laluan",
+      "date": "Tarikh",
+      "time": "Masa",
+      "amount": "Jumlah",
+      "total": "Jumlah Keseluruhan",
+      "currency": "Mata Wang",
+      "status": "Status",
+      "category": "Kategori",
+      "description": "Penerangan",
+      "notes": "Nota",
+      "tags": "Tag",
+      "merchant": "Peniaga",
+      "confidence": "Keyakinan",
+      "language": "Bahasa",
+      "theme": "Tema",
+      "settings": "Tetapan",
+      "profile": "Profil",
+      "account": "Akaun",
+      "subscription": "Langganan",
+      "billing": "Pengebilan",
+      "team": "Pasukan",
+      "members": "Ahli",
+      "permissions": "Kebenaran",
+      "notifications": "Pemberitahuan"
+    },
+    "status": {
+      "active": "Aktif",
+      "inactive": "Tidak Aktif",
+      "pending": "Menunggu",
+      "completed": "Selesai",
+      "processing": "Memproses",
+      "failed": "Gagal",
+      "cancelled": "Dibatalkan",
+      "draft": "Draf",
+      "published": "Diterbitkan",
+      "archived": "Diarkibkan",
+      "approved": "Diluluskan",
+      "rejected": "Ditolak",
+      "reviewing": "Mengkaji"
+    },
+    "messages": {
+      "success": "Berjaya!",
+      "error": "Ralat berlaku",
+      "warning": "Amaran",
+      "info": "Maklumat",
+      "noData": "Tiada data tersedia",
+      "loading": "Memuatkan...",
+      "saving": "Menyimpan...",
+      "deleting": "Memadam...",
+      "uploading": "Memuat naik...",
+      "processing": "Memproses...",
+      "confirmDelete": "Adakah anda pasti mahu memadam item ini?",
+      "unsavedChanges": "Anda mempunyai perubahan yang belum disimpan. Adakah anda pasti mahu keluar?",
+      "operationSuccessful": "Operasi berjaya diselesaikan",
+      "operationFailed": "Operasi gagal. Sila cuba lagi."
+    },
+    "time": {
+      "now": "Sekarang",
+      "today": "Hari Ini",
+      "yesterday": "Semalam",
+      "tomorrow": "Esok",
+      "thisWeek": "Minggu Ini",
+      "lastWeek": "Minggu Lepas",
+      "thisMonth": "Bulan Ini",
+      "lastMonth": "Bulan Lepas",
+      "thisYear": "Tahun Ini",
+      "lastYear": "Tahun Lepas"
+    },
+    "theme": {
+      "light": "Mod Cerah",
+      "dark": "Mod Gelap"
+    }
+  },
+  "settings": {
+    "title": "Tetapan",
+    "description": "Konfigurasikan keutamaan pemprosesan resit anda",
+    "tabs": {
+      "general": "Umum",
+      "processing": "Pemprosesan",
+      "categories": "Kategori",
+      "notifications": "Pemberitahuan",
+      "theme": "Tema",
+      "billing": "Pengebilan",
+      "team": "Pasukan",
+      "security": "Keselamatan"
+    },
+    "general": {
+      "title": "Tetapan Umum",
+      "language": {
+        "title": "Bahasa",
+        "description": "Pilih bahasa pilihan anda",
+        "options": {
+          "en": "English",
+          "ms": "Bahasa Malaysia"
+        }
+      },
+      "theme": {
+        "title": "Tema",
+        "description": "Pilih tema pilihan anda",
+        "options": {
+          "light": "Cerah",
+          "dark": "Gelap",
+          "system": "Sistem"
+        }
+      },
+      "currency": {
+        "title": "Mata Wang Lalai",
+        "description": "Tetapkan mata wang lalai untuk resit"
+      }
+    },
+    "actions": {
+      "save": "Simpan Perubahan",
+      "cancel": "Batal",
+      "reset": "Set Semula ke Lalai"
+    },
+    "messages": {
+      "saved": "Tetapan berjaya disimpan",
+      "error": "Gagal menyimpan tetapan"
+    }
+  },
+  "navigation": {
+    "dashboard": "Papan Pemuka",
+    "receipts": "Resit",
+    "categories": "Kategori",
+    "team": "Pasukan",
+    "settings": "Tetapan",
+    "profile": "Profil",
+    "billing": "Pengebilan",
+    "help": "Bantuan",
+    "logout": "Log Keluar"
+  },
+  "auth": {
+    "signIn": "Log Masuk",
+    "signUp": "Daftar",
+    "signOut": "Log Keluar",
+    "email": "E-mel",
+    "password": "Kata Laluan",
+    "confirmPassword": "Sahkan Kata Laluan",
+    "forgotPassword": "Lupa Kata Laluan?",
+    "resetPassword": "Set Semula Kata Laluan",
+    "createAccount": "Cipta Akaun",
+    "alreadyHaveAccount": "Sudah mempunyai akaun?",
+    "dontHaveAccount": "Belum mempunyai akaun?",
+    "signInWithGoogle": "Log masuk dengan Google",
+    "signInWithApple": "Log masuk dengan Apple",
+    "or": "atau",
+    "welcome": "Selamat Datang",
+    "welcomeBack": "Selamat kembali",
+    "getStarted": "Mulakan dengan Mataresit"
+  },
+  "dashboard": {
+    "title": "Papan Pemuka",
+    "welcome": "Selamat Datang ke Mataresit",
+    "recentReceipts": "Resit Terkini",
+    "totalReceipts": "Jumlah Resit",
+    "thisMonth": "Bulan Ini",
+    "totalAmount": "Jumlah Keseluruhan",
+    "categories": "Kategori",
+    "quickActions": "Tindakan Pantas",
+    "uploadReceipt": "Muat Naik Resit",
+    "viewAllReceipts": "Lihat Semua Resit",
+    "manageCategories": "Urus Kategori"
+  },
+  "receipts": {
+    "title": "Resit",
+    "uploadReceipt": "Muat Naik Resit",
+    "noReceipts": "Tiada resit dijumpai",
+    "searchReceipts": "Cari resit...",
+    "filterByCategory": "Tapis mengikut kategori",
+    "filterByDate": "Tapis mengikut tarikh",
+    "sortBy": "Susun mengikut",
+    "date": "Tarikh",
+    "amount": "Jumlah",
+    "merchant": "Peniaga",
+    "category": "Kategori",
+    "confidence": "Keyakinan",
+    "actions": "Tindakan",
+    "view": "Lihat",
+    "edit": "Edit",
+    "delete": "Padam",
+    "processing": "Memproses...",
+    "processed": "Diproses",
+    "failed": "Gagal"
+  }
+}
