@@ -8,7 +8,7 @@ import '../../../core/constants/app_constants.dart';
 
 import '../../categories/providers/categories_provider.dart';
 import '../providers/receipts_provider.dart';
-import '../../../shared/utils/currency_utils.dart';
+import '../../../shared/widgets/currency_display_widget.dart';
 import '../../../shared/utils/confidence_utils.dart';
 import '../../../shared/widgets/category_display.dart';
 import '../../../shared/widgets/confidence_indicator.dart';
@@ -203,13 +203,10 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
                       ),
                     ),
 
-                    // Amount with standardized currency formatting
-                    Text(
-                      CurrencyUtils.formatCurrencySafe(
-                        receipt.totalAmount,
-                        receipt.currency,
-                        fallbackCurrency: 'MYR',
-                      ),
+                    // Amount with currency conversion
+                    CompactCurrencyDisplay(
+                      amount: receipt.totalAmount ?? 0.0,
+                      currencyCode: receipt.currency ?? 'MYR',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.primary,

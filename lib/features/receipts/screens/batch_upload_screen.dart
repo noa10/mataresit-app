@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:go_router/go_router.dart';
+
 
 import '../models/batch_upload_models.dart';
 import '../providers/batch_upload_provider.dart';
@@ -10,6 +10,8 @@ import '../providers/receipts_provider.dart';
 import '../widgets/batch_upload_queue_item.dart';
 import '../widgets/batch_upload_review_widget.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/guards/subscription_guard.dart';
+import '../../subscription/widgets/subscription_limits_widget.dart';
 
 class BatchUploadScreen extends ConsumerStatefulWidget {
   const BatchUploadScreen({super.key});
@@ -185,6 +187,14 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Subscription Limits Display
+            const SubscriptionLimitsWidget(
+              showUpgradePrompt: true,
+              compact: true,
+            ),
+
+            const SizedBox(height: AppConstants.largePadding),
+
             Icon(
               Icons.cloud_upload_outlined,
               size: 80,
@@ -400,8 +410,17 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
           ),
           const Spacer(),
           ElevatedButton.icon(
-            onPressed: () {
-              ref.read(batchUploadProvider.notifier).startBatchProcessing();
+            onPressed: () async {
+              // Check batch upload limits before starting
+              final canUpload = await SubscriptionGuard.showBatchLimitDialogIfNeeded(
+                context,
+                ref,
+                batchState.items.length,
+              );
+
+              if (canUpload) {
+                ref.read(batchUploadProvider.notifier).startBatchProcessing();
+              }
             },
             icon: const Icon(Icons.upload),
             label: Text('Upload ${batchState.items.length} Files'),

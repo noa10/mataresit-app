@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/models/line_item_model.dart';
+import '../../../shared/widgets/currency_display_widget.dart';
 
 class BasicLineItemsWidget extends StatelessWidget {
   final List<LineItemModel> lineItems;
@@ -24,8 +25,12 @@ class BasicLineItemsWidget extends StatelessWidget {
     return lineItems.fold(0.0, (sum, item) => sum + item.amount);
   }
 
-  String _formatCurrency(double amount) {
-    return '$currency ${amount.toStringAsFixed(2)}';
+  Widget _buildCurrencyDisplay(double amount, {TextStyle? style}) {
+    return CompactCurrencyDisplay(
+      amount: amount,
+      currencyCode: currency,
+      style: style,
+    );
   }
 
   @override
@@ -187,8 +192,8 @@ class BasicLineItemsWidget extends StatelessWidget {
                             ),
                           )
                         else
-                          Text(
-                            _formatCurrency(item.amount),
+                          _buildCurrencyDisplay(
+                            item.amount,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w700,
                               letterSpacing: -0.1,
@@ -234,8 +239,8 @@ class BasicLineItemsWidget extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                Text(
-                  _formatCurrency(_calculateSubtotal()),
+                _buildCurrencyDisplay(
+                  _calculateSubtotal(),
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                     letterSpacing: -0.25,

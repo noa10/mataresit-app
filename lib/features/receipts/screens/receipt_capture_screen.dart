@@ -12,6 +12,8 @@ import '../widgets/processing_timeline_widget.dart';
 import '../widgets/processing_logs_widget.dart';
 import '../providers/receipt_capture_provider.dart';
 import '../providers/receipts_provider.dart';
+import '../../../core/guards/subscription_guard.dart';
+import '../../subscription/widgets/subscription_limits_widget.dart';
 
 class ReceiptCaptureScreen extends ConsumerStatefulWidget {
   const ReceiptCaptureScreen({super.key});
@@ -24,7 +26,6 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
   final ImagePicker _picker = ImagePicker();
   final Logger _logger = Logger();
   File? _selectedImage;
-  bool _isProcessing = false;
 
 
   @override
@@ -44,6 +45,14 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Subscription Limits Display
+            const SubscriptionLimitsWidget(
+              showUpgradePrompt: true,
+              compact: true,
+            ),
+
+            const SizedBox(height: AppConstants.largePadding),
+
             // Image Preview Section
             if (_selectedImage != null) ...[
               Card(
@@ -345,9 +354,7 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
         }
       }
 
-      setState(() {
-        _isProcessing = true;
-      });
+      // Processing state is managed by the provider
 
       final XFile? image = await _picker.pickImage(
         source: source,
@@ -364,9 +371,7 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
     } catch (e) {
       _showErrorSnackBar('Failed to pick image: ${e.toString()}');
     } finally {
-      setState(() {
-        _isProcessing = false;
-      });
+      // Processing state is managed by the provider
     }
   }
 
@@ -374,9 +379,7 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
     if (_selectedImage == null) return;
 
     try {
-      setState(() {
-        _isProcessing = true;
-      });
+      // Processing state is managed by the provider
 
       final croppedFile = await ImageCropper().cropImage(
         sourcePath: _selectedImage!.path,
@@ -399,9 +402,7 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
     } catch (e) {
       _showErrorSnackBar('Failed to crop image: ${e.toString()}');
     } finally {
-      setState(() {
-        _isProcessing = false;
-      });
+      // Processing state is managed by the provider
     }
   }
 
@@ -413,6 +414,17 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
 
   Future<void> _uploadReceipt() async {
     if (_selectedImage == null) return;
+
+    // Check subscription limits before upload
+    final canUpload = await SubscriptionGuard.showReceiptLimitDialogIfNeeded(
+      context,
+      ref,
+      additionalReceipts: 1,
+    );
+
+    if (!canUpload) {
+      return; // User was shown upgrade dialog
+    }
 
     try {
       await ref.read(receiptCaptureProvider.notifier).uploadReceipt(_selectedImage!);

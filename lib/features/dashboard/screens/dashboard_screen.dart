@@ -6,6 +6,9 @@ import '../../../core/constants/app_constants.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../../../app/router/app_router.dart';
+import '../../subscription/widgets/subscription_status_card.dart';
+import '../../subscription/widgets/subscription_limits_widget.dart';
+
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -14,6 +17,8 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
     final stats = ref.watch(dashboardStatsProvider);
+
+
 
     return Scaffold(
       appBar: AppBar(
@@ -80,9 +85,22 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: AppConstants.largePadding),
-              
+
+              // Subscription Status
+              const SubscriptionStatusCard(),
+
+              const SizedBox(height: AppConstants.defaultPadding),
+
+              // Subscription Limits
+              const SubscriptionLimitsWidget(
+                showUpgradePrompt: true,
+                compact: true,
+              ),
+
+              const SizedBox(height: AppConstants.largePadding),
+
               // Quick Stats
               Text(
                 'Quick Stats',

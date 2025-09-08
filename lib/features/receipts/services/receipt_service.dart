@@ -1,9 +1,11 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:logger/logger.dart';
 import '../../../shared/models/receipt_model.dart';
 import '../../../shared/models/line_item_model.dart';
 
 class ReceiptService {
   static final _supabase = Supabase.instance.client;
+  static final _logger = Logger();
 
   /// Map receipt data from model format to database format
   static Map<String, dynamic> _mapReceiptDataForDatabase(Map<String, dynamic> data) {
@@ -111,14 +113,14 @@ class ReceiptService {
     required List<LineItemModel> lineItems,
   }) async {
     try {
-      print('🔄 Updating receipt $receiptId with ${lineItems.length} line items');
+      _logger.i('🔄 Updating receipt $receiptId with ${lineItems.length} line items');
 
       // Map receipt data to database format
       final mappedReceiptData = _mapReceiptDataForDatabase(receiptData);
-      print('📝 Mapped receipt data: ${mappedReceiptData.keys.join(', ')}');
+      _logger.d('📝 Mapped receipt data: ${mappedReceiptData.keys.join(', ')}');
 
       // First update the receipt data
-      print('📊 Updating receipt data...');
+      _logger.d('📊 Updating receipt data...');
       await _supabase
           .from('receipts')
           .update({
@@ -126,17 +128,17 @@ class ReceiptService {
             'updated_at': DateTime.now().toIso8601String(),
           })
           .eq('id', receiptId);
-      print('✅ Receipt data updated successfully');
+      _logger.i('✅ Receipt data updated successfully');
 
       // Update line items if provided
       if (lineItems.isNotEmpty) {
-        print('🗑️ Deleting existing line items...');
+        _logger.d('🗑️ Deleting existing line items...');
         // Delete existing line items first
         await _supabase
             .from('line_items')
             .delete()
             .eq('receipt_id', receiptId);
-        print('✅ Existing line items deleted');
+        _logger.d('✅ Existing line items deleted');
 
         // Filter out items with empty descriptions and format for insertion
         final formattedLineItems = lineItems
@@ -159,29 +161,29 @@ class ReceiptService {
         }).toList();
 
         if (formattedLineItems.isNotEmpty) {
-          print('➕ Inserting ${formattedLineItems.length} line items...');
+          _logger.d('➕ Inserting ${formattedLineItems.length} line items...');
           await _supabase
               .from('line_items')
               .insert(formattedLineItems);
-          print('✅ Line items inserted successfully');
+          _logger.i('✅ Line items inserted successfully');
         }
       } else {
-        print('🗑️ Deleting all line items (empty array provided)...');
+        _logger.d('🗑️ Deleting all line items (empty array provided)...');
         // If empty array is explicitly passed, delete all line items
         await _supabase
             .from('line_items')
             .delete()
             .eq('receipt_id', receiptId);
-        print('✅ All line items deleted');
+        _logger.d('✅ All line items deleted');
       }
 
       // Fetch the updated receipt with line items
-      print('🔍 Fetching updated receipt with line items...');
+      _logger.d('🔍 Fetching updated receipt with line items...');
       final result = await getReceiptWithLineItems(receiptId);
-      print('✅ Receipt update completed successfully');
+      _logger.i('✅ Receipt update completed successfully');
       return result;
     } catch (error) {
-      print('❌ Error updating receipt: $error');
+      _logger.e('❌ Error updating receipt: $error');
       rethrow;
     }
   }
@@ -189,7 +191,7 @@ class ReceiptService {
   /// Get a receipt with its line items
   static Future<ReceiptModel> getReceiptWithLineItems(String receiptId) async {
     try {
-      print('🔍 Fetching receipt $receiptId with line items...');
+      _logger.d('🔍 Fetching receipt $receiptId with line items...');
       final response = await _supabase
           .from('receipts')
           .select('''
@@ -208,14 +210,14 @@ class ReceiptService {
             .map((item) => LineItemModel.fromJson(item))
             .toList();
 
-        print('✅ Receipt fetched successfully with ${lineItems.length} line items');
+        _logger.i('✅ Receipt fetched successfully with ${lineItems.length} line items');
         return receipt.copyWith(lineItems: lineItems);
       }
 
-      print('✅ Receipt fetched successfully with 0 line items');
+      _logger.i('✅ Receipt fetched successfully with 0 line items');
       return receipt;
     } catch (error) {
-      print('❌ Error fetching receipt with line items: $error');
+      _logger.e('❌ Error fetching receipt with line items: $error');
       rethrow;
     }
   }

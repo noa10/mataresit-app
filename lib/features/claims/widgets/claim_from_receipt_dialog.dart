@@ -7,6 +7,7 @@ import '../providers/claims_provider.dart';
 import '../../teams/providers/teams_provider.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/utils/currency_utils.dart';
+import '../../../shared/widgets/currency_display_widget.dart';
 
 /// Dialog for creating a claim from a receipt
 /// Matches the functionality of React app's ClaimFromReceiptButton
@@ -189,9 +190,9 @@ class _ClaimFromReceiptDialogState extends ConsumerState<ClaimFromReceiptDialog>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceVariant.withOpacity(0.3),
+                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: colorScheme.outline.withOpacity(0.3)),
+                border: Border.all(color: colorScheme.outline.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -211,8 +212,9 @@ class _ClaimFromReceiptDialogState extends ConsumerState<ClaimFromReceiptDialog>
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        Text(
-                          '${widget.receipt.currency ?? 'MYR'} ${widget.receipt.totalAmount?.toStringAsFixed(2) ?? '0.00'}',
+                        CompactCurrencyDisplay(
+                          amount: widget.receipt.totalAmount ?? 0.0,
+                          currencyCode: widget.receipt.currency ?? 'MYR',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
