@@ -14,7 +14,20 @@ import '../../features/claims/screens/claims_screen.dart';
 import '../../features/claims/screens/claim_detail_screen.dart';
 import '../../features/teams/screens/teams_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
+import '../../features/settings/screens/notification_settings_screen.dart';
+import '../../features/security/screens/security_settings_screen.dart';
+import '../../features/security/screens/password_change_screen.dart';
+import '../../features/security/screens/two_factor_auth_screen.dart';
+import '../../features/security/screens/session_management_screen.dart';
+import '../../features/security/screens/privacy_controls_screen.dart';
+import '../../features/security/screens/account_deletion_screen.dart';
+import '../../features/profile/screens/profile_screen.dart';
 import '../../features/analytics/screens/analytics_screen.dart';
+import '../../features/subscription/screens/pricing_screen.dart';
+import '../../features/subscription/screens/billing_screen.dart';
+import '../../features/settings/screens/language_selection_screen.dart';
+import '../../features/settings/screens/currency_settings_screen.dart';
+import '../../features/settings/screens/theme_settings_screen.dart';
 import '../../shared/widgets/main_navigation_wrapper.dart';
 import '../../shared/widgets/splash_screen.dart';
 import '../../debug/database_debug_screen.dart';
@@ -37,6 +50,13 @@ class AppRoutes {
   static const String claimDetail = '/claims/:id';
   static const String teams = '/teams';
   static const String settings = '/settings';
+  static const String securitySettings = '/settings/security';
+  static const String passwordChange = '/settings/security/password';
+  static const String twoFactorAuth = '/settings/security/2fa';
+  static const String sessionManagement = '/settings/security/sessions';
+  static const String privacyControls = '/settings/security/privacy';
+  static const String accountDeletion = '/settings/security/delete-account';
+  static const String profile = '/profile';
   static const String analytics = '/analytics';
   
   // Admin routes
@@ -157,12 +177,70 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.settings,
             builder: (context, state) => const SettingsScreen(),
+            routes: [
+              GoRoute(
+                path: 'notifications',
+                builder: (context, state) => const NotificationSettingsScreen(),
+              ),
+              GoRoute(
+                path: 'language',
+                builder: (context, state) => const LanguageSelectionScreen(),
+              ),
+              GoRoute(
+                path: 'currency',
+                builder: (context, state) => const CurrencySettingsScreen(),
+              ),
+              GoRoute(
+                path: 'theme',
+                builder: (context, state) => const ThemeSettingsScreen(),
+              ),
+              GoRoute(
+                path: 'security',
+                builder: (context, state) => const SecuritySettingsScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'password',
+                    builder: (context, state) => const PasswordChangeScreen(),
+                  ),
+                  GoRoute(
+                    path: '2fa',
+                    builder: (context, state) => const TwoFactorAuthScreen(),
+                  ),
+                  GoRoute(
+                    path: 'sessions',
+                    builder: (context, state) => const SessionManagementScreen(),
+                  ),
+                  GoRoute(
+                    path: 'privacy',
+                    builder: (context, state) => const PrivacyControlsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'delete-account',
+                    builder: (context, state) => const AccountDeletionScreen(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          GoRoute(
+            path: AppRoutes.profile,
+            builder: (context, state) => const ProfileScreen(),
           ),
           GoRoute(
             path: AppRoutes.analytics,
             builder: (context, state) => const AnalyticsScreen(),
           ),
         ],
+      ),
+
+      // Subscription routes (outside shell for easier access)
+      GoRoute(
+        path: '/pricing',
+        builder: (context, state) => const PricingScreen(),
+      ),
+      GoRoute(
+        path: '/billing',
+        builder: (context, state) => const BillingScreen(),
       ),
 
       // Debug routes (outside shell for easier access)

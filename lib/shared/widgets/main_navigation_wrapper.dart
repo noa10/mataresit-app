@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../app/router/app_router.dart';
+import '../../core/guards/subscription_guard.dart';
 
-class MainNavigationWrapper extends StatefulWidget {
+
+class MainNavigationWrapper extends ConsumerStatefulWidget {
   final Widget child;
 
   const MainNavigationWrapper({
@@ -11,10 +14,10 @@ class MainNavigationWrapper extends StatefulWidget {
   });
 
   @override
-  State<MainNavigationWrapper> createState() => _MainNavigationWrapperState();
+  ConsumerState<MainNavigationWrapper> createState() => _MainNavigationWrapperState();
 }
 
-class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
+class _MainNavigationWrapperState extends ConsumerState<MainNavigationWrapper> {
   int _selectedIndex = 0;
 
   final List<NavigationItem> _navigationItems = [
@@ -83,8 +86,9 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         elevation: 8,
-        selectedItemColor: Theme.of(context).primaryColor,
-        unselectedItemColor: Colors.grey[600],
+        selectedItemColor: Theme.of(context).bottomNavigationBarTheme.selectedItemColor ?? Theme.of(context).primaryColor,
+        unselectedItemColor: Theme.of(context).bottomNavigationBarTheme.unselectedItemColor ?? Colors.grey[600],
+        backgroundColor: Theme.of(context).bottomNavigationBarTheme.backgroundColor,
         selectedFontSize: 12,
         unselectedFontSize: 12,
         items: _navigationItems.map((item) {
@@ -107,8 +111,17 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
 
   Widget _buildFloatingActionButton() {
     return FloatingActionButton(
-      onPressed: () {
-        context.push(AppRoutes.receiptCapture);
+      onPressed: () async {
+        // Check subscription limits before allowing receipt capture
+        final canUpload = await SubscriptionGuard.showReceiptLimitDialogIfNeeded(
+          context,
+          ref,
+          additionalReceipts: 1,
+        );
+
+        if (canUpload && mounted) {
+          context.push(AppRoutes.receiptCapture);
+        }
       },
       tooltip: 'Capture Receipt',
       child: const Icon(Icons.camera_alt),
