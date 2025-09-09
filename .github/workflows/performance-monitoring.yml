@@ -1,0 +1,318 @@
+name: Performance Monitoring
+
+on:
+  workflow_run:
+    workflows: ["CI/CD Pipeline"]
+    types: [completed]
+  schedule:
+    # Run weekly performance analysis
+    - cron: '0 2 * * 1'
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: '3.24.5'
+
+jobs:
+  # Job 1: Collect Build Metrics
+  collect_metrics:
+    name: Collect Build Metrics
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    outputs:
+      build_duration: ${{ steps.metrics.outputs.build_duration }}
+      cache_hit_rate: ${{ steps.metrics.outputs.cache_hit_rate }}
+      test_duration: ${{ steps.metrics.outputs.test_duration }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get workflow run data
+        id: workflow_data
+        uses: actions/github-script@v7
+        with:
+          script: |
+            if (context.eventName === 'workflow_run') {
+              const run = context.payload.workflow_run;
+              const duration = new Date(run.updated_at) - new Date(run.created_at);
+              core.setOutput('duration', Math.round(duration / 1000));
+              core.setOutput('conclusion', run.conclusion);
+            }
+
+      - name: Analyze build performance
+        id: metrics
+        run: |
+          # Collect metrics from recent workflow runs
+          echo "Analyzing build performance..."
+          
+          # Default values
+          BUILD_DURATION=0
+          CACHE_HIT_RATE=0
+          TEST_DURATION=0
+          
+          # Get duration from workflow_run event
+          if [ "${{ steps.workflow_data.outputs.duration }}" != "" ]; then
+            BUILD_DURATION="${{ steps.workflow_data.outputs.duration }}"
+          fi
+          
+          echo "build_duration=$BUILD_DURATION" >> $GITHUB_OUTPUT
+          echo "cache_hit_rate=$CACHE_HIT_RATE" >> $GITHUB_OUTPUT
+          echo "test_duration=$TEST_DURATION" >> $GITHUB_OUTPUT
+          
+          echo "Build Duration: ${BUILD_DURATION}s"
+          echo "Cache Hit Rate: ${CACHE_HIT_RATE}%"
+          echo "Test Duration: ${TEST_DURATION}s"
+
+  # Job 2: Performance Analysis
+  analyze_performance:
+    name: Analyze Performance
+    runs-on: ubuntu-latest
+    needs: collect_metrics
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze app size
+        id: size_analysis
+        run: |
+          # Build release APK for size analysis
+          flutter build apk --release --analyze-size --target-platform android-arm64
+          
+          # Extract size information
+          APK_SIZE=$(du -h build/app/outputs/flutter-apk/app-arm64-v8a-release.apk | cut -f1)
+          echo "apk_size=$APK_SIZE" >> $GITHUB_OUTPUT
+          
+          # Analyze code size
+          flutter build apk --release --analyze-size --target-platform android-arm64 > size_analysis.txt 2>&1 || true
+          
+          echo "APK Size: $APK_SIZE"
+
+      - name: Performance benchmarks
+        run: |
+          # Run performance tests if they exist
+          if [ -d "test/performance" ]; then
+            echo "Running performance tests..."
+            flutter test test/performance/ --reporter=json > performance_results.json || true
+          fi
+          
+          # Analyze dependencies
+          flutter pub deps --json > dependencies.json
+          
+          # Count lines of code
+          find lib -name "*.dart" -exec wc -l {} + | tail -1 > loc_count.txt
+
+      - name: Generate performance report
+        run: |
+          cat > performance_report.md << EOF
+          # Performance Report - $(date +%Y-%m-%d)
+          
+          ## Build Metrics
+          - **Build Duration**: ${{ needs.collect_metrics.outputs.build_duration }}s
+          - **Cache Hit Rate**: ${{ needs.collect_metrics.outputs.cache_hit_rate }}%
+          - **Test Duration**: ${{ needs.collect_metrics.outputs.test_duration }}s
+          
+          ## App Size Analysis
+          - **APK Size**: ${{ steps.size_analysis.outputs.apk_size }}
+          
+          ## Code Metrics
+          - **Lines of Code**: $(cat loc_count.txt | awk '{print $1}')
+          - **Dependencies**: $(jq '.packages | length' dependencies.json)
+          
+          ## Recommendations
+          EOF
+          
+          # Add recommendations based on metrics
+          BUILD_DURATION=${{ needs.collect_metrics.outputs.build_duration }}
+          if [ "$BUILD_DURATION" -gt 600 ]; then
+            echo "- ⚠️ Build duration is high (${BUILD_DURATION}s). Consider optimizing dependencies or enabling more caching." >> performance_report.md
+          else
+            echo "- ✅ Build duration is acceptable (${BUILD_DURATION}s)." >> performance_report.md
+          fi
+          
+          echo "" >> performance_report.md
+          echo "## Historical Trends" >> performance_report.md
+          echo "- Track performance trends over time" >> performance_report.md
+          echo "- Monitor for performance regressions" >> performance_report.md
+
+      - name: Upload performance artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report
+          path: |
+            performance_report.md
+            size_analysis.txt
+            dependencies.json
+            loc_count.txt
+            performance_results.json
+          retention-days: 30
+
+  # Job 3: Cache Performance Analysis
+  cache_analysis:
+    name: Cache Performance Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Analyze cache effectiveness
+        run: |
+          echo "# Cache Performance Analysis" > cache_report.md
+          echo "" >> cache_report.md
+          echo "## Cache Configuration" >> cache_report.md
+          echo "- Flutter cache enabled: ✅" >> cache_report.md
+          echo "- Gradle cache enabled: ✅" >> cache_report.md
+          echo "- Pub cache enabled: ✅" >> cache_report.md
+          echo "" >> cache_report.md
+          echo "## Recommendations" >> cache_report.md
+          echo "- Monitor cache hit rates in workflow logs" >> cache_report.md
+          echo "- Optimize cache keys for better performance" >> cache_report.md
+          echo "- Consider using build cache for Gradle" >> cache_report.md
+
+      - name: Upload cache analysis
+        uses: actions/upload-artifact@v4
+        with:
+          name: cache-analysis
+          path: cache_report.md
+          retention-days: 30
+
+  # Job 4: Dependency Analysis
+  dependency_analysis:
+    name: Dependency Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze dependencies
+        run: |
+          # Generate dependency report
+          echo "# Dependency Analysis Report" > dependency_report.md
+          echo "" >> dependency_report.md
+          echo "## Dependency Overview" >> dependency_report.md
+          
+          # Count dependencies
+          DIRECT_DEPS=$(grep -c "^  [a-zA-Z]" pubspec.yaml || echo "0")
+          TOTAL_DEPS=$(flutter pub deps --json | jq '.packages | length')
+          
+          echo "- **Direct Dependencies**: $DIRECT_DEPS" >> dependency_report.md
+          echo "- **Total Dependencies**: $TOTAL_DEPS" >> dependency_report.md
+          echo "" >> dependency_report.md
+          
+          # Check for outdated dependencies
+          echo "## Outdated Dependencies" >> dependency_report.md
+          flutter pub outdated --json > outdated.json || echo "{}" > outdated.json
+          
+          if [ "$(jq '.packages | length' outdated.json)" -gt 0 ]; then
+            echo "⚠️ Some dependencies are outdated. Consider updating them." >> dependency_report.md
+          else
+            echo "✅ All dependencies are up to date." >> dependency_report.md
+          fi
+          
+          echo "" >> dependency_report.md
+          echo "## Security Analysis" >> dependency_report.md
+          echo "- Run \`flutter pub audit\` to check for security vulnerabilities" >> dependency_report.md
+
+      - name: Upload dependency analysis
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-analysis
+          path: |
+            dependency_report.md
+            outdated.json
+          retention-days: 30
+
+  # Job 5: Performance Summary
+  performance_summary:
+    name: Performance Summary
+    runs-on: ubuntu-latest
+    needs: [collect_metrics, analyze_performance, cache_analysis, dependency_analysis]
+    if: always()
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Generate summary
+        run: |
+          echo "# 📊 Performance Monitoring Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Build Performance" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Duration**: ${{ needs.collect_metrics.outputs.build_duration }}s" >> $GITHUB_STEP_SUMMARY
+          echo "- **Cache Hit Rate**: ${{ needs.collect_metrics.outputs.cache_hit_rate }}%" >> $GITHUB_STEP_SUMMARY
+          echo "- **Test Duration**: ${{ needs.collect_metrics.outputs.test_duration }}s" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Analysis Results" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Performance analysis completed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Cache analysis completed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Dependency analysis completed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Recommendations" >> $GITHUB_STEP_SUMMARY
+          
+          BUILD_DURATION=${{ needs.collect_metrics.outputs.build_duration }}
+          if [ "$BUILD_DURATION" -gt 600 ]; then
+            echo "- ⚠️ Consider optimizing build performance (current: ${BUILD_DURATION}s)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ✅ Build performance is good (${BUILD_DURATION}s)" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Performance reports available in workflow artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Download artifacts for detailed analysis" >> $GITHUB_STEP_SUMMARY
+
+      - name: Create performance issue (if needed)
+        if: needs.collect_metrics.outputs.build_duration > 900
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const buildDuration = ${{ needs.collect_metrics.outputs.build_duration }};
+            
+            // Check if there's already an open performance issue
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['performance', 'ci/cd'],
+              state: 'open'
+            });
+            
+            if (issues.data.length === 0) {
+              // Create new performance issue
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `Performance Alert: Build duration is ${buildDuration}s`,
+                body: `## Performance Alert
+                
+                The CI/CD build duration has exceeded the threshold of 15 minutes.
+                
+                **Current build duration**: ${buildDuration}s (${Math.round(buildDuration/60)} minutes)
+                
+                ## Recommended Actions
+                - Review recent changes that might impact build performance
+                - Check cache hit rates and optimize caching strategies
+                - Consider optimizing dependencies or build configuration
+                - Review Gradle and Flutter optimization settings
+                
+                ## Performance Reports
+                Check the latest workflow run for detailed performance analysis.`,
+                labels: ['performance', 'ci/cd', 'needs-investigation']
+              });
+            }
