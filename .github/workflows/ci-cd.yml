@@ -28,6 +28,12 @@ env:
   JAVA_VERSION: '17'
   GRADLE_VERSION: '8.5'
 
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+  checks: write
+
 jobs:
   # Job 1: Setup and Validation
   setup:
@@ -318,9 +324,15 @@ jobs:
     runs-on: ubuntu-latest
     needs: [setup, build_android]
     if: needs.setup.outputs.should_deploy == 'true'
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: Download APK artifacts
         uses: actions/download-artifact@v4
@@ -379,16 +391,33 @@ jobs:
           echo "Generated release notes"
 
       - name: Update version in repository
+        continue-on-error: true
         run: |
           # Update pubspec.yaml with new version
           sed -i "s/^version:.*/version: ${{ needs.setup.outputs.version }}+${{ needs.setup.outputs.build_number }}/" pubspec.yaml
 
-          # Commit version update
+          # Configure git with proper authentication
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+
+          # Check if there are changes to commit
+          if git diff --quiet pubspec.yaml; then
+            echo "No version changes to commit"
+            exit 0
+          fi
+
+          # Try to commit and push changes
+          echo "Committing version update..."
           git add pubspec.yaml
-          git commit -m "chore: bump version to ${{ needs.setup.outputs.version }}+${{ needs.setup.outputs.build_number }}" || exit 0
-          git push
+          git commit -m "chore: bump version to ${{ needs.setup.outputs.version }}+${{ needs.setup.outputs.build_number }}"
+
+          echo "Pushing changes..."
+          if git push origin HEAD:${{ github.ref_name }}; then
+            echo "✅ Successfully pushed version update"
+          else
+            echo "⚠️ Failed to push version update - continuing with release creation"
+            exit 0
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
