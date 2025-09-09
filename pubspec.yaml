@@ -20,18 +20,18 @@ dependencies:
   flutter_riverpod: ^2.6.1
   
   # Navigation
-  go_router: ^14.6.2
-  
+  go_router: ^16.2.1
+
   # Backend & Database
   supabase_flutter: ^2.8.2
-  
+
   # Image Processing & File Handling
   image_picker: ^1.1.2
   image_cropper: ^8.0.2
   image: ^4.2.0
-  file_picker: ^8.1.4
+  file_picker: ^10.3.2
   path_provider: ^2.1.5
-  permission_handler: ^11.3.1
+  permission_handler: ^12.0.1
   
   # Local Storage & Offline Sync
   shared_preferences: ^2.3.3
@@ -41,7 +41,7 @@ dependencies:
   connectivity_plus: ^6.1.0
 
   # Push Notifications & Real-time
-  flutter_local_notifications: ^18.0.1
+  flutter_local_notifications: ^19.4.1
 
   # Security & Biometrics
   local_auth: ^2.3.0
@@ -59,7 +59,7 @@ dependencies:
   
   # AI & Analytics
   google_generative_ai: ^0.4.6
-  fl_chart: ^0.70.1
+  fl_chart: ^1.1.0
 
   # Utilities
   logger: ^2.4.0
@@ -70,7 +70,7 @@ dependencies:
   path: ^1.9.0
   http: ^1.2.2
   intl: ^0.20.2
-  flutter_dotenv: ^5.1.0
+  flutter_dotenv: ^6.0.0
 
   # Internationalization
   easy_localization: ^3.0.7
@@ -85,7 +85,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
   
   # Code Generation
   build_runner: ^2.4.13
