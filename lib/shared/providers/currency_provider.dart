@@ -278,7 +278,7 @@ final currencyFormatterProvider = Provider.family<String, CurrencyFormatterParam
       return '${params.amount.toStringAsFixed(2)} ${params.currencyCode}';
     },
     loading: () => '${params.amount.toStringAsFixed(2)} ${params.currencyCode}',
-    error: (_, __) => '${params.amount.toStringAsFixed(2)} ${params.currencyCode}',
+    error: (error, stackTrace) => '${params.amount.toStringAsFixed(2)} ${params.currencyCode}',
   );
 });
 

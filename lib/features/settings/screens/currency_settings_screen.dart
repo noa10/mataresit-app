@@ -113,7 +113,7 @@ class _CurrencySettingsScreenState extends ConsumerState<CurrencySettingsScreen>
               showExample: true,
             ),
             loading: () => const CircularProgressIndicator(),
-            error: (_, __) => _buildCurrencyTile(
+            error: (error, stackTrace) => _buildCurrencyTile(
               currency: CurrencyModel.fallback(preferredCurrency),
               isSelected: true,
               showExample: true,

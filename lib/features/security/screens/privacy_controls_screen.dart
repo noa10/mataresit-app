@@ -247,7 +247,9 @@ class PrivacyControlsScreen extends ConsumerWidget {
               ListTile(
                 leading: Radio<String>(
                   value: 'forever',
+                  // ignore: deprecated_member_use
                   groupValue: selectedRetention,
+                  // ignore: deprecated_member_use
                   onChanged: (value) {
                     setState(() {
                       selectedRetention = value!;
@@ -264,7 +266,9 @@ class PrivacyControlsScreen extends ConsumerWidget {
               ListTile(
                 leading: Radio<String>(
                   value: '1year',
+                  // ignore: deprecated_member_use
                   groupValue: selectedRetention,
+                  // ignore: deprecated_member_use
                   onChanged: (value) {
                     setState(() {
                       selectedRetention = value!;
@@ -281,7 +285,9 @@ class PrivacyControlsScreen extends ConsumerWidget {
               ListTile(
                 leading: Radio<String>(
                   value: '6months',
+                  // ignore: deprecated_member_use
                   groupValue: selectedRetention,
+                  // ignore: deprecated_member_use
                   onChanged: (value) {
                     setState(() {
                       selectedRetention = value!;
@@ -298,7 +304,9 @@ class PrivacyControlsScreen extends ConsumerWidget {
               ListTile(
                 leading: Radio<String>(
                   value: '3months',
+                  // ignore: deprecated_member_use
                   groupValue: selectedRetention,
+                  // ignore: deprecated_member_use
                   onChanged: (value) {
                     setState(() {
                       selectedRetention = value!;

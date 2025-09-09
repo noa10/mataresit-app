@@ -276,7 +276,7 @@ class CurrencyDisplayWithTooltip extends ConsumerWidget {
         style: style,
         enableConversion: false,
       ),
-      error: (_, __) => CurrencyDisplayWidget(
+      error: (error, stackTrace) => CurrencyDisplayWidget(
         amount: amount,
         originalCurrency: originalCurrency,
         compact: compact,
