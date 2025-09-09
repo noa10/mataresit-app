@@ -288,8 +288,17 @@ jobs:
           storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
           keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
-          storeFile=app/keystore.jks
+          storeFile=keystore.jks
           EOF
+
+          # Debug: Show file structure and contents
+          echo "=== Debug: File structure ==="
+          ls -la android/
+          ls -la android/app/
+          echo "=== Debug: key.properties content ==="
+          cat android/key.properties
+          echo "=== Debug: Keystore file exists? ==="
+          ls -la android/app/keystore.jks || echo "Keystore file not found"
 
       - name: Build APK
         if: matrix.build_type == 'apk'

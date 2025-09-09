@@ -59,11 +59,39 @@ android {
             keyAlias = keyAliasValue
             keyPassword = keyPasswordValue
             storeFile = if (!storeFileValue.isNullOrEmpty()) {
+                println("Current working directory: ${System.getProperty("user.dir")}")
+                println("Project directory: ${project.projectDir}")
+                println("Root project directory: ${rootProject.projectDir}")
+
                 val keystoreFile = file(storeFileValue)
+                println("Looking for keystore at: ${keystoreFile.absolutePath}")
+
                 if (!keystoreFile.exists()) {
                     println("ERROR: Keystore file does not exist at: ${keystoreFile.absolutePath}")
+
+                    // Try multiple alternative paths
+                    val alternatives = listOf(
+                        file("keystore.jks"),
+                        file("../keystore.jks"),
+                        rootProject.file("android/app/keystore.jks"),
+                        project.file("keystore.jks")
+                    )
+
+                    var foundFile: File? = null
+                    for (altFile in alternatives) {
+                        println("Trying alternative path: ${altFile.absolutePath}")
+                        if (altFile.exists()) {
+                            println("Found keystore at alternative path: ${altFile.absolutePath}")
+                            foundFile = altFile
+                            break
+                        }
+                    }
+
+                    foundFile ?: keystoreFile
+                } else {
+                    println("Found keystore at: ${keystoreFile.absolutePath}")
+                    keystoreFile
                 }
-                keystoreFile
             } else null
             storePassword = storePasswordValue
         }
