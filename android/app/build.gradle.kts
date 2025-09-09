@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -6,10 +9,10 @@ plugins {
 }
 
 // Load keystore properties
-def keystoreProperties = new Properties()
-def keystorePropertiesFile = rootProject.file('key.properties')
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
@@ -29,11 +32,11 @@ android {
     }
 
     signingConfigs {
-        release {
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
-            storePassword keystoreProperties['storePassword']
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+            storeFile = if (keystoreProperties["storeFile"] != null) file(keystoreProperties["storeFile"] as String) else null
+            storePassword = keystoreProperties["storePassword"] as String?
         }
     }
 
@@ -52,51 +55,40 @@ android {
     }
 
     buildTypes {
-        debug {
-            applicationIdSuffix = ".debug"
-            debuggable = true
-            minifyEnabled = false
-            shrinkResources = false
+        getByName("debug") {
+            isDebuggable = true
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
 
-        release {
+        getByName("release") {
             // Use release signing config if available, otherwise fall back to debug
-            signingConfig = keystoreProperties['storeFile'] ? signingConfigs.release : signingConfigs.debug
-            minifyEnabled = true
-            shrinkResources = true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig = if (keystoreProperties["storeFile"] != null) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
 
             // Optimize for release
-            debuggable = false
-            jniDebuggable = false
-            renderscriptDebuggable = false
-            zipAlignEnabled = true
+            isDebuggable = false
+            isJniDebuggable = false
         }
 
-        profile {
-            initWith debug
-            applicationIdSuffix = ".profile"
-            debuggable = false
-            minifyEnabled = true
-            shrinkResources = true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        getByName("profile") {
+            isDebuggable = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 
-    // Split APKs by ABI for smaller download sizes
-    splits {
-        abi {
-            enable = true
-            reset()
-            include "arm64-v8a", "armeabi-v7a", "x86_64"
-            universalApk = false
-        }
-    }
+
 
     // Packaging options
-    packagingOptions {
-        pickFirst '**/libc++_shared.so'
-        pickFirst '**/libjsc.so'
+    packaging {
+        jniLibs {
+            pickFirsts.add("**/libc++_shared.so")
+            pickFirsts.add("**/libjsc.so")
+        }
     }
 }
 
