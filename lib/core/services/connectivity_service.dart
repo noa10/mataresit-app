@@ -8,7 +8,8 @@ class ConnectivityService {
   static final Logger _logger = Logger();
   static final Connectivity _connectivity = Connectivity();
   static StreamSubscription<List<ConnectivityResult>>? _subscription;
-  static final StreamController<bool> _connectivityController = StreamController<bool>.broadcast();
+  static final StreamController<bool> _connectivityController =
+      StreamController<bool>.broadcast();
 
   /// Stream of connectivity status (true = online, false = offline)
   static Stream<bool> get connectivityStream => _connectivityController.stream;
@@ -42,17 +43,18 @@ class ConnectivityService {
   /// Update connectivity status
   static void _updateConnectivityStatus(List<ConnectivityResult> results) {
     final wasOnline = _isOnline;
-    
+
     // Check if any connection type indicates online status
-    _isOnline = results.any((result) => 
-      result == ConnectivityResult.mobile ||
-      result == ConnectivityResult.wifi ||
-      result == ConnectivityResult.ethernet ||
-      result == ConnectivityResult.vpn
+    _isOnline = results.any(
+      (result) =>
+          result == ConnectivityResult.mobile ||
+          result == ConnectivityResult.wifi ||
+          result == ConnectivityResult.ethernet ||
+          result == ConnectivityResult.vpn,
     );
 
     _logger.d('Connectivity changed: ${_isOnline ? 'Online' : 'Offline'}');
-    
+
     // Notify listeners
     _connectivityController.add(_isOnline);
 
@@ -122,11 +124,14 @@ class ConnectivityState {
 class ConnectivityNotifier extends StateNotifier<ConnectivityState> {
   StreamSubscription<bool>? _subscription;
 
-  ConnectivityNotifier() : super(ConnectivityState(
-    isOnline: ConnectivityService.isOnline,
-    connectionType: ConnectivityResult.none,
-    lastOnline: DateTime.now(),
-  )) {
+  ConnectivityNotifier()
+    : super(
+        ConnectivityState(
+          isOnline: ConnectivityService.isOnline,
+          connectionType: ConnectivityResult.none,
+          lastOnline: DateTime.now(),
+        ),
+      ) {
     _initializeConnectivity();
   }
 
@@ -147,9 +152,10 @@ class ConnectivityNotifier extends StateNotifier<ConnectivityState> {
 }
 
 /// Connectivity provider
-final connectivityProvider = StateNotifierProvider<ConnectivityNotifier, ConnectivityState>((ref) {
-  return ConnectivityNotifier();
-});
+final connectivityProvider =
+    StateNotifierProvider<ConnectivityNotifier, ConnectivityState>((ref) {
+      return ConnectivityNotifier();
+    });
 
 /// Simple online status provider
 final isOnlineProvider = Provider<bool>((ref) {

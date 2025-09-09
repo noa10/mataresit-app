@@ -44,7 +44,8 @@ class SubscriptionState {
   }
 
   /// Get current subscription tier
-  SubscriptionTier get currentTier => subscription?.tier ?? SubscriptionTier.free;
+  SubscriptionTier get currentTier =>
+      subscription?.tier ?? SubscriptionTier.free;
 
   /// Check if subscription is active
   bool get isActive => subscription?.isActive ?? false;
@@ -56,7 +57,8 @@ class SubscriptionState {
   int get remainingReceipts => subscription?.remainingReceipts ?? 0;
 
   /// Get receipt usage percentage
-  double get receiptUsagePercentage => subscription?.receiptUsagePercentage ?? 0.0;
+  double get receiptUsagePercentage =>
+      subscription?.receiptUsagePercentage ?? 0.0;
 
   /// Check if a feature is available
   bool isFeatureAvailable(String feature) {
@@ -64,7 +66,8 @@ class SubscriptionState {
   }
 
   /// Get subscription limits
-  SubscriptionLimits get limits => subscription?.limits ?? TierConfig.getLimits(SubscriptionTier.free);
+  SubscriptionLimits get limits =>
+      subscription?.limits ?? TierConfig.getLimits(SubscriptionTier.free);
 }
 
 /// Subscription provider notifier
@@ -76,7 +79,7 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
   /// Initialize subscription data
   Future<void> _initialize() async {
     await loadSubscriptionData();
-    
+
     // Listen to subscription updates
     SubscriptionService.subscriptionStream.listen((subscription) {
       state = state.copyWith(
@@ -113,10 +116,7 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
       _logger.i('Subscription data loaded successfully');
     } catch (e) {
       _logger.e('Error loading subscription data: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -125,7 +125,8 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
 
-      final subscription = await SubscriptionService.refreshSubscriptionStatus();
+      final subscription =
+          await SubscriptionService.refreshSubscriptionStatus();
       final usage = await SubscriptionService.getSubscriptionUsage();
 
       state = state.copyWith(
@@ -138,10 +139,7 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
       _logger.i('Subscription data refreshed successfully');
     } catch (e) {
       _logger.e('Error refreshing subscription data: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -152,7 +150,9 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
   ) async {
     try {
       await StripeService.createCheckoutSession(tier, billingInterval);
-      _logger.i('Checkout session created for ${tier.value} ${billingInterval.value}');
+      _logger.i(
+        'Checkout session created for ${tier.value} ${billingInterval.value}',
+      );
     } catch (e) {
       _logger.e('Error creating checkout session: $e');
       state = state.copyWith(error: e.toString());
@@ -191,7 +191,10 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
     bool immediate = false,
   }) async {
     try {
-      await StripeService.downgradeSubscription(targetTier, immediate: immediate);
+      await StripeService.downgradeSubscription(
+        targetTier,
+        immediate: immediate,
+      );
       await refreshSubscriptionData();
       _logger.i('Subscription downgraded to ${targetTier.value}');
     } catch (e) {
@@ -207,7 +210,7 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
       state = state.copyWith(isLoading: true, error: null);
 
       await StripeService.updateBillingPreferences(preferences);
-      
+
       state = state.copyWith(
         billingPreferences: preferences,
         isLoading: false,
@@ -217,10 +220,7 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
       _logger.i('Billing preferences updated');
     } catch (e) {
       _logger.e('Error updating billing preferences: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }
@@ -247,9 +247,10 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
 }
 
 /// Subscription provider
-final subscriptionProvider = StateNotifierProvider<SubscriptionNotifier, SubscriptionState>((ref) {
-  return SubscriptionNotifier();
-});
+final subscriptionProvider =
+    StateNotifierProvider<SubscriptionNotifier, SubscriptionState>((ref) {
+      return SubscriptionNotifier();
+    });
 
 /// Current subscription tier provider
 final currentSubscriptionTierProvider = Provider<SubscriptionTier>((ref) {
@@ -282,7 +283,10 @@ final remainingReceiptsProvider = Provider<int>((ref) {
 });
 
 /// Feature availability provider
-final featureAvailabilityProvider = Provider.family<bool, String>((ref, feature) {
+final featureAvailabilityProvider = Provider.family<bool, String>((
+  ref,
+  feature,
+) {
   final subscriptionState = ref.watch(subscriptionProvider);
   return subscriptionState.isFeatureAvailable(feature);
 });

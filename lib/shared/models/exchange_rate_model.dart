@@ -7,27 +7,27 @@ part 'exchange_rate_model.g.dart';
 @JsonSerializable()
 class ExchangeRateModel extends Equatable {
   final String id;
-  
+
   @JsonKey(name: 'base_currency')
   final String baseCurrency;
-  
+
   @JsonKey(name: 'target_currency')
   final String targetCurrency;
-  
+
   @JsonKey(name: 'exchange_rate')
   final double exchangeRate;
-  
+
   @JsonKey(name: 'rate_date')
   final DateTime rateDate;
-  
+
   final String source;
-  
+
   @JsonKey(name: 'is_active')
   final bool isActive;
-  
+
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
-  
+
   @JsonKey(name: 'updated_at')
   final DateTime updatedAt;
 
@@ -93,19 +93,19 @@ class ExchangeRateModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        baseCurrency,
-        targetCurrency,
-        exchangeRate,
-        rateDate,
-        source,
-        isActive,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    baseCurrency,
+    targetCurrency,
+    exchangeRate,
+    rateDate,
+    source,
+    isActive,
+    createdAt,
+    updatedAt,
+  ];
 
   @override
-  String toString() => 
+  String toString() =>
       'ExchangeRateModel($baseCurrency -> $targetCurrency: $exchangeRate)';
 }
 
@@ -125,14 +125,13 @@ class ExchangeRateResponse extends Equatable {
   factory ExchangeRateResponse.fromJson(Map<String, dynamic> json) {
     // Handle fawazahmed0 API format
     final date = DateTime.parse(json['date'] as String);
-    final baseCurrency = json.keys.firstWhere(
-      (key) => key != 'date',
-      orElse: () => 'usd',
-    ).toUpperCase();
-    
+    final baseCurrency = json.keys
+        .firstWhere((key) => key != 'date', orElse: () => 'usd')
+        .toUpperCase();
+
     final ratesData = json[baseCurrency.toLowerCase()] as Map<String, dynamic>;
     final rates = <String, double>{};
-    
+
     ratesData.forEach((key, value) {
       if (value is num) {
         rates[key.toUpperCase()] = value.toDouble();
@@ -148,10 +147,10 @@ class ExchangeRateResponse extends Equatable {
 
   /// Convert to JSON
   Map<String, dynamic> toJson() => {
-        'date': date.toIso8601String(),
-        'baseCurrency': baseCurrency,
-        'rates': rates,
-      };
+    'date': date.toIso8601String(),
+    'baseCurrency': baseCurrency,
+    'rates': rates,
+  };
 
   /// Get rate for specific currency
   double? getRateFor(String targetCurrency) {
@@ -179,6 +178,6 @@ class ExchangeRateResponse extends Equatable {
   List<Object?> get props => [date, baseCurrency, rates];
 
   @override
-  String toString() => 
+  String toString() =>
       'ExchangeRateResponse($baseCurrency, ${rates.length} rates, $date)';
 }

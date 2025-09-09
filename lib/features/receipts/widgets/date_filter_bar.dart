@@ -8,10 +8,7 @@ import '../providers/receipts_provider.dart';
 class DateFilterBar extends ConsumerWidget {
   final VoidCallback? onFilterChanged;
 
-  const DateFilterBar({
-    super.key,
-    this.onFilterChanged,
-  });
+  const DateFilterBar({super.key, this.onFilterChanged});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -91,7 +88,7 @@ class DateFilterBar extends ConsumerWidget {
 
     return quickFilters.map((option) {
       final isSelected = currentFilter.option == option;
-      
+
       return Padding(
         padding: const EdgeInsets.only(right: 8),
         child: FilterChip(
@@ -99,7 +96,7 @@ class DateFilterBar extends ConsumerWidget {
             AppDateUtils.getFilterOptionDisplayName(option),
             style: TextStyle(
               fontSize: 12,
-              color: isSelected 
+              color: isSelected
                   ? Theme.of(context).colorScheme.primary
                   : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -107,7 +104,9 @@ class DateFilterBar extends ConsumerWidget {
           selected: isSelected,
           onSelected: (selected) => _applyQuickFilter(ref, option),
           selectedColor: Theme.of(context).colorScheme.primaryContainer,
-          backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+          backgroundColor: Theme.of(
+            context,
+          ).colorScheme.surfaceContainerHighest,
           checkmarkColor: Theme.of(context).colorScheme.primary,
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           visualDensity: VisualDensity.compact,
@@ -128,9 +127,8 @@ class DateFilterBar extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => _FilterBottomSheet(
-        onFilterChanged: onFilterChanged,
-      ),
+      builder: (context) =>
+          _FilterBottomSheet(onFilterChanged: onFilterChanged),
     );
   }
 }
@@ -139,9 +137,7 @@ class DateFilterBar extends ConsumerWidget {
 class _FilterBottomSheet extends ConsumerStatefulWidget {
   final VoidCallback? onFilterChanged;
 
-  const _FilterBottomSheet({
-    this.onFilterChanged,
-  });
+  const _FilterBottomSheet({this.onFilterChanged});
 
   @override
   ConsumerState<_FilterBottomSheet> createState() => _FilterBottomSheetState();
@@ -158,7 +154,9 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
         left: AppConstants.defaultPadding,
         right: AppConstants.defaultPadding,
         top: AppConstants.defaultPadding,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppConstants.defaultPadding,
+        bottom:
+            MediaQuery.of(context).viewInsets.bottom +
+            AppConstants.defaultPadding,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -175,46 +173,46 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Title
           Text(
             'Filter Receipts',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // All filter options
           Text(
             'Date Range',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           _buildAllFilterOptions(currentFilter),
-          
+
           const SizedBox(height: 20),
-          
+
           // Custom date range
           if (currentFilter.option == DateFilterOption.custom) ...[
             Text(
               'Custom Range',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             _buildCustomDateRange(currentFilter),
             const SizedBox(height: 20),
           ],
-          
+
           // Action buttons
           Row(
             children: [
@@ -299,9 +297,7 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outline,
-          ),
+          border: Border.all(color: Theme.of(context).colorScheme.outline),
           borderRadius: BorderRadius.circular(AppConstants.borderRadius),
         ),
         child: Column(
@@ -319,7 +315,7 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
                   ? AppDateUtils.formatDisplayDate(date)
                   : 'Select date',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: date != null 
+                color: date != null
                     ? Theme.of(context).colorScheme.onSurface
                     : Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -342,7 +338,7 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
     } else {
       await ref.read(receiptsProvider.notifier).applyQuickDateFilter(option);
     }
-    
+
     setState(() {}); // Refresh UI
     widget.onFilterChanged?.call();
   }

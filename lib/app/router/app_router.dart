@@ -41,7 +41,7 @@ class AppRoutes {
   static const String login = '/login';
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
-  
+
   // Main app routes
   static const String dashboard = '/dashboard';
   static const String receipts = '/receipts';
@@ -62,7 +62,7 @@ class AppRoutes {
   static const String privacyPolicy = '/privacy-policy';
   static const String profile = '/profile';
   static const String analytics = '/analytics';
-  
+
   // Admin routes
   static const String admin = '/admin';
   static const String adminDashboard = '/admin/dashboard';
@@ -77,7 +77,7 @@ class AppRoutes {
 /// Router provider
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
-  
+
   return GoRouter(
     initialLocation: AppRoutes.splash,
     debugLogDiagnostics: true,
@@ -85,30 +85,30 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAuthenticated = authState.isAuthenticated;
       final isLoading = authState.isLoading;
       final location = state.uri.path;
-      
+
       // Show splash screen while loading
       if (isLoading) {
         return location == AppRoutes.splash ? null : AppRoutes.splash;
       }
-      
+
       // After loading is complete, redirect based on authentication status
       if (!isLoading) {
         // If on splash screen and not loading, redirect based on auth status
         if (location == AppRoutes.splash) {
           return isAuthenticated ? AppRoutes.dashboard : AppRoutes.login;
         }
-        
+
         // Redirect to login if not authenticated and trying to access protected routes
         if (!isAuthenticated && !_isPublicRoute(location)) {
           return AppRoutes.login;
         }
-        
+
         // Redirect to dashboard if authenticated and trying to access auth routes
         if (isAuthenticated && _isAuthRoute(location)) {
           return AppRoutes.dashboard;
         }
       }
-      
+
       return null;
     },
     routes: [
@@ -117,7 +117,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.splash,
         builder: (context, state) => const SplashScreen(),
       ),
-      
+
       // Auth routes
       GoRoute(
         path: AppRoutes.login,
@@ -131,7 +131,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.forgotPassword,
         builder: (context, state) => const ForgotPasswordScreen(),
       ),
-      
+
       // Main app routes with bottom navigation
       ShellRoute(
         builder: (context, state, child) => MainNavigationWrapper(child: child),
@@ -212,7 +212,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'sessions',
-                    builder: (context, state) => const SessionManagementScreen(),
+                    builder: (context, state) =>
+                        const SessionManagementScreen(),
                   ),
                   GoRoute(
                     path: 'privacy',
@@ -264,18 +265,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
-      appBar: AppBar(
-        title: const Text('Page Not Found'),
-      ),
+      appBar: AppBar(title: const Text('Page Not Found')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             Text(
               'Page not found: ${state.uri.path}',

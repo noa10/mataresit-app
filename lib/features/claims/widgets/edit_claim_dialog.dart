@@ -9,11 +9,7 @@ class EditClaimDialog extends ConsumerStatefulWidget {
   final ClaimModel claim;
   final VoidCallback? onClaimUpdated;
 
-  const EditClaimDialog({
-    super.key,
-    required this.claim,
-    this.onClaimUpdated,
-  });
+  const EditClaimDialog({super.key, required this.claim, this.onClaimUpdated});
 
   @override
   ConsumerState<EditClaimDialog> createState() => _EditClaimDialogState();
@@ -25,7 +21,7 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
   late final TextEditingController _descriptionController;
   late final TextEditingController _amountController;
   late final TextEditingController _categoryController;
-  
+
   late String _currency;
   late ClaimPriority _priority;
   bool _isLoading = false;
@@ -34,9 +30,15 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.claim.title);
-    _descriptionController = TextEditingController(text: widget.claim.description ?? '');
-    _amountController = TextEditingController(text: widget.claim.amount.toString());
-    _categoryController = TextEditingController(text: widget.claim.category ?? '');
+    _descriptionController = TextEditingController(
+      text: widget.claim.description ?? '',
+    );
+    _amountController = TextEditingController(
+      text: widget.claim.amount.toString(),
+    );
+    _categoryController = TextEditingController(
+      text: widget.claim.category ?? '',
+    );
     _currency = CurrencyUtils.normalizeCurrencyCode(widget.claim.currency);
     _priority = widget.claim.priority;
   }
@@ -60,18 +62,20 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
     try {
       final request = UpdateClaimRequest(
         title: _titleController.text.trim(),
-        description: _descriptionController.text.trim().isEmpty 
-            ? null 
+        description: _descriptionController.text.trim().isEmpty
+            ? null
             : _descriptionController.text.trim(),
         amount: double.parse(_amountController.text),
         currency: _currency,
-        category: _categoryController.text.trim().isEmpty 
-            ? null 
+        category: _categoryController.text.trim().isEmpty
+            ? null
             : _categoryController.text.trim(),
         priority: _priority,
       );
 
-      await ref.read(claimsProvider.notifier).updateClaim(widget.claim.id, request);
+      await ref
+          .read(claimsProvider.notifier)
+          .updateClaim(widget.claim.id, request);
 
       if (mounted) {
         Navigator.of(context).pop();
@@ -220,16 +224,31 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
                                 labelText: 'Currency',
                                 border: OutlineInputBorder(),
                               ),
-                              items: ['MYR', 'USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'SGD']
-                                  .map((currency) => DropdownMenuItem(
-                                        value: currency,
-                                        child: Text(currency),
-                                      ))
-                                  .toList(),
+                              items:
+                                  [
+                                        'MYR',
+                                        'USD',
+                                        'EUR',
+                                        'GBP',
+                                        'CAD',
+                                        'AUD',
+                                        'JPY',
+                                        'SGD',
+                                      ]
+                                      .map(
+                                        (currency) => DropdownMenuItem(
+                                          value: currency,
+                                          child: Text(currency),
+                                        ),
+                                      )
+                                      .toList(),
                               onChanged: (value) {
                                 if (value != null) {
                                   setState(() {
-                                    _currency = CurrencyUtils.normalizeCurrencyCode(value);
+                                    _currency =
+                                        CurrencyUtils.normalizeCurrencyCode(
+                                          value,
+                                        );
                                   });
                                 }
                               },
@@ -261,10 +280,12 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
                           prefixIcon: Icon(Icons.priority_high),
                         ),
                         items: ClaimPriority.values
-                            .map((priority) => DropdownMenuItem(
-                                  value: priority,
-                                  child: Text(priority.name.toUpperCase()),
-                                ))
+                            .map(
+                              (priority) => DropdownMenuItem(
+                                value: priority,
+                                child: Text(priority.name.toUpperCase()),
+                              ),
+                            )
                             .toList(),
                         onChanged: (value) {
                           if (value != null) {
@@ -287,7 +308,11 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.info, color: Colors.blue.shade700, size: 20),
+                            Icon(
+                              Icons.info,
+                              color: Colors.blue.shade700,
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -312,16 +337,16 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 border: Border(
-                  top: BorderSide(
-                    color: Theme.of(context).dividerColor,
-                  ),
+                  top: BorderSide(color: Theme.of(context).dividerColor),
                 ),
               ),
               child: Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                      onPressed: _isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(),
                       child: const Text('Cancel'),
                     ),
                   ),

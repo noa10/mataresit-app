@@ -98,10 +98,7 @@ class PaginationWidget extends ConsumerWidget {
           icon: const Icon(Icons.expand_more),
           label: const Text('Load More'),
           style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 12,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
         ),
       ),
@@ -165,14 +162,14 @@ class PaginationInfoWidget extends ConsumerWidget {
   String _buildInfoText(ReceiptsState state) {
     final totalCount = state.totalCount;
     final totalAmount = state.totalAmount;
-    
+
     if (totalCount == 0) {
       return 'No receipts';
     }
-    
+
     final countText = totalCount == 1 ? '1 receipt' : '$totalCount receipts';
     final amountText = 'MYR ${totalAmount.toStringAsFixed(2)}';
-    
+
     if (state.hasMore) {
       return '$countText loaded • $amountText';
     } else {
@@ -204,9 +201,10 @@ class RefreshableReceiptsList extends ConsumerWidget {
 }
 
 /// Mixin for handling scroll-based pagination
-mixin ScrollPaginationMixin<T extends ConsumerStatefulWidget> on ConsumerState<T> {
+mixin ScrollPaginationMixin<T extends ConsumerStatefulWidget>
+    on ConsumerState<T> {
   late ScrollController scrollController;
-  
+
   @override
   void initState() {
     super.initState();
@@ -223,7 +221,7 @@ mixin ScrollPaginationMixin<T extends ConsumerStatefulWidget> on ConsumerState<T
 
   void _onScroll() {
     final receiptsNotifier = ref.read(receiptsProvider.notifier);
-    
+
     if (receiptsNotifier.shouldLoadMore(
       scrollController.position.pixels,
       scrollController.position.maxScrollExtent,
@@ -245,12 +243,12 @@ class InfiniteScrollWrapper extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<InfiniteScrollWrapper> createState() => _InfiniteScrollWrapperState();
+  ConsumerState<InfiniteScrollWrapper> createState() =>
+      _InfiniteScrollWrapperState();
 }
 
 class _InfiniteScrollWrapperState extends ConsumerState<InfiniteScrollWrapper>
     with ScrollPaginationMixin {
-
   @override
   Widget build(BuildContext context) {
     return widget.builder(scrollController);

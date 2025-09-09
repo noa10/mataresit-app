@@ -30,9 +30,8 @@ class SecuritySettingsState {
 
 /// Notifier for security settings
 class SecuritySettingsNotifier extends StateNotifier<SecuritySettingsState> {
-  SecuritySettingsNotifier() : super(SecuritySettingsState(
-    settings: SecurityService.securitySettings,
-  )) {
+  SecuritySettingsNotifier()
+    : super(SecuritySettingsState(settings: SecurityService.securitySettings)) {
     _initialize();
   }
 
@@ -42,19 +41,16 @@ class SecuritySettingsNotifier extends StateNotifier<SecuritySettingsState> {
   Future<void> _initialize() async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       await SecurityService.initialize();
-      
+
       state = state.copyWith(
         settings: SecurityService.securitySettings,
         isLoading: false,
       );
     } catch (e) {
       _logger.e('Failed to initialize security settings: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -62,19 +58,13 @@ class SecuritySettingsNotifier extends StateNotifier<SecuritySettingsState> {
   Future<void> updateSettings(SecuritySettings settings) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       await SecurityService.updateSecuritySettings(settings);
-      
-      state = state.copyWith(
-        settings: settings,
-        isLoading: false,
-      );
+
+      state = state.copyWith(settings: settings, isLoading: false);
     } catch (e) {
       _logger.e('Failed to update security settings: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }
@@ -83,7 +73,7 @@ class SecuritySettingsNotifier extends StateNotifier<SecuritySettingsState> {
   Future<void> toggleBiometricAuth(bool enabled) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       bool success;
       if (enabled) {
         success = await SecurityService.enableBiometricAuth();
@@ -97,23 +87,18 @@ class SecuritySettingsNotifier extends StateNotifier<SecuritySettingsState> {
           biometricEnabled: enabled,
           lastUpdated: DateTime.now(),
         );
-        
-        state = state.copyWith(
-          settings: updatedSettings,
-          isLoading: false,
-        );
+
+        state = state.copyWith(settings: updatedSettings, isLoading: false);
       } else {
         state = state.copyWith(
           isLoading: false,
-          error: 'Failed to ${enabled ? 'enable' : 'disable'} biometric authentication',
+          error:
+              'Failed to ${enabled ? 'enable' : 'disable'} biometric authentication',
         );
       }
     } catch (e) {
       _logger.e('Failed to toggle biometric auth: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }
@@ -122,25 +107,19 @@ class SecuritySettingsNotifier extends StateNotifier<SecuritySettingsState> {
   Future<void> setAppPin(String pin) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       await SecurityService.setAppPin(pin);
-      
+
       final updatedSettings = state.settings.copyWith(
         appLockEnabled: true,
         hasPinSet: true,
         lastUpdated: DateTime.now(),
       );
-      
-      state = state.copyWith(
-        settings: updatedSettings,
-        isLoading: false,
-      );
+
+      state = state.copyWith(settings: updatedSettings, isLoading: false);
     } catch (e) {
       _logger.e('Failed to set app PIN: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }
@@ -149,25 +128,19 @@ class SecuritySettingsNotifier extends StateNotifier<SecuritySettingsState> {
   Future<void> removeAppPin() async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       await SecurityService.removeAppPin();
-      
+
       final updatedSettings = state.settings.copyWith(
         appLockEnabled: false,
         hasPinSet: false,
         lastUpdated: DateTime.now(),
       );
-      
-      state = state.copyWith(
-        settings: updatedSettings,
-        isLoading: false,
-      );
+
+      state = state.copyWith(settings: updatedSettings, isLoading: false);
     } catch (e) {
       _logger.e('Failed to remove app PIN: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }
@@ -179,7 +152,7 @@ class SecuritySettingsNotifier extends StateNotifier<SecuritySettingsState> {
         autoLogoutMinutes: minutes,
         lastUpdated: DateTime.now(),
       );
-      
+
       await updateSettings(updatedSettings);
     } catch (e) {
       _logger.e('Failed to update auto-logout timeout: $e');
@@ -194,7 +167,7 @@ class SecuritySettingsNotifier extends StateNotifier<SecuritySettingsState> {
         twoFactorEnabled: enabled,
         lastUpdated: DateTime.now(),
       );
-      
+
       await updateSettings(updatedSettings);
     } catch (e) {
       _logger.e('Failed to toggle 2FA: $e');
@@ -209,7 +182,7 @@ class SecuritySettingsNotifier extends StateNotifier<SecuritySettingsState> {
         requireAuthForSensitiveOps: enabled,
         lastUpdated: DateTime.now(),
       );
-      
+
       await updateSettings(updatedSettings);
     } catch (e) {
       _logger.e('Failed to toggle require auth for sensitive ops: $e');
@@ -244,9 +217,12 @@ class SecuritySettingsNotifier extends StateNotifier<SecuritySettingsState> {
 }
 
 /// Provider for security settings
-final securitySettingsProvider = StateNotifierProvider<SecuritySettingsNotifier, SecuritySettingsState>((ref) {
-  return SecuritySettingsNotifier();
-});
+final securitySettingsProvider =
+    StateNotifierProvider<SecuritySettingsNotifier, SecuritySettingsState>((
+      ref,
+    ) {
+      return SecuritySettingsNotifier();
+    });
 
 /// Provider for current security settings (read-only)
 final currentSecuritySettingsProvider = Provider<SecuritySettings>((ref) {

@@ -41,7 +41,8 @@ class ThemeState {
 class ThemeNotifier extends StateNotifier<ThemeState> {
   static const String _themeConfigKey = 'theme_config';
 
-  ThemeNotifier() : super(const ThemeState(config: theme_model.ThemeConfig.defaultConfig)) {
+  ThemeNotifier()
+    : super(const ThemeState(config: theme_model.ThemeConfig.defaultConfig)) {
     _loadThemePreference();
   }
 
@@ -53,17 +54,22 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
       // First, try to load from SharedPreferences for immediate UI update
       final prefs = await SharedPreferences.getInstance();
       final localConfigJson = prefs.getString(_themeConfigKey);
-      
+
       if (localConfigJson != null) {
         try {
           final localConfig = theme_model.ThemeConfig.fromJson(
             Map<String, dynamic>.from(
               // Simple JSON parsing for basic config
-              {'mode': localConfigJson.split(',')[0], 'variant': localConfigJson.split(',')[1]}
-            )
+              {
+                'mode': localConfigJson.split(',')[0],
+                'variant': localConfigJson.split(',')[1],
+              },
+            ),
           );
           state = state.copyWith(config: localConfig, isLoading: false);
-          _logger.d('Loaded theme from local storage: ${localConfig.mode.value}, ${localConfig.variant.value}');
+          _logger.d(
+            'Loaded theme from local storage: ${localConfig.mode.value}, ${localConfig.variant.value}',
+          );
         } catch (e) {
           _logger.w('Failed to parse local theme config: $e');
         }
@@ -91,10 +97,12 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
           isLoading: false,
           lastUpdated: DateTime.now(),
         );
-        
+
         // Also save to local storage
         await _saveToLocalStorage(dbConfig);
-        _logger.i('Loaded theme from database: ${dbConfig.mode.value}, ${dbConfig.variant.value}');
+        _logger.i(
+          'Loaded theme from database: ${dbConfig.mode.value}, ${dbConfig.variant.value}',
+        );
       } else {
         state = state.copyWith(isLoading: false);
       }
@@ -112,7 +120,10 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
     try {
       final prefs = await SharedPreferences.getInstance();
       // Simple string format for basic storage
-      await prefs.setString(_themeConfigKey, '${config.mode.value},${config.variant.value}');
+      await prefs.setString(
+        _themeConfigKey,
+        '${config.mode.value},${config.variant.value}',
+      );
       _logger.d('Saved theme to local storage');
     } catch (e) {
       _logger.e('Failed to save theme to local storage: $e');
@@ -120,7 +131,10 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
   }
 
   /// Update theme configuration
-  Future<bool> updateTheme(theme_model.ThemeConfig newConfig, {String? userId}) async {
+  Future<bool> updateTheme(
+    theme_model.ThemeConfig newConfig, {
+    String? userId,
+  }) async {
     if (state.config == newConfig) return true;
 
     try {
@@ -128,12 +142,9 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
 
       // Save to local storage first for immediate UI update
       await _saveToLocalStorage(newConfig);
-      
+
       // Update state
-      state = state.copyWith(
-        config: newConfig,
-        lastUpdated: DateTime.now(),
-      );
+      state = state.copyWith(config: newConfig, lastUpdated: DateTime.now());
 
       // Save to database if user is authenticated
       if (userId != null) {
@@ -141,7 +152,9 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
           await ThemeService.saveThemePreference(userId, newConfig);
           _logger.i('Theme saved to database');
         } catch (e) {
-          _logger.w('Failed to save theme to database, but local update succeeded: $e');
+          _logger.w(
+            'Failed to save theme to database, but local update succeeded: $e',
+          );
           // Don't fail the operation if database save fails
         }
       }
@@ -159,12 +172,18 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
   }
 
   /// Update theme mode only
-  Future<bool> updateThemeMode(theme_model.ThemeMode mode, {String? userId}) async {
+  Future<bool> updateThemeMode(
+    theme_model.ThemeMode mode, {
+    String? userId,
+  }) async {
     return updateTheme(state.config.copyWith(mode: mode), userId: userId);
   }
 
   /// Update theme variant only
-  Future<bool> updateThemeVariant(theme_model.ThemeVariant variant, {String? userId}) async {
+  Future<bool> updateThemeVariant(
+    theme_model.ThemeVariant variant, {
+    String? userId,
+  }) async {
     return updateTheme(state.config.copyWith(variant: variant), userId: userId);
   }
 
@@ -199,7 +218,7 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
 /// Theme provider
 final themeProvider = StateNotifierProvider<ThemeNotifier, ThemeState>((ref) {
   final notifier = ThemeNotifier();
-  
+
   // Listen to auth state changes to load user preferences
   ref.listen<AuthState>(authProvider, (previous, next) {
     if (next.isAuthenticated && next.user != null) {
@@ -207,7 +226,7 @@ final themeProvider = StateNotifierProvider<ThemeNotifier, ThemeState>((ref) {
       notifier.loadUserThemePreference(next.user!.id);
     }
   });
-  
+
   return notifier;
 });
 

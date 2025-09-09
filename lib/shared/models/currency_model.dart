@@ -11,28 +11,28 @@ class CurrencyModel extends Equatable {
 
   @JsonKey(name: 'name')
   final String name;
-  
+
   @JsonKey(name: 'currency_symbol')
   final String symbol;
-  
+
   @JsonKey(name: 'decimal_places')
   final int decimalPlaces;
-  
+
   @JsonKey(name: 'symbol_position')
   final String symbolPosition; // 'before' or 'after'
-  
+
   @JsonKey(name: 'locale_code')
   final String localeCode;
-  
+
   @JsonKey(name: 'is_popular')
   final bool isPopular;
-  
+
   @JsonKey(name: 'is_active')
   final bool isActive;
-  
+
   @JsonKey(name: 'display_order')
   final int displayOrder;
-  
+
   @JsonKey(name: 'flag_emoji')
   final String? flagEmoji;
 
@@ -101,7 +101,7 @@ class CurrencyModel extends Equatable {
   /// Format an amount using this currency's configuration
   String formatAmount(double amount) {
     final formattedAmount = amount.toStringAsFixed(decimalPlaces);
-    
+
     if (symbolPosition == 'after') {
       return '$formattedAmount $symbol';
     } else {
@@ -127,20 +127,21 @@ class CurrencyModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        code,
-        name,
-        symbol,
-        decimalPlaces,
-        symbolPosition,
-        localeCode,
-        isPopular,
-        isActive,
-        displayOrder,
-        flagEmoji,
-      ];
+    code,
+    name,
+    symbol,
+    decimalPlaces,
+    symbolPosition,
+    localeCode,
+    isPopular,
+    isActive,
+    displayOrder,
+    flagEmoji,
+  ];
 
   @override
-  String toString() => 'CurrencyModel(code: $code, name: $name, symbol: $symbol)';
+  String toString() =>
+      'CurrencyModel(code: $code, name: $name, symbol: $symbol)';
 }
 
 /// Predefined popular currencies for quick access

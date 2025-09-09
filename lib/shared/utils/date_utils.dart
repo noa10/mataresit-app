@@ -18,11 +18,7 @@ class DateRange {
   final DateTime? endDate;
   final DateFilterOption option;
 
-  const DateRange({
-    this.startDate,
-    this.endDate,
-    required this.option,
-  });
+  const DateRange({this.startDate, this.endDate, required this.option});
 
   DateRange copyWith({
     DateTime? startDate,
@@ -242,15 +238,15 @@ class AppDateUtils {
     if (!range.hasDateRange) return true;
 
     final dateOnly = DateTime(date.year, date.month, date.day);
-    
+
     if (range.startDate != null && dateOnly.isBefore(range.startDate!)) {
       return false;
     }
-    
+
     if (range.endDate != null && dateOnly.isAfter(range.endDate!)) {
       return false;
     }
-    
+
     return true;
   }
 
@@ -309,5 +305,6 @@ class AppDateUtils {
   }
 
   /// Get default date range (last 7 days)
-  static DateRange get defaultDateRange => getDateRangeForOption(DateFilterOption.last7Days);
+  static DateRange get defaultDateRange =>
+      getDateRangeForOption(DateFilterOption.last7Days);
 }

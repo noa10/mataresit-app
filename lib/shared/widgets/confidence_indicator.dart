@@ -50,11 +50,13 @@ class ConfidenceIndicator extends StatelessWidget {
           const SizedBox(width: 4.0),
           Text(
             '${normalizedScore.round()}%',
-            style: textStyle ?? Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontSize: 12.0,
-              fontWeight: FontWeight.w600,
-              color: Color(confidenceColor.primaryColor),
-            ),
+            style:
+                textStyle ??
+                Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontSize: 12.0,
+                  fontWeight: FontWeight.w600,
+                  color: Color(confidenceColor.primaryColor),
+                ),
           ),
         ],
       ],
@@ -91,10 +93,12 @@ class ConfidenceIndicator extends StatelessWidget {
           const SizedBox(width: 4.0),
           Text(
             'Processing...',
-            style: textStyle ?? Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontSize: 12.0,
-              color: Colors.grey.shade600,
-            ),
+            style:
+                textStyle ??
+                Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontSize: 12.0,
+                  color: Colors.grey.shade600,
+                ),
           ),
         ],
       ],
@@ -104,17 +108,17 @@ class ConfidenceIndicator extends StatelessWidget {
   String _buildTooltipMessage(double normalizedScore, String label) {
     final buffer = StringBuffer();
     buffer.writeln('$label confidence');
-    
+
     if (normalizedScore == 100) {
       buffer.write('Verified by user');
     } else {
       buffer.write('AI detection: ${label.toLowerCase()} reliability');
     }
-    
+
     if (normalizedScore < 100) {
       buffer.write('\nEdit to verify and improve accuracy');
     }
-    
+
     return buffer.toString();
   }
 }
@@ -164,7 +168,9 @@ class ConfidenceBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     if (loading) {
       return Container(
-        padding: padding ?? const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+        padding:
+            padding ??
+            const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
         decoration: BoxDecoration(
           color: Colors.grey.shade200,
           borderRadius: BorderRadius.circular(12.0),
@@ -197,7 +203,8 @@ class ConfidenceBadge extends StatelessWidget {
     final confidenceColor = ConfidenceUtils.getConfidenceColor(normalizedScore);
 
     return Container(
-      padding: padding ?? const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      padding:
+          padding ?? const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
       decoration: BoxDecoration(
         color: Color(confidenceColor.lightBackgroundColor),
         borderRadius: BorderRadius.circular(12.0),
@@ -263,11 +270,7 @@ class DetailedConfidenceIndicator extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2.0),
-          ConfidenceIndicator(
-            score: score,
-            showLabel: true,
-            showTooltip: true,
-          ),
+          ConfidenceIndicator(score: score, showLabel: true, showTooltip: true),
         ],
       );
     }
@@ -283,11 +286,7 @@ class DetailedConfidenceIndicator extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 4.0),
-        ConfidenceIndicator(
-          score: score,
-          showLabel: true,
-          showTooltip: true,
-        ),
+        ConfidenceIndicator(score: score, showLabel: true, showTooltip: true),
       ],
     );
   }
@@ -304,10 +303,7 @@ class DetailedConfidenceIndicator extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 4.0),
-        ConfidenceIndicator(
-          loading: true,
-          showLabel: true,
-        ),
+        ConfidenceIndicator(loading: true, showLabel: true),
       ],
     );
   }

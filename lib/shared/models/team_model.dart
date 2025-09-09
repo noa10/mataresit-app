@@ -31,7 +31,8 @@ class TeamModel extends Equatable {
     required this.updatedAt,
   });
 
-  factory TeamModel.fromJson(Map<String, dynamic> json) => _$TeamModelFromJson(json);
+  factory TeamModel.fromJson(Map<String, dynamic> json) =>
+      _$TeamModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$TeamModelToJson(this);
 
@@ -65,18 +66,18 @@ class TeamModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        description,
-        avatarUrl,
-        ownerId,
-        status,
-        memberIds,
-        memberRoles,
-        settings,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    name,
+    description,
+    avatarUrl,
+    ownerId,
+    status,
+    memberIds,
+    memberRoles,
+    settings,
+    createdAt,
+    updatedAt,
+  ];
 
   int get memberCount => memberIds.length;
   bool isOwner(String userId) => ownerId == userId;
@@ -100,7 +101,8 @@ class TeamSettings extends Equatable {
     this.allowedCategories = const [],
   });
 
-  factory TeamSettings.fromJson(Map<String, dynamic> json) => _$TeamSettingsFromJson(json);
+  factory TeamSettings.fromJson(Map<String, dynamic> json) =>
+      _$TeamSettingsFromJson(json);
 
   Map<String, dynamic> toJson() => _$TeamSettingsToJson(this);
 
@@ -113,7 +115,8 @@ class TeamSettings extends Equatable {
   }) {
     return TeamSettings(
       allowMemberInvites: allowMemberInvites ?? this.allowMemberInvites,
-      requireApprovalForExpenses: requireApprovalForExpenses ?? this.requireApprovalForExpenses,
+      requireApprovalForExpenses:
+          requireApprovalForExpenses ?? this.requireApprovalForExpenses,
       expenseApprovalLimit: expenseApprovalLimit ?? this.expenseApprovalLimit,
       enableNotifications: enableNotifications ?? this.enableNotifications,
       allowedCategories: allowedCategories ?? this.allowedCategories,
@@ -122,12 +125,12 @@ class TeamSettings extends Equatable {
 
   @override
   List<Object?> get props => [
-        allowMemberInvites,
-        requireApprovalForExpenses,
-        expenseApprovalLimit,
-        enableNotifications,
-        allowedCategories,
-      ];
+    allowMemberInvites,
+    requireApprovalForExpenses,
+    expenseApprovalLimit,
+    enableNotifications,
+    allowedCategories,
+  ];
 }
 
 @JsonEnum()
@@ -183,6 +186,7 @@ extension TeamRoleExtension on TeamRole {
 
   bool get canManageTeam => this == TeamRole.owner || this == TeamRole.admin;
   bool get canInviteMembers => this == TeamRole.owner || this == TeamRole.admin;
-  bool get canApproveExpenses => this == TeamRole.owner || this == TeamRole.admin;
+  bool get canApproveExpenses =>
+      this == TeamRole.owner || this == TeamRole.admin;
   bool get canCreateReceipts => this != TeamRole.viewer;
 }

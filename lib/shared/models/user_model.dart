@@ -107,7 +107,8 @@ class UserModel extends Equatable {
     required this.updatedAt,
   });
 
-  factory UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);
+  factory UserModel.fromJson(Map<String, dynamic> json) =>
+      _$UserModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$UserModelToJson(this);
 
@@ -154,10 +155,12 @@ class UserModel extends Equatable {
       subscriptionStatus: subscriptionStatus ?? this.subscriptionStatus,
       stripeCustomerId: stripeCustomerId ?? this.stripeCustomerId,
       stripeSubscriptionId: stripeSubscriptionId ?? this.stripeSubscriptionId,
-      subscriptionStartDate: subscriptionStartDate ?? this.subscriptionStartDate,
+      subscriptionStartDate:
+          subscriptionStartDate ?? this.subscriptionStartDate,
       subscriptionEndDate: subscriptionEndDate ?? this.subscriptionEndDate,
       trialEndDate: trialEndDate ?? this.trialEndDate,
-      receiptsUsedThisMonth: receiptsUsedThisMonth ?? this.receiptsUsedThisMonth,
+      receiptsUsedThisMonth:
+          receiptsUsedThisMonth ?? this.receiptsUsedThisMonth,
       monthlyResetDate: monthlyResetDate ?? this.monthlyResetDate,
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,
       autoRenewalEnabled: autoRenewalEnabled ?? this.autoRenewalEnabled,
@@ -168,7 +171,8 @@ class UserModel extends Equatable {
       lastPaymentAttempt: lastPaymentAttempt ?? this.lastPaymentAttempt,
       nextBillingDate: nextBillingDate ?? this.nextBillingDate,
       billingAddress: billingAddress ?? this.billingAddress,
-      paymentMethodLastFour: paymentMethodLastFour ?? this.paymentMethodLastFour,
+      paymentMethodLastFour:
+          paymentMethodLastFour ?? this.paymentMethodLastFour,
       paymentMethodBrand: paymentMethodBrand ?? this.paymentMethodBrand,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -177,36 +181,36 @@ class UserModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        email,
-        firstName,
-        lastName,
-        avatarUrl,
-        googleAvatarUrl,
-        avatarUpdatedAt,
-        subscriptionTier,
-        subscriptionStatus,
-        stripeCustomerId,
-        stripeSubscriptionId,
-        subscriptionStartDate,
-        subscriptionEndDate,
-        trialEndDate,
-        receiptsUsedThisMonth,
-        monthlyResetDate,
-        preferredLanguage,
-        autoRenewalEnabled,
-        autoRenewalFrequency,
-        billingEmailEnabled,
-        paymentRetryAttempts,
-        gracePeriodEndDate,
-        lastPaymentAttempt,
-        nextBillingDate,
-        billingAddress,
-        paymentMethodLastFour,
-        paymentMethodBrand,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    email,
+    firstName,
+    lastName,
+    avatarUrl,
+    googleAvatarUrl,
+    avatarUpdatedAt,
+    subscriptionTier,
+    subscriptionStatus,
+    stripeCustomerId,
+    stripeSubscriptionId,
+    subscriptionStartDate,
+    subscriptionEndDate,
+    trialEndDate,
+    receiptsUsedThisMonth,
+    monthlyResetDate,
+    preferredLanguage,
+    autoRenewalEnabled,
+    autoRenewalFrequency,
+    billingEmailEnabled,
+    paymentRetryAttempts,
+    gracePeriodEndDate,
+    lastPaymentAttempt,
+    nextBillingDate,
+    billingAddress,
+    paymentMethodLastFour,
+    paymentMethodBrand,
+    createdAt,
+    updatedAt,
+  ];
 }
 
 @JsonEnum()

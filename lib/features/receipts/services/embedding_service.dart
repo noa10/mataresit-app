@@ -20,20 +20,27 @@ class EmbeddingService {
           'processAllFields': true,
           'processLineItems': true,
           'useImprovedDimensionHandling': true,
-          'forceRegenerate': true, // Force regeneration even if embeddings exist
+          'forceRegenerate':
+              true, // Force regeneration even if embeddings exist
         },
       );
 
       if (response.status == 200) {
-        _logger.i('✅ Successfully triggered embedding regeneration for receipt $receiptId');
+        _logger.i(
+          '✅ Successfully triggered embedding regeneration for receipt $receiptId',
+        );
         return true;
       } else {
-        _logger.w('⚠️ Embedding regeneration returned status ${response.status} for receipt $receiptId');
+        _logger.w(
+          '⚠️ Embedding regeneration returned status ${response.status} for receipt $receiptId',
+        );
         _logger.w('Response: ${response.data}');
         return false;
       }
     } catch (error) {
-      _logger.e('❌ Failed to trigger embedding regeneration for receipt $receiptId: $error');
+      _logger.e(
+        '❌ Failed to trigger embedding regeneration for receipt $receiptId: $error',
+      );
       return false;
     }
   }
@@ -45,25 +52,27 @@ class EmbeddingService {
       _logger.i('📋 Queuing embedding regeneration for receipt $receiptId');
 
       // Insert into embedding queue for asynchronous processing
-      await _supabase
-          .from('embedding_queue')
-          .insert({
-            'source_type': 'receipt',
-            'source_id': receiptId,
-            'operation': 'regenerate',
-            'priority': 'normal',
-            'metadata': {
-              'trigger': 'receipt_edit',
-              'timestamp': DateTime.now().toIso8601String(),
-              'source': 'flutter_app',
-            },
-          });
+      await _supabase.from('embedding_queue').insert({
+        'source_type': 'receipt',
+        'source_id': receiptId,
+        'operation': 'regenerate',
+        'priority': 'normal',
+        'metadata': {
+          'trigger': 'receipt_edit',
+          'timestamp': DateTime.now().toIso8601String(),
+          'source': 'flutter_app',
+        },
+      });
 
-      _logger.i('✅ Successfully queued embedding regeneration for receipt $receiptId');
+      _logger.i(
+        '✅ Successfully queued embedding regeneration for receipt $receiptId',
+      );
       return true;
     } catch (error) {
-      _logger.e('❌ Failed to queue embedding regeneration for receipt $receiptId: $error');
-      
+      _logger.e(
+        '❌ Failed to queue embedding regeneration for receipt $receiptId: $error',
+      );
+
       // Fallback to direct regeneration if queue fails
       _logger.i('🔄 Falling back to direct embedding regeneration');
       return await regenerateEmbeddingsForReceipt(receiptId);
@@ -97,13 +106,18 @@ class EmbeddingService {
 
       return response['embedding_status'] as String?;
     } catch (error) {
-      _logger.e('❌ Failed to get embedding status for receipt $receiptId: $error');
+      _logger.e(
+        '❌ Failed to get embedding status for receipt $receiptId: $error',
+      );
       return null;
     }
   }
 
   /// Update embedding status for a receipt
-  static Future<bool> updateEmbeddingStatus(String receiptId, String status) async {
+  static Future<bool> updateEmbeddingStatus(
+    String receiptId,
+    String status,
+  ) async {
     try {
       await _supabase
           .from('receipts')
@@ -113,27 +127,35 @@ class EmbeddingService {
       _logger.d('✅ Updated embedding status to $status for receipt $receiptId');
       return true;
     } catch (error) {
-      _logger.e('❌ Failed to update embedding status for receipt $receiptId: $error');
+      _logger.e(
+        '❌ Failed to update embedding status for receipt $receiptId: $error',
+      );
       return false;
     }
   }
 
   /// Batch regenerate embeddings for multiple receipts
-  static Future<Map<String, bool>> batchRegenerateEmbeddings(List<String> receiptIds) async {
+  static Future<Map<String, bool>> batchRegenerateEmbeddings(
+    List<String> receiptIds,
+  ) async {
     final results = <String, bool>{};
-    
-    _logger.i('🔄 Batch regenerating embeddings for ${receiptIds.length} receipts');
+
+    _logger.i(
+      '🔄 Batch regenerating embeddings for ${receiptIds.length} receipts',
+    );
 
     for (final receiptId in receiptIds) {
       final success = await queueEmbeddingRegeneration(receiptId);
       results[receiptId] = success;
-      
+
       // Small delay to avoid overwhelming the system
       await Future.delayed(const Duration(milliseconds: 100));
     }
 
     final successCount = results.values.where((success) => success).length;
-    _logger.i('✅ Batch embedding regeneration completed: $successCount/${receiptIds.length} successful');
+    _logger.i(
+      '✅ Batch embedding regeneration completed: $successCount/${receiptIds.length} successful',
+    );
 
     return results;
   }
@@ -147,11 +169,14 @@ class EmbeddingService {
 
   /// Sync embeddings after receipt modification
   /// This is the main method that should be called after receipt updates
-  static Future<void> syncEmbeddingsAfterReceiptUpdate(String receiptId, {
+  static Future<void> syncEmbeddingsAfterReceiptUpdate(
+    String receiptId, {
     bool forceImmediate = false,
   }) async {
     if (!isEmbeddingSyncEnabled()) {
-      _logger.d('🔇 Embedding synchronization is disabled, skipping for receipt $receiptId');
+      _logger.d(
+        '🔇 Embedding synchronization is disabled, skipping for receipt $receiptId',
+      );
       return;
     }
 

@@ -19,14 +19,14 @@ class ReceiptCaptureScreen extends ConsumerStatefulWidget {
   const ReceiptCaptureScreen({super.key});
 
   @override
-  ConsumerState<ReceiptCaptureScreen> createState() => _ReceiptCaptureScreenState();
+  ConsumerState<ReceiptCaptureScreen> createState() =>
+      _ReceiptCaptureScreenState();
 }
 
 class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
   final ImagePicker _picker = ImagePicker();
   final Logger _logger = Logger();
   File? _selectedImage;
-
 
   @override
   Widget build(BuildContext context) {
@@ -60,10 +60,7 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
                   height: 300,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.file(
-                      _selectedImage!,
-                      fit: BoxFit.contain,
-                    ),
+                    child: Image.file(_selectedImage!, fit: BoxFit.contain),
                   ),
                 ),
               ),
@@ -98,13 +95,16 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
                   icon: const Icon(Icons.cloud_upload),
                   label: const Text('Upload Receipt'),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: AppConstants.defaultPadding),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppConstants.defaultPadding,
+                    ),
                   ),
                 ),
               ],
 
               // Processing Timeline and Logs
-              if (captureState.isProcessing || captureState.processLogs.isNotEmpty) ...[
+              if (captureState.isProcessing ||
+                  captureState.processLogs.isNotEmpty) ...[
                 const SizedBox(height: AppConstants.largePadding),
                 ProcessingTimelineWidget(
                   currentStage: captureState.currentStage,
@@ -125,14 +125,17 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
                     startTime: captureState.startTime,
                   ),
                 // Show success message when completed
-                if (captureState.currentStage == 'COMPLETE' && !captureState.isProcessing) ...[
+                if (captureState.currentStage == 'COMPLETE' &&
+                    !captureState.isProcessing) ...[
                   const SizedBox(height: AppConstants.defaultPadding),
                   Container(
                     padding: const EdgeInsets.all(AppConstants.defaultPadding),
                     decoration: BoxDecoration(
                       color: Colors.green.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: Colors.green.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -141,10 +144,11 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
                         Expanded(
                           child: Text(
                             'Receipt processed successfully! You can now capture another receipt.',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.green.shade700,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Colors.green.shade700,
+                                  fontWeight: FontWeight.w500,
+                                ),
                           ),
                         ),
                       ],
@@ -188,9 +192,9 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
               const SizedBox(height: AppConstants.defaultPadding),
               Text(
                 'Capture Your Receipt',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppConstants.smallPadding),
@@ -202,9 +206,9 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
             ],
           ),
         ),
-        
+
         const SizedBox(height: AppConstants.largePadding * 2),
-        
+
         // Capture Buttons
         Row(
           children: [
@@ -236,9 +240,13 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
             icon: const Icon(Icons.upload_file),
             label: const Text('Upload Multiple Receipts'),
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: AppConstants.defaultPadding),
+              padding: const EdgeInsets.symmetric(
+                vertical: AppConstants.defaultPadding,
+              ),
               side: BorderSide(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.5),
               ),
             ),
           ),
@@ -255,10 +263,7 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(
-                      Icons.lightbulb_outline,
-                      color: Colors.orange,
-                    ),
+                    Icon(Icons.lightbulb_outline, color: Colors.orange),
                     const SizedBox(width: AppConstants.smallPadding),
                     Text(
                       'Tips for Better Results',
@@ -298,7 +303,9 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
                 padding: const EdgeInsets.all(AppConstants.defaultPadding),
                 decoration: BoxDecoration(
                   color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.borderRadius,
+                  ),
                 ),
                 child: Icon(
                   icon,
@@ -309,9 +316,9 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
               const SizedBox(height: AppConstants.defaultPadding),
               Text(
                 label,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -326,17 +333,10 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
       padding: const EdgeInsets.only(bottom: AppConstants.smallPadding),
       child: Row(
         children: [
-          Icon(
-            Icons.check_circle_outline,
-            size: 16,
-            color: Colors.green,
-          ),
+          Icon(Icons.check_circle_outline, size: 16, color: Colors.green),
           const SizedBox(width: AppConstants.smallPadding),
           Expanded(
-            child: Text(
-              tip,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            child: Text(tip, style: Theme.of(context).textTheme.bodySmall),
           ),
         ],
       ),
@@ -427,7 +427,9 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
     }
 
     try {
-      await ref.read(receiptCaptureProvider.notifier).uploadReceipt(_selectedImage!);
+      await ref
+          .read(receiptCaptureProvider.notifier)
+          .uploadReceipt(_selectedImage!);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -457,7 +459,9 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Receipt uploaded but list refresh failed. Pull to refresh manually.'),
+                content: Text(
+                  'Receipt uploaded but list refresh failed. Pull to refresh manually.',
+                ),
                 backgroundColor: Colors.orange,
                 duration: Duration(seconds: 3),
               ),
@@ -479,7 +483,9 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('$permission Permission Required'),
-        content: Text('Please grant $permission permission to capture receipts.'),
+        content: Text(
+          'Please grant $permission permission to capture receipts.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -499,7 +505,8 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
 
   Widget _buildErrorDisplay(String error) {
     // Check if this is a geographic restriction error
-    final isGeographicRestriction = error.contains('UnsupportedUserLocation') ||
+    final isGeographicRestriction =
+        error.contains('UnsupportedUserLocation') ||
         error.contains('geographic restriction') ||
         error.contains('not available in your region') ||
         error.contains('not available in your current location');
@@ -513,11 +520,7 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.location_off,
-                    color: Colors.orange,
-                    size: 24,
-                  ),
+                  Icon(Icons.location_off, color: Colors.orange, size: 24),
                   const SizedBox(width: AppConstants.smallPadding),
                   Expanded(
                     child: Text(
@@ -538,9 +541,9 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
               const SizedBox(height: AppConstants.defaultPadding),
               Text(
                 'Available options:',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: AppConstants.smallPadding),
               _buildSolutionOption(
@@ -599,10 +602,7 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
           const Icon(Icons.error_outline, color: Colors.red),
           const SizedBox(width: AppConstants.smallPadding),
           Expanded(
-            child: Text(
-              error,
-              style: const TextStyle(color: Colors.red),
-            ),
+            child: Text(error, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -614,11 +614,7 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
       padding: const EdgeInsets.only(bottom: AppConstants.smallPadding),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: 16,
-            color: Theme.of(context).primaryColor,
-          ),
+          Icon(icon, size: 16, color: Theme.of(context).primaryColor),
           const SizedBox(width: AppConstants.smallPadding),
           Expanded(
             child: Column(
@@ -626,14 +622,16 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
               children: [
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 Text(
                   description,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                    color: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -668,10 +666,7 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
   void _showErrorSnackBar(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
       );
     }
   }

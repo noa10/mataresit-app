@@ -32,9 +32,10 @@ class CurrencyDisplayWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userPreferredCurrency = ref.watch(userPreferredCurrencyProvider);
-    
+
     // If conversion is disabled or same currency, show original amount
-    if (!enableConversion || originalCurrency.toUpperCase() == userPreferredCurrency.toUpperCase()) {
+    if (!enableConversion ||
+        originalCurrency.toUpperCase() == userPreferredCurrency.toUpperCase()) {
       return _buildOriginalAmount(context);
     }
 
@@ -44,9 +45,11 @@ class CurrencyDisplayWidget extends ConsumerWidget {
       fromCurrency: originalCurrency,
       toCurrency: userPreferredCurrency,
     );
-    
-    final conversionAsync = ref.watch(currencyConversionProvider(conversionParams));
-    
+
+    final conversionAsync = ref.watch(
+      currencyConversionProvider(conversionParams),
+    );
+
     return conversionAsync.when(
       data: (result) => _buildConvertedAmount(context, result),
       loading: () => _buildLoadingAmount(context),
@@ -60,14 +63,17 @@ class CurrencyDisplayWidget extends ConsumerWidget {
       currencyCode: originalCurrency,
       compact: compact,
     );
-    
+
     return Text(
       formattedAmount,
       style: style ?? Theme.of(context).textTheme.bodyMedium,
     );
   }
 
-  Widget _buildConvertedAmount(BuildContext context, CurrencyConversionResult result) {
+  Widget _buildConvertedAmount(
+    BuildContext context,
+    CurrencyConversionResult result,
+  ) {
     if (!result.conversionApplied) {
       return _buildOriginalAmount(context);
     }
@@ -102,7 +108,7 @@ class CurrencyDisplayWidget extends ConsumerWidget {
           convertedFormatted,
           style: style ?? Theme.of(context).textTheme.bodyMedium,
         ),
-        
+
         // Additional info
         if (showOriginalAmount || showConversionRate) ...[
           const SizedBox(height: 2),
@@ -112,13 +118,17 @@ class CurrencyDisplayWidget extends ConsumerWidget {
     );
   }
 
-  Widget _buildAdditionalInfo(BuildContext context, CurrencyConversionResult result, String originalFormatted) {
+  Widget _buildAdditionalInfo(
+    BuildContext context,
+    CurrencyConversionResult result,
+    String originalFormatted,
+  ) {
     final parts = <String>[];
-    
+
     if (showOriginalAmount) {
       parts.add(originalFormatted);
     }
-    
+
     if (showConversionRate) {
       final rateFormatted = CurrencyFormatter.formatExchangeRate(
         rate: result.exchangeRate,
@@ -127,12 +137,14 @@ class CurrencyDisplayWidget extends ConsumerWidget {
       );
       parts.add(rateFormatted);
     }
-    
+
     return Text(
       parts.join(' • '),
-      style: originalAmountStyle ?? 
+      style:
+          originalAmountStyle ??
           Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: conversionIndicatorColor ?? 
+            color:
+                conversionIndicatorColor ??
                 Theme.of(context).colorScheme.onSurfaceVariant,
           ),
     );
@@ -156,7 +168,8 @@ class CurrencyDisplayWidget extends ConsumerWidget {
           height: 12,
           child: CircularProgressIndicator(
             strokeWidth: 2,
-            color: conversionIndicatorColor ?? 
+            color:
+                conversionIndicatorColor ??
                 Theme.of(context).colorScheme.primary,
           ),
         ),
@@ -212,7 +225,7 @@ class CurrencyDisplayWithTooltip extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userPreferredCurrency = ref.watch(userPreferredCurrencyProvider);
-    
+
     if (originalCurrency.toUpperCase() == userPreferredCurrency.toUpperCase()) {
       return CurrencyDisplayWidget(
         amount: amount,
@@ -228,9 +241,11 @@ class CurrencyDisplayWithTooltip extends ConsumerWidget {
       fromCurrency: originalCurrency,
       toCurrency: userPreferredCurrency,
     );
-    
-    final conversionAsync = ref.watch(currencyConversionProvider(conversionParams));
-    
+
+    final conversionAsync = ref.watch(
+      currencyConversionProvider(conversionParams),
+    );
+
     return conversionAsync.when(
       data: (result) {
         if (!result.conversionApplied) {
@@ -319,7 +334,7 @@ class _CurrencyInputFieldState extends ConsumerState<CurrencyInputField> {
     super.initState();
     _currentAmount = widget.initialAmount;
     _controller = TextEditingController(
-      text: widget.initialAmount != null 
+      text: widget.initialAmount != null
           ? CurrencyFormatter.formatForInput(
               amount: widget.initialAmount!,
               currencyCode: widget.currencyCode,
@@ -345,7 +360,9 @@ class _CurrencyInputFieldState extends ConsumerState<CurrencyInputField> {
           decoration: InputDecoration(
             labelText: widget.labelText,
             hintText: widget.hintText,
-            prefixText: CurrencyFormatter.getCurrencySymbol(widget.currencyCode),
+            prefixText: CurrencyFormatter.getCurrencySymbol(
+              widget.currencyCode,
+            ),
             suffixText: widget.currencyCode,
           ),
           onChanged: (value) {
@@ -354,8 +371,10 @@ class _CurrencyInputFieldState extends ConsumerState<CurrencyInputField> {
             widget.onChanged?.call(amount);
           },
         ),
-        
-        if (widget.showConversionPreview && _currentAmount != null && _currentAmount! > 0) ...[
+
+        if (widget.showConversionPreview &&
+            _currentAmount != null &&
+            _currentAmount! > 0) ...[
           const SizedBox(height: 8),
           CurrencyDisplayWidget(
             amount: _currentAmount!,

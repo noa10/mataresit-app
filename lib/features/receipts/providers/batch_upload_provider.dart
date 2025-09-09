@@ -6,7 +6,6 @@ import 'package:uuid/uuid.dart';
 import 'package:logger/logger.dart';
 import 'package:path/path.dart' as path;
 
-
 import '../models/batch_upload_models.dart';
 import '../../../core/network/supabase_client.dart';
 import '../../../core/services/performance_service.dart';
@@ -44,9 +43,10 @@ class Semaphore {
 }
 
 /// Provider for batch upload functionality
-final batchUploadProvider = StateNotifierProvider<BatchUploadNotifier, BatchUploadState>((ref) {
-  return BatchUploadNotifier(ref);
-});
+final batchUploadProvider =
+    StateNotifierProvider<BatchUploadNotifier, BatchUploadState>((ref) {
+      return BatchUploadNotifier(ref);
+    });
 
 /// Notifier for managing batch upload state and operations
 class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
@@ -71,7 +71,7 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
   Future<void> addFiles(List<File> files) async {
     try {
       _logger.i('Adding ${files.length} files to batch upload queue');
-      
+
       final newItems = <BatchUploadItem>[];
       const uuid = Uuid();
 
@@ -85,7 +85,7 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
         final fileStats = await file.stat();
         final fileName = path.basename(file.path);
         final fileExtension = path.extension(file.path).toLowerCase();
-        
+
         final item = BatchUploadItem(
           id: uuid.v4(),
           file: file,
@@ -104,7 +104,7 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
           items: updatedItems,
           status: BatchUploadStatus.ready,
         );
-        
+
         _logger.i('Added ${newItems.length} valid files to batch queue');
       }
     } catch (e) {
@@ -115,7 +115,9 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
 
   /// Remove a file from the batch upload queue
   void removeFile(String itemId) {
-    final updatedItems = state.items.where((item) => item.id != itemId).toList();
+    final updatedItems = state.items
+        .where((item) => item.id != itemId)
+        .toList();
     state = state.copyWith(
       items: updatedItems,
       status: updatedItems.isEmpty ? BatchUploadStatus.idle : state.status,
@@ -137,8 +139,6 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
     _logger.i('Cleared batch upload queue');
   }
 
-
-
   /// Start batch processing
   Future<void> startBatchProcessing() async {
     if (state.items.isEmpty) {
@@ -152,8 +152,10 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
     }
 
     try {
-      _logger.i('Starting batch upload processing for ${state.items.length} items');
-      
+      _logger.i(
+        'Starting batch upload processing for ${state.items.length} items',
+      );
+
       state = state.copyWith(
         status: BatchUploadStatus.processing,
         startedAt: DateTime.now(),
@@ -184,11 +186,11 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
       );
 
       _logger.i('✅ Batch upload processing completed successfully');
-      
     } catch (e) {
       _logger.e('Error during batch processing: $e');
       state = state.copyWith(
-        status: BatchUploadStatus.completed, // Still mark as completed to show results
+        status: BatchUploadStatus
+            .completed, // Still mark as completed to show results
         error: 'Batch processing error: $e',
         completedAt: DateTime.now(),
       );
@@ -218,7 +220,7 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
   void cancelBatchProcessing() {
     _cancelAllTimers();
     _progressTimer?.cancel();
-    
+
     // Cancel any active uploads
     final updatedItems = state.items.map((item) {
       if (item.isActive) {
@@ -235,7 +237,7 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
       status: BatchUploadStatus.cancelled,
       completedAt: DateTime.now(),
     );
-    
+
     _logger.i('Batch upload processing cancelled');
   }
 
@@ -271,7 +273,9 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
     final queuedItems = state.queuedItems;
     if (queuedItems.isEmpty) return;
 
-    _logger.i('Processing ${queuedItems.length} items sequentially for batch upload');
+    _logger.i(
+      'Processing ${queuedItems.length} items sequentially for batch upload',
+    );
 
     // Process items one by one to avoid overwhelming the AI service
     for (final item in queuedItems) {
@@ -295,18 +299,28 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
     try {
       await _processSingleItemAndWaitForCompletion(item).timeout(totalTimeout);
     } on TimeoutException {
-      _logger.w('Item ${item.fileName} timed out after ${totalTimeout.inMinutes} minutes');
-      _updateItemStatus(item.id, BatchUploadItemStatus.failed,
-          error: 'Processing timeout - please try again');
+      _logger.w(
+        'Item ${item.fileName} timed out after ${totalTimeout.inMinutes} minutes',
+      );
+      _updateItemStatus(
+        item.id,
+        BatchUploadItemStatus.failed,
+        error: 'Processing timeout - please try again',
+      );
     } catch (e) {
       _logger.e('Error processing item ${item.fileName}: $e');
-      _updateItemStatus(item.id, BatchUploadItemStatus.failed,
-          error: 'Processing failed: $e');
+      _updateItemStatus(
+        item.id,
+        BatchUploadItemStatus.failed,
+        error: 'Processing failed: $e',
+      );
     }
   }
 
   /// Process a single item and wait for it to complete
-  Future<void> _processSingleItemAndWaitForCompletion(BatchUploadItem item) async {
+  Future<void> _processSingleItemAndWaitForCompletion(
+    BatchUploadItem item,
+  ) async {
     // Add delay between batch requests to avoid race conditions (like React app)
     await Future.delayed(const Duration(milliseconds: 100));
 
@@ -319,9 +333,13 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
 
   /// Wait for an item to complete processing
   Future<void> _waitForItemCompletion(String itemId) async {
-    const checkInterval = Duration(milliseconds: 300); // More responsive checking
+    const checkInterval = Duration(
+      milliseconds: 300,
+    ); // More responsive checking
     const maxWaitTime = Duration(minutes: 8);
-    const progressStuckTimeout = Duration(seconds: 45); // Reduced from 2 minutes to 45 seconds
+    const progressStuckTimeout = Duration(
+      seconds: 45,
+    ); // Reduced from 2 minutes to 45 seconds
     final startTime = DateTime.now();
     int checkCount = 0;
     DateTime? progressStuckStartTime;
@@ -338,28 +356,41 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
       }
 
       final item = state.items[itemIndex];
-      _logger.d('🕐 Check #$checkCount for item ${item.fileName}: status=${item.status}, isFinished=${item.isFinished}, progress=${item.progress}%');
+      _logger.d(
+        '🕐 Check #$checkCount for item ${item.fileName}: status=${item.status}, isFinished=${item.isFinished}, progress=${item.progress}%',
+      );
 
       if (item.isFinished) {
-        _logger.i('✅ Item ${item.fileName} finished with status: ${item.status} after $checkCount checks');
+        _logger.i(
+          '✅ Item ${item.fileName} finished with status: ${item.status} after $checkCount checks',
+        );
         break;
       }
 
       // Fallback completion logic: If progress is 100% but status is still processing
-      if (item.progress >= 100 && item.status == BatchUploadItemStatus.processing) {
+      if (item.progress >= 100 &&
+          item.status == BatchUploadItemStatus.processing) {
         if (progressStuckStartTime == null) {
           progressStuckStartTime = DateTime.now();
-          _logger.w('⚠️ Item ${item.fileName} has 100% progress but is still processing. Starting fallback timer.');
-        } else if (DateTime.now().difference(progressStuckStartTime) > progressStuckTimeout) {
-          _logger.w('🔧 Fallback completion: Item ${item.fileName} stuck at 100% progress for ${progressStuckTimeout.inSeconds} seconds. Marking as completed.');
+          _logger.w(
+            '⚠️ Item ${item.fileName} has 100% progress but is still processing. Starting fallback timer.',
+          );
+        } else if (DateTime.now().difference(progressStuckStartTime) >
+            progressStuckTimeout) {
+          _logger.w(
+            '🔧 Fallback completion: Item ${item.fileName} stuck at 100% progress for ${progressStuckTimeout.inSeconds} seconds. Marking as completed.',
+          );
 
           // Force completion if we have a receipt ID
           if (item.receiptId != null) {
             _handleReceiptCompletion(itemId, item.receiptId!, null, null);
           } else {
             // Mark as failed if no receipt ID
-            _updateItemStatus(itemId, BatchUploadItemStatus.failed,
-                error: 'Processing timeout - no completion signal received');
+            _updateItemStatus(
+              itemId,
+              BatchUploadItemStatus.failed,
+              error: 'Processing timeout - no completion signal received',
+            );
           }
           break;
         }
@@ -374,16 +405,23 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
 
     // Handle timeout case
     if (DateTime.now().difference(startTime) >= maxWaitTime) {
-      _logger.w('⏰ Item $itemId timed out after ${maxWaitTime.inMinutes} minutes');
+      _logger.w(
+        '⏰ Item $itemId timed out after ${maxWaitTime.inMinutes} minutes',
+      );
 
       // Check if item is still not finished and mark as failed
       final itemIndex = state.items.indexWhere((item) => item.id == itemId);
       if (itemIndex != -1) {
         final item = state.items[itemIndex];
         if (!item.isFinished) {
-          _logger.w('🔧 Timeout handling: Marking item ${item.fileName} as failed due to timeout');
-          _updateItemStatus(itemId, BatchUploadItemStatus.failed,
-              error: 'Processing timeout after ${maxWaitTime.inMinutes} minutes');
+          _logger.w(
+            '🔧 Timeout handling: Marking item ${item.fileName} as failed due to timeout',
+          );
+          _updateItemStatus(
+            itemId,
+            BatchUploadItemStatus.failed,
+            error: 'Processing timeout after ${maxWaitTime.inMinutes} minutes',
+          );
         }
       }
     }
@@ -397,10 +435,13 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
   Future<void> _processSingleItem(BatchUploadItem item) async {
     try {
       _logger.i('Processing item: ${item.fileName}');
-      
+
       // Update item status to uploading
-      _updateItemStatus(item.id, BatchUploadItemStatus.uploading, 
-          stage: BatchProcessingStage.initializing);
+      _updateItemStatus(
+        item.id,
+        BatchUploadItemStatus.uploading,
+        stage: BatchProcessingStage.initializing,
+      );
 
       final user = _ref.read(currentUserProvider);
       if (user == null) {
@@ -408,8 +449,12 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
       }
 
       // Step 1: Upload image to Supabase Storage
-      _updateItemProgress(item.id, 10, 'Uploading image to cloud storage...',
-          stage: BatchProcessingStage.uploadingImage);
+      _updateItemProgress(
+        item.id,
+        10,
+        'Uploading image to cloud storage...',
+        stage: BatchProcessingStage.uploadingImage,
+      );
 
       final uuid = const Uuid();
       final receiptId = uuid.v4();
@@ -419,7 +464,9 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
 
       // Optimize image before upload (match React app behavior)
       _updateItemProgress(item.id, 25, 'Optimizing image...');
-      final optimizedFile = await PerformanceService.optimizeImageForUpload(item.file);
+      final optimizedFile = await PerformanceService.optimizeImageForUpload(
+        item.file,
+      );
 
       final imageBytes = await optimizedFile.readAsBytes();
       final imageSizeMB = imageBytes.length / 1024 / 1024;
@@ -427,14 +474,17 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
       // Log detailed image information for debugging
       _logger.i('Uploading optimized image:');
       _logger.i('  File: $fileName');
-      _logger.i('  Size: ${imageSizeMB.toStringAsFixed(2)} MB (${imageBytes.length} bytes)');
+      _logger.i(
+        '  Size: ${imageSizeMB.toStringAsFixed(2)} MB (${imageBytes.length} bytes)',
+      );
       _logger.i('  Content-Type: image/jpeg');
 
       final imageUrl = await SupabaseService.uploadFile(
         bucket: AppConstants.receiptImagesBucket,
         path: filePath,
         bytes: imageBytes,
-        contentType: 'image/jpeg', // Always JPEG after optimization (match React app)
+        contentType:
+            'image/jpeg', // Always JPEG after optimization (match React app)
       );
 
       _logger.i('Image uploaded successfully: $imageUrl');
@@ -442,11 +492,17 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
       _updateItemProgress(item.id, 40, 'Image upload completed');
 
       // Step 2: Create receipt record
-      _updateItemProgress(item.id, 50, 'Creating receipt record...',
-          stage: BatchProcessingStage.creatingRecord);
+      _updateItemProgress(
+        item.id,
+        50,
+        'Creating receipt record...',
+        stage: BatchProcessingStage.creatingRecord,
+      );
 
       final currentTeamState = _ref.read(currentTeamModelProvider);
-      final today = DateTime.now().toIso8601String().split('T')[0]; // Get date in YYYY-MM-DD format
+      final today = DateTime.now().toIso8601String().split(
+        'T',
+      )[0]; // Get date in YYYY-MM-DD format
 
       final initialReceiptData = {
         'id': receiptId,
@@ -468,15 +524,17 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
         'updated_at': DateTime.now().toIso8601String(),
       };
 
-      await SupabaseService.client
-          .from('receipts')
-          .insert(initialReceiptData);
+      await SupabaseService.client.from('receipts').insert(initialReceiptData);
 
       _updateItemProgress(item.id, 70, 'Receipt record created');
 
       // Step 3: Process with AI
-      _updateItemProgress(item.id, 80, 'Processing with AI Vision...',
-          stage: BatchProcessingStage.aiProcessing);
+      _updateItemProgress(
+        item.id,
+        80,
+        'Processing with AI Vision...',
+        stage: BatchProcessingStage.aiProcessing,
+      );
 
       // Set up real-time subscription for processing logs
       _subscribeToProcessingLogs(item.id, receiptId);
@@ -489,49 +547,68 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
         final requestPayload = {
           'receiptId': receiptId,
           'imageUrl': imageUrl,
-          'modelId': 'gemini-2.5-flash-lite', // Revert to original model for debugging
+          'modelId':
+              'gemini-2.5-flash-lite', // Revert to original model for debugging
           'skipOptimization': true, // Flutter has already optimized the image
-          'clientOptimized': true, // Indicate client-side optimization was performed
+          'clientOptimized':
+              true, // Indicate client-side optimization was performed
         };
 
         _logger.d('AI processing request payload: $requestPayload');
 
-        final response = await SupabaseService.client.functions.invoke(
-          'process-receipt',
-          body: requestPayload,
-        ).timeout(const Duration(seconds: 30)); // Timeout for the function call
+        final response = await SupabaseService.client.functions
+            .invoke('process-receipt', body: requestPayload)
+            .timeout(
+              const Duration(seconds: 30),
+            ); // Timeout for the function call
 
-        _logger.d('AI processing response for $receiptId: status=${response.status}, data=${response.data}');
+        _logger.d(
+          'AI processing response for $receiptId: status=${response.status}, data=${response.data}',
+        );
 
         if (response.status != 200) {
           final errorData = response.data;
-          String errorMessage = 'AI processing failed with status: ${response.status}';
+          String errorMessage =
+              'AI processing failed with status: ${response.status}';
 
           // Check for specific error types like React app does
-          if (errorData != null && errorData.toString().contains('WORKER_LIMIT')) {
-            errorMessage = 'Processing failed due to resource limits. Please try again later.';
-          } else if (errorData != null && errorData.toString().contains('compute resources')) {
-            errorMessage = 'The receipt is too complex to process. Try using a smaller image.';
+          if (errorData != null &&
+              errorData.toString().contains('WORKER_LIMIT')) {
+            errorMessage =
+                'Processing failed due to resource limits. Please try again later.';
+          } else if (errorData != null &&
+              errorData.toString().contains('compute resources')) {
+            errorMessage =
+                'The receipt is too complex to process. Try using a smaller image.';
           }
 
           throw Exception(errorMessage);
         }
       } on TimeoutException {
         _logger.e('AI processing request timed out for $receiptId');
-        _updateItemStatus(item.id, BatchUploadItemStatus.failed,
-            error: 'AI processing request timed out');
+        _updateItemStatus(
+          item.id,
+          BatchUploadItemStatus.failed,
+          error: 'AI processing request timed out',
+        );
         return;
       } catch (e) {
         _logger.e('Failed to trigger AI processing for $receiptId: $e');
-        _updateItemStatus(item.id, BatchUploadItemStatus.failed,
-            error: 'Failed to start AI processing: $e');
+        _updateItemStatus(
+          item.id,
+          BatchUploadItemStatus.failed,
+          error: 'Failed to start AI processing: $e',
+        );
         return; // Exit early if AI processing can't be triggered
       }
 
       // Update item with receipt ID and mark as processing
       _updateItemWithReceiptId(item.id, receiptId);
-      _updateItemStatus(item.id, BatchUploadItemStatus.processing,
-          stage: BatchProcessingStage.aiProcessing);
+      _updateItemStatus(
+        item.id,
+        BatchUploadItemStatus.processing,
+        stage: BatchProcessingStage.aiProcessing,
+      );
 
       // Immediate completion check - sometimes the processing is so fast that
       // real-time subscriptions miss it
@@ -539,10 +616,13 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
 
       // Also perform multiple quick checks in the first 30 seconds
       _performQuickCompletionChecks(item.id, receiptId);
-
     } catch (e) {
       _logger.e('Error processing item ${item.fileName}: $e');
-      _updateItemStatus(item.id, BatchUploadItemStatus.failed, error: e.toString());
+      _updateItemStatus(
+        item.id,
+        BatchUploadItemStatus.failed,
+        error: e.toString(),
+      );
     }
   }
 
@@ -559,49 +639,68 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
         .from('receipts')
         .stream(primaryKey: ['id'])
         .eq('id', receiptId)
-        .listen((data) {
-          _logger.d('🔔 Real-time subscription triggered for receipt $receiptId');
-          _logger.d('🔔 Raw data received: $data');
+        .listen(
+          (data) {
+            _logger.d(
+              '🔔 Real-time subscription triggered for receipt $receiptId',
+            );
+            _logger.d('🔔 Raw data received: $data');
 
-          if (data.isNotEmpty) {
-            final receiptData = data.first;
-            final processingStatus = receiptData['processing_status'] as String?;
-            final merchant = receiptData['merchant'] as String?;
-            final total = receiptData['total'] as double?;
+            if (data.isNotEmpty) {
+              final receiptData = data.first;
+              final processingStatus =
+                  receiptData['processing_status'] as String?;
+              final merchant = receiptData['merchant'] as String?;
+              final total = receiptData['total'] as double?;
 
-            // Log ALL fields to see what's in the database
-            _logger.d('🔔 Full receipt data: $receiptData');
-            _logger.d('🔔 Processing status: "$processingStatus" (type: ${processingStatus.runtimeType})');
-            _logger.d('🔔 Merchant: "$merchant"');
-            _logger.d('🔔 Total: $total');
+              // Log ALL fields to see what's in the database
+              _logger.d('🔔 Full receipt data: $receiptData');
+              _logger.d(
+                '🔔 Processing status: "$processingStatus" (type: ${processingStatus.runtimeType})',
+              );
+              _logger.d('🔔 Merchant: "$merchant"');
+              _logger.d('🔔 Total: $total');
 
-            _logger.d('Real-time update for receipt $receiptId: status=$processingStatus, merchant=$merchant, total=$total');
+              _logger.d(
+                'Real-time update for receipt $receiptId: status=$processingStatus, merchant=$merchant, total=$total',
+              );
 
-            if (processingStatus == 'complete') {
-              _logger.i('🎉 COMPLETION DETECTED via real-time subscription for $receiptId');
-              _handleReceiptCompletion(itemId, receiptId, merchant, total);
-              // Cancel subscription and timer after completion
-              _subscriptions[itemId]?.cancel();
-              _subscriptions.remove(itemId);
-              // Cancel the specific timer for this item
-              _itemTimers[itemId]?.cancel();
-              _itemTimers.remove(itemId);
-            } else if (processingStatus == 'failed' || processingStatus == 'failed_ai') {
-              _logger.i('🚨 FAILURE DETECTED via real-time subscription for $receiptId');
-              _handleReceiptFailure(itemId, receiptId);
-              // Cancel subscription and timer after failure
-              _subscriptions[itemId]?.cancel();
-              _subscriptions.remove(itemId);
-              // Cancel the specific timer for this item
-              _itemTimers[itemId]?.cancel();
-              _itemTimers.remove(itemId);
-            } else {
-              _logger.d('🔔 Status "$processingStatus" does not match "complete" - continuing to wait');
+              if (processingStatus == 'complete') {
+                _logger.i(
+                  '🎉 COMPLETION DETECTED via real-time subscription for $receiptId',
+                );
+                _handleReceiptCompletion(itemId, receiptId, merchant, total);
+                // Cancel subscription and timer after completion
+                _subscriptions[itemId]?.cancel();
+                _subscriptions.remove(itemId);
+                // Cancel the specific timer for this item
+                _itemTimers[itemId]?.cancel();
+                _itemTimers.remove(itemId);
+              } else if (processingStatus == 'failed' ||
+                  processingStatus == 'failed_ai') {
+                _logger.i(
+                  '🚨 FAILURE DETECTED via real-time subscription for $receiptId',
+                );
+                _handleReceiptFailure(itemId, receiptId);
+                // Cancel subscription and timer after failure
+                _subscriptions[itemId]?.cancel();
+                _subscriptions.remove(itemId);
+                // Cancel the specific timer for this item
+                _itemTimers[itemId]?.cancel();
+                _itemTimers.remove(itemId);
+              } else {
+                _logger.d(
+                  '🔔 Status "$processingStatus" does not match "complete" - continuing to wait',
+                );
+              }
             }
-          }
-        }, onError: (error) {
-          _logger.e('🚨 Real-time subscription error for receipt $receiptId: $error');
-        });
+          },
+          onError: (error) {
+            _logger.e(
+              '🚨 Real-time subscription error for receipt $receiptId: $error',
+            );
+          },
+        );
 
     // Store subscription for cleanup
     _subscriptions[itemId] = subscription;
@@ -626,9 +725,14 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
 
         // Check for timeout
         if (elapsed > maxProcessingTime || pollCount > maxPollAttempts) {
-          _logger.w('Processing timeout for item $itemId after ${elapsed.inMinutes} minutes');
-          _updateItemStatus(itemId, BatchUploadItemStatus.failed,
-              error: 'Processing timeout - please try again');
+          _logger.w(
+            'Processing timeout for item $itemId after ${elapsed.inMinutes} minutes',
+          );
+          _updateItemStatus(
+            itemId,
+            BatchUploadItemStatus.failed,
+            error: 'Processing timeout - please try again',
+          );
           timer.cancel();
           _itemTimers.remove(itemId);
           _subscriptions[itemId]?.cancel();
@@ -637,12 +741,16 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
         }
 
         // Fallback polling - check receipt status
-        _logger.d('🔍 Polling database for receipt $receiptId (poll #$pollCount)');
+        _logger.d(
+          '🔍 Polling database for receipt $receiptId (poll #$pollCount)',
+        );
 
         try {
           final response = await SupabaseService.client
               .from('receipts')
-              .select('processing_status, merchant, total, currency, created_at, updated_at')
+              .select(
+                'processing_status, merchant, total, currency, created_at, updated_at',
+              )
               .eq('id', receiptId)
               .single();
 
@@ -654,10 +762,16 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
           final total = response['total'] as double?;
           final updatedAt = response['updated_at'] as String?;
 
-          _logger.d('🔍 Polling results - Status: "$processingStatus" (type: ${processingStatus.runtimeType})');
-          _logger.d('🔍 Polling results - Merchant: "$merchant", Total: $total');
+          _logger.d(
+            '🔍 Polling results - Status: "$processingStatus" (type: ${processingStatus.runtimeType})',
+          );
+          _logger.d(
+            '🔍 Polling results - Merchant: "$merchant", Total: $total',
+          );
           _logger.d('🔍 Polling results - Updated at: $updatedAt');
-          _logger.d('Fallback polling receipt $receiptId: status=$processingStatus, merchant=$merchant, total=$total');
+          _logger.d(
+            'Fallback polling receipt $receiptId: status=$processingStatus, merchant=$merchant, total=$total',
+          );
 
           if (processingStatus == 'complete') {
             _logger.i('🎉 COMPLETION DETECTED via polling for $receiptId');
@@ -666,7 +780,8 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
             _itemTimers.remove(itemId);
             _subscriptions[itemId]?.cancel();
             _subscriptions.remove(itemId);
-          } else if (processingStatus == 'failed' || processingStatus == 'failed_ai') {
+          } else if (processingStatus == 'failed' ||
+              processingStatus == 'failed_ai') {
             _logger.i('🚨 FAILURE DETECTED via polling for $receiptId');
             _handleReceiptFailure(itemId, receiptId);
             timer.cancel();
@@ -674,7 +789,9 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
             _subscriptions[itemId]?.cancel();
             _subscriptions.remove(itemId);
           } else {
-            _logger.d('🔍 Polling status "$processingStatus" does not match "complete" - continuing to poll');
+            _logger.d(
+              '🔍 Polling status "$processingStatus" does not match "complete" - continuing to poll',
+            );
             // Still processing - update progress message with more granular feedback
             String progressMessage;
             int progressValue;
@@ -689,7 +806,8 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
               progressMessage = 'Processing line items...';
               progressValue = 95;
             } else {
-              progressMessage = 'Finalizing processing... (${elapsed.inSeconds}s)';
+              progressMessage =
+                  'Finalizing processing... (${elapsed.inSeconds}s)';
               progressValue = 98;
             }
 
@@ -699,8 +817,11 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
           _logger.w('🚨 Error in fallback polling for $itemId: $e');
           // Don't fail immediately on network errors, but count them
           if (pollCount > maxPollAttempts) {
-            _updateItemStatus(itemId, BatchUploadItemStatus.failed,
-                error: 'Network error during processing check');
+            _updateItemStatus(
+              itemId,
+              BatchUploadItemStatus.failed,
+              error: 'Network error during processing check',
+            );
             timer.cancel();
             _itemTimers.remove(itemId);
             _subscriptions[itemId]?.cancel();
@@ -710,8 +831,11 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
       } catch (e) {
         // Catch any unexpected errors in the timer callback
         _logger.e('🚨 Unexpected error in polling timer for $itemId: $e');
-        _updateItemStatus(itemId, BatchUploadItemStatus.failed,
-            error: 'Unexpected error during processing');
+        _updateItemStatus(
+          itemId,
+          BatchUploadItemStatus.failed,
+          error: 'Unexpected error during processing',
+        );
         timer.cancel();
         _itemTimers.remove(itemId);
         _subscriptions[itemId]?.cancel();
@@ -724,8 +848,13 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
 
   /// Perform immediate completion check after AI processing is triggered
   /// This helps catch cases where processing completes very quickly
-  Future<void> _performImmediateCompletionCheck(String itemId, String receiptId) async {
-    _logger.d('🚀 Performing immediate completion check for receipt $receiptId');
+  Future<void> _performImmediateCompletionCheck(
+    String itemId,
+    String receiptId,
+  ) async {
+    _logger.d(
+      '🚀 Performing immediate completion check for receipt $receiptId',
+    );
 
     // Wait a short moment for the edge function to potentially complete
     await Future.delayed(const Duration(seconds: 2));
@@ -741,7 +870,9 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
       final merchant = response['merchant'] as String?;
       final total = response['total'] as double?;
 
-      _logger.d('🚀 Immediate check result for $receiptId: status="$processingStatus"');
+      _logger.d(
+        '🚀 Immediate check result for $receiptId: status="$processingStatus"',
+      );
 
       if (processingStatus == 'complete') {
         _logger.i('🎉 IMMEDIATE COMPLETION DETECTED for $receiptId');
@@ -751,7 +882,8 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
         _subscriptions.remove(itemId);
         _itemTimers[itemId]?.cancel();
         _itemTimers.remove(itemId);
-      } else if (processingStatus == 'failed' || processingStatus == 'failed_ai') {
+      } else if (processingStatus == 'failed' ||
+          processingStatus == 'failed_ai') {
         _logger.i('🚨 IMMEDIATE FAILURE DETECTED for $receiptId');
         _handleReceiptFailure(itemId, receiptId);
         // Cancel any existing subscriptions and timers
@@ -760,7 +892,9 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
         _itemTimers[itemId]?.cancel();
         _itemTimers.remove(itemId);
       } else {
-        _logger.d('🚀 Immediate check: Receipt $receiptId still processing (status: "$processingStatus")');
+        _logger.d(
+          '🚀 Immediate check: Receipt $receiptId still processing (status: "$processingStatus")',
+        );
       }
     } catch (e) {
       _logger.w('🚀 Error in immediate completion check for $receiptId: $e');
@@ -797,18 +931,25 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
           final merchant = response['merchant'] as String?;
           final total = response['total'] as double?;
 
-          _logger.d('⚡ Quick check ${seconds}s result for $receiptId: status="$processingStatus"');
+          _logger.d(
+            '⚡ Quick check ${seconds}s result for $receiptId: status="$processingStatus"',
+          );
 
           if (processingStatus == 'complete') {
-            _logger.i('🎉 QUICK COMPLETION DETECTED at ${seconds}s for $receiptId');
+            _logger.i(
+              '🎉 QUICK COMPLETION DETECTED at ${seconds}s for $receiptId',
+            );
             _handleReceiptCompletion(itemId, receiptId, merchant, total);
             // Cancel any existing subscriptions and timers
             _subscriptions[itemId]?.cancel();
             _subscriptions.remove(itemId);
             _itemTimers[itemId]?.cancel();
             _itemTimers.remove(itemId);
-          } else if (processingStatus == 'failed' || processingStatus == 'failed_ai') {
-            _logger.i('🚨 QUICK FAILURE DETECTED at ${seconds}s for $receiptId');
+          } else if (processingStatus == 'failed' ||
+              processingStatus == 'failed_ai') {
+            _logger.i(
+              '🚨 QUICK FAILURE DETECTED at ${seconds}s for $receiptId',
+            );
             _handleReceiptFailure(itemId, receiptId);
             // Cancel any existing subscriptions and timers
             _subscriptions[itemId]?.cancel();
@@ -817,27 +958,45 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
             _itemTimers.remove(itemId);
           }
         } catch (e) {
-          _logger.w('⚡ Error in quick completion check at ${seconds}s for $receiptId: $e');
+          _logger.w(
+            '⚡ Error in quick completion check at ${seconds}s for $receiptId: $e',
+          );
         }
       });
     }
   }
 
   /// Handle receipt completion (extracted from polling logic)
-  void _handleReceiptCompletion(String itemId, String receiptId, String? merchant, double? total) {
-    _logger.i('🎯 _handleReceiptCompletion called for itemId: $itemId, receiptId: $receiptId');
+  void _handleReceiptCompletion(
+    String itemId,
+    String receiptId,
+    String? merchant,
+    double? total,
+  ) {
+    _logger.i(
+      '🎯 _handleReceiptCompletion called for itemId: $itemId, receiptId: $receiptId',
+    );
     _logger.i('🎯 Completion data - Merchant: "$merchant", Total: $total');
 
-    _updateItemStatus(itemId, BatchUploadItemStatus.completed,
-        stage: BatchProcessingStage.completed);
-    _updateItemProgress(itemId, 100, 'Processing completed successfully!',
-        stage: BatchProcessingStage.completed);
+    _updateItemStatus(
+      itemId,
+      BatchUploadItemStatus.completed,
+      stage: BatchProcessingStage.completed,
+    );
+    _updateItemProgress(
+      itemId,
+      100,
+      'Processing completed successfully!',
+      stage: BatchProcessingStage.completed,
+    );
 
     // Debug: Check if item is now marked as finished
     final itemIndex = state.items.indexWhere((item) => item.id == itemId);
     if (itemIndex != -1) {
       final item = state.items[itemIndex];
-      _logger.i('🎯 Item $itemId status after completion: ${item.status}, isFinished: ${item.isFinished}');
+      _logger.i(
+        '🎯 Item $itemId status after completion: ${item.status}, isFinished: ${item.isFinished}',
+      );
     } else {
       _logger.w('🎯 Item $itemId not found in state after completion');
     }
@@ -845,10 +1004,16 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
     // Check if all items are now finished to trigger batch completion
     _checkIfBatchIsComplete();
 
-    if (merchant != null && merchant.isNotEmpty && merchant != 'Processing...') {
-      _logger.i('Receipt $receiptId completed with merchant: $merchant, total: $total');
+    if (merchant != null &&
+        merchant.isNotEmpty &&
+        merchant != 'Processing...') {
+      _logger.i(
+        'Receipt $receiptId completed with merchant: $merchant, total: $total',
+      );
     } else {
-      _logger.w('Receipt $receiptId completed but AI could not extract meaningful data');
+      _logger.w(
+        'Receipt $receiptId completed but AI could not extract meaningful data',
+      );
     }
   }
 
@@ -881,13 +1046,22 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
 
   /// Handle receipt failure (extracted from polling logic)
   void _handleReceiptFailure(String itemId, String receiptId) {
-    _logger.d('🚨 _handleReceiptFailure called for itemId: $itemId, receiptId: $receiptId');
+    _logger.d(
+      '🚨 _handleReceiptFailure called for itemId: $itemId, receiptId: $receiptId',
+    );
 
-    _updateItemStatus(itemId, BatchUploadItemStatus.failed,
-        stage: BatchProcessingStage.failed,
-        error: 'AI processing failed');
-    _updateItemProgress(itemId, 100, 'Processing failed',
-        stage: BatchProcessingStage.failed);
+    _updateItemStatus(
+      itemId,
+      BatchUploadItemStatus.failed,
+      stage: BatchProcessingStage.failed,
+      error: 'AI processing failed',
+    );
+    _updateItemProgress(
+      itemId,
+      100,
+      'Processing failed',
+      stage: BatchProcessingStage.failed,
+    );
 
     // Store receipt ID for reference
     _updateItemWithReceiptId(itemId, receiptId);
@@ -896,7 +1070,9 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
     final itemIndex = state.items.indexWhere((item) => item.id == itemId);
     if (itemIndex != -1) {
       final item = state.items[itemIndex];
-      final updatedItem = item.addLog('Receipt processing failed - AI analysis unsuccessful');
+      final updatedItem = item.addLog(
+        'Receipt processing failed - AI analysis unsuccessful',
+      );
       final updatedItems = [...state.items];
       updatedItems[itemIndex] = updatedItem;
       state = state.copyWith(items: updatedItems);
@@ -906,7 +1082,9 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
   }
 
   /// Update item status
-  void _updateItemStatus(String itemId, BatchUploadItemStatus status, {
+  void _updateItemStatus(
+    String itemId,
+    BatchUploadItemStatus status, {
     BatchProcessingStage? stage,
     String? error,
   }) {
@@ -918,8 +1096,12 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
       status: status,
       currentStage: stage,
       error: error,
-      startedAt: status == BatchUploadItemStatus.uploading ? DateTime.now() : item.startedAt,
-      completedAt: status.index >= BatchUploadItemStatus.completed.index ? DateTime.now() : null,
+      startedAt: status == BatchUploadItemStatus.uploading
+          ? DateTime.now()
+          : item.startedAt,
+      completedAt: status.index >= BatchUploadItemStatus.completed.index
+          ? DateTime.now()
+          : null,
     );
 
     final updatedItems = [...state.items];
@@ -928,17 +1110,19 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
   }
 
   /// Update item progress
-  void _updateItemProgress(String itemId, int progress, String message, {
+  void _updateItemProgress(
+    String itemId,
+    int progress,
+    String message, {
     BatchProcessingStage? stage,
   }) {
     final itemIndex = state.items.indexWhere((item) => item.id == itemId);
     if (itemIndex == -1) return;
 
     final item = state.items[itemIndex];
-    final updatedItem = item.copyWith(
-      progress: progress,
-      currentStage: stage ?? item.currentStage,
-    ).addLog(message);
+    final updatedItem = item
+        .copyWith(progress: progress, currentStage: stage ?? item.currentStage)
+        .addLog(message);
 
     final updatedItems = [...state.items];
     updatedItems[itemIndex] = updatedItem;
@@ -958,8 +1142,6 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
     state = state.copyWith(items: updatedItems);
   }
 
-
-
   /// Start progress tracking timer
   void _startProgressTracking() {
     _progressTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -971,13 +1153,17 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
   void _updateTotalProgress() {
     if (state.items.isEmpty) return;
 
-    final totalProgress = state.items.fold<int>(0, (sum, item) => sum + item.progress) / state.items.length;
+    final totalProgress =
+        state.items.fold<int>(0, (sum, item) => sum + item.progress) /
+        state.items.length;
     state = state.copyWith(totalProgress: totalProgress.round());
   }
 
   /// Cancel all active timers and subscriptions
   void _cancelAllTimers() {
-    _logger.d('Cancelling ${_itemTimers.length} active timers and ${_subscriptions.length} subscriptions');
+    _logger.d(
+      'Cancelling ${_itemTimers.length} active timers and ${_subscriptions.length} subscriptions',
+    );
     for (final timer in _itemTimers.values) {
       if (timer.isActive) {
         timer.cancel();
@@ -996,7 +1182,7 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
   bool _isValidFile(File file) {
     final fileExtension = path.extension(file.path).toLowerCase();
     const allowedExtensions = ['.jpg', '.jpeg', '.png', '.pdf'];
-    
+
     if (!allowedExtensions.contains(fileExtension)) {
       return false;
     }
@@ -1004,7 +1190,7 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
     // Check file size (max 5MB)
     final fileStats = file.statSync();
     const maxFileSize = 5 * 1024 * 1024; // 5MB
-    
+
     return fileStats.size <= maxFileSize;
   }
 

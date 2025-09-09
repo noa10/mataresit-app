@@ -9,7 +9,8 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
@@ -26,19 +27,18 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    
+
     // Listen to auth state changes
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next.error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error!),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(next.error!), backgroundColor: Colors.red),
         );
       }
-      
-      if (previous?.isLoading == true && next.isLoading == false && next.error == null) {
+
+      if (previous?.isLoading == true &&
+          next.isLoading == false &&
+          next.error == null) {
         setState(() {
           _emailSent = true;
         });
@@ -68,15 +68,19 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: AppConstants.largePadding * 2),
-                
+
                 // Icon
                 Center(
                   child: Container(
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
+                      color: Theme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.largeBorderRadius,
+                      ),
                     ),
                     child: Icon(
                       Icons.lock_reset,
@@ -85,9 +89,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: AppConstants.largePadding),
-                
+
                 // Title
                 Text(
                   _emailSent ? 'Check Your Email' : 'Forgot Password?',
@@ -96,22 +100,22 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 const SizedBox(height: AppConstants.smallPadding),
-                
+
                 // Description
                 Text(
                   _emailSent
                       ? 'We\'ve sent a password reset link to your email address. Please check your inbox and follow the instructions to reset your password.'
                       : 'Enter your email address and we\'ll send you a link to reset your password.',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 const SizedBox(height: AppConstants.largePadding * 2),
-                
+
                 if (!_emailSent) ...[
                   // Email Field
                   TextFormField(
@@ -127,16 +131,18 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your email';
                       }
-                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                      if (!RegExp(
+                        r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                      ).hasMatch(value)) {
                         return 'Please enter a valid email';
                       }
                       return null;
                     },
                     onFieldSubmitted: (_) => _handleResetPassword(),
                   ),
-                  
+
                   const SizedBox(height: AppConstants.largePadding * 2),
-                  
+
                   // Reset Password Button
                   LoadingButton(
                     onPressed: _handleResetPassword,
@@ -150,9 +156,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     icon: const Icon(Icons.arrow_back),
                     label: const Text('Back to Login'),
                   ),
-                  
+
                   const SizedBox(height: AppConstants.defaultPadding),
-                  
+
                   OutlinedButton.icon(
                     onPressed: () {
                       setState(() {
@@ -164,9 +170,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     label: const Text('Send Again'),
                   ),
                 ],
-                
+
                 const SizedBox(height: AppConstants.largePadding),
-                
+
                 // Back to Login
                 if (!_emailSent)
                   TextButton(
@@ -183,7 +189,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   void _handleResetPassword() {
     if (_formKey.currentState!.validate()) {
-      ref.read(authProvider.notifier).resetPassword(_emailController.text.trim());
+      ref
+          .read(authProvider.notifier)
+          .resetPassword(_emailController.text.trim());
     }
   }
 }

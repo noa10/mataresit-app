@@ -29,21 +29,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      ),
+    );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.2, 0.8, curve: Curves.elasticOut),
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.2, 0.8, curve: Curves.elasticOut),
+      ),
+    );
 
     _animationController.forward();
   }
@@ -107,24 +105,25 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: AppConstants.largePadding),
-                  
+
                   // App Name
                   FadeTransition(
                     opacity: _fadeAnimation,
                     child: Text(
                       AppConstants.appName,
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                      ),
+                      style: Theme.of(context).textTheme.headlineLarge
+                          ?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: AppConstants.smallPadding),
-                  
+
                   // App Tagline
                   FadeTransition(
                     opacity: _fadeAnimation,
@@ -136,16 +135,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: AppConstants.largePadding * 2),
-                  
+
                   // Loading Indicator
                   if (authState.isLoading)
                     const LoadingWidget(
                       color: Colors.white,
                       message: 'Initializing...',
                     ),
-                  
+
                   // Error Message
                   if (authState.error != null)
                     Padding(
@@ -153,7 +152,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         horizontal: AppConstants.largePadding,
                       ),
                       child: Container(
-                        padding: const EdgeInsets.all(AppConstants.defaultPadding),
+                        padding: const EdgeInsets.all(
+                          AppConstants.defaultPadding,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.red.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(

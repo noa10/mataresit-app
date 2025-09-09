@@ -67,9 +67,11 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: analyticsState.isLoading ? null : () {
-              _refreshAnalytics();
-            },
+            onPressed: analyticsState.isLoading
+                ? null
+                : () {
+                    _refreshAnalytics();
+                  },
           ),
         ],
       ),
@@ -85,135 +87,148 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               ),
             )
           : analyticsState.error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Error loading analytics',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        analyticsState.error!,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          ref.read(analyticsProvider.notifier).refresh();
-                        },
-                        child: const Text('Retry'),
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.error,
                   ),
-                )
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppConstants.defaultPadding),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error loading analytics',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    analyticsState.error!,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      ref.read(analyticsProvider.notifier).refresh();
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            )
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(AppConstants.defaultPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Date range and last updated info
+                  Row(
                     children: [
-                      // Date range and last updated info
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.primaryContainer,
-                                borderRadius: BorderRadius.circular(8),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.date_range,
+                                size: 16,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
                               ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.date_range,
-                                    size: 16,
-                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    _selectedTimeframe == 'Custom Range' && _selectedDateRange != null
-                                        ? '${_formatDate(_selectedDateRange!.start)} - ${_formatDate(_selectedDateRange!.end)}'
-                                        : _selectedTimeframe,
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                              const SizedBox(width: 8),
+                              Text(
+                                _selectedTimeframe == 'Custom Range' &&
+                                        _selectedDateRange != null
+                                    ? '${_formatDate(_selectedDateRange!.start)} - ${_formatDate(_selectedDateRange!.end)}'
+                                    : _selectedTimeframe,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimaryContainer,
                                       fontWeight: FontWeight.w500,
                                     ),
-                                  ),
-                                ],
                               ),
-                            ),
+                            ],
                           ),
-                          if (analyticsState.lastUpdated != null) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.update,
-                                    size: 16,
-                                    color: Theme.of(context).colorScheme.onSurface,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    _formatDateTime(analyticsState.lastUpdated!),
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context).colorScheme.onSurface,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ],
+                        ),
                       ),
-                      const SizedBox(height: AppConstants.defaultPadding),
-
-                      // Summary Cards
-                      _buildSummaryCards(context, analytics),
-            
-            const SizedBox(height: AppConstants.largePadding),
-            
-            // Category Spending Chart
-            if (pieChartData.isNotEmpty) ...[
-              _buildSectionTitle(context, 'Spending by Category'),
-              const SizedBox(height: AppConstants.defaultPadding),
-              _buildCategoryPieChart(context, analytics, pieChartData),
-              
-              const SizedBox(height: AppConstants.largePadding),
-            ],
-            
-            // Spending Trend Chart
-            if (analytics.spendingTrend.isNotEmpty) ...[
-              _buildSectionTitle(context, 'Spending Trend'),
-              const SizedBox(height: AppConstants.defaultPadding),
-              _buildSpendingTrendChart(context, lineChartData),
-              
-              const SizedBox(height: AppConstants.largePadding),
-            ],
-            
-                      // Payment Methods
-                      if (analytics.paymentMethodBreakdown.isNotEmpty) ...[
-                        _buildSectionTitle(context, 'Payment Methods'),
-                        const SizedBox(height: AppConstants.defaultPadding),
-                        _buildPaymentMethodsList(context, analytics),
+                      if (analyticsState.lastUpdated != null) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.update,
+                                size: 16,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _formatDateTime(analyticsState.lastUpdated!),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ],
                   ),
-                ),
+                  const SizedBox(height: AppConstants.defaultPadding),
+
+                  // Summary Cards
+                  _buildSummaryCards(context, analytics),
+
+                  const SizedBox(height: AppConstants.largePadding),
+
+                  // Category Spending Chart
+                  if (pieChartData.isNotEmpty) ...[
+                    _buildSectionTitle(context, 'Spending by Category'),
+                    const SizedBox(height: AppConstants.defaultPadding),
+                    _buildCategoryPieChart(context, analytics, pieChartData),
+
+                    const SizedBox(height: AppConstants.largePadding),
+                  ],
+
+                  // Spending Trend Chart
+                  if (analytics.spendingTrend.isNotEmpty) ...[
+                    _buildSectionTitle(context, 'Spending Trend'),
+                    const SizedBox(height: AppConstants.defaultPadding),
+                    _buildSpendingTrendChart(context, lineChartData),
+
+                    const SizedBox(height: AppConstants.largePadding),
+                  ],
+
+                  // Payment Methods
+                  if (analytics.paymentMethodBreakdown.isNotEmpty) ...[
+                    _buildSectionTitle(context, 'Payment Methods'),
+                    const SizedBox(height: AppConstants.defaultPadding),
+                    _buildPaymentMethodsList(context, analytics),
+                  ],
+                ],
+              ),
+            ),
     );
   }
 
@@ -279,9 +294,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       initialDateRange: _selectedDateRange,
       builder: (context, child) {
         return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme,
-          ),
+          data: Theme.of(
+            context,
+          ).copyWith(colorScheme: Theme.of(context).colorScheme),
           child: child!,
         );
       },
@@ -299,10 +314,14 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   /// Refresh analytics with current date range
   void _refreshAnalytics() {
     if (_selectedDateRange != null) {
-      ref.read(analyticsProvider.notifier).loadAnalytics(
-        startDate: _selectedDateRange!.start.toIso8601String().split('T')[0],
-        endDate: _selectedDateRange!.end.toIso8601String().split('T')[0],
-      );
+      ref
+          .read(analyticsProvider.notifier)
+          .loadAnalytics(
+            startDate: _selectedDateRange!.start.toIso8601String().split(
+              'T',
+            )[0],
+            endDate: _selectedDateRange!.end.toIso8601String().split('T')[0],
+          );
     } else {
       ref.read(analyticsProvider.notifier).refresh();
     }
@@ -403,9 +422,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 Expanded(
                   child: Text(
                     title,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                   ),
                 ),
               ],
@@ -427,9 +446,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-        fontWeight: FontWeight.bold,
-      ),
+      style: Theme.of(
+        context,
+      ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
     );
   }
 
@@ -493,33 +512,31 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               ),
             ),
             const SizedBox(width: 4),
-            Text(
-              entry.key,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            Text(entry.key, style: Theme.of(context).textTheme.bodySmall),
           ],
         );
       }).toList(),
     );
   }
 
-  Widget _buildSpendingTrendChart(BuildContext context, LineChartData chartData) {
+  Widget _buildSpendingTrendChart(
+    BuildContext context,
+    LineChartData chartData,
+  ) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
         child: Column(
-          children: [
-            SizedBox(
-              height: 200,
-              child: LineChart(chartData),
-            ),
-          ],
+          children: [SizedBox(height: 200, child: LineChart(chartData))],
         ),
       ),
     );
   }
 
-  Widget _buildPaymentMethodsList(BuildContext context, AnalyticsData analytics) {
+  Widget _buildPaymentMethodsList(
+    BuildContext context,
+    AnalyticsData analytics,
+  ) {
     final entries = analytics.paymentMethodBreakdown.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
@@ -533,9 +550,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               padding: const EdgeInsets.only(bottom: AppConstants.smallPadding),
               child: Row(
                 children: [
-                  Expanded(
-                    child: Text(entry.key),
-                  ),
+                  Expanded(child: Text(entry.key)),
                   Text(
                     '\$${entry.value.toStringAsFixed(2)} (${percentage.toStringAsFixed(1)}%)',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(

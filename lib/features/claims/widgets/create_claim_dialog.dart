@@ -28,7 +28,7 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
   final _categoryController = TextEditingController();
-  
+
   String _currency = 'MYR';
   ClaimPriority _priority = ClaimPriority.medium;
   List<ReceiptModel> _selectedReceipts = [];
@@ -61,8 +61,11 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
       _amountController.text = total.toStringAsFixed(2);
 
       // Set currency from first receipt if available
-      if (_selectedReceipts.first.currency != null && _selectedReceipts.first.currency!.isNotEmpty) {
-        _currency = CurrencyUtils.normalizeCurrencyCode(_selectedReceipts.first.currency!);
+      if (_selectedReceipts.first.currency != null &&
+          _selectedReceipts.first.currency!.isNotEmpty) {
+        _currency = CurrencyUtils.normalizeCurrencyCode(
+          _selectedReceipts.first.currency!,
+        );
       }
     }
   }
@@ -102,30 +105,33 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
 
     try {
       // Prepare attachments from selected receipts
-      final attachments = _selectedReceipts.map((receipt) {
-        return {
-          'type': 'receipt',
-          'receiptId': receipt.id,
-          'url': receipt.imageUrl,
-          'metadata': {
-            'merchant': receipt.merchantName,
-            'date': receipt.transactionDate?.toIso8601String(),
-            'total': receipt.totalAmount,
-            'currency': receipt.currency,
-          }
-        };
-      }).map((attachment) => attachment.toString()).toList();
+      final attachments = _selectedReceipts
+          .map((receipt) {
+            return {
+              'type': 'receipt',
+              'receiptId': receipt.id,
+              'url': receipt.imageUrl,
+              'metadata': {
+                'merchant': receipt.merchantName,
+                'date': receipt.transactionDate?.toIso8601String(),
+                'total': receipt.totalAmount,
+                'currency': receipt.currency,
+              },
+            };
+          })
+          .map((attachment) => attachment.toString())
+          .toList();
 
       final request = CreateClaimRequest(
         teamId: currentTeamState.currentTeam!.id,
         title: _titleController.text.trim(),
-        description: _descriptionController.text.trim().isEmpty 
-            ? null 
+        description: _descriptionController.text.trim().isEmpty
+            ? null
             : _descriptionController.text.trim(),
         amount: double.parse(_amountController.text),
         currency: _currency,
-        category: _categoryController.text.trim().isEmpty 
-            ? null 
+        category: _categoryController.text.trim().isEmpty
+            ? null
             : _categoryController.text.trim(),
         priority: _priority,
         attachments: attachments.isEmpty ? null : attachments,
@@ -280,16 +286,31 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
                                 labelText: 'Currency',
                                 border: OutlineInputBorder(),
                               ),
-                              items: ['MYR', 'USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'SGD']
-                                  .map((currency) => DropdownMenuItem(
-                                        value: currency,
-                                        child: Text(currency),
-                                      ))
-                                  .toList(),
+                              items:
+                                  [
+                                        'MYR',
+                                        'USD',
+                                        'EUR',
+                                        'GBP',
+                                        'CAD',
+                                        'AUD',
+                                        'JPY',
+                                        'SGD',
+                                      ]
+                                      .map(
+                                        (currency) => DropdownMenuItem(
+                                          value: currency,
+                                          child: Text(currency),
+                                        ),
+                                      )
+                                      .toList(),
                               onChanged: (value) {
                                 if (value != null) {
                                   setState(() {
-                                    _currency = CurrencyUtils.normalizeCurrencyCode(value);
+                                    _currency =
+                                        CurrencyUtils.normalizeCurrencyCode(
+                                          value,
+                                        );
                                   });
                                 }
                               },
@@ -321,10 +342,12 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
                           prefixIcon: Icon(Icons.priority_high),
                         ),
                         items: ClaimPriority.values
-                            .map((priority) => DropdownMenuItem(
-                                  value: priority,
-                                  child: Text(priority.name.toUpperCase()),
-                                ))
+                            .map(
+                              (priority) => DropdownMenuItem(
+                                value: priority,
+                                child: Text(priority.name.toUpperCase()),
+                              ),
+                            )
                             .toList(),
                         onChanged: (value) {
                           if (value != null) {
@@ -350,16 +373,16 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 border: Border(
-                  top: BorderSide(
-                    color: Theme.of(context).dividerColor,
-                  ),
+                  top: BorderSide(color: Theme.of(context).dividerColor),
                 ),
               ),
               child: Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                      onPressed: _isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(),
                       child: const Text('Cancel'),
                     ),
                   ),
@@ -393,9 +416,9 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
           children: [
             Text(
               'Attached Receipts',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const Spacer(),
             TextButton.icon(
@@ -422,24 +445,26 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
             ),
           )
         else
-          ...(_selectedReceipts.map((receipt) => Card(
-                child: ListTile(
-                  leading: const Icon(Icons.receipt),
-                  title: Text(receipt.merchantName ?? 'Unknown Merchant'),
-                  subtitle: Text(
-                    '${receipt.transactionDate?.day ?? ''}/${receipt.transactionDate?.month ?? ''}/${receipt.transactionDate?.year ?? ''} • ${receipt.currency ?? 'USD'} ${(receipt.totalAmount ?? 0.0).toStringAsFixed(2)}',
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.remove_circle, color: Colors.red),
-                    onPressed: () {
-                      setState(() {
-                        _selectedReceipts.remove(receipt);
-                        _calculateTotalFromReceipts();
-                      });
-                    },
-                  ),
+          ...(_selectedReceipts.map(
+            (receipt) => Card(
+              child: ListTile(
+                leading: const Icon(Icons.receipt),
+                title: Text(receipt.merchantName ?? 'Unknown Merchant'),
+                subtitle: Text(
+                  '${receipt.transactionDate?.day ?? ''}/${receipt.transactionDate?.month ?? ''}/${receipt.transactionDate?.year ?? ''} • ${receipt.currency ?? 'USD'} ${(receipt.totalAmount ?? 0.0).toStringAsFixed(2)}',
                 ),
-              ))),
+                trailing: IconButton(
+                  icon: const Icon(Icons.remove_circle, color: Colors.red),
+                  onPressed: () {
+                    setState(() {
+                      _selectedReceipts.remove(receipt);
+                      _calculateTotalFromReceipts();
+                    });
+                  },
+                ),
+              ),
+            ),
+          )),
       ],
     );
   }
@@ -458,7 +483,7 @@ class _ReceiptPickerDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final receiptsState = ref.watch(receiptsProvider);
-    
+
     return AlertDialog(
       title: const Text('Select Receipts'),
       content: SizedBox(
@@ -471,7 +496,7 @@ class _ReceiptPickerDialog extends ConsumerWidget {
                 itemBuilder: (context, index) {
                   final receipt = receiptsState.receipts[index];
                   final isSelected = selectedReceipts.contains(receipt);
-                  
+
                   return CheckboxListTile(
                     title: Text(receipt.merchantName ?? 'Unknown Merchant'),
                     subtitle: Text(
@@ -479,7 +504,9 @@ class _ReceiptPickerDialog extends ConsumerWidget {
                     ),
                     value: isSelected,
                     onChanged: (selected) {
-                      final newSelection = List<ReceiptModel>.from(selectedReceipts);
+                      final newSelection = List<ReceiptModel>.from(
+                        selectedReceipts,
+                      );
                       if (selected == true) {
                         newSelection.add(receipt);
                       } else {

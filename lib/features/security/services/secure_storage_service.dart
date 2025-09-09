@@ -5,9 +5,7 @@ import 'package:logger/logger.dart';
 /// Service for secure storage of sensitive data
 class SecureStorageService {
   static const _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(
-      encryptedSharedPreferences: true,
-    ),
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),
@@ -24,7 +22,9 @@ class SecureStorageService {
   static const String _backupCodesKey = '2fa_backup_codes';
 
   /// Store security settings
-  static Future<void> storeSecuritySettings(Map<String, dynamic> settings) async {
+  static Future<void> storeSecuritySettings(
+    Map<String, dynamic> settings,
+  ) async {
     try {
       final jsonString = jsonEncode(settings);
       await _storage.write(key: _securitySettingsKey, value: jsonString);
@@ -50,7 +50,9 @@ class SecureStorageService {
   }
 
   /// Store biometric settings
-  static Future<void> storeBiometricSettings(Map<String, dynamic> settings) async {
+  static Future<void> storeBiometricSettings(
+    Map<String, dynamic> settings,
+  ) async {
     try {
       final jsonString = jsonEncode(settings);
       await _storage.write(key: _biometricSettingsKey, value: jsonString);
@@ -76,7 +78,9 @@ class SecureStorageService {
   }
 
   /// Store privacy settings
-  static Future<void> storePrivacySettings(Map<String, dynamic> settings) async {
+  static Future<void> storePrivacySettings(
+    Map<String, dynamic> settings,
+  ) async {
     try {
       final jsonString = jsonEncode(settings);
       await _storage.write(key: _privacySettingsKey, value: jsonString);

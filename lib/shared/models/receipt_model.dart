@@ -5,7 +5,8 @@ import 'line_item_model.dart';
 part 'receipt_model.g.dart';
 
 /// Custom JSON converter for ProcessingStatus to handle cross-platform compatibility
-class ProcessingStatusConverter implements JsonConverter<ProcessingStatus, String?> {
+class ProcessingStatusConverter
+    implements JsonConverter<ProcessingStatus, String?> {
   const ProcessingStatusConverter();
 
   @override
@@ -165,7 +166,8 @@ class ReceiptModel extends Equatable {
     this.aiSuggestions,
   });
 
-  factory ReceiptModel.fromJson(Map<String, dynamic> json) => _$ReceiptModelFromJson(json);
+  factory ReceiptModel.fromJson(Map<String, dynamic> json) =>
+      _$ReceiptModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$ReceiptModelToJson(this);
 
@@ -255,46 +257,46 @@ class ReceiptModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        teamId,
-        merchantName,
-        merchantAddress,
-        merchantPhone,
-        merchantEmail,
-        receiptNumber,
-        transactionDate,
-        totalAmount,
-        taxAmount,
-        discountAmount,
-        tipAmount,
-        currency,
-        paymentMethod,
-        category,
-        customCategoryId,
-        description,
-        notes,
-        imageUrl,
-        thumbnailUrl,
-        originalFileName,
-        fileSize,
-        mimeType,
-        status,
-        processingStatus,
-        ocrData,
-        metadata,
-        tags,
-        isExpense,
-        isReimbursable,
-        projectId,
-        clientId,
-        createdAt,
-        updatedAt,
-        processedAt,
-        lineItems,
-        confidenceScores,
-        aiSuggestions,
-      ];
+    id,
+    userId,
+    teamId,
+    merchantName,
+    merchantAddress,
+    merchantPhone,
+    merchantEmail,
+    receiptNumber,
+    transactionDate,
+    totalAmount,
+    taxAmount,
+    discountAmount,
+    tipAmount,
+    currency,
+    paymentMethod,
+    category,
+    customCategoryId,
+    description,
+    notes,
+    imageUrl,
+    thumbnailUrl,
+    originalFileName,
+    fileSize,
+    mimeType,
+    status,
+    processingStatus,
+    ocrData,
+    metadata,
+    tags,
+    isExpense,
+    isReimbursable,
+    projectId,
+    clientId,
+    createdAt,
+    updatedAt,
+    processedAt,
+    lineItems,
+    confidenceScores,
+    aiSuggestions,
+  ];
 }
 
 @JsonEnum()

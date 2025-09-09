@@ -20,7 +20,7 @@ void main() {
 
       // Should not throw an exception and should map 'complete' to 'completed'
       expect(() => ReceiptModel.fromJson(jsonData), returnsNormally);
-      
+
       final receipt = ReceiptModel.fromJson(jsonData);
       expect(receipt.processingStatus, ProcessingStatus.completed);
     });
@@ -68,28 +68,34 @@ void main() {
         };
 
         final receipt = ReceiptModel.fromJson(jsonData);
-        expect(receipt.processingStatus, entry.value, 
-               reason: 'Failed for processing_status: ${entry.key}');
+        expect(
+          receipt.processingStatus,
+          entry.value,
+          reason: 'Failed for processing_status: ${entry.key}',
+        );
       }
     });
 
-    test('should default to completed for unknown processing status values', () {
-      final jsonData = {
-        'id': 'test-id',
-        'user_id': 'test-user',
-        'merchant': 'Test Merchant',
-        'date': '2024-01-01',
-        'total': 100.0,
-        'currency': 'MYR',
-        'status': 'active',
-        'processing_status': 'unknown_status',
-        'created_at': '2024-01-01T00:00:00Z',
-        'updated_at': '2024-01-01T00:00:00Z',
-      };
+    test(
+      'should default to completed for unknown processing status values',
+      () {
+        final jsonData = {
+          'id': 'test-id',
+          'user_id': 'test-user',
+          'merchant': 'Test Merchant',
+          'date': '2024-01-01',
+          'total': 100.0,
+          'currency': 'MYR',
+          'status': 'active',
+          'processing_status': 'unknown_status',
+          'created_at': '2024-01-01T00:00:00Z',
+          'updated_at': '2024-01-01T00:00:00Z',
+        };
 
-      final receipt = ReceiptModel.fromJson(jsonData);
-      expect(receipt.processingStatus, ProcessingStatus.completed);
-    });
+        final receipt = ReceiptModel.fromJson(jsonData);
+        expect(receipt.processingStatus, ProcessingStatus.completed);
+      },
+    );
 
     test('should handle null processing status', () {
       final jsonData = {
@@ -125,9 +131,15 @@ void main() {
       expect(converter.fromJson('pending'), ProcessingStatus.pending);
       expect(converter.fromJson('processing'), ProcessingStatus.processing);
       expect(converter.fromJson('completed'), ProcessingStatus.completed);
-      expect(converter.fromJson('complete'), ProcessingStatus.completed); // Cross-platform
+      expect(
+        converter.fromJson('complete'),
+        ProcessingStatus.completed,
+      ); // Cross-platform
       expect(converter.fromJson('failed'), ProcessingStatus.failed);
-      expect(converter.fromJson('manual_review'), ProcessingStatus.manualReview);
+      expect(
+        converter.fromJson('manual_review'),
+        ProcessingStatus.manualReview,
+      );
     });
   });
 }

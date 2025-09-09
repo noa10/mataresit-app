@@ -23,7 +23,7 @@ class TeamInvitationModel extends Equatable {
   final DateTime createdAt;
   @JsonKey(name: 'updated_at')
   final DateTime updatedAt;
-  
+
   // Enhanced fields
   @JsonKey(name: 'invitation_attempts')
   final int? invitationAttempts;
@@ -33,7 +33,7 @@ class TeamInvitationModel extends Equatable {
   final String? customMessage;
   final Map<String, dynamic>? permissions;
   final Map<String, dynamic>? metadata;
-  
+
   // Joined data
   @JsonKey(name: 'team_name')
   final String? teamName;
@@ -142,25 +142,25 @@ class TeamInvitationModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        teamId,
-        email,
-        role,
-        invitedBy,
-        status,
-        token,
-        expiresAt,
-        acceptedAt,
-        createdAt,
-        updatedAt,
-        invitationAttempts,
-        lastSentAt,
-        customMessage,
-        permissions,
-        metadata,
-        teamName,
-        invitedByName,
-      ];
+    id,
+    teamId,
+    email,
+    role,
+    invitedBy,
+    status,
+    token,
+    expiresAt,
+    acceptedAt,
+    createdAt,
+    updatedAt,
+    invitationAttempts,
+    lastSentAt,
+    customMessage,
+    permissions,
+    metadata,
+    teamName,
+    invitedByName,
+  ];
 }
 
 @JsonEnum()
@@ -191,5 +191,6 @@ extension InvitationStatusExtension on InvitationStatus {
 
   bool get isActive => this == InvitationStatus.pending;
   bool get isCompleted => this == InvitationStatus.accepted;
-  bool get isInactive => this == InvitationStatus.expired || this == InvitationStatus.cancelled;
+  bool get isInactive =>
+      this == InvitationStatus.expired || this == InvitationStatus.cancelled;
 }

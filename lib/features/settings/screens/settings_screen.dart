@@ -11,7 +11,6 @@ import '../../../core/providers/language_provider.dart';
 import '../../../shared/providers/currency_provider.dart';
 import '../../../shared/providers/theme_provider.dart';
 
-
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -24,9 +23,7 @@ class SettingsScreen extends ConsumerWidget {
     final themeState = ref.watch(themeProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('settings.title'.tr()),
-      ),
+      appBar: AppBar(title: Text('settings.title'.tr())),
       body: ListView(
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
         children: [
@@ -39,14 +36,26 @@ class SettingsScreen extends ConsumerWidget {
                   CircleAvatar(
                     radius: 30,
                     backgroundColor: Theme.of(context).primaryColor,
-                    backgroundImage: profileState.profile != null &&
-                        ProfileService.getAvatarUrl(profileState.profile!) != null
-                        ? NetworkImage(ProfileService.getAvatarUrl(profileState.profile!)!)
+                    backgroundImage:
+                        profileState.profile != null &&
+                            ProfileService.getAvatarUrl(
+                                  profileState.profile!,
+                                ) !=
+                                null
+                        ? NetworkImage(
+                            ProfileService.getAvatarUrl(profileState.profile!)!,
+                          )
                         : null,
-                    child: profileState.profile != null &&
-                        ProfileService.getAvatarUrl(profileState.profile!) == null
+                    child:
+                        profileState.profile != null &&
+                            ProfileService.getAvatarUrl(
+                                  profileState.profile!,
+                                ) ==
+                                null
                         ? Text(
-                            ProfileService.getUserInitials(profileState.profile!),
+                            ProfileService.getUserInitials(
+                              profileState.profile!,
+                            ),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 24,
@@ -62,17 +71,17 @@ class SettingsScreen extends ConsumerWidget {
                       children: [
                         Text(
                           profileState.profile != null
-                              ? ProfileService.getFullName(profileState.profile!)
+                              ? ProfileService.getFullName(
+                                  profileState.profile!,
+                                )
                               : user?.fullName ?? 'User',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         Text(
                           profileState.profile?.email ?? user?.email ?? '',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: Colors.grey[600]),
                         ),
                       ],
                     ),
@@ -87,7 +96,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
           ),
-          
+
           const SizedBox(height: AppConstants.largePadding),
 
           // Subscription Section
@@ -96,129 +105,109 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: AppConstants.largePadding),
 
           // Settings Sections
-          _buildSettingsSection(
-            context,
-            'settings.tabs.billing'.tr(),
-            [
-              _buildSettingsTile(
-                context,
-                'common.labels.subscription'.tr(),
-                Icons.credit_card_outlined,
-                () => context.push('/pricing'),
-              ),
-              _buildSettingsTile(
-                context,
-                'common.labels.billing'.tr(),
-                Icons.receipt_outlined,
-                () => context.push('/billing'),
-              ),
-            ],
-          ),
+          _buildSettingsSection(context, 'settings.tabs.billing'.tr(), [
+            _buildSettingsTile(
+              context,
+              'common.labels.subscription'.tr(),
+              Icons.credit_card_outlined,
+              () => context.push('/pricing'),
+            ),
+            _buildSettingsTile(
+              context,
+              'common.labels.billing'.tr(),
+              Icons.receipt_outlined,
+              () => context.push('/billing'),
+            ),
+          ]),
 
           const SizedBox(height: AppConstants.largePadding),
 
-          _buildSettingsSection(
-            context,
-            'Account',
-            [
-              _buildSettingsTile(
-                context,
-                'Profile',
-                Icons.person_outline,
-                () {
-                  context.push('/profile');
-                },
-              ),
-              _buildSettingsTile(
-                context,
-                'Security',
-                Icons.security_outlined,
-                () {
-                  context.push('/settings/security');
-                },
-              ),
-              _buildSettingsTile(
-                context,
-                'Notifications',
-                Icons.notifications_outlined,
-                () {
-                  context.push('/settings/notifications');
-                },
-              ),
-            ],
-          ),
-          
+          _buildSettingsSection(context, 'Account', [
+            _buildSettingsTile(context, 'Profile', Icons.person_outline, () {
+              context.push('/profile');
+            }),
+            _buildSettingsTile(
+              context,
+              'Security',
+              Icons.security_outlined,
+              () {
+                context.push('/settings/security');
+              },
+            ),
+            _buildSettingsTile(
+              context,
+              'Notifications',
+              Icons.notifications_outlined,
+              () {
+                context.push('/settings/notifications');
+              },
+            ),
+          ]),
+
           const SizedBox(height: AppConstants.largePadding),
-          
-          _buildSettingsSection(
-            context,
-            'settings.tabs.general'.tr(),
-            [
-              _buildSettingsTile(
-                context,
-                'settings.general.language.title'.tr(),
-                Icons.language_outlined,
-                () {
-                  context.push('/settings/language');
-                },
-                subtitle: languageState.currentLanguage.name,
-              ),
-              _buildSettingsTile(
-                context,
-                'settings.general.theme.title'.tr(),
-                Icons.palette_outlined,
-                () {
-                  context.push('/settings/theme');
-                },
-                subtitle: '${themeState.config.mode.displayName} • ${themeState.config.variant.displayName}',
-              ),
-              _buildSettingsTile(
-                context,
-                'settings.general.currency.title'.tr(),
-                Icons.attach_money_outlined,
-                () {
-                  context.push('/settings/currency');
-                },
-                subtitle: currencyState.userPreferredCurrency ?? 'MYR',
-              ),
-            ],
-          ),
-          
+
+          _buildSettingsSection(context, 'settings.tabs.general'.tr(), [
+            _buildSettingsTile(
+              context,
+              'settings.general.language.title'.tr(),
+              Icons.language_outlined,
+              () {
+                context.push('/settings/language');
+              },
+              subtitle: languageState.currentLanguage.name,
+            ),
+            _buildSettingsTile(
+              context,
+              'settings.general.theme.title'.tr(),
+              Icons.palette_outlined,
+              () {
+                context.push('/settings/theme');
+              },
+              subtitle:
+                  '${themeState.config.mode.displayName} • ${themeState.config.variant.displayName}',
+            ),
+            _buildSettingsTile(
+              context,
+              'settings.general.currency.title'.tr(),
+              Icons.attach_money_outlined,
+              () {
+                context.push('/settings/currency');
+              },
+              subtitle: currencyState.userPreferredCurrency ?? 'MYR',
+            ),
+          ]),
+
           const SizedBox(height: AppConstants.largePadding),
-          
-          _buildSettingsSection(
-            context,
-            'navigation.help'.tr(),
-            [
-              _buildSettingsTile(
-                context,
-                'navigation.help'.tr(),
-                Icons.help_outline,
-                () {
-                  context.push('/help');
-                },
-              ),
-              _buildSettingsTile(
-                context,
-                'Contact Us',
-                Icons.contact_support_outlined,
-                () {
-                  // TODO: Navigate to contact
-                },
-              ),
-              _buildSettingsTile(
-                context,
-                'Privacy Policy',
-                Icons.privacy_tip_outlined,
-                () {
-                  context.push('/privacy-policy');
-                },
-              ),
-            ],
-          ),
-          
+
+          _buildSettingsSection(context, 'navigation.help'.tr(), [
+            _buildSettingsTile(
+              context,
+              'navigation.help'.tr(),
+              Icons.help_outline,
+              () {
+                context.push('/help');
+              },
+            ),
+            _buildSettingsTile(
+              context,
+              'Contact Us',
+              Icons.contact_support_outlined,
+              () {
+                // TODO: Navigate to contact
+              },
+            ),
+            _buildSettingsTile(
+              context,
+              'Privacy Policy',
+              Icons.privacy_tip_outlined,
+              () {
+                context.push('/privacy-policy');
+              },
+            ),
+          ]),
+
           const SizedBox(height: AppConstants.largePadding),
-          
+
           // Logout Button
           Card(
             child: ListTile(
@@ -232,16 +221,16 @@ class SettingsScreen extends ConsumerWidget {
               },
             ),
           ),
-          
+
           const SizedBox(height: AppConstants.largePadding),
-          
+
           // App Version
           Center(
             child: Text(
               'Version ${AppConstants.appVersion}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
             ),
           ),
         ],
@@ -268,9 +257,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: AppConstants.smallPadding),
-        Card(
-          child: Column(children: children),
-        ),
+        Card(child: Column(children: children)),
       ],
     );
   }

@@ -23,9 +23,9 @@ class FeatureComparisonTable extends StatelessWidget {
           children: [
             Text(
               'Feature Comparison',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             SingleChildScrollView(
@@ -45,7 +45,7 @@ class FeatureComparisonTable extends StatelessWidget {
 
   Widget _buildComparisonTable(BuildContext context) {
     final features = _getFeatureList();
-    
+
     return DataTable(
       columnSpacing: 18,
       headingRowHeight: 50,
@@ -53,16 +53,15 @@ class FeatureComparisonTable extends StatelessWidget {
       dataRowMaxHeight: 40,
       columns: [
         const DataColumn(
-          label: Text(
-            'Feature',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
+          label: Text('Feature', style: TextStyle(fontWeight: FontWeight.bold)),
         ),
         _buildTierColumn(context, SubscriptionTier.free),
         _buildTierColumn(context, SubscriptionTier.pro),
         _buildTierColumn(context, SubscriptionTier.max),
       ],
-      rows: features.map((feature) => _buildFeatureRow(context, feature)).toList(),
+      rows: features
+          .map((feature) => _buildFeatureRow(context, feature))
+          .toList(),
     );
   }
 
@@ -112,7 +111,9 @@ class FeatureComparisonTable extends StatelessWidget {
               ],
             ),
             Text(
-              price == 0 ? 'Free' : '\$${price.toStringAsFixed(0)}/${billingInterval.value}',
+              price == 0
+                  ? 'Free'
+                  : '\$${price.toStringAsFixed(0)}/${billingInterval.value}',
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 fontSize: 9,
                 color: isCurrentTier
@@ -151,14 +152,14 @@ class FeatureComparisonTable extends StatelessWidget {
     );
   }
 
-  DataCell _buildFeatureCell(BuildContext context, FeatureItem feature, SubscriptionTier tier) {
+  DataCell _buildFeatureCell(
+    BuildContext context,
+    FeatureItem feature,
+    SubscriptionTier tier,
+  ) {
     final value = _getFeatureValue(feature, tier);
-    
-    return DataCell(
-      Center(
-        child: _buildFeatureValue(context, value),
-      ),
-    );
+
+    return DataCell(Center(child: _buildFeatureValue(context, value)));
   }
 
   Widget _buildFeatureValue(BuildContext context, FeatureValue value) {
@@ -178,9 +179,9 @@ class FeatureComparisonTable extends StatelessWidget {
       case FeatureValueType.number:
         return Text(
           value.numberValue == -1 ? 'Unlimited' : value.numberValue.toString(),
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
           textAlign: TextAlign.center,
         );
     }
@@ -203,7 +204,7 @@ class FeatureComparisonTable extends StatelessWidget {
 
   FeatureValue _getFeatureValue(FeatureItem feature, SubscriptionTier tier) {
     final limits = TierConfig.getLimits(tier);
-    
+
     switch (feature.type) {
       case FeatureType.monthlyReceipts:
         return FeatureValue.number(limits.monthlyReceipts);
@@ -211,7 +212,9 @@ class FeatureComparisonTable extends StatelessWidget {
         if (limits.storageLimitMB == -1) {
           return FeatureValue.number(-1);
         }
-        return FeatureValue.text('${(limits.storageLimitMB / 1024).toStringAsFixed(0)}GB');
+        return FeatureValue.text(
+          '${(limits.storageLimitMB / 1024).toStringAsFixed(0)}GB',
+        );
       case FeatureType.dataRetention:
         return FeatureValue.text('${limits.retentionDays} days');
       case FeatureType.batchUploadLimit:
@@ -293,23 +296,19 @@ class FeatureValue {
   final int? numberValue;
 
   FeatureValue.boolean(this.boolValue)
-      : type = FeatureValueType.boolean,
-        textValue = null,
-        numberValue = null;
+    : type = FeatureValueType.boolean,
+      textValue = null,
+      numberValue = null;
 
   FeatureValue.text(this.textValue)
-      : type = FeatureValueType.text,
-        boolValue = null,
-        numberValue = null;
+    : type = FeatureValueType.text,
+      boolValue = null,
+      numberValue = null;
 
   FeatureValue.number(this.numberValue)
-      : type = FeatureValueType.number,
-        boolValue = null,
-        textValue = null;
+    : type = FeatureValueType.number,
+      boolValue = null,
+      textValue = null;
 }
 
-enum FeatureValueType {
-  boolean,
-  text,
-  number,
-}
+enum FeatureValueType { boolean, text, number }

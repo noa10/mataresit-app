@@ -13,23 +13,23 @@ class CurrencyFormatter {
     int? overrideDecimals,
   }) {
     final decimals = overrideDecimals ?? currency.decimalPlaces;
-    
+
     String formattedAmount;
-    
+
     if (compact && amount.abs() >= 1000) {
       formattedAmount = _formatCompactAmount(amount, decimals);
     } else {
       formattedAmount = amount.toStringAsFixed(decimals);
-      
+
       // Add thousand separators for readability
       if (amount.abs() >= 1000) {
         formattedAmount = _addThousandSeparators(formattedAmount);
       }
     }
-    
+
     // Build the final formatted string
     final parts = <String>[];
-    
+
     if (showSymbol) {
       if (currency.symbolPosition == 'before') {
         parts.add(currency.symbol);
@@ -41,11 +41,11 @@ class CurrencyFormatter {
     } else {
       parts.add(formattedAmount);
     }
-    
+
     if (showCode) {
       parts.add(currency.code);
     }
-    
+
     return parts.join(' ').trim();
   }
 
@@ -57,7 +57,7 @@ class CurrencyFormatter {
     int? decimals,
   }) {
     final currency = PopularCurrencies.getByCode(currencyCode);
-    
+
     if (currency != null) {
       return formatAmount(
         amount: amount,
@@ -66,7 +66,7 @@ class CurrencyFormatter {
         overrideDecimals: decimals,
       );
     }
-    
+
     // Fallback formatting
     final formattedAmount = amount.toStringAsFixed(decimals ?? 2);
     return '$formattedAmount $currencyCode';
@@ -82,22 +82,26 @@ class CurrencyFormatter {
     bool compact = false,
   }) {
     final parts = <String>[];
-    
+
     // Format converted amount
     if (targetCurrency != null) {
-      parts.add(formatAmount(
-        amount: result.convertedAmount,
-        currency: targetCurrency,
-        compact: compact,
-      ));
+      parts.add(
+        formatAmount(
+          amount: result.convertedAmount,
+          currency: targetCurrency,
+          compact: compact,
+        ),
+      );
     } else {
-      parts.add(formatAmountWithCode(
-        amount: result.convertedAmount,
-        currencyCode: result.targetCurrency,
-        compact: compact,
-      ));
+      parts.add(
+        formatAmountWithCode(
+          amount: result.convertedAmount,
+          currencyCode: result.targetCurrency,
+          compact: compact,
+        ),
+      );
     }
-    
+
     // Add original amount if requested and conversion was applied
     if (showOriginal && result.conversionApplied) {
       String originalFormatted;
@@ -116,13 +120,13 @@ class CurrencyFormatter {
       }
       parts.add('($originalFormatted)');
     }
-    
+
     // Add conversion rate if requested
     if (showConversionRate && result.conversionApplied) {
       final rateFormatted = result.exchangeRate.toStringAsFixed(4);
       parts.add('@ $rateFormatted');
     }
-    
+
     return parts.join(' ');
   }
 
@@ -133,7 +137,7 @@ class CurrencyFormatter {
     bool showCurrencyCode = false,
   }) {
     final currency = PopularCurrencies.getByCode(currencyCode);
-    
+
     if (currency != null) {
       return formatAmount(
         amount: amount,
@@ -142,12 +146,12 @@ class CurrencyFormatter {
         showCode: showCurrencyCode,
       );
     }
-    
+
     // Fallback
-    final compactAmount = amount.abs() >= 10000 
+    final compactAmount = amount.abs() >= 10000
         ? _formatCompactAmount(amount, 2)
         : amount.toStringAsFixed(2);
-    
+
     return showCurrencyCode ? '$compactAmount $currencyCode' : compactAmount;
   }
 
@@ -158,21 +162,21 @@ class CurrencyFormatter {
   }) {
     final currency = PopularCurrencies.getByCode(currencyCode);
     final decimals = currency?.decimalPlaces ?? 2;
-    
+
     return amount.toStringAsFixed(decimals);
   }
 
   /// Parse amount from formatted string
   static double? parseAmount(String formattedAmount) {
     if (formattedAmount.trim().isEmpty) return null;
-    
+
     // Remove common currency symbols and codes
     String cleaned = formattedAmount
         .replaceAll(RegExp(r'[RM$€£¥₱₫฿₩]'), '')
         .replaceAll(RegExp(r'\b[A-Z]{3}\b'), '')
         .replaceAll(',', '')
         .trim();
-    
+
     return double.tryParse(cleaned);
   }
 
@@ -181,13 +185,13 @@ class CurrencyFormatter {
     if (amount.abs() < 1000) {
       return amount.toStringAsFixed(decimals);
     }
-    
+
     final absAmount = amount.abs();
     final isNegative = amount < 0;
-    
+
     String suffix;
     double divisor;
-    
+
     if (absAmount >= 1000000000) {
       suffix = 'B';
       divisor = 1000000000;
@@ -198,15 +202,15 @@ class CurrencyFormatter {
       suffix = 'K';
       divisor = 1000;
     }
-    
+
     final compactValue = absAmount / divisor;
     final formatted = compactValue.toStringAsFixed(1);
-    
+
     // Remove unnecessary .0
-    final cleanFormatted = formatted.endsWith('.0') 
+    final cleanFormatted = formatted.endsWith('.0')
         ? formatted.substring(0, formatted.length - 2)
         : formatted;
-    
+
     return '${isNegative ? '-' : ''}$cleanFormatted$suffix';
   }
 
@@ -215,7 +219,7 @@ class CurrencyFormatter {
     final parts = amount.split('.');
     final integerPart = parts[0];
     final decimalPart = parts.length > 1 ? parts[1] : '';
-    
+
     // Add commas to integer part
     final reversed = integerPart.split('').reversed.join();
     final withCommas = reversed.replaceAllMapped(
@@ -223,7 +227,7 @@ class CurrencyFormatter {
       (match) => '${match.group(1)},',
     );
     final formatted = withCommas.split('').reversed.join();
-    
+
     return decimalPart.isNotEmpty ? '$formatted.$decimalPart' : formatted;
   }
 
@@ -243,7 +247,7 @@ class CurrencyFormatter {
   static String formatPercentageChange(double percentage) {
     final absPercentage = percentage.abs();
     final sign = percentage >= 0 ? '+' : '-';
-    
+
     if (absPercentage < 0.01) {
       return '0.00%';
     } else if (absPercentage < 1) {
@@ -267,7 +271,7 @@ class CurrencyFormatter {
   /// Validate currency amount string
   static bool isValidAmount(String amount) {
     if (amount.trim().isEmpty) return false;
-    
+
     final parsed = parseAmount(amount);
     return parsed != null && parsed >= 0;
   }
@@ -284,13 +288,13 @@ class CurrencyFormatter {
       currencyCode: currencyCode,
       compact: compact,
     );
-    
+
     final maxFormatted = formatAmountWithCode(
       amount: maxAmount,
       currencyCode: currencyCode,
       compact: compact,
     );
-    
+
     return '$minFormatted - $maxFormatted';
   }
 

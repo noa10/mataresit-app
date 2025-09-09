@@ -26,7 +26,9 @@ void main() async {
     try {
       await dotenv.load(fileName: '.env');
       logger.i('✅ Environment variables loaded successfully');
-      logger.i('📋 GEMINI_API_KEY loaded: ${dotenv.env['GEMINI_API_KEY']?.isNotEmpty == true ? 'YES' : 'NO'}');
+      logger.i(
+        '📋 GEMINI_API_KEY loaded: ${dotenv.env['GEMINI_API_KEY']?.isNotEmpty == true ? 'YES' : 'NO'}',
+      );
     } catch (envError) {
       logger.w('⚠️ Failed to load .env file: $envError');
       logger.i('ℹ️ Will use default environment variables');
@@ -47,8 +49,12 @@ void main() async {
         final services = AIVisionServiceManager.getConfiguredServiceNames();
         logger.i('✅ AI Vision services configured: ${services.join(', ')}');
       } else {
-        logger.w('⚠️ No AI Vision services are configured - receipt processing will not work');
-        logger.w('ℹ️ Please set GEMINI_API_KEY or OPENROUTER_API_KEY environment variable');
+        logger.w(
+          '⚠️ No AI Vision services are configured - receipt processing will not work',
+        );
+        logger.w(
+          'ℹ️ Please set GEMINI_API_KEY or OPENROUTER_API_KEY environment variable',
+        );
       }
     } catch (e) {
       logger.e('❌ AI Vision Service Manager initialization failed: $e');
@@ -95,15 +101,10 @@ void main() async {
 
   runApp(
     EasyLocalization(
-      supportedLocales: const [
-        Locale('en'),
-        Locale('ms'),
-      ],
+      supportedLocales: const [Locale('en'), Locale('ms')],
       path: 'assets/translations',
       fallbackLocale: const Locale('en'),
-      child: const ProviderScope(
-        child: MataresitApp(),
-      ),
+      child: const ProviderScope(child: MataresitApp()),
     ),
   );
 }

@@ -8,25 +8,25 @@ part 'currency_preference_model.g.dart';
 class CurrencyPreferenceModel extends Equatable {
   @JsonKey(name: 'user_id')
   final String userId;
-  
+
   @JsonKey(name: 'preferred_currency')
   final String preferredCurrency;
-  
+
   @JsonKey(name: 'auto_convert')
   final bool autoConvert;
-  
+
   @JsonKey(name: 'show_original_amounts')
   final bool showOriginalAmounts;
-  
+
   @JsonKey(name: 'rate_update_frequency')
   final int rateUpdateFrequencyHours;
-  
+
   @JsonKey(name: 'offline_mode_enabled')
   final bool offlineModeEnabled;
-  
+
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
-  
+
   @JsonKey(name: 'updated_at')
   final DateTime updatedAt;
 
@@ -79,7 +79,8 @@ class CurrencyPreferenceModel extends Equatable {
       preferredCurrency: preferredCurrency ?? this.preferredCurrency,
       autoConvert: autoConvert ?? this.autoConvert,
       showOriginalAmounts: showOriginalAmounts ?? this.showOriginalAmounts,
-      rateUpdateFrequencyHours: rateUpdateFrequencyHours ?? this.rateUpdateFrequencyHours,
+      rateUpdateFrequencyHours:
+          rateUpdateFrequencyHours ?? this.rateUpdateFrequencyHours,
       offlineModeEnabled: offlineModeEnabled ?? this.offlineModeEnabled,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -98,18 +99,18 @@ class CurrencyPreferenceModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        userId,
-        preferredCurrency,
-        autoConvert,
-        showOriginalAmounts,
-        rateUpdateFrequencyHours,
-        offlineModeEnabled,
-        createdAt,
-        updatedAt,
-      ];
+    userId,
+    preferredCurrency,
+    autoConvert,
+    showOriginalAmounts,
+    rateUpdateFrequencyHours,
+    offlineModeEnabled,
+    createdAt,
+    updatedAt,
+  ];
 
   @override
-  String toString() => 
+  String toString() =>
       'CurrencyPreferenceModel(userId: $userId, preferredCurrency: $preferredCurrency)';
 }
 
@@ -117,21 +118,21 @@ class CurrencyPreferenceModel extends Equatable {
 enum CurrencyUpdateFrequency {
   @JsonValue(1)
   hourly(1, 'Every hour'),
-  
+
   @JsonValue(6)
   sixHourly(6, 'Every 6 hours'),
-  
+
   @JsonValue(12)
   twelveHourly(12, 'Every 12 hours'),
-  
+
   @JsonValue(24)
   daily(24, 'Daily'),
-  
+
   @JsonValue(168)
   weekly(168, 'Weekly');
 
   const CurrencyUpdateFrequency(this.hours, this.displayName);
-  
+
   final int hours;
   final String displayName;
 
@@ -149,16 +150,16 @@ enum CurrencyUpdateFrequency {
 class CurrencyDisplayPreferences extends Equatable {
   @JsonKey(name: 'show_currency_symbols')
   final bool showCurrencySymbols;
-  
+
   @JsonKey(name: 'show_currency_codes')
   final bool showCurrencyCodes;
-  
+
   @JsonKey(name: 'show_conversion_rates')
   final bool showConversionRates;
-  
+
   @JsonKey(name: 'compact_amounts')
   final bool compactAmounts; // Show 1.2K instead of 1,200
-  
+
   @JsonKey(name: 'decimal_places')
   final int? decimalPlaces; // Override default decimal places
 
@@ -201,13 +202,14 @@ class CurrencyDisplayPreferences extends Equatable {
 
   @override
   List<Object?> get props => [
-        showCurrencySymbols,
-        showCurrencyCodes,
-        showConversionRates,
-        compactAmounts,
-        decimalPlaces,
-      ];
+    showCurrencySymbols,
+    showCurrencyCodes,
+    showConversionRates,
+    compactAmounts,
+    decimalPlaces,
+  ];
 
   @override
-  String toString() => 'CurrencyDisplayPreferences(symbols: $showCurrencySymbols, codes: $showCurrencyCodes)';
+  String toString() =>
+      'CurrencyDisplayPreferences(symbols: $showCurrencySymbols, codes: $showCurrencyCodes)';
 }

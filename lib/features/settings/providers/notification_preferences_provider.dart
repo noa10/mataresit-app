@@ -39,17 +39,19 @@ class NotificationPreferencesState extends Equatable {
 
   @override
   List<Object?> get props => [
-        preferences,
-        isLoading,
-        isUpdating,
-        error,
-        updateError,
-      ];
+    preferences,
+    isLoading,
+    isUpdating,
+    error,
+    updateError,
+  ];
 }
 
 /// Notification preferences provider
-class NotificationPreferencesNotifier extends StateNotifier<NotificationPreferencesState> {
-  NotificationPreferencesNotifier(this._service, this._authNotifier) : super(const NotificationPreferencesState()) {
+class NotificationPreferencesNotifier
+    extends StateNotifier<NotificationPreferencesState> {
+  NotificationPreferencesNotifier(this._service, this._authNotifier)
+    : super(const NotificationPreferencesState()) {
     // Listen to auth changes and load preferences when user logs in
     _authNotifier.addListener((authState) {
       if (authState.user != null && state.preferences == null) {
@@ -72,17 +74,11 @@ class NotificationPreferencesNotifier extends StateNotifier<NotificationPreferen
 
     try {
       final preferences = await _service.getUserNotificationPreferences();
-      state = state.copyWith(
-        preferences: preferences,
-        isLoading: false,
-      );
+      state = state.copyWith(preferences: preferences, isLoading: false);
       AppLogger.info('Notification preferences loaded successfully');
     } catch (e, stackTrace) {
       AppLogger.error('Failed to load notification preferences', e, stackTrace);
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -94,17 +90,15 @@ class NotificationPreferencesNotifier extends StateNotifier<NotificationPreferen
 
     try {
       await _service.updateNotificationPreferences(preferences);
-      state = state.copyWith(
-        preferences: preferences,
-        isUpdating: false,
-      );
+      state = state.copyWith(preferences: preferences, isUpdating: false);
       AppLogger.info('Notification preferences updated successfully');
     } catch (e, stackTrace) {
-      AppLogger.error('Failed to update notification preferences', e, stackTrace);
-      state = state.copyWith(
-        isUpdating: false,
-        updateError: e.toString(),
+      AppLogger.error(
+        'Failed to update notification preferences',
+        e,
+        stackTrace,
       );
+      state = state.copyWith(isUpdating: false, updateError: e.toString());
     }
   }
 
@@ -112,7 +106,9 @@ class NotificationPreferencesNotifier extends StateNotifier<NotificationPreferen
   Future<void> toggleEmailNotifications(bool enabled) async {
     if (state.preferences == null) return;
 
-    final updatedPreferences = state.preferences!.copyWith(emailEnabled: enabled);
+    final updatedPreferences = state.preferences!.copyWith(
+      emailEnabled: enabled,
+    );
     await updatePreferences(updatedPreferences);
   }
 
@@ -120,82 +116,131 @@ class NotificationPreferencesNotifier extends StateNotifier<NotificationPreferen
   Future<void> togglePushNotifications(bool enabled) async {
     if (state.preferences == null) return;
 
-    final updatedPreferences = state.preferences!.copyWith(pushEnabled: enabled);
+    final updatedPreferences = state.preferences!.copyWith(
+      pushEnabled: enabled,
+    );
     await updatePreferences(updatedPreferences);
   }
 
   /// Update email preference for a specific notification type
-  Future<void> updateEmailPreference(NotificationType type, bool enabled) async {
+  Future<void> updateEmailPreference(
+    NotificationType type,
+    bool enabled,
+  ) async {
     if (state.preferences == null) return;
 
     NotificationPreferences updatedPreferences;
 
     switch (type) {
       case NotificationType.receiptProcessingStarted:
-        updatedPreferences = state.preferences!.copyWith(emailReceiptProcessingStarted: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailReceiptProcessingStarted: enabled,
+        );
         break;
       case NotificationType.receiptProcessingCompleted:
-        updatedPreferences = state.preferences!.copyWith(emailReceiptProcessingCompleted: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailReceiptProcessingCompleted: enabled,
+        );
         break;
       case NotificationType.receiptProcessingFailed:
-        updatedPreferences = state.preferences!.copyWith(emailReceiptProcessingFailed: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailReceiptProcessingFailed: enabled,
+        );
         break;
       case NotificationType.receiptReadyForReview:
-        updatedPreferences = state.preferences!.copyWith(emailReceiptReadyForReview: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailReceiptReadyForReview: enabled,
+        );
         break;
       case NotificationType.receiptBatchCompleted:
-        updatedPreferences = state.preferences!.copyWith(emailReceiptBatchCompleted: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailReceiptBatchCompleted: enabled,
+        );
         break;
       case NotificationType.receiptBatchFailed:
-        updatedPreferences = state.preferences!.copyWith(emailReceiptBatchFailed: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailReceiptBatchFailed: enabled,
+        );
         break;
       case NotificationType.receiptShared:
-        updatedPreferences = state.preferences!.copyWith(emailReceiptShared: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailReceiptShared: enabled,
+        );
         break;
       case NotificationType.receiptCommentAdded:
-        updatedPreferences = state.preferences!.copyWith(emailReceiptCommentAdded: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailReceiptCommentAdded: enabled,
+        );
         break;
       case NotificationType.receiptEditedByTeamMember:
-        updatedPreferences = state.preferences!.copyWith(emailReceiptEditedByTeamMember: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailReceiptEditedByTeamMember: enabled,
+        );
         break;
       case NotificationType.receiptApprovedByTeam:
-        updatedPreferences = state.preferences!.copyWith(emailReceiptApprovedByTeam: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailReceiptApprovedByTeam: enabled,
+        );
         break;
       case NotificationType.receiptFlaggedForReview:
-        updatedPreferences = state.preferences!.copyWith(emailReceiptFlaggedForReview: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailReceiptFlaggedForReview: enabled,
+        );
         break;
       case NotificationType.teamInvitationSent:
-        updatedPreferences = state.preferences!.copyWith(emailTeamInvitationSent: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailTeamInvitationSent: enabled,
+        );
         break;
       case NotificationType.teamInvitationAccepted:
-        updatedPreferences = state.preferences!.copyWith(emailTeamInvitationAccepted: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailTeamInvitationAccepted: enabled,
+        );
         break;
       case NotificationType.teamMemberJoined:
-        updatedPreferences = state.preferences!.copyWith(emailTeamMemberJoined: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailTeamMemberJoined: enabled,
+        );
         break;
       case NotificationType.teamMemberLeft:
-        updatedPreferences = state.preferences!.copyWith(emailTeamMemberLeft: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailTeamMemberLeft: enabled,
+        );
         break;
       case NotificationType.teamMemberRemoved:
-        updatedPreferences = state.preferences!.copyWith(emailTeamMemberRemoved: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailTeamMemberRemoved: enabled,
+        );
         break;
       case NotificationType.teamMemberRoleChanged:
-        updatedPreferences = state.preferences!.copyWith(emailTeamMemberRoleChanged: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailTeamMemberRoleChanged: enabled,
+        );
         break;
       case NotificationType.teamSettingsUpdated:
-        updatedPreferences = state.preferences!.copyWith(emailTeamSettingsUpdated: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailTeamSettingsUpdated: enabled,
+        );
         break;
       case NotificationType.claimSubmitted:
-        updatedPreferences = state.preferences!.copyWith(emailClaimSubmitted: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailClaimSubmitted: enabled,
+        );
         break;
       case NotificationType.claimApproved:
-        updatedPreferences = state.preferences!.copyWith(emailClaimApproved: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailClaimApproved: enabled,
+        );
         break;
       case NotificationType.claimRejected:
-        updatedPreferences = state.preferences!.copyWith(emailClaimRejected: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailClaimRejected: enabled,
+        );
         break;
       case NotificationType.claimReviewRequested:
-        updatedPreferences = state.preferences!.copyWith(emailClaimReviewRequested: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          emailClaimReviewRequested: enabled,
+        );
         break;
     }
 
@@ -210,70 +255,114 @@ class NotificationPreferencesNotifier extends StateNotifier<NotificationPreferen
 
     switch (type) {
       case NotificationType.receiptProcessingStarted:
-        updatedPreferences = state.preferences!.copyWith(pushReceiptProcessingStarted: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushReceiptProcessingStarted: enabled,
+        );
         break;
       case NotificationType.receiptProcessingCompleted:
-        updatedPreferences = state.preferences!.copyWith(pushReceiptProcessingCompleted: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushReceiptProcessingCompleted: enabled,
+        );
         break;
       case NotificationType.receiptProcessingFailed:
-        updatedPreferences = state.preferences!.copyWith(pushReceiptProcessingFailed: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushReceiptProcessingFailed: enabled,
+        );
         break;
       case NotificationType.receiptReadyForReview:
-        updatedPreferences = state.preferences!.copyWith(pushReceiptReadyForReview: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushReceiptReadyForReview: enabled,
+        );
         break;
       case NotificationType.receiptBatchCompleted:
-        updatedPreferences = state.preferences!.copyWith(pushReceiptBatchCompleted: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushReceiptBatchCompleted: enabled,
+        );
         break;
       case NotificationType.receiptBatchFailed:
-        updatedPreferences = state.preferences!.copyWith(pushReceiptBatchFailed: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushReceiptBatchFailed: enabled,
+        );
         break;
       case NotificationType.receiptShared:
-        updatedPreferences = state.preferences!.copyWith(pushReceiptShared: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushReceiptShared: enabled,
+        );
         break;
       case NotificationType.receiptCommentAdded:
-        updatedPreferences = state.preferences!.copyWith(pushReceiptCommentAdded: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushReceiptCommentAdded: enabled,
+        );
         break;
       case NotificationType.receiptEditedByTeamMember:
-        updatedPreferences = state.preferences!.copyWith(pushReceiptEditedByTeamMember: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushReceiptEditedByTeamMember: enabled,
+        );
         break;
       case NotificationType.receiptApprovedByTeam:
-        updatedPreferences = state.preferences!.copyWith(pushReceiptApprovedByTeam: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushReceiptApprovedByTeam: enabled,
+        );
         break;
       case NotificationType.receiptFlaggedForReview:
-        updatedPreferences = state.preferences!.copyWith(pushReceiptFlaggedForReview: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushReceiptFlaggedForReview: enabled,
+        );
         break;
       case NotificationType.teamInvitationSent:
-        updatedPreferences = state.preferences!.copyWith(pushTeamInvitationSent: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushTeamInvitationSent: enabled,
+        );
         break;
       case NotificationType.teamInvitationAccepted:
-        updatedPreferences = state.preferences!.copyWith(pushTeamInvitationAccepted: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushTeamInvitationAccepted: enabled,
+        );
         break;
       case NotificationType.teamMemberJoined:
-        updatedPreferences = state.preferences!.copyWith(pushTeamMemberJoined: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushTeamMemberJoined: enabled,
+        );
         break;
       case NotificationType.teamMemberLeft:
-        updatedPreferences = state.preferences!.copyWith(pushTeamMemberLeft: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushTeamMemberLeft: enabled,
+        );
         break;
       case NotificationType.teamMemberRemoved:
-        updatedPreferences = state.preferences!.copyWith(pushTeamMemberRemoved: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushTeamMemberRemoved: enabled,
+        );
         break;
       case NotificationType.teamMemberRoleChanged:
-        updatedPreferences = state.preferences!.copyWith(pushTeamMemberRoleChanged: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushTeamMemberRoleChanged: enabled,
+        );
         break;
       case NotificationType.teamSettingsUpdated:
-        updatedPreferences = state.preferences!.copyWith(pushTeamSettingsUpdated: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushTeamSettingsUpdated: enabled,
+        );
         break;
       case NotificationType.claimSubmitted:
-        updatedPreferences = state.preferences!.copyWith(pushClaimSubmitted: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushClaimSubmitted: enabled,
+        );
         break;
       case NotificationType.claimApproved:
-        updatedPreferences = state.preferences!.copyWith(pushClaimApproved: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushClaimApproved: enabled,
+        );
         break;
       case NotificationType.claimRejected:
-        updatedPreferences = state.preferences!.copyWith(pushClaimRejected: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushClaimRejected: enabled,
+        );
         break;
       case NotificationType.claimReviewRequested:
-        updatedPreferences = state.preferences!.copyWith(pushClaimReviewRequested: enabled);
+        updatedPreferences = state.preferences!.copyWith(
+          pushClaimReviewRequested: enabled,
+        );
         break;
     }
 
@@ -309,7 +398,8 @@ class NotificationPreferencesNotifier extends StateNotifier<NotificationPreferen
 
     final updatedPreferences = state.preferences!.copyWith(
       dailyDigestEnabled: dailyEnabled ?? state.preferences!.dailyDigestEnabled,
-      weeklyDigestEnabled: weeklyEnabled ?? state.preferences!.weeklyDigestEnabled,
+      weeklyDigestEnabled:
+          weeklyEnabled ?? state.preferences!.weeklyDigestEnabled,
       digestTime: digestTime ?? state.preferences!.digestTime,
     );
 
@@ -325,7 +415,8 @@ class NotificationPreferencesNotifier extends StateNotifier<NotificationPreferen
 
     final updatedPreferences = state.preferences!.copyWith(
       browserPermissionGranted: granted,
-      browserPermissionRequestedAt: requestedAt ?? state.preferences!.browserPermissionRequestedAt,
+      browserPermissionRequestedAt:
+          requestedAt ?? state.preferences!.browserPermissionRequestedAt,
     );
 
     await updatePreferences(updatedPreferences);
@@ -343,16 +434,21 @@ class NotificationPreferencesNotifier extends StateNotifier<NotificationPreferen
 }
 
 /// Notification preferences service provider
-final notificationPreferencesServiceProvider = Provider<NotificationPreferencesService>((ref) {
-  return NotificationPreferencesService();
-});
+final notificationPreferencesServiceProvider =
+    Provider<NotificationPreferencesService>((ref) {
+      return NotificationPreferencesService();
+    });
 
 /// Notification preferences provider
-final notificationPreferencesProvider = StateNotifierProvider<NotificationPreferencesNotifier, NotificationPreferencesState>((ref) {
-  final service = ref.watch(notificationPreferencesServiceProvider);
-  final authNotifier = ref.read(authProvider.notifier);
-  return NotificationPreferencesNotifier(service, authNotifier);
-});
+final notificationPreferencesProvider =
+    StateNotifierProvider<
+      NotificationPreferencesNotifier,
+      NotificationPreferencesState
+    >((ref) {
+      final service = ref.watch(notificationPreferencesServiceProvider);
+      final authNotifier = ref.read(authProvider.notifier);
+      return NotificationPreferencesNotifier(service, authNotifier);
+    });
 
 /// Convenience providers for specific states
 final notificationPreferencesLoadingProvider = Provider<bool>((ref) {
@@ -371,6 +467,7 @@ final notificationPreferencesUpdateErrorProvider = Provider<String?>((ref) {
   return ref.watch(notificationPreferencesProvider).updateError;
 });
 
-final currentNotificationPreferencesProvider = Provider<NotificationPreferences?>((ref) {
-  return ref.watch(notificationPreferencesProvider).preferences;
-});
+final currentNotificationPreferencesProvider =
+    Provider<NotificationPreferences?>((ref) {
+      return ref.watch(notificationPreferencesProvider).preferences;
+    });

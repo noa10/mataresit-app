@@ -27,7 +27,7 @@ class CurrencyConfigs {
   static const Map<String, CurrencyConfig> _configs = {
     'MYR': CurrencyConfig(
       code: 'MYR',
-      symbol: 'MYR',  // Changed from 'RM' to 'MYR' to match React version
+      symbol: 'MYR', // Changed from 'RM' to 'MYR' to match React version
       name: 'Malaysian Ringgit',
       decimals: 2,
       locale: 'ms_MY',
@@ -266,7 +266,10 @@ class CurrencyUtils {
     // Remove all non-numeric characters except decimal point and minus sign
     final cleanString = currencyString
         .replaceAll(RegExp(r'[^\d.-]'), '')
-        .replaceAll(RegExp(r'\.(?=.*\.)'), ''); // Remove all but the last decimal point
+        .replaceAll(
+          RegExp(r'\.(?=.*\.)'),
+          '',
+        ); // Remove all but the last decimal point
 
     final parsed = double.tryParse(cleanString);
     return parsed ?? 0.0;
@@ -317,8 +320,8 @@ class CurrencyUtils {
     final numericAmount = amount is double
         ? amount
         : amount is int
-            ? amount.toDouble()
-            : parseCurrency(amount.toString());
+        ? amount.toDouble()
+        : parseCurrency(amount.toString());
 
     if (numericAmount.isNaN) {
       return const ValidationResult(
@@ -344,10 +347,7 @@ class CurrencyUtils {
       );
     }
 
-    return ValidationResult(
-      isValid: true,
-      value: numericAmount,
-    );
+    return ValidationResult(isValid: true, value: numericAmount);
   }
 
   /// Format currency for input fields (without symbols)

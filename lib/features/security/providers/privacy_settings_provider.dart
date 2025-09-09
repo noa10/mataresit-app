@@ -38,9 +38,8 @@ class PrivacySettingsState {
 
 /// Notifier for privacy settings
 class PrivacySettingsNotifier extends StateNotifier<PrivacySettingsState> {
-  PrivacySettingsNotifier() : super(PrivacySettingsState(
-    settings: PrivacyService.privacySettings,
-  )) {
+  PrivacySettingsNotifier()
+    : super(PrivacySettingsState(settings: PrivacyService.privacySettings)) {
     _initialize();
   }
 
@@ -50,22 +49,19 @@ class PrivacySettingsNotifier extends StateNotifier<PrivacySettingsState> {
   Future<void> _initialize() async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       await PrivacyService.initialize();
-      
+
       state = state.copyWith(
         settings: PrivacyService.privacySettings,
         isLoading: false,
       );
-      
+
       // Load data usage stats
       await _loadDataUsageStats();
     } catch (e) {
       _logger.e('Failed to initialize privacy settings: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -83,19 +79,13 @@ class PrivacySettingsNotifier extends StateNotifier<PrivacySettingsState> {
   Future<void> updateSettings(PrivacySettings settings) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       await PrivacyService.updatePrivacySettings(settings);
-      
-      state = state.copyWith(
-        settings: settings,
-        isLoading: false,
-      );
+
+      state = state.copyWith(settings: settings, isLoading: false);
     } catch (e) {
       _logger.e('Failed to update privacy settings: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }
@@ -107,7 +97,7 @@ class PrivacySettingsNotifier extends StateNotifier<PrivacySettingsState> {
         allowAnalytics: enabled,
         lastUpdated: DateTime.now(),
       );
-      
+
       await updateSettings(updatedSettings);
     } catch (e) {
       _logger.e('Failed to toggle analytics: $e');
@@ -122,7 +112,7 @@ class PrivacySettingsNotifier extends StateNotifier<PrivacySettingsState> {
         allowCrashReporting: enabled,
         lastUpdated: DateTime.now(),
       );
-      
+
       await updateSettings(updatedSettings);
     } catch (e) {
       _logger.e('Failed to toggle crash reporting: $e');
@@ -137,7 +127,7 @@ class PrivacySettingsNotifier extends StateNotifier<PrivacySettingsState> {
         allowUsageData: enabled,
         lastUpdated: DateTime.now(),
       );
-      
+
       await updateSettings(updatedSettings);
     } catch (e) {
       _logger.e('Failed to toggle usage data: $e');
@@ -152,7 +142,7 @@ class PrivacySettingsNotifier extends StateNotifier<PrivacySettingsState> {
         dataRetentionDays: days,
         lastUpdated: DateTime.now(),
       );
-      
+
       await updateSettings(updatedSettings);
     } catch (e) {
       _logger.e('Failed to update data retention: $e');
@@ -167,7 +157,7 @@ class PrivacySettingsNotifier extends StateNotifier<PrivacySettingsState> {
         autoDeleteOldReceipts: enabled,
         lastUpdated: DateTime.now(),
       );
-      
+
       await updateSettings(updatedSettings);
     } catch (e) {
       _logger.e('Failed to toggle auto-delete old receipts: $e');
@@ -182,7 +172,7 @@ class PrivacySettingsNotifier extends StateNotifier<PrivacySettingsState> {
         allowTeamDataSharing: enabled,
         lastUpdated: DateTime.now(),
       );
-      
+
       await updateSettings(updatedSettings);
     } catch (e) {
       _logger.e('Failed to toggle team data sharing: $e');
@@ -197,7 +187,7 @@ class PrivacySettingsNotifier extends StateNotifier<PrivacySettingsState> {
         allowDataExport: enabled,
         lastUpdated: DateTime.now(),
       );
-      
+
       await updateSettings(updatedSettings);
     } catch (e) {
       _logger.e('Failed to toggle data export: $e');
@@ -209,18 +199,15 @@ class PrivacySettingsNotifier extends StateNotifier<PrivacySettingsState> {
   Future<String?> exportDataAsJson() async {
     try {
       state = state.copyWith(isExporting: true, error: null);
-      
+
       final filePath = await PrivacyService.exportUserDataAsJson();
-      
+
       state = state.copyWith(isExporting: false);
-      
+
       return filePath;
     } catch (e) {
       _logger.e('Failed to export data as JSON: $e');
-      state = state.copyWith(
-        isExporting: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isExporting: false, error: e.toString());
       return null;
     }
   }
@@ -229,18 +216,15 @@ class PrivacySettingsNotifier extends StateNotifier<PrivacySettingsState> {
   Future<String?> exportDataAsCsv() async {
     try {
       state = state.copyWith(isExporting: true, error: null);
-      
+
       final filePath = await PrivacyService.exportUserDataAsCsv();
-      
+
       state = state.copyWith(isExporting: false);
-      
+
       return filePath;
     } catch (e) {
       _logger.e('Failed to export data as CSV: $e');
-      state = state.copyWith(
-        isExporting: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isExporting: false, error: e.toString());
       return null;
     }
   }
@@ -260,19 +244,16 @@ class PrivacySettingsNotifier extends StateNotifier<PrivacySettingsState> {
   Future<void> cleanupOldData() async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       await PrivacyService.cleanupOldData();
-      
+
       // Refresh data usage stats after cleanup
       await _loadDataUsageStats();
-      
+
       state = state.copyWith(isLoading: false);
     } catch (e) {
       _logger.e('Failed to cleanup old data: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }
@@ -281,13 +262,13 @@ class PrivacySettingsNotifier extends StateNotifier<PrivacySettingsState> {
   Future<void> clearAllUserData() async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       await PrivacyService.clearAllUserData();
-      
+
       // Reset settings to default
       const defaultSettings = PrivacySettings();
       await PrivacyService.updatePrivacySettings(defaultSettings);
-      
+
       state = state.copyWith(
         settings: defaultSettings,
         isLoading: false,
@@ -295,10 +276,7 @@ class PrivacySettingsNotifier extends StateNotifier<PrivacySettingsState> {
       );
     } catch (e) {
       _logger.e('Failed to clear all user data: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }
@@ -320,9 +298,10 @@ class PrivacySettingsNotifier extends StateNotifier<PrivacySettingsState> {
 }
 
 /// Provider for privacy settings
-final privacySettingsProvider = StateNotifierProvider<PrivacySettingsNotifier, PrivacySettingsState>((ref) {
-  return PrivacySettingsNotifier();
-});
+final privacySettingsProvider =
+    StateNotifierProvider<PrivacySettingsNotifier, PrivacySettingsState>((ref) {
+      return PrivacySettingsNotifier();
+    });
 
 /// Provider for current privacy settings (read-only)
 final currentPrivacySettingsProvider = Provider<PrivacySettings>((ref) {

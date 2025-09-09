@@ -3,14 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/models/user_model.dart';
 
-
 class ProfileSecurity extends ConsumerStatefulWidget {
   final UserModel profile;
 
-  const ProfileSecurity({
-    super.key,
-    required this.profile,
-  });
+  const ProfileSecurity({super.key, required this.profile});
 
   @override
   ConsumerState<ProfileSecurity> createState() => _ProfileSecurityState();
@@ -21,7 +17,7 @@ class _ProfileSecurityState extends ConsumerState<ProfileSecurity> {
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  
+
   bool _isChangingPassword = false;
   bool _showCurrentPassword = false;
   bool _showNewPassword = false;
@@ -49,13 +45,13 @@ class _ProfileSecurityState extends ConsumerState<ProfileSecurity> {
               children: [
                 Text(
                   'Account Security',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                
+
                 const SizedBox(height: AppConstants.defaultPadding),
-                
+
                 ListTile(
                   leading: const Icon(Icons.email),
                   title: const Text('Email'),
@@ -63,9 +59,9 @@ class _ProfileSecurityState extends ConsumerState<ProfileSecurity> {
                   trailing: const Icon(Icons.verified, color: Colors.green),
                   contentPadding: EdgeInsets.zero,
                 ),
-                
+
                 const Divider(),
-                
+
                 ListTile(
                   leading: const Icon(Icons.lock),
                   title: const Text('Password'),
@@ -84,11 +80,11 @@ class _ProfileSecurityState extends ConsumerState<ProfileSecurity> {
             ),
           ),
         ),
-        
+
         // Change Password Form
         if (_isChangingPassword) ...[
           const SizedBox(height: AppConstants.defaultPadding),
-          
+
           Card(
             child: Padding(
               padding: const EdgeInsets.all(AppConstants.defaultPadding),
@@ -103,9 +99,9 @@ class _ProfileSecurityState extends ConsumerState<ProfileSecurity> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    
+
                     const SizedBox(height: AppConstants.defaultPadding),
-                    
+
                     // Current Password
                     TextFormField(
                       controller: _currentPasswordController,
@@ -114,7 +110,9 @@ class _ProfileSecurityState extends ConsumerState<ProfileSecurity> {
                         border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _showCurrentPassword ? Icons.visibility_off : Icons.visibility,
+                            _showCurrentPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                           ),
                           onPressed: () {
                             setState(() {
@@ -131,9 +129,9 @@ class _ProfileSecurityState extends ConsumerState<ProfileSecurity> {
                         return null;
                       },
                     ),
-                    
+
                     const SizedBox(height: AppConstants.defaultPadding),
-                    
+
                     // New Password
                     TextFormField(
                       controller: _newPasswordController,
@@ -142,7 +140,9 @@ class _ProfileSecurityState extends ConsumerState<ProfileSecurity> {
                         border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _showNewPassword ? Icons.visibility_off : Icons.visibility,
+                            _showNewPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                           ),
                           onPressed: () {
                             setState(() {
@@ -162,9 +162,9 @@ class _ProfileSecurityState extends ConsumerState<ProfileSecurity> {
                         return null;
                       },
                     ),
-                    
+
                     const SizedBox(height: AppConstants.defaultPadding),
-                    
+
                     // Confirm Password
                     TextFormField(
                       controller: _confirmPasswordController,
@@ -173,7 +173,9 @@ class _ProfileSecurityState extends ConsumerState<ProfileSecurity> {
                         border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _showConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                            _showConfirmPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                           ),
                           onPressed: () {
                             setState(() {
@@ -193,9 +195,9 @@ class _ProfileSecurityState extends ConsumerState<ProfileSecurity> {
                         return null;
                       },
                     ),
-                    
+
                     const SizedBox(height: AppConstants.defaultPadding),
-                    
+
                     // Update Button
                     SizedBox(
                       width: double.infinity,
@@ -210,9 +212,9 @@ class _ProfileSecurityState extends ConsumerState<ProfileSecurity> {
             ),
           ),
         ],
-        
+
         const SizedBox(height: AppConstants.defaultPadding),
-        
+
         // Account Actions
         Card(
           child: Padding(
@@ -222,13 +224,13 @@ class _ProfileSecurityState extends ConsumerState<ProfileSecurity> {
               children: [
                 Text(
                   'Account Actions',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                
+
                 const SizedBox(height: AppConstants.defaultPadding),
-                
+
                 ListTile(
                   leading: const Icon(Icons.download, color: Colors.blue),
                   title: const Text('Export Data'),
@@ -237,14 +239,22 @@ class _ProfileSecurityState extends ConsumerState<ProfileSecurity> {
                   onTap: _exportData,
                   contentPadding: EdgeInsets.zero,
                 ),
-                
+
                 const Divider(),
-                
+
                 ListTile(
                   leading: const Icon(Icons.delete_forever, color: Colors.red),
-                  title: const Text('Delete Account', style: TextStyle(color: Colors.red)),
-                  subtitle: const Text('Permanently delete your account and all data'),
-                  trailing: const Icon(Icons.arrow_forward_ios, color: Colors.red),
+                  title: const Text(
+                    'Delete Account',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  subtitle: const Text(
+                    'Permanently delete your account and all data',
+                  ),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios,
+                    color: Colors.red,
+                  ),
                   onTap: _showDeleteAccountDialog,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -308,7 +318,9 @@ class _ProfileSecurityState extends ConsumerState<ProfileSecurity> {
     // TODO: Implement account deletion functionality
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Account deletion functionality will be implemented soon'),
+        content: Text(
+          'Account deletion functionality will be implemented soon',
+        ),
         backgroundColor: Colors.red,
       ),
     );

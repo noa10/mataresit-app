@@ -27,8 +27,8 @@ class AppBarWithActions extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       title: subtitle != null
           ? Column(
-              crossAxisAlignment: centerTitle 
-                  ? CrossAxisAlignment.center 
+              crossAxisAlignment: centerTitle
+                  ? CrossAxisAlignment.center
                   : CrossAxisAlignment.start,
               children: [
                 Text(

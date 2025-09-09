@@ -40,9 +40,9 @@ class TwoFactorAuthScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // 2FA Status
             Card(
               child: Padding(
@@ -72,9 +72,9 @@ class TwoFactorAuthScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Enable 2FA button
             ElevatedButton.icon(
               onPressed: () {
@@ -91,16 +91,13 @@ class TwoFactorAuthScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // How it works section
             const Text(
               'How it works:',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             const Text(

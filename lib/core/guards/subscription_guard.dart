@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../config/subscription_config.dart';
 import '../../features/subscription/providers/subscription_provider.dart';
 
-
 /// Subscription guard for enforcing subscription limits
 /// This provides methods to check and enforce subscription limits throughout the app
 class SubscriptionGuard {
@@ -18,14 +17,15 @@ class SubscriptionGuard {
   static Future<bool> canBatchUpload(WidgetRef ref, int receiptCount) async {
     final subscriptionState = ref.read(subscriptionProvider);
     final subscription = subscriptionState.subscription;
-    
+
     if (subscription == null) return false;
-    
+
     // Check if user has enough remaining receipts
-    if (subscription.remainingReceipts < receiptCount && subscription.limits.monthlyReceipts != -1) {
+    if (subscription.remainingReceipts < receiptCount &&
+        subscription.limits.monthlyReceipts != -1) {
       return false;
     }
-    
+
     // Check batch upload limit
     return receiptCount <= subscription.limits.batchUploadLimit;
   }
@@ -41,12 +41,12 @@ class SubscriptionGuard {
     final subscriptionState = ref.read(subscriptionProvider);
     final subscription = subscriptionState.subscription;
     final usage = subscriptionState.usage;
-    
+
     if (subscription == null || usage == null) return false;
-    
+
     final maxUsers = subscription.limits.features.maxUsers;
     if (maxUsers == -1) return true; // Unlimited
-    
+
     return usage.teamMembersCount < maxUsers;
   }
 
@@ -82,10 +82,10 @@ class SubscriptionGuard {
       if (shouldUpgrade == true && context.mounted) {
         context.push('/pricing');
       }
-      
+
       return false;
     }
-    
+
     return true;
   }
 
@@ -97,12 +97,13 @@ class SubscriptionGuard {
   }) async {
     final subscriptionState = ref.read(subscriptionProvider);
     final subscription = subscriptionState.subscription;
-    
+
     if (subscription == null) return false;
-    
-    final canUpload = subscription.remainingReceipts >= additionalReceipts || 
-                     subscription.limits.monthlyReceipts == -1;
-    
+
+    final canUpload =
+        subscription.remainingReceipts >= additionalReceipts ||
+        subscription.limits.monthlyReceipts == -1;
+
     if (!canUpload) {
       final shouldUpgrade = await showDialog<bool>(
         context: context,
@@ -116,10 +117,10 @@ class SubscriptionGuard {
       if (shouldUpgrade == true && context.mounted) {
         context.push('/pricing');
       }
-      
+
       return false;
     }
-    
+
     return true;
   }
 
@@ -131,11 +132,11 @@ class SubscriptionGuard {
   ) async {
     final subscriptionState = ref.read(subscriptionProvider);
     final subscription = subscriptionState.subscription;
-    
+
     if (subscription == null) return false;
-    
+
     final batchLimit = subscription.limits.batchUploadLimit;
-    
+
     if (receiptCount > batchLimit) {
       final shouldUpgrade = await showDialog<bool>(
         context: context,
@@ -149,10 +150,10 @@ class SubscriptionGuard {
       if (shouldUpgrade == true && context.mounted) {
         context.push('/pricing');
       }
-      
+
       return false;
     }
-    
+
     return true;
   }
 
@@ -175,15 +176,12 @@ class SubscriptionGuard {
 class UpgradeDialog extends StatelessWidget {
   final String feature;
 
-  const UpgradeDialog({
-    super.key,
-    required this.feature,
-  });
+  const UpgradeDialog({super.key, required this.feature});
 
   @override
   Widget build(BuildContext context) {
     final requiredTier = SubscriptionGuard.getRequiredTierForFeature(feature);
-    
+
     return AlertDialog(
       title: const Text('Feature Not Available'),
       content: Column(
@@ -196,25 +194,27 @@ class UpgradeDialog extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'Upgrade now to unlock:',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
-          ..._getFeatureList(requiredTier).map((feature) => Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.check_circle,
-                  size: 16,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 8),
-                Expanded(child: Text(feature)),
-              ],
+          ..._getFeatureList(requiredTier).map(
+            (feature) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.check_circle,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(feature)),
+                ],
+              ),
             ),
-          )),
+          ),
         ],
       ),
       actions: [
@@ -280,9 +280,9 @@ class ReceiptLimitDialog extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'Upgrade to continue uploading receipts:',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           if (currentTier == SubscriptionTier.free) ...[
@@ -306,7 +306,11 @@ class ReceiptLimitDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildUpgradeOption(BuildContext context, String planName, String benefit) {
+  Widget _buildUpgradeOption(
+    BuildContext context,
+    String planName,
+    String benefit,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
@@ -352,9 +356,9 @@ class BatchLimitDialog extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'Options:',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Text('• Upload in smaller batches of $batchLimit receipts'),

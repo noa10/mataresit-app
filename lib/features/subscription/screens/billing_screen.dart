@@ -21,12 +21,12 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     final billingPreferences = subscriptionState.billingPreferences;
 
     return Scaffold(
-      appBar: const AppBarWithActions(
-        title: 'Billing & Payments',
-      ),
+      appBar: const AppBarWithActions(title: 'Billing & Payments'),
       body: RefreshIndicator(
         onRefresh: () async {
-          await ref.read(subscriptionProvider.notifier).refreshSubscriptionData();
+          await ref
+              .read(subscriptionProvider.notifier)
+              .refreshSubscriptionData();
         },
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -80,9 +80,9 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
           children: [
             Text(
               'Billing Information',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
 
@@ -134,9 +134,9 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
           children: [
             Text(
               'Payment Method',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
 
@@ -178,7 +178,10 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     );
   }
 
-  Widget _buildBillingPreferencesSection(BuildContext context, billingPreferences) {
+  Widget _buildBillingPreferencesSection(
+    BuildContext context,
+    billingPreferences,
+  ) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -187,9 +190,9 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
           children: [
             Text(
               'Billing Preferences',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
 
@@ -285,10 +288,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.warning,
-                  color: Theme.of(context).colorScheme.error,
-                ),
+                Icon(Icons.warning, color: Theme.of(context).colorScheme.error),
                 const SizedBox(width: 8),
                 Text(
                   'Danger Zone',
@@ -303,9 +303,9 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
 
             Text(
               'Cancel your subscription',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 4),
             Text(
@@ -331,7 +331,12 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, String label, String value, IconData icon) {
+  Widget _buildInfoRow(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+  ) {
     return Row(
       children: [
         Icon(
@@ -341,16 +346,13 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
         ),
         Text(
           value,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
       ],
     );
@@ -378,9 +380,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   void _updateBillingPreference(String key, bool value) {
     // TODO: Implement billing preference updates
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Billing preferences update coming soon!'),
-      ),
+      const SnackBar(content: Text('Billing preferences update coming soon!')),
     );
   }
 
@@ -414,9 +414,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
         await ref.read(subscriptionProvider.notifier).cancelSubscription();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Subscription canceled successfully'),
-            ),
+            const SnackBar(content: Text('Subscription canceled successfully')),
           );
         }
       } catch (e) {

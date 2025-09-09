@@ -14,36 +14,37 @@ void main() {
       container = ProviderContainer(
         overrides: [
           // Mock auth provider
-          currentUserProvider.overrideWith((ref) => UserModel(
-            id: 'test-user',
-            email: 'test@example.com',
-            firstName: 'Test',
-            lastName: 'User',
-            subscriptionTier: 'free',
-            subscriptionStatus: 'active',
-            receiptsUsedThisMonth: 0,
-            preferredLanguage: 'en',
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          )),
-          
+          currentUserProvider.overrideWith(
+            (ref) => UserModel(
+              id: 'test-user',
+              email: 'test@example.com',
+              firstName: 'Test',
+              lastName: 'User',
+              subscriptionTier: 'free',
+              subscriptionStatus: 'active',
+              receiptsUsedThisMonth: 0,
+              preferredLanguage: 'en',
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+          ),
+
           // Mock dashboard stats provider
-          dashboardStatsProvider.overrideWith((ref) => const DashboardStats(
-            totalReceipts: 10,
-            thisMonthReceipts: 5,
-            totalAmount: 250.50,
-            totalTeams: 2,
-            recentReceipts: [],
-            categoryBreakdown: {
-              'Food & Beverage': 5,
-              'Transportation': 3,
-              'Office Supplies': 2,
-            },
-            monthlySpending: {
-              'Jan': 100.0,
-              'Feb': 150.5,
-            },
-          )),
+          dashboardStatsProvider.overrideWith(
+            (ref) => const DashboardStats(
+              totalReceipts: 10,
+              thisMonthReceipts: 5,
+              totalAmount: 250.50,
+              totalTeams: 2,
+              recentReceipts: [],
+              categoryBreakdown: {
+                'Food & Beverage': 5,
+                'Transportation': 3,
+                'Office Supplies': 2,
+              },
+              monthlySpending: {'Jan': 100.0, 'Feb': 150.5},
+            ),
+          ),
         ],
       );
     });
@@ -52,13 +53,13 @@ void main() {
       container.dispose();
     });
 
-    testWidgets('should display welcome message with user name', (WidgetTester tester) async {
+    testWidgets('should display welcome message with user name', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [],
-          child: MaterialApp(
-            home: const DashboardScreen(),
-          ),
+          child: MaterialApp(home: const DashboardScreen()),
         ),
       );
 
@@ -68,13 +69,13 @@ void main() {
       expect(find.text('Test User'), findsOneWidget);
     });
 
-    testWidgets('should display quick stats cards', (WidgetTester tester) async {
+    testWidgets('should display quick stats cards', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [],
-          child: MaterialApp(
-            home: const DashboardScreen(),
-          ),
+          child: MaterialApp(home: const DashboardScreen()),
         ),
       );
 
@@ -83,13 +84,13 @@ void main() {
       // Check for stats cards
       expect(find.text('Total Receipts'), findsOneWidget);
       expect(find.text('10'), findsOneWidget);
-      
+
       expect(find.text('This Month'), findsOneWidget);
       expect(find.text('5'), findsOneWidget);
-      
+
       expect(find.text('Total Amount'), findsOneWidget);
       expect(find.text('\$250.50'), findsOneWidget);
-      
+
       expect(find.text('Teams'), findsOneWidget);
       expect(find.text('2'), findsOneWidget);
     });
@@ -98,9 +99,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [],
-          child: MaterialApp(
-            home: const DashboardScreen(),
-          ),
+          child: MaterialApp(home: const DashboardScreen()),
         ),
       );
 
@@ -111,13 +110,13 @@ void main() {
       expect(find.text('Analytics'), findsOneWidget);
     });
 
-    testWidgets('should display recent activity section', (WidgetTester tester) async {
+    testWidgets('should display recent activity section', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [],
-          child: MaterialApp(
-            home: const DashboardScreen(),
-          ),
+          child: MaterialApp(home: const DashboardScreen()),
         ),
       );
 
@@ -127,13 +126,13 @@ void main() {
       expect(find.text('No recent activity'), findsOneWidget);
     });
 
-    testWidgets('should display category breakdown when available', (WidgetTester tester) async {
+    testWidgets('should display category breakdown when available', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [],
-          child: MaterialApp(
-            home: const DashboardScreen(),
-          ),
+          child: MaterialApp(home: const DashboardScreen()),
         ),
       );
 
@@ -149,9 +148,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [],
-          child: MaterialApp(
-            home: const DashboardScreen(),
-          ),
+          child: MaterialApp(home: const DashboardScreen()),
         ),
       );
 
@@ -169,7 +166,9 @@ void main() {
       expect(find.byType(DashboardScreen), findsOneWidget);
     });
 
-    testWidgets('should navigate to receipt capture on action tap', (WidgetTester tester) async {
+    testWidgets('should navigate to receipt capture on action tap', (
+      WidgetTester tester,
+    ) async {
       bool captureNavigationCalled = false;
 
       await tester.pumpWidget(
@@ -181,9 +180,8 @@ void main() {
               if (settings.name == '/receipts/capture') {
                 captureNavigationCalled = true;
                 return MaterialPageRoute(
-                  builder: (context) => const Scaffold(
-                    body: Text('Receipt Capture Screen'),
-                  ),
+                  builder: (context) =>
+                      const Scaffold(body: Text('Receipt Capture Screen')),
                 );
               }
               return null;
@@ -201,7 +199,9 @@ void main() {
       expect(captureNavigationCalled, isTrue);
     });
 
-    testWidgets('should navigate to analytics on action tap', (WidgetTester tester) async {
+    testWidgets('should navigate to analytics on action tap', (
+      WidgetTester tester,
+    ) async {
       bool analyticsNavigationCalled = false;
 
       await tester.pumpWidget(
@@ -213,9 +213,8 @@ void main() {
               if (settings.name == '/analytics') {
                 analyticsNavigationCalled = true;
                 return MaterialPageRoute(
-                  builder: (context) => const Scaffold(
-                    body: Text('Analytics Screen'),
-                  ),
+                  builder: (context) =>
+                      const Scaffold(body: Text('Analytics Screen')),
                 );
               }
               return null;
@@ -233,13 +232,13 @@ void main() {
       expect(analyticsNavigationCalled, isTrue);
     });
 
-    testWidgets('should display user avatar with correct initial', (WidgetTester tester) async {
+    testWidgets('should display user avatar with correct initial', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [],
-          child: MaterialApp(
-            home: const DashboardScreen(),
-          ),
+          child: MaterialApp(home: const DashboardScreen()),
         ),
       );
 
@@ -253,21 +252,25 @@ void main() {
       expect(find.text('T'), findsOneWidget); // First letter of "Test User"
     });
 
-    testWidgets('should handle empty stats gracefully', (WidgetTester tester) async {
+    testWidgets('should handle empty stats gracefully', (
+      WidgetTester tester,
+    ) async {
       final emptyContainer = ProviderContainer(
         overrides: [
-          currentUserProvider.overrideWith((ref) => UserModel(
-            id: 'test-user',
-            email: 'test@example.com',
-            firstName: 'Test',
-            lastName: 'User',
-            subscriptionTier: 'free',
-            subscriptionStatus: 'active',
-            receiptsUsedThisMonth: 0,
-            preferredLanguage: 'en',
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          )),
+          currentUserProvider.overrideWith(
+            (ref) => UserModel(
+              id: 'test-user',
+              email: 'test@example.com',
+              firstName: 'Test',
+              lastName: 'User',
+              subscriptionTier: 'free',
+              subscriptionStatus: 'active',
+              receiptsUsedThisMonth: 0,
+              preferredLanguage: 'en',
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+          ),
           dashboardStatsProvider.overrideWith((ref) => const DashboardStats()),
         ],
       );
@@ -275,9 +278,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [],
-          child: MaterialApp(
-            home: const DashboardScreen(),
-          ),
+          child: MaterialApp(home: const DashboardScreen()),
         ),
       );
 
@@ -294,9 +295,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [],
-          child: MaterialApp(
-            home: const DashboardScreen(),
-          ),
+          child: MaterialApp(home: const DashboardScreen()),
         ),
       );
 
@@ -304,20 +303,17 @@ void main() {
 
       // Check for semantic labels
       expect(find.bySemanticsLabel('Dashboard'), findsOneWidget);
-      
+
       // Check that interactive elements have proper semantics
       final captureButton = find.text('Capture Receipt');
       expect(captureButton, findsOneWidget);
-      
+
       final analyticsButton = find.text('Analytics');
       expect(analyticsButton, findsOneWidget);
 
       // Verify touch targets are large enough (minimum 44x44)
       final captureButtonWidget = tester.widget<InkWell>(
-        find.ancestor(
-          of: captureButton,
-          matching: find.byType(InkWell),
-        ).first,
+        find.ancestor(of: captureButton, matching: find.byType(InkWell)).first,
       );
       expect(captureButtonWidget, isNotNull);
     });

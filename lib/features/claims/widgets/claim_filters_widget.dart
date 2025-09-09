@@ -98,29 +98,29 @@ class _ClaimFiltersWidgetState extends State<ClaimFiltersWidget> {
                   ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Status filter
             _buildStatusFilter(),
-            
+
             const SizedBox(height: 16),
-            
+
             // Priority filter
             _buildPriorityFilter(),
-            
+
             const SizedBox(height: 16),
-            
+
             // Amount range filter
             _buildAmountRangeFilter(),
-            
+
             const SizedBox(height: 16),
-            
+
             // Category filter
             _buildCategoryFilter(),
-            
+
             const SizedBox(height: 16),
-            
+
             // Date range filter
             _buildDateRangeFilter(),
           ],
@@ -135,9 +135,9 @@ class _ClaimFiltersWidgetState extends State<ClaimFiltersWidget> {
       children: [
         Text(
           'Status',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -168,9 +168,9 @@ class _ClaimFiltersWidgetState extends State<ClaimFiltersWidget> {
       children: [
         Text(
           'Priority',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -192,7 +192,7 @@ class _ClaimFiltersWidgetState extends State<ClaimFiltersWidget> {
                 chipColor = Colors.red.shade700;
                 break;
             }
-            
+
             return FilterChip(
               label: Text(priority.name.toUpperCase()),
               selected: isSelected,
@@ -219,9 +219,9 @@ class _ClaimFiltersWidgetState extends State<ClaimFiltersWidget> {
       children: [
         Text(
           'Amount Range',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         Row(
@@ -281,9 +281,9 @@ class _ClaimFiltersWidgetState extends State<ClaimFiltersWidget> {
       children: [
         Text(
           'Category',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -313,9 +313,9 @@ class _ClaimFiltersWidgetState extends State<ClaimFiltersWidget> {
       children: [
         Text(
           'Date Range',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         Row(
@@ -359,9 +359,7 @@ class _ClaimFiltersWidgetState extends State<ClaimFiltersWidget> {
                   );
                   if (date != null) {
                     setState(() {
-                      _currentFilters = _currentFilters.copyWith(
-                        dateTo: date,
-                      );
+                      _currentFilters = _currentFilters.copyWith(dateTo: date);
                     });
                     _updateFilters();
                   }

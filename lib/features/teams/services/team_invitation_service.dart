@@ -36,12 +36,20 @@ class TeamInvitationService {
         );
 
         if (functionResponse != null) {
-          AppLogger.debug('✅ Database function returned ${functionResponse.length} invitations', {
-            'sample': functionResponse.isNotEmpty ? functionResponse.first : null,
-          });
-          
+          AppLogger.debug(
+            '✅ Database function returned ${functionResponse.length} invitations',
+            {
+              'sample': functionResponse.isNotEmpty
+                  ? functionResponse.first
+                  : null,
+            },
+          );
+
           final invitations = (functionResponse as List)
-              .map((json) => TeamInvitationModel.fromJson(json as Map<String, dynamic>))
+              .map(
+                (json) =>
+                    TeamInvitationModel.fromJson(json as Map<String, dynamic>),
+              )
               .toList();
 
           // Apply client-side pagination if needed
@@ -57,7 +65,10 @@ class TeamInvitationService {
           return invitations;
         }
       } catch (functionError) {
-        AppLogger.warning('🔄 Database function failed, falling back to direct query', functionError);
+        AppLogger.warning(
+          '🔄 Database function failed, falling back to direct query',
+          functionError,
+        );
       }
 
       // Fallback to direct table query
@@ -100,13 +111,15 @@ class TeamInvitationService {
       final response = await (limit != null || offset != null
           ? finalQuery.range(offset ?? 0, (offset ?? 0) + (limit ?? 50) - 1)
           : finalQuery);
-      
+
       AppLogger.debug('✅ Direct query returned ${response.length} invitations');
 
       return (response as List)
-          .map((json) => TeamInvitationModel.fromJson(json as Map<String, dynamic>))
+          .map(
+            (json) =>
+                TeamInvitationModel.fromJson(json as Map<String, dynamic>),
+          )
           .toList();
-
     } catch (error) {
       AppLogger.error('💥 Failed to load team invitations', error);
       rethrow;
@@ -221,7 +234,7 @@ class TeamInvitationService {
   static Future<Map<String, int>> getInvitationStats(String teamId) async {
     try {
       final invitations = await getTeamInvitations(teamId: teamId);
-      
+
       final stats = <String, int>{
         'total': invitations.length,
         'pending': 0,

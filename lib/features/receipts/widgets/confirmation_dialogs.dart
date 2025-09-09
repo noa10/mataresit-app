@@ -66,8 +66,10 @@ class ConfirmationDialogs {
     int count,
     String? categoryName,
   ) async {
-    final action = categoryName != null ? 'assign to "$categoryName"' : 'remove category from';
-    
+    final action = categoryName != null
+        ? 'assign to "$categoryName"'
+        : 'remove category from';
+
     final result = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -133,19 +135,20 @@ class ConfirmationDialogs {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              message,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+            Text(message, style: Theme.of(context).textTheme.bodyLarge),
             if (details != null) ...[
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.errorContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.error.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Column(
@@ -204,9 +207,7 @@ class ConfirmationDialogs {
         backgroundColor: Theme.of(context).colorScheme.primary,
         duration: duration,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -233,9 +234,7 @@ class ConfirmationDialogs {
         backgroundColor: Theme.of(context).colorScheme.error,
         duration: duration,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         action: SnackBarAction(
           label: 'Dismiss',
           textColor: Theme.of(context).colorScheme.onError,
@@ -248,10 +247,7 @@ class ConfirmationDialogs {
   }
 
   /// Show loading dialog for long-running operations
-  static void showLoadingDialog(
-    BuildContext context,
-    String message,
-  ) {
+  static void showLoadingDialog(BuildContext context, String message) {
     showDialog(
       context: context,
       barrierDismissible: false,

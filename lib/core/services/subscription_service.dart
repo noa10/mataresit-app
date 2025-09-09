@@ -55,8 +55,12 @@ class SubscriptionService {
 
       // Convert to subscription model
       final subscription = SubscriptionModel(
-        tier: SubscriptionTier.fromString(response['subscription_tier'] ?? 'free'),
-        status: SubscriptionStatus.fromString(response['subscription_status'] ?? 'active'),
+        tier: SubscriptionTier.fromString(
+          response['subscription_tier'] ?? 'free',
+        ),
+        status: SubscriptionStatus.fromString(
+          response['subscription_status'] ?? 'active',
+        ),
         stripeCustomerId: response['stripe_customer_id'],
         stripeSubscriptionId: response['stripe_subscription_id'],
         subscriptionStartDate: response['subscription_start_date'] != null
@@ -75,15 +79,17 @@ class SubscriptionService {
         nextBillingDate: null, // Column doesn't exist in database
       );
 
-      _logger.i('Subscription status retrieved: ${subscription.tier.value} - ${subscription.status.value}');
-      
+      _logger.i(
+        'Subscription status retrieved: ${subscription.tier.value} - ${subscription.status.value}',
+      );
+
       // Emit to stream
       _subscriptionController.add(subscription);
-      
+
       return subscription;
     } catch (e) {
       _logger.e('Error fetching subscription status: $e');
-      
+
       // Return free tier as fallback
       final freeSubscription = SubscriptionModel.free();
       _subscriptionController.add(freeSubscription);
@@ -102,7 +108,9 @@ class SubscriptionService {
       }
 
       // Call the initialize-user-subscription edge function to sync with Stripe
-      final response = await _client.functions.invoke('initialize-user-subscription');
+      final response = await _client.functions.invoke(
+        'initialize-user-subscription',
+      );
       _logger.d('Subscription refresh response: ${response.data}');
 
       // Get updated subscription status
@@ -139,7 +147,9 @@ class SubscriptionService {
         lastUpdated: DateTime.now(),
       );
 
-      _logger.i('Usage retrieved: ${usage.receiptsUsed} receipts, ${usage.storageUsedMB}MB storage');
+      _logger.i(
+        'Usage retrieved: ${usage.receiptsUsed} receipts, ${usage.storageUsedMB}MB storage',
+      );
       return usage;
     } catch (e) {
       _logger.e('Error fetching subscription usage: $e');
@@ -173,7 +183,7 @@ class SubscriptionService {
   static Future<String?> getUpgradeMessage() async {
     try {
       final subscription = await getSubscriptionStatus();
-      
+
       switch (subscription.tier) {
         case SubscriptionTier.free:
           return 'Upgrade to Pro for 500 receipts/month and advanced features';
@@ -230,7 +240,6 @@ class SubscriptionService {
       } catch (e) {
         _logger.w('Could not fetch subscription limits: $e');
       }
-
     } catch (e) {
       _logger.e('Error in debug query: $e');
     }
@@ -246,7 +255,7 @@ class SubscriptionService {
       // Get current month's receipt count
       final now = DateTime.now();
       final startOfMonth = DateTime(now.year, now.month, 1);
-      
+
       final response = await _client
           .from('receipts')
           .select('id')

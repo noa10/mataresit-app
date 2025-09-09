@@ -13,7 +13,7 @@ class ProfileService {
   static Future<UserModel?> getUserProfile(String userId) async {
     try {
       AppLogger.info('Fetching profile for user: $userId');
-      
+
       final response = await SupabaseService.client
           .from(_profilesTable)
           .select()
@@ -35,7 +35,7 @@ class ProfileService {
   ) async {
     try {
       AppLogger.info('Updating profile for user: $userId');
-      
+
       // Add updated timestamp
       final updateData = {
         ...updates,
@@ -61,7 +61,7 @@ class ProfileService {
   static Future<String?> uploadAvatar(String userId, File imageFile) async {
     try {
       AppLogger.info('Uploading avatar for user: $userId');
-      
+
       final fileName = '${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final filePath = '$userId/$fileName';
 
@@ -91,13 +91,13 @@ class ProfileService {
 
   /// Upload avatar from bytes (for web/mobile compatibility)
   static Future<String?> uploadAvatarFromBytes(
-    String userId, 
-    Uint8List imageBytes, 
+    String userId,
+    Uint8List imageBytes,
     String fileName,
   ) async {
     try {
       AppLogger.info('Uploading avatar from bytes for user: $userId');
-      
+
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final filePath = '$userId/${timestamp}_$fileName';
 
@@ -117,7 +117,9 @@ class ProfileService {
         'avatar_updated_at': DateTime.now().toIso8601String(),
       });
 
-      AppLogger.info('Avatar uploaded from bytes successfully for user: $userId');
+      AppLogger.info(
+        'Avatar uploaded from bytes successfully for user: $userId',
+      );
       return publicUrl;
     } catch (e) {
       AppLogger.error('Error uploading avatar from bytes for user: $userId', e);
@@ -129,7 +131,7 @@ class ProfileService {
   static Future<bool> removeAvatar(String userId) async {
     try {
       AppLogger.info('Removing avatar for user: $userId');
-      
+
       // Get current profile to find avatar URL
       final profile = await getUserProfile(userId);
       if (profile?.avatarUrl != null) {
@@ -138,11 +140,11 @@ class ProfileService {
         final pathSegments = uri.pathSegments;
         if (pathSegments.length >= 3) {
           final filePath = pathSegments.sublist(2).join('/');
-          
+
           // Delete file from storage
-          await SupabaseService.client.storage
-              .from(_avatarBucket)
-              .remove([filePath]);
+          await SupabaseService.client.storage.from(_avatarBucket).remove([
+            filePath,
+          ]);
         }
       }
 
@@ -175,7 +177,7 @@ class ProfileService {
   static String getUserInitials(UserModel user) {
     final firstName = user.firstName?.trim() ?? '';
     final lastName = user.lastName?.trim() ?? '';
-    
+
     if (firstName.isNotEmpty && lastName.isNotEmpty) {
       return '${firstName[0].toUpperCase()}${lastName[0].toUpperCase()}';
     } else if (firstName.isNotEmpty) {
@@ -185,7 +187,7 @@ class ProfileService {
     } else if (user.email != null && user.email!.isNotEmpty) {
       return user.email![0].toUpperCase();
     }
-    
+
     return 'U';
   }
 
@@ -193,7 +195,7 @@ class ProfileService {
   static String getFullName(UserModel user) {
     final firstName = user.firstName?.trim() ?? '';
     final lastName = user.lastName?.trim() ?? '';
-    
+
     if (firstName.isNotEmpty && lastName.isNotEmpty) {
       return '$firstName $lastName';
     } else if (firstName.isNotEmpty) {
@@ -203,28 +205,28 @@ class ProfileService {
     } else if (user.email != null && user.email!.isNotEmpty) {
       return user.email!.split('@')[0];
     }
-    
+
     return 'User';
   }
 
   /// Validate profile update data
   static Map<String, String> validateProfileData(Map<String, dynamic> data) {
     final errors = <String, String>{};
-    
+
     if (data.containsKey('first_name')) {
       final firstName = data['first_name'] as String?;
       if (firstName != null && firstName.length > 50) {
         errors['first_name'] = 'First name must be 50 characters or less';
       }
     }
-    
+
     if (data.containsKey('last_name')) {
       final lastName = data['last_name'] as String?;
       if (lastName != null && lastName.length > 50) {
         errors['last_name'] = 'Last name must be 50 characters or less';
       }
     }
-    
+
     if (data.containsKey('email')) {
       final email = data['email'] as String?;
       if (email != null && email.isNotEmpty) {
@@ -234,7 +236,7 @@ class ProfileService {
         }
       }
     }
-    
+
     return errors;
   }
 }

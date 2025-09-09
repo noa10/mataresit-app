@@ -65,10 +65,18 @@ class ReceiptData {
             if (parts.length == 3) {
               // Assume YYYY-MM-DD format first
               if (parts[0].length == 4) {
-                transactionDate = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+                transactionDate = DateTime(
+                  int.parse(parts[0]),
+                  int.parse(parts[1]),
+                  int.parse(parts[2]),
+                );
               } else {
                 // Assume DD-MM-YYYY format
-                transactionDate = DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+                transactionDate = DateTime(
+                  int.parse(parts[2]),
+                  int.parse(parts[1]),
+                  int.parse(parts[0]),
+                );
               }
             }
           } catch (_) {
@@ -134,7 +142,9 @@ class ReceiptData {
         taxAmount: parseAmount(json['taxAmount']),
         discountAmount: parseAmount(json['discountAmount']),
         tipAmount: parseAmount(json['tipAmount']),
-        currency: CurrencyUtils.normalizeCurrencyCode(json['currency']?.toString() ?? 'MYR'),
+        currency: CurrencyUtils.normalizeCurrencyCode(
+          json['currency']?.toString() ?? 'MYR',
+        ),
         paymentMethod: json['paymentMethod']?.toString(),
         category: json['category']?.toString(),
         items: items,
@@ -220,19 +230,19 @@ class ReceiptItem {
 abstract class AIVisionService {
   /// Process receipt image and extract structured data
   Future<ReceiptData> processReceiptImage(File imageFile);
-  
+
   /// Test the service connection
   Future<String> testConnection();
-  
+
   /// Check if the service is properly configured
   bool isConfigured();
-  
+
   /// Get the service name
   String get serviceName;
-  
+
   /// Get the service priority (lower number = higher priority)
   int get priority;
-  
+
   /// Check if the service supports the given image format
   bool supportsImageFormat(String mimeType);
 }
@@ -241,20 +251,21 @@ abstract class AIVisionService {
 class GeographicRestrictionException implements Exception {
   final String message;
   final String service;
-  
+
   const GeographicRestrictionException(this.message, this.service);
-  
+
   @override
-  String toString() => 'GeographicRestrictionException: $message (Service: $service)';
+  String toString() =>
+      'GeographicRestrictionException: $message (Service: $service)';
 }
 
 /// Exception thrown when a service has reached its quota limit
 class QuotaExceededException implements Exception {
   final String message;
   final String service;
-  
+
   const QuotaExceededException(this.message, this.service);
-  
+
   @override
   String toString() => 'QuotaExceededException: $message (Service: $service)';
 }
@@ -263,9 +274,10 @@ class QuotaExceededException implements Exception {
 class ServiceConfigurationException implements Exception {
   final String message;
   final String service;
-  
+
   const ServiceConfigurationException(this.message, this.service);
-  
+
   @override
-  String toString() => 'ServiceConfigurationException: $message (Service: $service)';
+  String toString() =>
+      'ServiceConfigurationException: $message (Service: $service)';
 }

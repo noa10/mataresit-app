@@ -44,9 +44,9 @@ class SecuritySettingsScreen extends ConsumerWidget {
             subtitle: 'Manage your active sessions',
             onTap: () => context.push(AppRoutes.sessionManagement),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Privacy Controls Section
           _buildSectionHeader('Privacy Controls'),
           const SizedBox(height: 8),
@@ -57,9 +57,9 @@ class SecuritySettingsScreen extends ConsumerWidget {
             subtitle: 'Control your data and privacy preferences',
             onTap: () => context.push(AppRoutes.privacyControls),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Security Features Section
           _buildSectionHeader('Security Features'),
           const SizedBox(height: 8),
@@ -72,7 +72,9 @@ class SecuritySettingsScreen extends ConsumerWidget {
               // This will be handled in the main security settings
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Biometric settings available in main security screen'),
+                  content: Text(
+                    'Biometric settings available in main security screen',
+                  ),
                 ),
               );
             },
@@ -86,14 +88,16 @@ class SecuritySettingsScreen extends ConsumerWidget {
               // This will be handled in the main security settings
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('PIN settings available in main security screen'),
+                  content: Text(
+                    'PIN settings available in main security screen',
+                  ),
                 ),
               );
             },
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Danger Zone Section
           _buildSectionHeader('Danger Zone'),
           const SizedBox(height: 8),

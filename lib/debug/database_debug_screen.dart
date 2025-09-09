@@ -10,7 +10,8 @@ class DatabaseDebugScreen extends ConsumerStatefulWidget {
   const DatabaseDebugScreen({super.key});
 
   @override
-  ConsumerState<DatabaseDebugScreen> createState() => _DatabaseDebugScreenState();
+  ConsumerState<DatabaseDebugScreen> createState() =>
+      _DatabaseDebugScreenState();
 }
 
 class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
@@ -31,12 +32,16 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
 
     try {
       _addOutput('Testing Gemini Vision Service...');
-      
+
       // Check environment variables
       _addOutput('\n=== Environment Check ===');
-      _addOutput('Raw .env GEMINI_API_KEY: ${dotenv.env['GEMINI_API_KEY']?.isNotEmpty == true ? 'SET' : 'NOT SET'}');
-      _addOutput('AppConstants.geminiApiKey: ${AppConstants.geminiApiKey.isNotEmpty ? 'SET (${AppConstants.geminiApiKey.substring(0, 10)}...)' : 'NOT SET'}');
-      
+      _addOutput(
+        'Raw .env GEMINI_API_KEY: ${dotenv.env['GEMINI_API_KEY']?.isNotEmpty == true ? 'SET' : 'NOT SET'}',
+      );
+      _addOutput(
+        'AppConstants.geminiApiKey: ${AppConstants.geminiApiKey.isNotEmpty ? 'SET (${AppConstants.geminiApiKey.substring(0, 10)}...)' : 'NOT SET'}',
+      );
+
       // Check service status
       final status = AIVisionServiceManager.getServicesStatus();
       _addOutput('\n=== AI Vision Services Status ===');
@@ -44,12 +49,14 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
 
       if (!AIVisionServiceManager.hasConfiguredServices()) {
         _addOutput('❌ No AI vision services are configured');
-        _addOutput('Please ensure GEMINI_API_KEY or OPENROUTER_API_KEY is set in .env file');
+        _addOutput(
+          'Please ensure GEMINI_API_KEY or OPENROUTER_API_KEY is set in .env file',
+        );
         return;
       }
-      
+
       _addOutput('✅ Gemini service is configured');
-      
+
       // Test basic connection
       try {
         _addOutput('\n=== Connection Test ===');
@@ -65,7 +72,6 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
       } catch (e) {
         _addOutput('❌ Connection test failed: $e');
       }
-      
     } catch (e) {
       _addOutput('Gemini test failed: $e');
     }
@@ -87,11 +93,15 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
 
       // Test basic connection
       _addOutput('Supabase client initialized');
-      _addOutput('Auth user: ${client.auth.currentUser?.id ?? 'Not authenticated'}');
+      _addOutput(
+        'Auth user: ${client.auth.currentUser?.id ?? 'Not authenticated'}',
+      );
 
       // Test current team
       final currentTeamState = ref.read(currentTeamProvider);
-      _addOutput('Current team: ${currentTeamState.currentTeam?.id ?? 'None'} - ${currentTeamState.currentTeam?.name ?? 'None'}');
+      _addOutput(
+        'Current team: ${currentTeamState.currentTeam?.id ?? 'None'} - ${currentTeamState.currentTeam?.name ?? 'None'}',
+      );
 
       if (currentTeamState.currentTeam != null) {
         final teamId = currentTeamState.currentTeam!.id;
@@ -103,7 +113,9 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
               .from('claims')
               .select('id')
               .limit(1);
-          _addOutput('Claims table exists, test query returned: ${testResponse.runtimeType}');
+          _addOutput(
+            'Claims table exists, test query returned: ${testResponse.runtimeType}',
+          );
           _addOutput('Test response: $testResponse');
         } catch (e) {
           _addOutput('Claims table test failed: $e');
@@ -111,12 +123,15 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
 
         // Test RPC function
         try {
-          final rpcResponse = await client.rpc('get_team_claims', params: {
-            '_team_id': teamId,
-            '_status': null,
-            '_limit': 5,
-            '_offset': 0,
-          });
+          final rpcResponse = await client.rpc(
+            'get_team_claims',
+            params: {
+              '_team_id': teamId,
+              '_status': null,
+              '_limit': 5,
+              '_offset': 0,
+            },
+          );
           _addOutput('RPC response: $rpcResponse');
           _addOutput('RPC response length: ${rpcResponse.length}');
         } catch (e) {
@@ -130,7 +145,9 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
               .select('*')
               .eq('team_id', teamId)
               .limit(5);
-          _addOutput('Direct claims query returned: ${directResponse.runtimeType}');
+          _addOutput(
+            'Direct claims query returned: ${directResponse.runtimeType}',
+          );
           _addOutput('Direct response length: ${directResponse.length}');
           if (directResponse.isNotEmpty) {
             _addOutput('First claim: ${directResponse.first}');
@@ -145,7 +162,9 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
               .from('claims')
               .select('*')
               .limit(5);
-          _addOutput('All claims query returned: ${allClaimsResponse.runtimeType}');
+          _addOutput(
+            'All claims query returned: ${allClaimsResponse.runtimeType}',
+          );
           _addOutput('All claims length: ${allClaimsResponse.length}');
           if (allClaimsResponse.isNotEmpty) {
             _addOutput('First claim (any team): ${allClaimsResponse.first}');
@@ -154,7 +173,6 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
           _addOutput('All claims query failed: $e');
         }
       }
-
     } catch (e) {
       _addOutput('Database test failed: $e');
     }
@@ -183,7 +201,7 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
           children: [
             ElevatedButton(
               onPressed: _isLoading ? null : _testGeminiService,
-              child: _isLoading 
+              child: _isLoading
                   ? const SizedBox(
                       width: 20,
                       height: 20,
@@ -194,7 +212,7 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
             const SizedBox(height: 8),
             ElevatedButton(
               onPressed: _isLoading ? null : _testDatabaseConnection,
-              child: _isLoading 
+              child: _isLoading
                   ? const SizedBox(
                       width: 20,
                       height: 20,
@@ -214,7 +232,9 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
                 ),
                 child: SingleChildScrollView(
                   child: Text(
-                    _debugOutput.isEmpty ? 'Tap "Test Database Connection" to start debugging...' : _debugOutput,
+                    _debugOutput.isEmpty
+                        ? 'Tap "Test Database Connection" to start debugging...'
+                        : _debugOutput,
                     style: const TextStyle(
                       fontFamily: 'monospace',
                       fontSize: 12,

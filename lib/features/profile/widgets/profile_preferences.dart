@@ -7,10 +7,7 @@ import '../providers/profile_provider.dart';
 class ProfilePreferences extends ConsumerStatefulWidget {
   final UserModel profile;
 
-  const ProfilePreferences({
-    super.key,
-    required this.profile,
-  });
+  const ProfilePreferences({super.key, required this.profile});
 
   @override
   ConsumerState<ProfilePreferences> createState() => _ProfilePreferencesState();
@@ -45,13 +42,13 @@ class _ProfilePreferencesState extends ConsumerState<ProfilePreferences> {
               children: [
                 Text(
                   'Language & Region',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                
+
                 const SizedBox(height: AppConstants.defaultPadding),
-                
+
                 DropdownButtonFormField<String>(
                   initialValue: _selectedLanguage,
                   decoration: const InputDecoration(
@@ -66,22 +63,24 @@ class _ProfilePreferencesState extends ConsumerState<ProfilePreferences> {
                     DropdownMenuItem(value: 'it', child: Text('Italian')),
                     DropdownMenuItem(value: 'pt', child: Text('Portuguese')),
                   ],
-                  onChanged: profileState.isUpdating ? null : (value) {
-                    if (value != null && value != _selectedLanguage) {
-                      setState(() {
-                        _selectedLanguage = value;
-                      });
-                      _updatePreference('preferred_language', value);
-                    }
-                  },
+                  onChanged: profileState.isUpdating
+                      ? null
+                      : (value) {
+                          if (value != null && value != _selectedLanguage) {
+                            setState(() {
+                              _selectedLanguage = value;
+                            });
+                            _updatePreference('preferred_language', value);
+                          }
+                        },
                 ),
               ],
             ),
           ),
         ),
-        
+
         const SizedBox(height: AppConstants.defaultPadding),
-        
+
         // Notification Preferences
         Card(
           child: Padding(
@@ -91,32 +90,36 @@ class _ProfilePreferencesState extends ConsumerState<ProfilePreferences> {
               children: [
                 Text(
                   'Notifications',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                
+
                 const SizedBox(height: AppConstants.defaultPadding),
-                
+
                 SwitchListTile(
                   title: const Text('Billing Email Notifications'),
-                  subtitle: const Text('Receive emails about billing and payments'),
+                  subtitle: const Text(
+                    'Receive emails about billing and payments',
+                  ),
                   value: _billingEmailEnabled,
-                  onChanged: profileState.isUpdating ? null : (value) {
-                    setState(() {
-                      _billingEmailEnabled = value;
-                    });
-                    _updatePreference('billing_email_enabled', value);
-                  },
+                  onChanged: profileState.isUpdating
+                      ? null
+                      : (value) {
+                          setState(() {
+                            _billingEmailEnabled = value;
+                          });
+                          _updatePreference('billing_email_enabled', value);
+                        },
                   contentPadding: EdgeInsets.zero,
                 ),
               ],
             ),
           ),
         ),
-        
+
         const SizedBox(height: AppConstants.defaultPadding),
-        
+
         // Subscription Preferences
         Card(
           child: Padding(
@@ -126,32 +129,36 @@ class _ProfilePreferencesState extends ConsumerState<ProfilePreferences> {
               children: [
                 Text(
                   'Subscription',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                
+
                 const SizedBox(height: AppConstants.defaultPadding),
-                
+
                 SwitchListTile(
                   title: const Text('Auto-Renewal'),
-                  subtitle: const Text('Automatically renew subscription when it expires'),
+                  subtitle: const Text(
+                    'Automatically renew subscription when it expires',
+                  ),
                   value: _autoRenewalEnabled,
-                  onChanged: profileState.isUpdating ? null : (value) {
-                    setState(() {
-                      _autoRenewalEnabled = value;
-                    });
-                    _updatePreference('auto_renewal_enabled', value);
-                  },
+                  onChanged: profileState.isUpdating
+                      ? null
+                      : (value) {
+                          setState(() {
+                            _autoRenewalEnabled = value;
+                          });
+                          _updatePreference('auto_renewal_enabled', value);
+                        },
                   contentPadding: EdgeInsets.zero,
                 ),
               ],
             ),
           ),
         ),
-        
+
         const SizedBox(height: AppConstants.defaultPadding),
-        
+
         // Theme Preferences
         Card(
           child: Padding(
@@ -161,13 +168,13 @@ class _ProfilePreferencesState extends ConsumerState<ProfilePreferences> {
               children: [
                 Text(
                   'Appearance',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                
+
                 const SizedBox(height: AppConstants.defaultPadding),
-                
+
                 ListTile(
                   leading: Icon(
                     Theme.of(context).brightness == Brightness.dark
@@ -186,7 +193,9 @@ class _ProfilePreferencesState extends ConsumerState<ProfilePreferences> {
                       // TODO: Implement theme switching
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Theme switching will be implemented soon'),
+                          content: Text(
+                            'Theme switching will be implemented soon',
+                          ),
                         ),
                       );
                     },
@@ -197,7 +206,7 @@ class _ProfilePreferencesState extends ConsumerState<ProfilePreferences> {
             ),
           ),
         ),
-        
+
         // Update Status
         if (profileState.isUpdating)
           const Padding(
@@ -217,7 +226,7 @@ class _ProfilePreferencesState extends ConsumerState<ProfilePreferences> {
               ),
             ),
           ),
-        
+
         // Error Message
         if (profileState.updateError != null)
           Padding(
@@ -226,17 +235,15 @@ class _ProfilePreferencesState extends ConsumerState<ProfilePreferences> {
               width: double.infinity,
               padding: const EdgeInsets.all(AppConstants.smallPadding),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
+                color: Theme.of(
+                  context,
+                ).colorScheme.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.error,
-                ),
+                border: Border.all(color: Theme.of(context).colorScheme.error),
               ),
               child: Text(
                 profileState.updateError!,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.error,
-                ),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
           ),
@@ -248,7 +255,7 @@ class _ProfilePreferencesState extends ConsumerState<ProfilePreferences> {
     final success = await ref.read(profileProvider.notifier).updateProfile({
       key: value,
     });
-    
+
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

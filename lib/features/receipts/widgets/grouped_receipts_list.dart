@@ -28,7 +28,8 @@ class GroupedReceiptsList extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<GroupedReceiptsList> createState() => _GroupedReceiptsListState();
+  ConsumerState<GroupedReceiptsList> createState() =>
+      _GroupedReceiptsListState();
 }
 
 class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
@@ -72,7 +73,8 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
           child: ListView.builder(
             controller: _scrollController,
             padding: const EdgeInsets.all(AppConstants.defaultPadding),
-            itemCount: widget.groupedReceipts.length + 1, // +1 for pagination widget
+            itemCount:
+                widget.groupedReceipts.length + 1, // +1 for pagination widget
             itemBuilder: (context, index) {
               if (index >= widget.groupedReceipts.length) {
                 return PaginationWidget(
@@ -187,7 +189,8 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
                     if (receiptsState.isSelectionMode) ...[
                       Checkbox(
                         value: isSelected,
-                        onChanged: (value) => receiptsNotifier.toggleReceiptSelection(receipt.id),
+                        onChanged: (value) =>
+                            receiptsNotifier.toggleReceiptSelection(receipt.id),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       const SizedBox(width: 8),
@@ -197,9 +200,8 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
                     Expanded(
                       child: Text(
                         receipt.merchantName ?? 'Unknown Merchant',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ),
 
@@ -215,108 +217,139 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
                   ],
                 ),
 
-              const SizedBox(height: 8),
+                const SizedBox(height: 8),
 
-              // Details row
-              Row(
-                children: [
-                  // Category - Use real category data with fallback
-                  Consumer(
-                    builder: (context, ref, child) {
-                      // Watch the categories state to ensure they're loaded
-                      final categoriesState = ref.watch(categoriesProvider);
+                // Details row
+                Row(
+                  children: [
+                    // Category - Use real category data with fallback
+                    Consumer(
+                      builder: (context, ref, child) {
+                        // Watch the categories state to ensure they're loaded
+                        final categoriesState = ref.watch(categoriesProvider);
 
-                      // Find the category from display categories (includes both team and personal)
-                      CategoryModel? category;
-                      if (receipt.customCategoryId != null) {
-                        category = categoriesState.displayCategories
-                            .where((cat) => cat.id == receipt.customCategoryId)
-                            .firstOrNull;
-
-                        // If category not found by ID, try to find by name (case-insensitive)
-                        if (category == null && receipt.category != null) {
+                        // Find the category from display categories (includes both team and personal)
+                        CategoryModel? category;
+                        if (receipt.customCategoryId != null) {
                           category = categoriesState.displayCategories
-                              .where((cat) => cat.name.toLowerCase() == receipt.category!.toLowerCase())
+                              .where(
+                                (cat) => cat.id == receipt.customCategoryId,
+                              )
                               .firstOrNull;
-                        }
 
-                        // If still not found, try partial name matching for common variations
-                        if (category == null && receipt.category != null) {
-                          final categoryName = receipt.category!.toLowerCase();
-
-                          // Handle common category name mappings
-                          if (categoryName.contains('grocer') || categoryName.contains('food')) {
+                          // If category not found by ID, try to find by name (case-insensitive)
+                          if (category == null && receipt.category != null) {
                             category = categoriesState.displayCategories
-                                .where((cat) => cat.name.toLowerCase().contains('food') ||
-                                              cat.name.toLowerCase().contains('dining') ||
-                                              cat.name.toLowerCase().contains('grocer'))
-                                .firstOrNull;
-                          } else if (categoryName.contains('shop')) {
-                            category = categoriesState.displayCategories
-                                .where((cat) => cat.name.toLowerCase().contains('shop'))
+                                .where(
+                                  (cat) =>
+                                      cat.name.toLowerCase() ==
+                                      receipt.category!.toLowerCase(),
+                                )
                                 .firstOrNull;
                           }
+
+                          // If still not found, try partial name matching for common variations
+                          if (category == null && receipt.category != null) {
+                            final categoryName = receipt.category!
+                                .toLowerCase();
+
+                            // Handle common category name mappings
+                            if (categoryName.contains('grocer') ||
+                                categoryName.contains('food')) {
+                              category = categoriesState.displayCategories
+                                  .where(
+                                    (cat) =>
+                                        cat.name.toLowerCase().contains(
+                                          'food',
+                                        ) ||
+                                        cat.name.toLowerCase().contains(
+                                          'dining',
+                                        ) ||
+                                        cat.name.toLowerCase().contains(
+                                          'grocer',
+                                        ),
+                                  )
+                                  .firstOrNull;
+                            } else if (categoryName.contains('shop')) {
+                              category = categoriesState.displayCategories
+                                  .where(
+                                    (cat) =>
+                                        cat.name.toLowerCase().contains('shop'),
+                                  )
+                                  .firstOrNull;
+                            }
+                          }
                         }
-                      }
 
-                      return CategoryDisplay(
-                        category: category,
-                        size: CategoryDisplaySize.small,
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 8),
-
-                  // Payment method
-                  if (receipt.paymentMethod != null) ...[
-                    Icon(
-                      _getPaymentMethodIcon(receipt.paymentMethod!),
-                      size: 16,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      receipt.paymentMethod!,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                        return CategoryDisplay(
+                          category: category,
+                          size: CategoryDisplaySize.small,
+                        );
+                      },
                     ),
                     const SizedBox(width: 8),
+
+                    // Payment method
+                    if (receipt.paymentMethod != null) ...[
+                      Icon(
+                        _getPaymentMethodIcon(receipt.paymentMethod!),
+                        size: 16,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        receipt.paymentMethod!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+
+                    const Spacer(),
+
+                    // Confidence score indicator (match React web aggregate + ai_suggestions fallback)
+                    Builder(
+                      builder: (context) {
+                        final hasConfidence =
+                            (receipt.aiSuggestions != null &&
+                                receipt.aiSuggestions!.containsKey(
+                                  'confidence',
+                                )) ||
+                            (receipt.confidenceScores != null &&
+                                receipt.confidenceScores!.isNotEmpty);
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CompactConfidenceIndicator(
+                              score: hasConfidence
+                                  ? ConfidenceUtils.calculateAggregateConfidence(
+                                      receipt,
+                                    )
+                                  : null,
+                              loading:
+                                  !hasConfidence &&
+                                  receipt.processingStatus ==
+                                      ProcessingStatus.processing,
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                        );
+                      },
+                    ),
+
+                    // Status indicator
+                    _buildStatusIndicator(receipt.status),
                   ],
+                ),
 
-                  const Spacer(),
-
-                  // Confidence score indicator (match React web aggregate + ai_suggestions fallback)
-                  Builder(
-                    builder: (context) {
-                      final hasConfidence =
-                          (receipt.aiSuggestions != null && receipt.aiSuggestions!.containsKey('confidence')) ||
-                          (receipt.confidenceScores != null && receipt.confidenceScores!.isNotEmpty);
-                      return Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CompactConfidenceIndicator(
-                            score: hasConfidence ? ConfidenceUtils.calculateAggregateConfidence(receipt) : null,
-                            loading: !hasConfidence && receipt.processingStatus == ProcessingStatus.processing,
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                      );
-                    },
-                  ),
-
-                  // Status indicator
-                  _buildStatusIndicator(receipt.status),
-                ],
-              ),
-
-              // Review status badge
-              const SizedBox(height: 4),
-              _buildReviewStatusBadge(receipt.status),
-            ],
+                // Review status badge
+                const SizedBox(height: 4),
+                _buildReviewStatusBadge(receipt.status),
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -344,11 +377,7 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
         break;
     }
 
-    return Icon(
-      icon,
-      size: 16,
-      color: color,
-    );
+    return Icon(icon, size: 16, color: color);
   }
 
   IconData _getPaymentMethodIcon(String paymentMethod) {
@@ -411,8 +440,6 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
       ),
     );
   }
-
-
 
   Widget _buildEmptyState() {
     return Center(

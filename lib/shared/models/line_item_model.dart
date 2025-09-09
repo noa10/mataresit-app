@@ -49,13 +49,11 @@ class LineItemModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        receiptId,
-        description,
-        amount,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    receiptId,
+    description,
+    amount,
+    createdAt,
+    updatedAt,
+  ];
 }
-
-

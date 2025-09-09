@@ -46,10 +46,7 @@ class ThemeConfig extends Equatable {
   final ThemeMode mode;
   final ThemeVariant variant;
 
-  const ThemeConfig({
-    required this.mode,
-    required this.variant,
-  });
+  const ThemeConfig({required this.mode, required this.variant});
 
   /// Default theme configuration
   static const ThemeConfig defaultConfig = ThemeConfig(
@@ -58,10 +55,7 @@ class ThemeConfig extends Equatable {
   );
 
   /// Create a copy with updated values
-  ThemeConfig copyWith({
-    ThemeMode? mode,
-    ThemeVariant? variant,
-  }) {
+  ThemeConfig copyWith({ThemeMode? mode, ThemeVariant? variant}) {
     return ThemeConfig(
       mode: mode ?? this.mode,
       variant: variant ?? this.variant,
@@ -70,10 +64,7 @@ class ThemeConfig extends Equatable {
 
   /// Convert to JSON for storage
   Map<String, dynamic> toJson() {
-    return {
-      'mode': mode.value,
-      'variant': variant.value,
-    };
+    return {'mode': mode.value, 'variant': variant.value};
   }
 
   /// Create from JSON

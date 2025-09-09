@@ -88,7 +88,9 @@ class _BatchUploadQueueItemState extends State<BatchUploadQueueItem>
                     Text(
                       _getFormattedFileSize(widget.item.fileSize),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                   ],
@@ -134,11 +136,7 @@ class _BatchUploadQueueItemState extends State<BatchUploadQueueItem>
         color: iconColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(
-        iconData,
-        color: iconColor,
-        size: 24,
-      ),
+      child: Icon(iconData, color: iconColor, size: 24),
     );
   }
 
@@ -199,27 +197,29 @@ class _BatchUploadQueueItemState extends State<BatchUploadQueueItem>
             ),
             tooltip: _showLogs ? 'Hide logs' : 'Show logs',
           ),
-        
+
         // Retry button for failed uploads
-        if (widget.item.status == BatchUploadItemStatus.failed && widget.onRetry != null)
+        if (widget.item.status == BatchUploadItemStatus.failed &&
+            widget.onRetry != null)
           IconButton(
             onPressed: () => widget.onRetry!(widget.item.id),
             icon: const Icon(Icons.refresh, size: 20),
             tooltip: 'Retry upload',
           ),
-        
+
         // View receipt button for completed uploads
-        if (widget.item.status == BatchUploadItemStatus.completed && 
-            widget.item.receiptId != null && 
+        if (widget.item.status == BatchUploadItemStatus.completed &&
+            widget.item.receiptId != null &&
             widget.onViewReceipt != null)
           IconButton(
             onPressed: () => widget.onViewReceipt!(widget.item.receiptId!),
             icon: const Icon(Icons.visibility, size: 20),
             tooltip: 'View receipt',
           ),
-        
+
         // Remove button for queued items
-        if (widget.item.status == BatchUploadItemStatus.queued && widget.onRemove != null)
+        if (widget.item.status == BatchUploadItemStatus.queued &&
+            widget.onRemove != null)
           IconButton(
             onPressed: () => widget.onRemove!(widget.item.id),
             icon: const Icon(Icons.close, size: 20),
@@ -256,7 +256,9 @@ class _BatchUploadQueueItemState extends State<BatchUploadQueueItem>
         const SizedBox(height: 8),
         LinearProgressIndicator(
           value: widget.item.progress / 100,
-          backgroundColor: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+          backgroundColor: Theme.of(
+            context,
+          ).colorScheme.outline.withValues(alpha: 0.2),
           color: _getProgressColor(),
         ),
         if (widget.item.error != null) ...[
@@ -264,7 +266,9 @@ class _BatchUploadQueueItemState extends State<BatchUploadQueueItem>
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
+              color: Theme.of(
+                context,
+              ).colorScheme.errorContainer.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Row(
@@ -295,7 +299,9 @@ class _BatchUploadQueueItemState extends State<BatchUploadQueueItem>
     return Container(
       margin: const EdgeInsets.only(top: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         border: Border(
           top: BorderSide(
             color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
@@ -337,9 +343,8 @@ class _BatchUploadQueueItemState extends State<BatchUploadQueueItem>
                       Expanded(
                         child: Text(
                           log,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontFamily: 'monospace',
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(fontFamily: 'monospace'),
                         ),
                       ),
                     ],

@@ -56,7 +56,9 @@ class SubscriptionModel extends Equatable {
   }
 
   /// Check if subscription is active
-  bool get isActive => status == SubscriptionStatus.active || status == SubscriptionStatus.trialing;
+  bool get isActive =>
+      status == SubscriptionStatus.active ||
+      status == SubscriptionStatus.trialing;
 
   /// Check if subscription is in trial
   bool get isTrialing => status == SubscriptionStatus.trialing;
@@ -112,18 +114,18 @@ class SubscriptionModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        tier,
-        status,
-        stripeCustomerId,
-        stripeSubscriptionId,
-        subscriptionStartDate,
-        subscriptionEndDate,
-        trialEndDate,
-        receiptsUsedThisMonth,
-        monthlyResetDate,
-        nextBillingDate,
-        simulated,
-      ];
+    tier,
+    status,
+    stripeCustomerId,
+    stripeSubscriptionId,
+    subscriptionStartDate,
+    subscriptionEndDate,
+    trialEndDate,
+    receiptsUsedThisMonth,
+    monthlyResetDate,
+    nextBillingDate,
+    simulated,
+  ];
 
   SubscriptionModel copyWith({
     SubscriptionTier? tier,
@@ -143,10 +145,12 @@ class SubscriptionModel extends Equatable {
       status: status ?? this.status,
       stripeCustomerId: stripeCustomerId ?? this.stripeCustomerId,
       stripeSubscriptionId: stripeSubscriptionId ?? this.stripeSubscriptionId,
-      subscriptionStartDate: subscriptionStartDate ?? this.subscriptionStartDate,
+      subscriptionStartDate:
+          subscriptionStartDate ?? this.subscriptionStartDate,
       subscriptionEndDate: subscriptionEndDate ?? this.subscriptionEndDate,
       trialEndDate: trialEndDate ?? this.trialEndDate,
-      receiptsUsedThisMonth: receiptsUsedThisMonth ?? this.receiptsUsedThisMonth,
+      receiptsUsedThisMonth:
+          receiptsUsedThisMonth ?? this.receiptsUsedThisMonth,
       monthlyResetDate: monthlyResetDate ?? this.monthlyResetDate,
       nextBillingDate: nextBillingDate ?? this.nextBillingDate,
       simulated: simulated ?? this.simulated,
@@ -194,12 +198,12 @@ class SubscriptionUsage extends Equatable {
 
   @override
   List<Object?> get props => [
-        receiptsUsed,
-        storageUsedMB,
-        teamMembersCount,
-        apiRequestsThisHour,
-        lastUpdated,
-      ];
+    receiptsUsed,
+    storageUsedMB,
+    teamMembersCount,
+    apiRequestsThisHour,
+    lastUpdated,
+  ];
 
   SubscriptionUsage copyWith({
     int? receiptsUsed,
@@ -281,18 +285,18 @@ class BillingPreferences extends Equatable {
 
   @override
   List<Object?> get props => [
-        autoRenewalEnabled,
-        autoRenewalFrequency,
-        billingEmailEnabled,
-        reminderDaysBeforeRenewal,
-        paymentFailureNotifications,
-        gracePeriodNotifications,
-        maxPaymentRetryAttempts,
-        retryIntervalHours,
-        gracePeriodDays,
-        preferredLanguage,
-        timezone,
-      ];
+    autoRenewalEnabled,
+    autoRenewalFrequency,
+    billingEmailEnabled,
+    reminderDaysBeforeRenewal,
+    paymentFailureNotifications,
+    gracePeriodNotifications,
+    maxPaymentRetryAttempts,
+    retryIntervalHours,
+    gracePeriodDays,
+    preferredLanguage,
+    timezone,
+  ];
 
   BillingPreferences copyWith({
     bool? autoRenewalEnabled,
@@ -311,10 +315,14 @@ class BillingPreferences extends Equatable {
       autoRenewalEnabled: autoRenewalEnabled ?? this.autoRenewalEnabled,
       autoRenewalFrequency: autoRenewalFrequency ?? this.autoRenewalFrequency,
       billingEmailEnabled: billingEmailEnabled ?? this.billingEmailEnabled,
-      reminderDaysBeforeRenewal: reminderDaysBeforeRenewal ?? this.reminderDaysBeforeRenewal,
-      paymentFailureNotifications: paymentFailureNotifications ?? this.paymentFailureNotifications,
-      gracePeriodNotifications: gracePeriodNotifications ?? this.gracePeriodNotifications,
-      maxPaymentRetryAttempts: maxPaymentRetryAttempts ?? this.maxPaymentRetryAttempts,
+      reminderDaysBeforeRenewal:
+          reminderDaysBeforeRenewal ?? this.reminderDaysBeforeRenewal,
+      paymentFailureNotifications:
+          paymentFailureNotifications ?? this.paymentFailureNotifications,
+      gracePeriodNotifications:
+          gracePeriodNotifications ?? this.gracePeriodNotifications,
+      maxPaymentRetryAttempts:
+          maxPaymentRetryAttempts ?? this.maxPaymentRetryAttempts,
       retryIntervalHours: retryIntervalHours ?? this.retryIntervalHours,
       gracePeriodDays: gracePeriodDays ?? this.gracePeriodDays,
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,

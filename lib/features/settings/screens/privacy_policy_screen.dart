@@ -7,10 +7,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Privacy Policy'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Privacy Policy'), elevation: 0),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
         child: Column(
@@ -30,10 +27,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     padding: const EdgeInsets.all(AppConstants.defaultPadding),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [
-                          Colors.blue.shade600,
-                          Colors.indigo.shade700,
-                        ],
+                        colors: [Colors.blue.shade600, Colors.indigo.shade700],
                       ),
                       shape: BoxShape.circle,
                     ),
@@ -65,15 +59,16 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     padding: const EdgeInsets.all(AppConstants.smallPadding),
                     decoration: BoxDecoration(
                       color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.borderRadius,
+                      ),
                     ),
                     child: Column(
                       children: [
                         Text(
                           'Effective Date: January 15, 2025',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         Text(
                           'Last Updated: January 15, 2025',
@@ -85,24 +80,18 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: AppConstants.largePadding),
-            
+
             // Introduction Section
-            _buildSection(
-              context,
-              'Introduction',
-              Icons.info_outline,
-              Colors.blue,
-              [
-                'Mataresit ("we," "our," or "us") is committed to protecting your privacy and ensuring the security of your personal and financial data. This Privacy Policy explains how we collect, use, process, and protect your information when you use our AI-powered receipt management platform.',
-                'Our service transforms receipts into organized data using advanced artificial intelligence, enabling automated expense tracking, categorization, and financial reporting for businesses of all sizes.',
-                'By using Mataresit, you consent to the practices described in this Privacy Policy.',
-              ],
-            ),
-            
+            _buildSection(context, 'Introduction', Icons.info_outline, Colors.blue, [
+              'Mataresit ("we," "our," or "us") is committed to protecting your privacy and ensuring the security of your personal and financial data. This Privacy Policy explains how we collect, use, process, and protect your information when you use our AI-powered receipt management platform.',
+              'Our service transforms receipts into organized data using advanced artificial intelligence, enabling automated expense tracking, categorization, and financial reporting for businesses of all sizes.',
+              'By using Mataresit, you consent to the practices described in this Privacy Policy.',
+            ]),
+
             const SizedBox(height: AppConstants.largePadding),
-            
+
             // Information We Collect Section
             _buildSection(
               context,
@@ -111,9 +100,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
               Colors.green,
               [],
             ),
-            
+
             const SizedBox(height: AppConstants.defaultPadding),
-            
+
             // Information categories
             _buildInfoCard(
               context,
@@ -127,9 +116,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 'Account Settings: Preferences, categories, and configurations',
               ],
             ),
-            
+
             const SizedBox(height: AppConstants.smallPadding),
-            
+
             _buildInfoCard(
               context,
               'Receipt Data',
@@ -142,9 +131,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 'Metadata: Upload timestamps, processing status, confidence scores',
               ],
             ),
-            
+
             const SizedBox(height: AppConstants.smallPadding),
-            
+
             _buildInfoCard(
               context,
               'Usage Analytics',
@@ -157,9 +146,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 'Performance Metrics: Response times, accuracy scores',
               ],
             ),
-            
+
             const SizedBox(height: AppConstants.smallPadding),
-            
+
             _buildInfoCard(
               context,
               'Payment Information',
@@ -172,9 +161,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 'Usage Tracking: Monthly limits, overage monitoring',
               ],
             ),
-            
+
             const SizedBox(height: AppConstants.largePadding),
-            
+
             // AI Processing Section
             _buildSection(
               context,
@@ -188,9 +177,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 'All payment processing is handled securely by Stripe.',
               ],
             ),
-            
+
             const SizedBox(height: AppConstants.largePadding),
-            
+
             // How We Use Your Information Section
             _buildSection(
               context,
@@ -204,9 +193,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 'Security: Fraud prevention and system security monitoring',
               ],
             ),
-            
+
             const SizedBox(height: AppConstants.largePadding),
-            
+
             // Data Security Section
             _buildSection(
               context,
@@ -221,9 +210,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 'Data retention: Receipt data (7 years), Account data (lifetime), Usage logs (2 years)',
               ],
             ),
-            
+
             const SizedBox(height: AppConstants.largePadding),
-            
+
             // Your Rights Section
             _buildSection(
               context,
@@ -239,14 +228,14 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 'Objection Rights: Object to certain types of processing',
               ],
             ),
-            
+
             const SizedBox(height: AppConstants.largePadding),
-            
+
             // Contact Information Section
             _buildContactSection(context),
-            
+
             const SizedBox(height: AppConstants.largePadding),
-            
+
             // Footer
             _buildFooter(context),
           ],
@@ -285,15 +274,19 @@ class PrivacyPolicyScreen extends StatelessWidget {
             ),
             if (content.isNotEmpty) ...[
               const SizedBox(height: AppConstants.defaultPadding),
-              ...content.map((text) => Padding(
-                padding: const EdgeInsets.only(bottom: AppConstants.smallPadding),
-                child: Text(
-                  text,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[700],
+              ...content.map(
+                (text) => Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: AppConstants.smallPadding,
+                  ),
+                  child: Text(
+                    text,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
                   ),
                 ),
-              )),
+              ),
             ],
           ],
         ),
@@ -329,29 +322,31 @@ class PrivacyPolicyScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppConstants.smallPadding),
-            ...items.map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '• ',
-                    style: TextStyle(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      item,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[700],
+            ...items.map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '• ',
+                      style: TextStyle(
+                        color: color,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                ],
+                    Expanded(
+                      child: Text(
+                        item,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            )),
+            ),
           ],
         ),
       ),
@@ -368,7 +363,11 @@ class PrivacyPolicyScreen extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.contact_support, color: Colors.green.shade600, size: 24),
+                Icon(
+                  Icons.contact_support,
+                  color: Colors.green.shade600,
+                  size: 24,
+                ),
                 const SizedBox(width: AppConstants.smallPadding),
                 Text(
                   'Contact Information',
@@ -390,10 +389,11 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     children: [
                       Text(
                         'Data Protection & Privacy Inquiries',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green.shade800,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green.shade800,
+                            ),
                       ),
                       Text(
                         'We\'re here to help with all your privacy-related questions',
@@ -478,9 +478,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               responseTime,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
             ),
           ],
         ),
@@ -511,9 +511,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     ),
                     Text(
                       'Effective Date: January 15, 2025',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                     ),
                   ],
                 ),
@@ -524,17 +524,17 @@ class PrivacyPolicyScreen extends StatelessWidget {
             const SizedBox(height: AppConstants.smallPadding),
             Text(
               'This Privacy Policy is part of our commitment to transparency and data protection.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppConstants.smallPadding),
             Text(
               '© 2025 Mataresit. All rights reserved. This document is governed by Malaysian privacy laws and international best practices.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[500],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppConstants.defaultPadding),
@@ -552,7 +552,11 @@ class PrivacyPolicyScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSecurityBadge(BuildContext context, IconData icon, String label) {
+  Widget _buildSecurityBadge(
+    BuildContext context,
+    IconData icon,
+    String label,
+  ) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

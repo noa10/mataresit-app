@@ -89,13 +89,13 @@ class GroupedReceipts extends Equatable {
 
   @override
   List<Object?> get props => [
-        dateKey,
-        date,
-        displayName,
-        receipts,
-        totalAmount,
-        count,
-      ];
+    dateKey,
+    date,
+    displayName,
+    receipts,
+    totalAmount,
+    count,
+  ];
 }
 
 /// Helper class for grouping receipts by date
@@ -109,41 +109,43 @@ class ReceiptGrouper {
 
     // Group receipts by date key
     final Map<String, List<ReceiptModel>> groupedMap = {};
-    
+
     for (final receipt in receipts) {
       final transactionDate = receipt.transactionDate ?? receipt.createdAt;
       final dateKey = _getDateKey(transactionDate);
-      
+
       groupedMap.putIfAbsent(dateKey, () => []).add(receipt);
     }
 
     // Convert to GroupedReceipts list
     final List<GroupedReceipts> groupedList = [];
-    
+
     for (final entry in groupedMap.entries) {
       final dateKey = entry.key;
       final receiptsForDate = entry.value;
       final date = _parseDateKey(dateKey);
       final displayName = _formatGroupDate(date);
-      
+
       // Sort receipts within each group by time (newest first)
       receiptsForDate.sort((a, b) {
         final dateA = a.transactionDate ?? a.createdAt;
         final dateB = b.transactionDate ?? b.createdAt;
         return dateB.compareTo(dateA);
       });
-      
-      groupedList.add(GroupedReceipts.fromReceipts(
-        dateKey: dateKey,
-        date: date,
-        displayName: displayName,
-        receipts: receiptsForDate,
-      ));
+
+      groupedList.add(
+        GroupedReceipts.fromReceipts(
+          dateKey: dateKey,
+          date: date,
+          displayName: displayName,
+          receipts: receiptsForDate,
+        ),
+      );
     }
 
     // Sort groups by date
     groupedList.sort((a, b) {
-      return sortDescending 
+      return sortDescending
           ? b.date.compareTo(a.date)
           : a.date.compareTo(b.date);
     });
@@ -154,8 +156,8 @@ class ReceiptGrouper {
   /// Get date key in YYYY-MM-DD format
   static String _getDateKey(DateTime date) {
     return '${date.year.toString().padLeft(4, '0')}-'
-           '${date.month.toString().padLeft(2, '0')}-'
-           '${date.day.toString().padLeft(2, '0')}';
+        '${date.month.toString().padLeft(2, '0')}-'
+        '${date.day.toString().padLeft(2, '0')}';
   }
 
   /// Parse date key back to DateTime
@@ -173,21 +175,26 @@ class ReceiptGrouper {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
-    
+
     final dateOnly = DateTime(date.year, date.month, date.day);
-    
+
     if (dateOnly == today) {
       return 'Today';
     } else if (dateOnly == yesterday) {
       return 'Yesterday';
     } else {
       final difference = today.difference(dateOnly).inDays;
-      
+
       if (difference < 7) {
         // Show day name for recent dates
         const dayNames = [
-          'Monday', 'Tuesday', 'Wednesday', 'Thursday', 
-          'Friday', 'Saturday', 'Sunday'
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+          'Sunday',
         ];
         final dayName = dayNames[date.weekday - 1];
         return '$dayName, ${_formatShortDate(date)}';
@@ -204,8 +211,18 @@ class ReceiptGrouper {
   /// Format short date (MMM d)
   static String _formatShortDate(DateTime date) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${months[date.month - 1]} ${date.day}';
   }

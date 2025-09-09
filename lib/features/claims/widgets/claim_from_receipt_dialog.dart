@@ -22,16 +22,18 @@ class ClaimFromReceiptDialog extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ClaimFromReceiptDialog> createState() => _ClaimFromReceiptDialogState();
+  ConsumerState<ClaimFromReceiptDialog> createState() =>
+      _ClaimFromReceiptDialogState();
 }
 
-class _ClaimFromReceiptDialogState extends ConsumerState<ClaimFromReceiptDialog> {
+class _ClaimFromReceiptDialogState
+    extends ConsumerState<ClaimFromReceiptDialog> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
   final _categoryController = TextEditingController();
-  
+
   String _currency = 'MYR';
   ClaimPriority _priority = ClaimPriority.medium;
   bool _isLoading = false;
@@ -53,10 +55,12 @@ class _ClaimFromReceiptDialogState extends ConsumerState<ClaimFromReceiptDialog>
 
   void _initializeFormWithReceiptData() {
     final receipt = widget.receipt;
-    
+
     // Pre-fill form with receipt data (matching React app logic)
-    _titleController.text = 'Expense - ${receipt.merchantName ?? 'Unknown Merchant'}';
-    _descriptionController.text = 'Expense claim for ${receipt.merchantName ?? 'Unknown Merchant'} on ${_formatDate(receipt.transactionDate)}';
+    _titleController.text =
+        'Expense - ${receipt.merchantName ?? 'Unknown Merchant'}';
+    _descriptionController.text =
+        'Expense claim for ${receipt.merchantName ?? 'Unknown Merchant'} on ${_formatDate(receipt.transactionDate)}';
     _amountController.text = receipt.totalAmount?.toString() ?? '0.00';
     _currency = CurrencyUtils.normalizeCurrencyCode(receipt.currency);
     _categoryController.text = receipt.category ?? '';
@@ -92,20 +96,20 @@ class _ClaimFromReceiptDialogState extends ConsumerState<ClaimFromReceiptDialog>
             'date': widget.receipt.transactionDate?.toIso8601String(),
             'total': widget.receipt.totalAmount,
             'currency': widget.receipt.currency,
-          }
-        }
+          },
+        },
       ];
 
       final request = CreateClaimRequest(
         teamId: currentTeam.id,
         title: _titleController.text.trim(),
-        description: _descriptionController.text.trim().isEmpty 
-            ? null 
+        description: _descriptionController.text.trim().isEmpty
+            ? null
             : _descriptionController.text.trim(),
         amount: double.parse(_amountController.text),
         currency: _currency,
-        category: _categoryController.text.trim().isEmpty 
-            ? null 
+        category: _categoryController.text.trim().isEmpty
+            ? null
             : _categoryController.text.trim(),
         priority: _priority,
         attachments: attachments.map((a) => a.toString()).toList(),
@@ -138,10 +142,7 @@ class _ClaimFromReceiptDialogState extends ConsumerState<ClaimFromReceiptDialog>
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 
@@ -151,9 +152,7 @@ class _ClaimFromReceiptDialogState extends ConsumerState<ClaimFromReceiptDialog>
     final colorScheme = theme.colorScheme;
 
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 500, maxHeight: 700),
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
@@ -164,11 +163,7 @@ class _ClaimFromReceiptDialogState extends ConsumerState<ClaimFromReceiptDialog>
             // Header
             Row(
               children: [
-                Icon(
-                  Icons.receipt_long,
-                  color: colorScheme.primary,
-                  size: 24,
-                ),
+                Icon(Icons.receipt_long, color: colorScheme.primary, size: 24),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -190,9 +185,13 @@ class _ClaimFromReceiptDialogState extends ConsumerState<ClaimFromReceiptDialog>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                color: colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.3,
+                ),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: colorScheme.outline.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: colorScheme.outline.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
@@ -298,10 +297,22 @@ class _ClaimFromReceiptDialogState extends ConsumerState<ClaimFromReceiptDialog>
                                 border: OutlineInputBorder(),
                               ),
                               items: const [
-                                DropdownMenuItem(value: 'MYR', child: Text('MYR')),
-                                DropdownMenuItem(value: 'USD', child: Text('USD')),
-                                DropdownMenuItem(value: 'EUR', child: Text('EUR')),
-                                DropdownMenuItem(value: 'GBP', child: Text('GBP')),
+                                DropdownMenuItem(
+                                  value: 'MYR',
+                                  child: Text('MYR'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'USD',
+                                  child: Text('USD'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'EUR',
+                                  child: Text('EUR'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'GBP',
+                                  child: Text('GBP'),
+                                ),
                               ],
                               onChanged: (value) {
                                 if (value != null) {
@@ -360,7 +371,9 @@ class _ClaimFromReceiptDialogState extends ConsumerState<ClaimFromReceiptDialog>
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                    onPressed: _isLoading
+                        ? null
+                        : () => Navigator.of(context).pop(),
                     child: const Text('Cancel'),
                   ),
                 ),

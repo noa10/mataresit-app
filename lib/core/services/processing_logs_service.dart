@@ -5,7 +5,8 @@ import 'app_logger.dart';
 
 /// Service for managing real-time processing logs
 class ProcessingLogsService {
-  static final ProcessingLogsService _instance = ProcessingLogsService._internal();
+  static final ProcessingLogsService _instance =
+      ProcessingLogsService._internal();
   factory ProcessingLogsService() => _instance;
   ProcessingLogsService._internal();
 
@@ -42,7 +43,9 @@ class ProcessingLogsService {
       controller.close();
     }
 
-    AppLogger.info('Unsubscribed from processing logs', {'receiptId': receiptId});
+    AppLogger.info('Unsubscribed from processing logs', {
+      'receiptId': receiptId,
+    });
   }
 
   /// Add a local processing log (for immediate UI feedback)
@@ -87,9 +90,7 @@ class ProcessingLogsService {
   }) async {
     try {
       // Save to database - the processing_logs table exists
-      await SupabaseService.client
-          .from('processing_logs')
-          .insert({
+      await SupabaseService.client.from('processing_logs').insert({
         'receipt_id': receiptId,
         'status_message': message,
         'step_name': stepName,

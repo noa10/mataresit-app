@@ -28,10 +28,12 @@ class EnhancedCategorySelector extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<EnhancedCategorySelector> createState() => _EnhancedCategorySelectorState();
+  ConsumerState<EnhancedCategorySelector> createState() =>
+      _EnhancedCategorySelectorState();
 }
 
-class _EnhancedCategorySelectorState extends ConsumerState<EnhancedCategorySelector> {
+class _EnhancedCategorySelectorState
+    extends ConsumerState<EnhancedCategorySelector> {
   final TextEditingController _searchController = TextEditingController();
   bool _isOpen = false;
   String _searchQuery = '';
@@ -42,7 +44,9 @@ class _EnhancedCategorySelectorState extends ConsumerState<EnhancedCategorySelec
     // Load categories when widget initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final currentTeam = ref.read(currentTeamModelProvider);
-      ref.read(categoriesProvider.notifier).loadCategories(teamId: currentTeam?.id);
+      ref
+          .read(categoriesProvider.notifier)
+          .loadCategories(teamId: currentTeam?.id);
     });
   }
 
@@ -56,7 +60,7 @@ class _EnhancedCategorySelectorState extends ConsumerState<EnhancedCategorySelec
     if (_searchQuery.isEmpty) {
       return categories;
     }
-    
+
     return categories.where((category) {
       return category.name.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
@@ -75,7 +79,9 @@ class _EnhancedCategorySelectorState extends ConsumerState<EnhancedCategorySelec
       }
     });
 
-    final filteredCategories = _getFilteredCategories(categoriesState.displayCategories);
+    final filteredCategories = _getFilteredCategories(
+      categoriesState.displayCategories,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,19 +99,19 @@ class _EnhancedCategorySelectorState extends ConsumerState<EnhancedCategorySelec
 
         // Category selector button
         InkWell(
-          onTap: widget.enabled ? () {
-            setState(() {
-              _isOpen = !_isOpen;
-            });
-          } : null,
+          onTap: widget.enabled
+              ? () {
+                  setState(() {
+                    _isOpen = !_isOpen;
+                  });
+                }
+              : null,
           borderRadius: BorderRadius.circular(8),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               border: Border.all(
-                color: _isOpen
-                    ? colorScheme.primary
-                    : colorScheme.outline,
+                color: _isOpen ? colorScheme.primary : colorScheme.outline,
                 width: _isOpen ? 2 : 1,
               ),
               borderRadius: BorderRadius.circular(8),
@@ -123,7 +129,9 @@ class _EnhancedCategorySelectorState extends ConsumerState<EnhancedCategorySelec
                               width: 10,
                               height: 10,
                               decoration: BoxDecoration(
-                                color: _parseColor(widget.selectedCategory!.color),
+                                color: _parseColor(
+                                  widget.selectedCategory!.color,
+                                ),
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -223,19 +231,22 @@ class _EnhancedCategorySelectorState extends ConsumerState<EnhancedCategorySelec
                       ),
 
                       // Category items
-                      ...filteredCategories.map((category) => _buildCategoryItem(
-                        context: context,
-                        category: category,
-                        isSelected: widget.selectedCategory?.id == category.id,
-                        onTap: () {
-                          widget.onCategorySelected(category);
-                          setState(() {
-                            _isOpen = false;
-                            _searchQuery = '';
-                            _searchController.clear();
-                          });
-                        },
-                      )),
+                      ...filteredCategories.map(
+                        (category) => _buildCategoryItem(
+                          context: context,
+                          category: category,
+                          isSelected:
+                              widget.selectedCategory?.id == category.id,
+                          onTap: () {
+                            widget.onCategorySelected(category);
+                            setState(() {
+                              _isOpen = false;
+                              _searchQuery = '';
+                              _searchController.clear();
+                            });
+                          },
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -261,7 +272,9 @@ class _EnhancedCategorySelectorState extends ConsumerState<EnhancedCategorySelec
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? colorScheme.primaryContainer.withValues(alpha: 0.3) : null,
+          color: isSelected
+              ? colorScheme.primaryContainer.withValues(alpha: 0.3)
+              : null,
         ),
         child: Row(
           children: [
@@ -284,7 +297,10 @@ class _EnhancedCategorySelectorState extends ConsumerState<EnhancedCategorySelec
               ),
               if (widget.showReceiptCount && category.receiptCount != null) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(12),
@@ -315,19 +331,13 @@ class _EnhancedCategorySelectorState extends ConsumerState<EnhancedCategorySelec
             ],
             if (isSelected) ...[
               const SizedBox(width: 8),
-              Icon(
-                Icons.check,
-                size: 16,
-                color: colorScheme.primary,
-              ),
+              Icon(Icons.check, size: 16, color: colorScheme.primary),
             ],
           ],
         ),
       ),
     );
   }
-
-
 
   Color _parseColor(String colorString) {
     try {

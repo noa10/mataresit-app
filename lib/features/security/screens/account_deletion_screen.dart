@@ -7,14 +7,15 @@ class AccountDeletionScreen extends ConsumerStatefulWidget {
   const AccountDeletionScreen({super.key});
 
   @override
-  ConsumerState<AccountDeletionScreen> createState() => _AccountDeletionScreenState();
+  ConsumerState<AccountDeletionScreen> createState() =>
+      _AccountDeletionScreenState();
 }
 
 class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _passwordController = TextEditingController();
   final _reasonController = TextEditingController();
-  
+
   bool _obscurePassword = true;
   bool _isLoading = false;
   bool _confirmDeletion = false;
@@ -76,9 +77,9 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Export data option
               CheckboxListTile(
                 title: const Text('Export my data first'),
@@ -91,9 +92,9 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
                 },
                 controlAffinity: ListTileControlAffinity.leading,
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Reason field (optional)
               TextFormField(
                 controller: _reasonController,
@@ -104,9 +105,9 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Password confirmation
               TextFormField(
                 controller: _passwordController,
@@ -116,7 +117,9 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                      _obscurePassword
+                          ? Icons.visibility
+                          : Icons.visibility_off,
                     ),
                     onPressed: () {
                       setState(() {
@@ -133,13 +136,15 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
                   return null;
                 },
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Final confirmation checkbox
               CheckboxListTile(
                 title: const Text('I understand this action cannot be undone'),
-                subtitle: const Text('Check this box to confirm account deletion'),
+                subtitle: const Text(
+                  'Check this box to confirm account deletion',
+                ),
                 value: _confirmDeletion,
                 onChanged: (value) {
                   setState(() {
@@ -148,12 +153,14 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
                 },
                 controlAffinity: ListTileControlAffinity.leading,
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Delete account button
               ElevatedButton(
-                onPressed: (_confirmDeletion && !_isLoading) ? _deleteAccount : null,
+                onPressed: (_confirmDeletion && !_isLoading)
+                    ? _deleteAccount
+                    : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
@@ -165,14 +172,16 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : const Text('Delete My Account'),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Cancel button
               TextButton(
                 onPressed: _isLoading ? null : () => context.pop(),
@@ -201,18 +210,16 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
     try {
       // Export data first if requested
       if (_exportDataFirst && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Exporting your data...'),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Exporting your data...')));
         // TODO: Implement data export
         await Future.delayed(const Duration(seconds: 2));
       }
 
       // TODO: Implement account deletion using AuthSecurityService
       await Future.delayed(const Duration(seconds: 3)); // Simulate API call
-      
+
       if (mounted) {
         // Show success message and navigate to login
         ScaffoldMessenger.of(context).showSnackBar(
@@ -221,7 +228,7 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        
+
         // Navigate to login screen
         context.go('/login');
       }
@@ -245,24 +252,25 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
 
   Future<bool> _showFinalConfirmationDialog() async {
     return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Final Confirmation'),
-        content: const Text(
-          'Are you absolutely sure you want to delete your account? This action cannot be undone and all your data will be permanently lost.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Final Confirmation'),
+            content: const Text(
+              'Are you absolutely sure you want to delete your account? This action cannot be undone and all your data will be permanently lost.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Yes, Delete My Account'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Yes, Delete My Account'),
-          ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
   }
 }

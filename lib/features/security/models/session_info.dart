@@ -8,25 +8,25 @@ part 'session_info.g.dart';
 class SessionInfo extends Equatable {
   /// Session ID
   final String sessionId;
-  
+
   /// Device information
   final String deviceInfo;
-  
+
   /// IP address
   final String? ipAddress;
-  
+
   /// Location (if available)
   final String? location;
-  
+
   /// When the session was created
   final DateTime createdAt;
-  
+
   /// When the session was last active
   final DateTime lastActiveAt;
-  
+
   /// Whether this is the current session
   final bool isCurrent;
-  
+
   /// User agent string
   final String? userAgent;
 
@@ -74,7 +74,7 @@ class SessionInfo extends Equatable {
   /// Get display text for session duration
   String get sessionDurationText {
     final duration = DateTime.now().difference(createdAt);
-    
+
     if (duration.inDays > 0) {
       return '${duration.inDays} day${duration.inDays == 1 ? '' : 's'} ago';
     } else if (duration.inHours > 0) {
@@ -89,7 +89,7 @@ class SessionInfo extends Equatable {
   /// Get display text for last active time
   String get lastActiveText {
     final duration = DateTime.now().difference(lastActiveAt);
-    
+
     if (duration.inDays > 0) {
       return '${duration.inDays} day${duration.inDays == 1 ? '' : 's'} ago';
     } else if (duration.inHours > 0) {
@@ -103,13 +103,13 @@ class SessionInfo extends Equatable {
 
   @override
   List<Object?> get props => [
-        sessionId,
-        deviceInfo,
-        ipAddress,
-        location,
-        createdAt,
-        lastActiveAt,
-        isCurrent,
-        userAgent,
-      ];
+    sessionId,
+    deviceInfo,
+    ipAddress,
+    location,
+    createdAt,
+    lastActiveAt,
+    isCurrent,
+    userAgent,
+  ];
 }

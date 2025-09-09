@@ -14,7 +14,7 @@ void main() {
     test('Should fetch real receipts from Supabase', () async {
       // Create a provider container
       final container = ProviderContainer();
-      
+
       try {
         // Test direct Supabase query
         final response = await SupabaseService.client
@@ -22,25 +22,26 @@ void main() {
             .select()
             .limit(5);
 
-        AppLogger.info('📊 Test: Fetched ${(response as List).length} receipts from database');
-        
+        AppLogger.info(
+          '📊 Test: Fetched ${(response as List).length} receipts from database',
+        );
+
         // Verify we can fetch data
         expect(response, isA<List>());
-        
+
         if ((response as List).isNotEmpty) {
           final firstReceipt = response.first;
           AppLogger.info('📋 Test: First receipt data: $firstReceipt');
-          
+
           // Verify expected fields exist
           expect(firstReceipt, containsPair('id', isA<String>()));
           expect(firstReceipt, containsPair('user_id', isA<String>()));
-          
+
           // Test the mapping function
           // Note: We can't directly test the private _mapDatabaseToModel method
           // but we can verify the data structure is compatible
           // The receiptProvider is available for future testing if needed
         }
-        
       } catch (e) {
         AppLogger.error('❌ Test failed to fetch receipts', e);
         fail('Failed to fetch receipts: $e');
@@ -51,19 +52,20 @@ void main() {
 
     test('Should calculate dashboard stats correctly', () async {
       final container = ProviderContainer();
-      
+
       try {
         // This will trigger the receipts provider to load data
         final dashboardStats = container.read(dashboardStatsProvider);
-        
-        AppLogger.info('📈 Test: Dashboard stats - Total: ${dashboardStats.totalReceipts}, Amount: \$${dashboardStats.totalAmount}');
-        
+
+        AppLogger.info(
+          '📈 Test: Dashboard stats - Total: ${dashboardStats.totalReceipts}, Amount: \$${dashboardStats.totalAmount}',
+        );
+
         // Verify stats structure
         expect(dashboardStats.totalReceipts, isA<int>());
         expect(dashboardStats.totalAmount, isA<double>());
         expect(dashboardStats.thisMonthReceipts, isA<int>());
         expect(dashboardStats.recentReceipts, isA<List>());
-        
       } catch (e) {
         AppLogger.error('❌ Test failed to calculate dashboard stats', e);
         fail('Failed to calculate dashboard stats: $e');
@@ -74,7 +76,7 @@ void main() {
 
     test('Should handle empty database gracefully', () async {
       final container = ProviderContainer();
-      
+
       try {
         // Test with potentially empty results
         final response = await SupabaseService.client
@@ -85,9 +87,8 @@ void main() {
 
         expect(response, isA<List>());
         expect((response as List).isEmpty, isTrue);
-        
+
         AppLogger.info('✅ Test: Empty database query handled correctly');
-        
       } catch (e) {
         AppLogger.error('❌ Test failed to handle empty database', e);
         fail('Failed to handle empty database: $e');

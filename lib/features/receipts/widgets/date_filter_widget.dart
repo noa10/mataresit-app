@@ -8,10 +8,7 @@ import '../providers/receipts_provider.dart';
 class DateFilterWidget extends ConsumerStatefulWidget {
   final VoidCallback? onFilterChanged;
 
-  const DateFilterWidget({
-    super.key,
-    this.onFilterChanged,
-  });
+  const DateFilterWidget({super.key, this.onFilterChanged});
 
   @override
   ConsumerState<DateFilterWidget> createState() => _DateFilterWidgetState();
@@ -45,22 +42,25 @@ class _DateFilterWidgetState extends ConsumerState<DateFilterWidget> {
                       children: [
                         Text(
                           'Date Filter',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         Text(
                           AppDateUtils.formatDateRange(currentFilter),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                         ),
                       ],
                     ),
                   ),
                   if (receiptsState.hasActiveFilters)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.primary,
                         borderRadius: BorderRadius.circular(12),
@@ -99,9 +99,9 @@ class _DateFilterWidgetState extends ConsumerState<DateFilterWidget> {
                   ),
                   const SizedBox(height: 12),
                   _buildQuickFilterButtons(currentFilter),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Custom date range
                   Text(
                     'Custom Range',
@@ -111,9 +111,9 @@ class _DateFilterWidgetState extends ConsumerState<DateFilterWidget> {
                   ),
                   const SizedBox(height: 12),
                   _buildCustomDateRange(currentFilter),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Action buttons
                   Row(
                     children: [
@@ -200,9 +200,7 @@ class _DateFilterWidgetState extends ConsumerState<DateFilterWidget> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outline,
-          ),
+          border: Border.all(color: Theme.of(context).colorScheme.outline),
           borderRadius: BorderRadius.circular(AppConstants.borderRadius),
         ),
         child: Column(
@@ -216,11 +214,11 @@ class _DateFilterWidgetState extends ConsumerState<DateFilterWidget> {
             ),
             const SizedBox(height: 4),
             Text(
-              date != null 
+              date != null
                   ? AppDateUtils.formatDisplayDate(date)
                   : 'Select date',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: date != null 
+                color: date != null
                     ? Theme.of(context).colorScheme.onSurface
                     : Theme.of(context).colorScheme.onSurfaceVariant,
               ),

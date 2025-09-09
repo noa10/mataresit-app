@@ -40,7 +40,9 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
     // Load categories when the screen initializes with team context
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final currentTeam = _ref.read(currentTeamModelProvider);
-      _ref.read(categoriesProvider.notifier).loadCategories(teamId: currentTeam?.id);
+      _ref
+          .read(categoriesProvider.notifier)
+          .loadCategories(teamId: currentTeam?.id);
     });
   }
 
@@ -118,7 +120,8 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
             icon: Icon(
               receiptsState.isGroupedView ? Icons.view_list : Icons.view_agenda,
             ),
-            onPressed: () => ref.read(receiptsProvider.notifier).toggleGroupedView(),
+            onPressed: () =>
+                ref.read(receiptsProvider.notifier).toggleGroupedView(),
             tooltip: receiptsState.isGroupedView ? 'List view' : 'Grouped view',
           ),
           PopupMenuButton<String>(
@@ -247,7 +250,8 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
             if (receiptsState.hasActiveFilters) ...[
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () => ref.read(receiptsProvider.notifier).clearAllFilters(),
+                onPressed: () =>
+                    ref.read(receiptsProvider.notifier).clearAllFilters(),
                 child: const Text('Clear Filters'),
               ),
             ],
@@ -268,11 +272,13 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
           child: ListView.builder(
             controller: _scrollController,
             padding: const EdgeInsets.all(AppConstants.defaultPadding),
-            itemCount: receiptsState.receipts.length + 1, // +1 for pagination widget
+            itemCount:
+                receiptsState.receipts.length + 1, // +1 for pagination widget
             itemBuilder: (context, index) {
               if (index >= receiptsState.receipts.length) {
                 return PaginationWidget(
-                  onLoadMore: () => ref.read(receiptsProvider.notifier).loadMore(),
+                  onLoadMore: () =>
+                      ref.read(receiptsProvider.notifier).loadMore(),
                   showLoadMoreButton: false, // Use automatic loading
                 );
               }
@@ -285,8 +291,6 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
       ],
     );
   }
-
-
 
   Widget _buildReceiptCard(ReceiptModel receipt) {
     final receiptsState = ref.watch(receiptsProvider);
@@ -323,7 +327,8 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
                     if (receiptsState.isSelectionMode) ...[
                       Checkbox(
                         value: isSelected,
-                        onChanged: (value) => receiptsNotifier.toggleReceiptSelection(receipt.id),
+                        onChanged: (value) =>
+                            receiptsNotifier.toggleReceiptSelection(receipt.id),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       const SizedBox(width: 8),
@@ -333,9 +338,8 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
                     Expanded(
                       child: Text(
                         receipt.merchantName ?? 'Unknown Merchant',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ),
 
@@ -347,10 +351,11 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
                           receipt.currency,
                           fallbackCurrency: 'MYR',
                         ),
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).primaryColor,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).primaryColor,
+                            ),
                       ),
                   ],
                 ),
@@ -382,83 +387,100 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
                     Builder(
                       builder: (context) {
                         final hasConfidence =
-                            (receipt.aiSuggestions != null && receipt.aiSuggestions!.containsKey('confidence')) ||
-                            (receipt.confidenceScores != null && receipt.confidenceScores!.isNotEmpty);
+                            (receipt.aiSuggestions != null &&
+                                receipt.aiSuggestions!.containsKey(
+                                  'confidence',
+                                )) ||
+                            (receipt.confidenceScores != null &&
+                                receipt.confidenceScores!.isNotEmpty);
                         return CompactConfidenceIndicator(
-                          score: hasConfidence ? ConfidenceUtils.calculateAggregateConfidence(receipt) : null,
-                          loading: !hasConfidence && receipt.processingStatus == ProcessingStatus.processing,
+                          score: hasConfidence
+                              ? ConfidenceUtils.calculateAggregateConfidence(
+                                  receipt,
+                                )
+                              : null,
+                          loading:
+                              !hasConfidence &&
+                              receipt.processingStatus ==
+                                  ProcessingStatus.processing,
                         );
                       },
                     ),
                   ],
                 ),
 
-              const SizedBox(height: AppConstants.smallPadding),
+                const SizedBox(height: AppConstants.smallPadding),
 
-              // Details row
-              Row(
-                children: [
-                  // Category - Use real category data with fallback
-                  Consumer(
-                    builder: (context, ref, child) {
-                      // Watch the categories state to ensure they're loaded
-                      final categoriesState = ref.watch(categoriesProvider);
+                // Details row
+                Row(
+                  children: [
+                    // Category - Use real category data with fallback
+                    Consumer(
+                      builder: (context, ref, child) {
+                        // Watch the categories state to ensure they're loaded
+                        final categoriesState = ref.watch(categoriesProvider);
 
-                      // Find the category from display categories (includes both team and personal)
-                      CategoryModel? category;
-                      if (receipt.customCategoryId != null) {
-                        category = categoriesState.displayCategories
-                            .where((cat) => cat.id == receipt.customCategoryId)
-                            .firstOrNull;
-
-                        // Debug logging for category lookup removed
-
-                        // If category not found, try to create a fallback based on category field
-                        if (category == null && receipt.category != null) {
-                          // Look for a category with matching name (case-insensitive)
+                        // Find the category from display categories (includes both team and personal)
+                        CategoryModel? category;
+                        if (receipt.customCategoryId != null) {
                           category = categoriesState.displayCategories
-                              .where((cat) => cat.name.toLowerCase() == receipt.category!.toLowerCase())
+                              .where(
+                                (cat) => cat.id == receipt.customCategoryId,
+                              )
                               .firstOrNull;
+
+                          // Debug logging for category lookup removed
+
+                          // If category not found, try to create a fallback based on category field
+                          if (category == null && receipt.category != null) {
+                            // Look for a category with matching name (case-insensitive)
+                            category = categoriesState.displayCategories
+                                .where(
+                                  (cat) =>
+                                      cat.name.toLowerCase() ==
+                                      receipt.category!.toLowerCase(),
+                                )
+                                .firstOrNull;
+                          }
                         }
-                      }
 
-                      return CategoryDisplay(
-                        category: category,
-                        size: CategoryDisplaySize.small,
-                      );
-                    },
-                  ),
-                  const SizedBox(width: AppConstants.smallPadding),
-
-                  // Processing status
-                  _buildStatusChip(receipt.processingStatus),
-
-                  const Spacer(),
-
-                  // Date
-                  Text(
-                    timeago.format(receipt.createdAt),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
+                        return CategoryDisplay(
+                          category: category,
+                          size: CategoryDisplaySize.small,
+                        );
+                      },
                     ),
+                    const SizedBox(width: AppConstants.smallPadding),
+
+                    // Processing status
+                    _buildStatusChip(receipt.processingStatus),
+
+                    const Spacer(),
+
+                    // Date
+                    Text(
+                      timeago.format(receipt.createdAt),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+
+                // Description if available
+                if (receipt.description != null) ...[
+                  const SizedBox(height: AppConstants.smallPadding),
+                  Text(
+                    receipt.description!,
+                    style: Theme.of(context).textTheme.bodySmall,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
-              ),
-
-              // Description if available
-              if (receipt.description != null) ...[
-                const SizedBox(height: AppConstants.smallPadding),
-                Text(
-                  receipt.description!,
-                  style: Theme.of(context).textTheme.bodySmall,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
               ],
-            ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -502,11 +524,7 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 12,
-            color: color,
-          ),
+          Icon(icon, size: 12, color: color),
           const SizedBox(width: 4),
           Text(
             status.displayName,
@@ -553,7 +571,9 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              ref.read(receiptsProvider.notifier).setSearchQuery(_searchController.text);
+              ref
+                  .read(receiptsProvider.notifier)
+                  .setSearchQuery(_searchController.text);
             },
             child: const Text('Search'),
           ),
@@ -561,6 +581,4 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
       ),
     );
   }
-
-
 }

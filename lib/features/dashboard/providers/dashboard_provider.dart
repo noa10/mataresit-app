@@ -49,7 +49,9 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
   final receiptsState = ref.watch(receiptsProvider);
   final receipts = receiptsState.receipts;
 
-  AppLogger.info('📊 Dashboard calculating stats from ${receipts.length} receipts');
+  AppLogger.info(
+    '📊 Dashboard calculating stats from ${receipts.length} receipts',
+  );
 
   if (receipts.isEmpty) {
     AppLogger.warning('📊 No receipts found, returning empty stats');
@@ -69,7 +71,9 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
 
   // Calculate total amount (filter out null and zero values)
   final totalAmount = receipts
-      .where((receipt) => receipt.totalAmount != null && receipt.totalAmount! > 0)
+      .where(
+        (receipt) => receipt.totalAmount != null && receipt.totalAmount! > 0,
+      )
       .fold<double>(0.0, (sum, receipt) => sum + receipt.totalAmount!);
 
   // Get recent receipts (last 5)
@@ -91,15 +95,17 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
       return receipt.createdAt.year == month.year &&
           receipt.createdAt.month == month.month;
     });
-    
+
     final monthTotal = monthReceipts
         .where((receipt) => receipt.totalAmount != null)
         .fold<double>(0.0, (sum, receipt) => sum + receipt.totalAmount!);
-    
+
     monthlySpending[monthName] = monthTotal;
   }
 
-  AppLogger.info('📈 Dashboard stats calculated: Total: $totalReceipts, This month: $thisMonthReceipts, Amount: \$${totalAmount.toStringAsFixed(2)}');
+  AppLogger.info(
+    '📈 Dashboard stats calculated: Total: $totalReceipts, This month: $thisMonthReceipts, Amount: \$${totalAmount.toStringAsFixed(2)}',
+  );
 
   return DashboardStats(
     totalReceipts: totalReceipts,
@@ -114,8 +120,18 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
 
 String _getMonthName(int month) {
   const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
   return months[month - 1];
 }

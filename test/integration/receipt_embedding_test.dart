@@ -25,7 +25,10 @@ void main() {
       expect(container.read(receiptCaptureProvider).isProcessing, false);
 
       // Verify that the provider has the correct type
-      expect(notifier.runtimeType.toString(), contains('ReceiptCaptureNotifier'));
+      expect(
+        notifier.runtimeType.toString(),
+        contains('ReceiptCaptureNotifier'),
+      );
 
       // Test passes if the provider is properly configured
       expect(notifier, isA<ReceiptCaptureNotifier>());

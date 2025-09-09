@@ -16,9 +16,7 @@ class PerformanceService {
   static Future<void> initialize() async {
     try {
       // Initialize WorkManager for background tasks
-      await Workmanager().initialize(
-        _callbackDispatcher,
-      );
+      await Workmanager().initialize(_callbackDispatcher);
 
       // Schedule periodic tasks
       await _schedulePeriodicTasks();
@@ -38,9 +36,7 @@ class PerformanceService {
         'cacheCleanup',
         _cacheCleanupTask,
         frequency: const Duration(hours: 24),
-        constraints: Constraints(
-          requiresBatteryNotLow: true,
-        ),
+        constraints: Constraints(requiresBatteryNotLow: true),
       );
 
       // Schedule data sync every 30 minutes when connected
@@ -86,10 +82,13 @@ class PerformanceService {
           ),
         );
 
-        final result = await receivePort.first.timeout(
-          const Duration(seconds: 30),
-          onTimeout: () => _ImageCompressionResult(error: 'Isolate timeout'),
-        ) as _ImageCompressionResult;
+        final result =
+            await receivePort.first.timeout(
+                  const Duration(seconds: 30),
+                  onTimeout: () =>
+                      _ImageCompressionResult(error: 'Isolate timeout'),
+                )
+                as _ImageCompressionResult;
 
         isolate.kill();
 
@@ -98,11 +97,15 @@ class PerformanceService {
         }
 
         final compressedFile = File(result.compressedPath!);
-        _logger.d('Image compression completed via isolate: ${compressedFile.path}');
+        _logger.d(
+          'Image compression completed via isolate: ${compressedFile.path}',
+        );
 
         return compressedFile;
       } catch (isolateError) {
-        _logger.w('Isolate compression failed, falling back to synchronous: $isolateError');
+        _logger.w(
+          'Isolate compression failed, falling back to synchronous: $isolateError',
+        );
 
         // Fallback to synchronous compression
         return await _compressImageSynchronous(
@@ -129,9 +132,9 @@ class PerformanceService {
       final image = img.decodeImage(imageBytes);
 
       if (image == null) {
-        data.sendPort.send(_ImageCompressionResult(
-          error: 'Failed to decode image',
-        ));
+        data.sendPort.send(
+          _ImageCompressionResult(error: 'Failed to decode image'),
+        );
         return;
       }
 
@@ -148,21 +151,23 @@ class PerformanceService {
 
       // Compress to JPEG (match React app format exactly)
       // The img package expects quality 0-100, same as our input, so use directly
-      final compressedBytes = img.encodeJpg(processedImage, quality: data.quality);
+      final compressedBytes = img.encodeJpg(
+        processedImage,
+        quality: data.quality,
+      );
 
       // Save compressed image
       final directory = await getTemporaryDirectory();
-      final fileName = 'compressed_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final fileName =
+          'compressed_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final compressedFile = File('${directory.path}/$fileName');
       await compressedFile.writeAsBytes(compressedBytes);
 
-      data.sendPort.send(_ImageCompressionResult(
-        compressedPath: compressedFile.path,
-      ));
+      data.sendPort.send(
+        _ImageCompressionResult(compressedPath: compressedFile.path),
+      );
     } catch (e) {
-      data.sendPort.send(_ImageCompressionResult(
-        error: e.toString(),
-      ));
+      data.sendPort.send(_ImageCompressionResult(error: e.toString()));
     }
   }
 
@@ -200,11 +205,14 @@ class PerformanceService {
 
       // Save compressed image
       final directory = await getTemporaryDirectory();
-      final fileName = 'compressed_sync_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final fileName =
+          'compressed_sync_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final compressedFile = File('${directory.path}/$fileName');
       await compressedFile.writeAsBytes(compressedBytes);
 
-      _logger.d('Synchronous image compression completed: ${compressedFile.path}');
+      _logger.d(
+        'Synchronous image compression completed: ${compressedFile.path}',
+      );
       return compressedFile;
     } catch (e) {
       _logger.e('Synchronous image compression failed: $e');
@@ -221,7 +229,8 @@ class PerformanceService {
       _logger.i('Original image size: ${originalSizeMB.toStringAsFixed(2)} MB');
 
       // Skip optimization for small files (match React app behavior)
-      if (fileSize < 1024 * 1024) { // < 1MB
+      if (fileSize < 1024 * 1024) {
+        // < 1MB
         _logger.i('File is already small (< 1MB), skipping optimization');
         return imageFile;
       }
@@ -232,14 +241,22 @@ class PerformanceService {
       int? maxWidth = 1500; // Match React app max width
       int? maxHeight;
 
-      if (fileSize > 3 * 1024 * 1024) { // > 3MB
-        quality = 90; // Higher quality for large files to compensate for double optimization
+      if (fileSize > 3 * 1024 * 1024) {
+        // > 3MB
+        quality =
+            90; // Higher quality for large files to compensate for double optimization
         maxWidth = 1500; // Keep consistent with React app
-        _logger.d('Large file detected (> 3MB), using quality: $quality, maxWidth: $maxWidth');
-      } else if (fileSize > 1 * 1024 * 1024) { // > 1MB
-        quality = 95; // Higher quality for medium files to compensate for double optimization
+        _logger.d(
+          'Large file detected (> 3MB), using quality: $quality, maxWidth: $maxWidth',
+        );
+      } else if (fileSize > 1 * 1024 * 1024) {
+        // > 1MB
+        quality =
+            95; // Higher quality for medium files to compensate for double optimization
         maxWidth = 1500; // Match React app max width
-        _logger.d('Medium file detected (> 1MB), using quality: $quality, maxWidth: $maxWidth');
+        _logger.d(
+          'Medium file detected (> 1MB), using quality: $quality, maxWidth: $maxWidth',
+        );
       }
 
       // Always optimize images to match React app behavior
@@ -288,10 +305,13 @@ class PerformanceService {
           ),
         );
 
-        final result = await receivePort.first.timeout(
-          const Duration(seconds: 15),
-          onTimeout: () => _ThumbnailResult(error: 'Thumbnail isolate timeout'),
-        ) as _ThumbnailResult;
+        final result =
+            await receivePort.first.timeout(
+                  const Duration(seconds: 15),
+                  onTimeout: () =>
+                      _ThumbnailResult(error: 'Thumbnail isolate timeout'),
+                )
+                as _ThumbnailResult;
 
         isolate.kill();
 
@@ -301,7 +321,9 @@ class PerformanceService {
 
         return File(result.thumbnailPath!);
       } catch (isolateError) {
-        _logger.w('Isolate thumbnail generation failed, falling back to synchronous: $isolateError');
+        _logger.w(
+          'Isolate thumbnail generation failed, falling back to synchronous: $isolateError',
+        );
 
         // Fallback to synchronous thumbnail generation
         return await _generateThumbnailSynchronous(
@@ -325,9 +347,7 @@ class PerformanceService {
       final image = img.decodeImage(imageBytes);
 
       if (image == null) {
-        data.sendPort.send(_ThumbnailResult(
-          error: 'Failed to decode image',
-        ));
+        data.sendPort.send(_ThumbnailResult(error: 'Failed to decode image'));
         return;
       }
 
@@ -347,13 +367,9 @@ class PerformanceService {
       final thumbnailFile = File('${directory.path}/$fileName');
       await thumbnailFile.writeAsBytes(thumbnailBytes);
 
-      data.sendPort.send(_ThumbnailResult(
-        thumbnailPath: thumbnailFile.path,
-      ));
+      data.sendPort.send(_ThumbnailResult(thumbnailPath: thumbnailFile.path));
     } catch (e) {
-      data.sendPort.send(_ThumbnailResult(
-        error: e.toString(),
-      ));
+      data.sendPort.send(_ThumbnailResult(error: e.toString()));
     }
   }
 
@@ -384,11 +400,14 @@ class PerformanceService {
 
       // Save thumbnail
       final directory = await getTemporaryDirectory();
-      final fileName = 'thumb_sync_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final fileName =
+          'thumb_sync_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final thumbnailFile = File('${directory.path}/$fileName');
       await thumbnailFile.writeAsBytes(thumbnailBytes);
 
-      _logger.d('Synchronous thumbnail generation completed: ${thumbnailFile.path}');
+      _logger.d(
+        'Synchronous thumbnail generation completed: ${thumbnailFile.path}',
+      );
       return thumbnailFile;
     } catch (e) {
       _logger.e('Synchronous thumbnail generation failed: $e');
@@ -401,12 +420,12 @@ class PerformanceService {
     try {
       final tempDir = await getTemporaryDirectory();
       final files = tempDir.listSync();
-      
+
       int deletedCount = 0;
       for (final file in files) {
         if (file is File) {
           final fileName = file.path.split('/').last;
-          if (fileName.startsWith('compressed_') || 
+          if (fileName.startsWith('compressed_') ||
               fileName.startsWith('thumb_') ||
               fileName.startsWith('temp_')) {
             try {
@@ -418,7 +437,7 @@ class PerformanceService {
           }
         }
       }
-      
+
       _logger.i('Cleaned up $deletedCount temporary files');
     } catch (e) {
       _logger.e('Failed to cleanup temp files: $e');
@@ -430,15 +449,15 @@ class PerformanceService {
     try {
       final tempDir = await getTemporaryDirectory();
       final cacheDir = await getApplicationCacheDirectory();
-      
+
       int totalSize = 0;
-      
+
       // Calculate temp directory size
       totalSize += await _calculateDirectorySize(tempDir);
-      
+
       // Calculate cache directory size
       totalSize += await _calculateDirectorySize(cacheDir);
-      
+
       return totalSize;
     } catch (e) {
       _logger.e('Failed to calculate cache size: $e');
@@ -467,13 +486,13 @@ class PerformanceService {
     try {
       final tempDir = await getTemporaryDirectory();
       final cacheDir = await getApplicationCacheDirectory();
-      
+
       // Clear temp directory
       await _clearDirectory(tempDir);
-      
+
       // Clear cache directory
       await _clearDirectory(cacheDir);
-      
+
       _logger.i('Cache cleared successfully');
     } catch (e) {
       _logger.e('Failed to clear cache: $e');
@@ -502,7 +521,7 @@ class PerformanceService {
       // This is a simplified version - in a real app you might use
       // platform-specific code to get detailed memory information
       final cacheSize = await getCacheSize();
-      
+
       return {
         'cacheSize': cacheSize,
         'cacheSizeMB': (cacheSize / 1024 / 1024).toStringAsFixed(2),
@@ -521,7 +540,7 @@ void _callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     final logger = Logger();
     logger.i('Executing background task: $task');
-    
+
     try {
       switch (task) {
         case 'cacheCleanup':

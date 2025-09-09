@@ -47,8 +47,12 @@ class CategoriesNotifier extends StateNotifier<CategoriesState> {
     try {
       _logger.d('Loading categories for teamId: $teamId');
 
-      final categories = await CategoryService.fetchUserCategories(teamId: teamId);
-      final displayCategories = await CategoryService.fetchCategoriesForDisplay(teamId: teamId);
+      final categories = await CategoryService.fetchUserCategories(
+        teamId: teamId,
+      );
+      final displayCategories = await CategoryService.fetchCategoriesForDisplay(
+        teamId: teamId,
+      );
 
       state = state.copyWith(
         categories: categories,
@@ -56,24 +60,29 @@ class CategoriesNotifier extends StateNotifier<CategoriesState> {
         isLoading: false,
       );
 
-      _logger.d('Categories loaded successfully: ${categories.length} categories, ${displayCategories.length} display categories');
+      _logger.d(
+        'Categories loaded successfully: ${categories.length} categories, ${displayCategories.length} display categories',
+      );
 
       // Debug: Log first few categories
       for (int i = 0; i < categories.length && i < 5; i++) {
         final category = categories[i];
-        _logger.d('🏷️ Category ${category.id}: ${category.name} (${category.color})');
+        _logger.d(
+          '🏷️ Category ${category.id}: ${category.name} (${category.color})',
+        );
       }
 
       // Debug: Check if the specific category ID from receipt exists
       final testCategoryId = '14269126-d957-4a63-b06b-7fbfe2e017ae';
-      final foundCategory = categories.where((c) => c.id == testCategoryId).firstOrNull;
-      _logger.d('🔍 Looking for category ID $testCategoryId: ${foundCategory?.name ?? 'NOT FOUND'}');
+      final foundCategory = categories
+          .where((c) => c.id == testCategoryId)
+          .firstOrNull;
+      _logger.d(
+        '🔍 Looking for category ID $testCategoryId: ${foundCategory?.name ?? 'NOT FOUND'}',
+      );
     } catch (error) {
       _logger.e('Error loading categories: $error');
-      state = state.copyWith(
-        isLoading: false,
-        error: error.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: error.toString());
     }
   }
 
@@ -115,7 +124,10 @@ class CategoriesNotifier extends StateNotifier<CategoriesState> {
     try {
       _logger.d('Updating category: $categoryId');
 
-      final success = await CategoryService.updateCategory(categoryId, categoryData);
+      final success = await CategoryService.updateCategory(
+        categoryId,
+        categoryData,
+      );
 
       if (success) {
         // Reload categories to get the updated list
@@ -170,7 +182,9 @@ class CategoriesNotifier extends StateNotifier<CategoriesState> {
     String? teamId,
   }) async {
     try {
-      _logger.d('Bulk assigning category: $categoryId to ${receiptIds.length} receipts');
+      _logger.d(
+        'Bulk assigning category: $categoryId to ${receiptIds.length} receipts',
+      );
 
       final updatedCount = await CategoryService.bulkAssignCategory(
         receiptIds,
@@ -193,7 +207,9 @@ class CategoriesNotifier extends StateNotifier<CategoriesState> {
   /// Get category by ID from current state
   CategoryModel? getCategoryById(String categoryId) {
     try {
-      return state.displayCategories.firstWhere((category) => category.id == categoryId);
+      return state.displayCategories.firstWhere(
+        (category) => category.id == categoryId,
+      );
     } catch (e) {
       return null;
     }
@@ -211,9 +227,10 @@ class CategoriesNotifier extends StateNotifier<CategoriesState> {
 }
 
 /// Categories provider
-final categoriesProvider = StateNotifierProvider<CategoriesNotifier, CategoriesState>((ref) {
-  return CategoriesNotifier(ref);
-});
+final categoriesProvider =
+    StateNotifierProvider<CategoriesNotifier, CategoriesState>((ref) {
+      return CategoriesNotifier(ref);
+    });
 
 /// Provider for user categories (for management/editing)
 final userCategoriesProvider = Provider<List<CategoryModel>>((ref) {
@@ -236,7 +253,10 @@ final categoriesErrorProvider = Provider<String?>((ref) {
 });
 
 /// Provider to get a specific category by ID
-final categoryByIdProvider = Provider.family<CategoryModel?, String>((ref, categoryId) {
+final categoryByIdProvider = Provider.family<CategoryModel?, String>((
+  ref,
+  categoryId,
+) {
   final categories = ref.watch(displayCategoriesProvider);
   try {
     return categories.firstWhere((category) => category.id == categoryId);

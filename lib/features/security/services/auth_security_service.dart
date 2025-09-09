@@ -32,7 +32,7 @@ class AuthSecurityService {
 
       // Update password
       final response = await SupabaseService.updateUser(password: newPassword);
-      
+
       if (response.user == null) {
         throw Exception('Failed to update password');
       }
@@ -81,7 +81,7 @@ class AuthSecurityService {
       // In Supabase, we can use the signOut with scope parameter
       // For now, we'll just refresh the current session
       await SupabaseService.client.auth.refreshSession();
-      
+
       _logger.d('Signed out from other sessions successfully');
     } catch (e) {
       _logger.e('Failed to sign out from other sessions: $e');
@@ -96,7 +96,7 @@ class AuthSecurityService {
 
       // For the current session, perform a full sign out
       final currentSession = SupabaseService.currentSession;
-      if (currentSession != null && 
+      if (currentSession != null &&
           currentSession.accessToken.substring(0, 8) == sessionId) {
         await SupabaseService.signOut();
       }
@@ -135,15 +135,18 @@ class AuthSecurityService {
       // 1. Create a deletion request record
       // 2. Send confirmation email
       // 3. Schedule data deletion after confirmation period
-      
+
       // For now, we'll call a custom RPC function
       try {
-        await SupabaseService.client.rpc('request_account_deletion', params: {
-          'deletion_reason': reason,
-        });
+        await SupabaseService.client.rpc(
+          'request_account_deletion',
+          params: {'deletion_reason': reason},
+        );
       } catch (e) {
         // If RPC doesn't exist, we'll just log the request
-        _logger.w('Account deletion RPC not available, logging request locally');
+        _logger.w(
+          'Account deletion RPC not available, logging request locally',
+        );
       }
 
       _logger.d('Account deletion requested successfully');
@@ -177,7 +180,9 @@ class AuthSecurityService {
       _logger.d('Checking account deletion status');
 
       try {
-        final response = await SupabaseService.client.rpc('get_account_deletion_status');
+        final response = await SupabaseService.client.rpc(
+          'get_account_deletion_status',
+        );
         return response as Map<String, dynamic>?;
       } catch (e) {
         _logger.w('Account deletion status RPC not available');
@@ -195,7 +200,7 @@ class AuthSecurityService {
       _logger.d('Updating user email');
 
       final response = await SupabaseService.updateUser(email: newEmail);
-      
+
       if (response.user == null) {
         throw Exception('Failed to update email');
       }

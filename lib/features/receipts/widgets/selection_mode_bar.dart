@@ -32,9 +32,7 @@ class SelectionModeBar extends ConsumerWidget {
           FilledButton.icon(
             onPressed: receiptsNotifier.toggleSelectionMode,
             icon: Icon(
-              receiptsState.isSelectionMode 
-                  ? Icons.close 
-                  : Icons.checklist,
+              receiptsState.isSelectionMode ? Icons.close : Icons.checklist,
               size: 18,
             ),
             label: Text(
@@ -82,11 +80,16 @@ class SelectionModeBar extends ConsumerWidget {
                     ? receiptsNotifier.clearSelection
                     : receiptsNotifier.selectAllReceipts,
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   minimumSize: const Size(0, 32),
                 ),
                 child: Text(
-                  receiptsNotifier.isAllSelected ? 'Deselect All' : 'Select All',
+                  receiptsNotifier.isAllSelected
+                      ? 'Deselect All'
+                      : 'Select All',
                   style: TextStyle(
                     fontSize: 14,
                     color: Theme.of(context).colorScheme.primary,
@@ -102,16 +105,18 @@ class SelectionModeBar extends ConsumerWidget {
             IconButton(
               onPressed: receiptsNotifier.toggleGroupedView,
               icon: Icon(
-                receiptsState.isGroupedView 
-                    ? Icons.view_list 
+                receiptsState.isGroupedView
+                    ? Icons.view_list
                     : Icons.view_agenda,
                 size: 20,
               ),
-              tooltip: receiptsState.isGroupedView 
-                  ? 'Switch to flat view' 
+              tooltip: receiptsState.isGroupedView
+                  ? 'Switch to flat view'
                   : 'Switch to grouped view',
               style: IconButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest,
                 foregroundColor: Theme.of(context).colorScheme.onSurface,
                 padding: const EdgeInsets.all(8),
                 minimumSize: const Size(36, 36),
@@ -150,9 +155,7 @@ class CompactSelectionModeBar extends ConsumerWidget {
           IconButton.filled(
             onPressed: receiptsNotifier.toggleSelectionMode,
             icon: Icon(
-              receiptsState.isSelectionMode 
-                  ? Icons.close 
-                  : Icons.checklist,
+              receiptsState.isSelectionMode ? Icons.close : Icons.checklist,
               size: 18,
             ),
             style: IconButton.styleFrom(
@@ -188,7 +191,10 @@ class CompactSelectionModeBar extends ConsumerWidget {
                           ? receiptsNotifier.clearSelection
                           : receiptsNotifier.selectAllReceipts,
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         minimumSize: const Size(0, 28),
                       ),
                       child: Text(
@@ -205,16 +211,18 @@ class CompactSelectionModeBar extends ConsumerWidget {
             IconButton(
               onPressed: receiptsNotifier.toggleGroupedView,
               icon: Icon(
-                receiptsState.isGroupedView 
-                    ? Icons.view_list 
+                receiptsState.isGroupedView
+                    ? Icons.view_list
                     : Icons.view_agenda,
                 size: 18,
               ),
-              tooltip: receiptsState.isGroupedView 
-                  ? 'Flat view' 
+              tooltip: receiptsState.isGroupedView
+                  ? 'Flat view'
                   : 'Grouped view',
               style: IconButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest,
                 minimumSize: const Size(36, 36),
               ),
             ),

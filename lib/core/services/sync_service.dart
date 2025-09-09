@@ -13,10 +13,12 @@ class SyncService {
   static final Logger _logger = Logger();
   static Timer? _syncTimer;
   static bool _isSyncing = false;
-  static final StreamController<SyncStatus> _syncStatusController = StreamController<SyncStatus>.broadcast();
+  static final StreamController<SyncStatus> _syncStatusController =
+      StreamController<SyncStatus>.broadcast();
 
   /// Stream of sync status updates
-  static Stream<SyncStatus> get syncStatusStream => _syncStatusController.stream;
+  static Stream<SyncStatus> get syncStatusStream =>
+      _syncStatusController.stream;
 
   /// Initialize sync service
   static Future<void> initialize() async {
@@ -59,7 +61,8 @@ class SyncService {
     _syncStatusController.add(SyncStatus.syncing);
 
     try {
-      final pendingOperations = OfflineDatabaseService.getPendingSyncOperations();
+      final pendingOperations =
+          OfflineDatabaseService.getPendingSyncOperations();
       _logger.i('Starting sync of ${pendingOperations.length} operations');
 
       int successCount = 0;
@@ -72,26 +75,32 @@ class SyncService {
           successCount++;
         } catch (e) {
           _logger.e('Failed to sync operation ${operation['id']}: $e');
-          
+
           // Update retry count
           final retryCount = (operation['retryCount'] as int? ?? 0) + 1;
           if (retryCount < 3) {
-            await OfflineDatabaseService.updateSyncRetryCount(operation['id'], retryCount);
+            await OfflineDatabaseService.updateSyncRetryCount(
+              operation['id'],
+              retryCount,
+            );
           } else {
             // Remove after 3 failed attempts
             await OfflineDatabaseService.removeFromSyncQueue(operation['id']);
-            _logger.w('Removing operation ${operation['id']} after 3 failed attempts');
+            _logger.w(
+              'Removing operation ${operation['id']} after 3 failed attempts',
+            );
           }
           failureCount++;
         }
       }
 
-      _logger.i('Sync completed: $successCount success, $failureCount failures');
+      _logger.i(
+        'Sync completed: $successCount success, $failureCount failures',
+      );
       _syncStatusController.add(SyncStatus.completed);
 
       // Sync remote changes to local
       await _syncRemoteChanges();
-
     } catch (e) {
       _logger.e('Sync failed: $e');
       _syncStatusController.add(SyncStatus.failed);
@@ -101,7 +110,9 @@ class SyncService {
   }
 
   /// Process individual sync operation
-  static Future<void> _processSyncOperation(Map<String, dynamic> operation) async {
+  static Future<void> _processSyncOperation(
+    Map<String, dynamic> operation,
+  ) async {
     final operationType = operation['operation'] as String;
     final entityType = operation['entityType'] as String;
     final entityId = operation['entityId'] as String;
@@ -123,15 +134,17 @@ class SyncService {
   }
 
   /// Sync receipt operation
-  static Future<void> _syncReceiptOperation(String operation, String entityId, Map<String, dynamic> data) async {
+  static Future<void> _syncReceiptOperation(
+    String operation,
+    String entityId,
+    Map<String, dynamic> data,
+  ) async {
     switch (operation) {
       case 'create':
       case 'update':
         // Map the data to match database schema
         final mappedData = _mapReceiptDataForDatabase(data);
-        await SupabaseService.client
-            .from('receipts')
-            .upsert(mappedData);
+        await SupabaseService.client.from('receipts').upsert(mappedData);
         break;
       case 'delete':
         await SupabaseService.client
@@ -143,7 +156,9 @@ class SyncService {
   }
 
   /// Map receipt data from model format to database format
-  static Map<String, dynamic> _mapReceiptDataForDatabase(Map<String, dynamic> data) {
+  static Map<String, dynamic> _mapReceiptDataForDatabase(
+    Map<String, dynamic> data,
+  ) {
     final mappedData = Map<String, dynamic>.from(data);
 
     // Map category to predicted_category
@@ -176,31 +191,32 @@ class SyncService {
   }
 
   /// Sync team operation
-  static Future<void> _syncTeamOperation(String operation, String entityId, Map<String, dynamic> data) async {
+  static Future<void> _syncTeamOperation(
+    String operation,
+    String entityId,
+    Map<String, dynamic> data,
+  ) async {
     switch (operation) {
       case 'create':
       case 'update':
-        await SupabaseService.client
-            .from('teams')
-            .upsert(data);
+        await SupabaseService.client.from('teams').upsert(data);
         break;
       case 'delete':
-        await SupabaseService.client
-            .from('teams')
-            .delete()
-            .eq('id', entityId);
+        await SupabaseService.client.from('teams').delete().eq('id', entityId);
         break;
     }
   }
 
   /// Sync user operation
-  static Future<void> _syncUserOperation(String operation, String entityId, Map<String, dynamic> data) async {
+  static Future<void> _syncUserOperation(
+    String operation,
+    String entityId,
+    Map<String, dynamic> data,
+  ) async {
     switch (operation) {
       case 'create':
       case 'update':
-        await SupabaseService.client
-            .from('profiles')
-            .upsert(data);
+        await SupabaseService.client.from('profiles').upsert(data);
         break;
       case 'delete':
         await SupabaseService.client
@@ -245,8 +261,9 @@ class SyncService {
 
       // Get user's teams from offline storage
       final teams = OfflineDatabaseService.getAllTeams()
-          .where((team) => team.ownerId == userId ||
-                          team.memberIds.contains(userId))
+          .where(
+            (team) => team.ownerId == userId || team.memberIds.contains(userId),
+          )
           .toList();
 
       for (final team in teams) {
@@ -269,7 +286,9 @@ class SyncService {
   }
 
   /// Convert old user format to new profile format
-  static Map<String, dynamic> _convertUserToProfileFormat(Map<String, dynamic> userData) {
+  static Map<String, dynamic> _convertUserToProfileFormat(
+    Map<String, dynamic> userData,
+  ) {
     return {
       'id': userData['id'],
       'email': userData['email'],
@@ -298,12 +317,16 @@ class SyncService {
       if (localProfile != null && remoteProfile != null) {
         // Compare timestamps and sync newer data
         final localUpdated = localProfile.updatedAt;
-        final remoteUpdated = DateTime.tryParse(remoteProfile['updated_at'] ?? '');
+        final remoteUpdated = DateTime.tryParse(
+          remoteProfile['updated_at'] ?? '',
+        );
 
         if (remoteUpdated != null) {
           if (localUpdated.isAfter(remoteUpdated)) {
             // Local is newer, sync to remote
-            final profileData = _convertUserToProfileFormat(localProfile.toJson());
+            final profileData = _convertUserToProfileFormat(
+              localProfile.toJson(),
+            );
             await queueOperation(
               operation: 'update',
               entityType: 'user',
@@ -343,7 +366,10 @@ class SyncService {
           .eq('user_id', userId);
 
       // Create maps for easier comparison
-      final localReceiptMap = {for (var r in localReceipts) r.id: _mapReceiptDataForDatabase(r.toJson())};
+      final localReceiptMap = {
+        for (var r in localReceipts)
+          r.id: _mapReceiptDataForDatabase(r.toJson()),
+      };
       final remoteReceiptMap = {for (var r in remoteReceipts) r['id']: r};
 
       // Find receipts that exist locally but not remotely
@@ -361,11 +387,12 @@ class SyncService {
       // Find receipts that exist remotely but not locally
       for (final remoteId in remoteReceiptMap.keys) {
         if (!localReceiptMap.containsKey(remoteId)) {
-          final remoteReceipt = ReceiptModel.fromJson(remoteReceiptMap[remoteId]!);
+          final remoteReceipt = ReceiptModel.fromJson(
+            remoteReceiptMap[remoteId]!,
+          );
           await OfflineDatabaseService.saveReceipt(remoteReceipt);
         }
       }
-
     } catch (e) {
       _logger.e('Failed to check receipts consistency: $e');
     }
@@ -377,8 +404,12 @@ class SyncService {
       _logger.d('Syncing remote changes to local storage');
 
       // Get last sync timestamp
-      final lastSync = OfflineDatabaseService.getSetting<String>('last_sync_timestamp');
-      final lastSyncDate = lastSync != null ? DateTime.parse(lastSync) : DateTime.now().subtract(const Duration(days: 30));
+      final lastSync = OfflineDatabaseService.getSetting<String>(
+        'last_sync_timestamp',
+      );
+      final lastSyncDate = lastSync != null
+          ? DateTime.parse(lastSync)
+          : DateTime.now().subtract(const Duration(days: 30));
 
       // Sync receipts
       await _syncRemoteReceipts(lastSyncDate);
@@ -387,8 +418,10 @@ class SyncService {
       await _syncRemoteTeams(lastSyncDate);
 
       // Update last sync timestamp
-      await OfflineDatabaseService.saveSetting('last_sync_timestamp', DateTime.now().toIso8601String());
-
+      await OfflineDatabaseService.saveSetting(
+        'last_sync_timestamp',
+        DateTime.now().toIso8601String(),
+      );
     } catch (e) {
       _logger.e('Failed to sync remote changes: $e');
       rethrow;
@@ -409,7 +442,7 @@ class SyncService {
       var query = SupabaseService.client
           .from('receipts')
           .select()
-          .eq('user_id', user.id)  // Filter by current user
+          .eq('user_id', user.id) // Filter by current user
           .gte('updated_at', lastSync.toIso8601String())
           .order('updated_at', ascending: false);
 
@@ -420,7 +453,9 @@ class SyncService {
         await OfflineDatabaseService.saveReceipt(receipt);
       }
 
-      _logger.d('Synced ${response.length} receipts from remote for user ${user.email}');
+      _logger.d(
+        'Synced ${response.length} receipts from remote for user ${user.email}',
+      );
     } catch (e) {
       _logger.e('Failed to sync remote receipts: $e');
       rethrow;
@@ -450,10 +485,10 @@ class SyncService {
   /// Force full sync
   static Future<void> forceSyncAll() async {
     _logger.i('Starting force sync of all data');
-    
+
     // Clear last sync timestamp to force full sync
     await OfflineDatabaseService.saveSetting('last_sync_timestamp', null);
-    
+
     // Start sync
     await syncPendingOperations();
   }
@@ -482,13 +517,15 @@ class SyncService {
   static Map<String, dynamic> getSyncStats() {
     final pendingOps = OfflineDatabaseService.getPendingSyncOperations();
     final storageStats = OfflineDatabaseService.getStorageStats();
-    
+
     return {
       'pendingOperations': pendingOps.length,
       'isOnline': ConnectivityService.isOnline,
       'isSyncing': _isSyncing,
       'storageStats': storageStats,
-      'lastSync': OfflineDatabaseService.getSetting<String>('last_sync_timestamp'),
+      'lastSync': OfflineDatabaseService.getSetting<String>(
+        'last_sync_timestamp',
+      ),
     };
   }
 
@@ -500,12 +537,7 @@ class SyncService {
 }
 
 /// Sync status enumeration
-enum SyncStatus {
-  idle,
-  syncing,
-  completed,
-  failed,
-}
+enum SyncStatus { idle, syncing, completed, failed }
 
 /// Sync state
 class SyncState {
@@ -540,10 +572,8 @@ class SyncState {
 class SyncNotifier extends StateNotifier<SyncState> {
   StreamSubscription<SyncStatus>? _subscription;
 
-  SyncNotifier() : super(const SyncState(
-    status: SyncStatus.idle,
-    pendingOperations: 0,
-  )) {
+  SyncNotifier()
+    : super(const SyncState(status: SyncStatus.idle, pendingOperations: 0)) {
     _initializeSync();
   }
 
@@ -553,7 +583,7 @@ class SyncNotifier extends StateNotifier<SyncState> {
       state = state.copyWith(
         status: status,
         pendingOperations: stats['pendingOperations'] as int,
-        lastSync: stats['lastSync'] != null 
+        lastSync: stats['lastSync'] != null
             ? DateTime.parse(stats['lastSync'] as String)
             : null,
       );

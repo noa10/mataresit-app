@@ -10,7 +10,7 @@ import '../../shared/utils/currency_utils.dart';
 class OpenRouterVisionService implements AIVisionService {
   static final Logger _logger = Logger();
   static const String _baseUrl = 'https://openrouter.ai/api/v1';
-  
+
   // Available vision models in order of preference
   static const List<String> _visionModels = [
     'google/gemini-pro-vision',
@@ -55,10 +55,12 @@ class OpenRouterVisionService implements AIVisionService {
 
       final fileSizeBytes = await imageFile.length();
       _logger.d('Image file size: $fileSizeBytes bytes');
-      
+
       // Check file size (4MB limit for most OpenRouter models)
       if (fileSizeBytes > 4 * 1024 * 1024) {
-        throw Exception('Image file too large. Maximum size is 4MB for OpenRouter.');
+        throw Exception(
+          'Image file too large. Maximum size is 4MB for OpenRouter.',
+        );
       }
 
       // Check minimum file size
@@ -107,9 +109,9 @@ class OpenRouterVisionService implements AIVisionService {
         } catch (e) {
           lastError = e is Exception ? e : Exception(e.toString());
           _logger.w('Model $model failed: $e');
-          
+
           // If it's a configuration or quota error, don't try other models
-          if (e.toString().contains('quota') || 
+          if (e.toString().contains('quota') ||
               e.toString().contains('insufficient_quota') ||
               e.toString().contains('rate_limit')) {
             throw QuotaExceededException(
@@ -117,18 +119,18 @@ class OpenRouterVisionService implements AIVisionService {
               serviceName,
             );
           }
-          
+
           // Continue to next model for other errors
           continue;
         }
       }
 
       // All models failed
-      throw lastError ?? Exception('All OpenRouter models failed to process the image');
-
+      throw lastError ??
+          Exception('All OpenRouter models failed to process the image');
     } catch (e) {
       _logger.e('Error processing receipt image with OpenRouter: $e');
-      
+
       // Return error response
       return ReceiptData(
         merchantName: 'Processing Error',
@@ -145,23 +147,17 @@ class OpenRouterVisionService implements AIVisionService {
 
   Future<ReceiptData> _callOpenRouterAPI(String model, String dataUrl) async {
     final prompt = _buildReceiptExtractionPrompt();
-    
+
     final requestBody = {
       'model': model,
       'messages': [
         {
           'role': 'user',
           'content': [
-            {
-              'type': 'text',
-              'text': prompt,
-            },
+            {'type': 'text', 'text': prompt},
             {
               'type': 'image_url',
-              'image_url': {
-                'url': dataUrl,
-                'detail': 'high',
-              },
+              'image_url': {'url': dataUrl, 'detail': 'high'},
             },
           ],
         },
@@ -184,25 +180,29 @@ class OpenRouterVisionService implements AIVisionService {
     if (response.statusCode != 200) {
       final errorBody = response.body;
       _logger.e('OpenRouter API error: ${response.statusCode} - $errorBody');
-      throw Exception('OpenRouter API error: ${response.statusCode} - $errorBody');
+      throw Exception(
+        'OpenRouter API error: ${response.statusCode} - $errorBody',
+      );
     }
 
     final responseData = jsonDecode(response.body) as Map<String, dynamic>;
     final choices = responseData['choices'] as List<dynamic>?;
-    
+
     if (choices == null || choices.isEmpty) {
       throw Exception('No response from OpenRouter API');
     }
 
     final message = choices[0]['message'] as Map<String, dynamic>?;
     final content = message?['content'] as String?;
-    
+
     if (content == null || content.isEmpty) {
       throw Exception('Empty response from OpenRouter API');
     }
 
-    _logger.d('OpenRouter response preview: ${content.substring(0, content.length > 200 ? 200 : content.length)}...');
-    
+    _logger.d(
+      'OpenRouter response preview: ${content.substring(0, content.length > 200 ? 200 : content.length)}...',
+    );
+
     // Parse the structured response
     return _parseReceiptData(content);
   }
@@ -275,7 +275,8 @@ Important guidelines:
           'messages': [
             {
               'role': 'user',
-              'content': 'Hello, can you confirm you are working? Please respond with "OK".',
+              'content':
+                  'Hello, can you confirm you are working? Please respond with "OK".',
             },
           ],
           'max_tokens': 10,
@@ -311,7 +312,10 @@ Important guidelines:
         cleanedResponse = cleanedResponse.substring(3);
       }
       if (cleanedResponse.endsWith('```')) {
-        cleanedResponse = cleanedResponse.substring(0, cleanedResponse.length - 3);
+        cleanedResponse = cleanedResponse.substring(
+          0,
+          cleanedResponse.length - 3,
+        );
       }
 
       cleanedResponse = cleanedResponse.trim();
@@ -335,10 +339,18 @@ Important guidelines:
             if (parts.length == 3) {
               // Assume YYYY-MM-DD format first
               if (parts[0].length == 4) {
-                transactionDate = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+                transactionDate = DateTime(
+                  int.parse(parts[0]),
+                  int.parse(parts[1]),
+                  int.parse(parts[2]),
+                );
               } else {
                 // Assume DD-MM-YYYY format
-                transactionDate = DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+                transactionDate = DateTime(
+                  int.parse(parts[2]),
+                  int.parse(parts[1]),
+                  int.parse(parts[0]),
+                );
               }
             }
           } catch (_) {
@@ -399,7 +411,9 @@ Important guidelines:
         taxAmount: parseAmount(jsonData['taxAmount']),
         discountAmount: parseAmount(jsonData['discountAmount']),
         tipAmount: parseAmount(jsonData['tipAmount']),
-        currency: CurrencyUtils.normalizeCurrencyCode(jsonData['currency']?.toString() ?? 'MYR'),
+        currency: CurrencyUtils.normalizeCurrencyCode(
+          jsonData['currency']?.toString() ?? 'MYR',
+        ),
         paymentMethod: jsonData['paymentMethod']?.toString(),
         category: jsonData['category']?.toString(),
         items: items,

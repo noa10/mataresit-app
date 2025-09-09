@@ -25,7 +25,7 @@ class PricingTierCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final subscriptionState = ref.watch(subscriptionProvider);
     final isLoading = subscriptionState.isLoading;
-    
+
     return Card(
       elevation: isPopular ? 8 : 2,
       child: Container(
@@ -74,11 +74,7 @@ class PricingTierCard extends ConsumerWidget {
             color: _getTierColor(context).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            _getTierIcon(),
-            color: _getTierColor(context),
-            size: 24,
-          ),
+          child: Icon(_getTierIcon(), color: _getTierColor(context), size: 24),
         ),
         const SizedBox(width: 12),
 
@@ -132,7 +128,10 @@ class PricingTierCard extends ConsumerWidget {
 
   Widget _buildPricing(BuildContext context) {
     final price = PricingInfo.getPrice(tier, billingInterval);
-    final monthlyEquivalent = PricingInfo.getMonthlyEquivalentPrice(tier, billingInterval);
+    final monthlyEquivalent = PricingInfo.getMonthlyEquivalentPrice(
+      tier,
+      billingInterval,
+    );
     final savings = PricingInfo.getAnnualSavingsPercentage(tier);
 
     return Column(
@@ -198,30 +197,32 @@ class PricingTierCard extends ConsumerWidget {
       children: [
         Text(
           'Features',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
-        ...features.map((feature) => Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Row(
-            children: [
-              Icon(
-                Icons.check_circle,
-                size: 16,
-                color: _getTierColor(context),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  feature,
-                  style: Theme.of(context).textTheme.bodyMedium,
+        ...features.map(
+          (feature) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.check_circle,
+                  size: 16,
+                  color: _getTierColor(context),
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    feature,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ),
+              ],
+            ),
           ),
-        )),
+        ),
       ],
     );
   }

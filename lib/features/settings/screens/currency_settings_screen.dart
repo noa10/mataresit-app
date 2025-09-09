@@ -8,15 +8,16 @@ import '../../../shared/utils/currency_formatter.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../shared/widgets/loading_widget.dart';
 
-
 class CurrencySettingsScreen extends ConsumerStatefulWidget {
   const CurrencySettingsScreen({super.key});
 
   @override
-  ConsumerState<CurrencySettingsScreen> createState() => _CurrencySettingsScreenState();
+  ConsumerState<CurrencySettingsScreen> createState() =>
+      _CurrencySettingsScreenState();
 }
 
-class _CurrencySettingsScreenState extends ConsumerState<CurrencySettingsScreen> {
+class _CurrencySettingsScreenState
+    extends ConsumerState<CurrencySettingsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   bool _showAllCurrencies = false;
@@ -31,7 +32,7 @@ class _CurrencySettingsScreenState extends ConsumerState<CurrencySettingsScreen>
   Widget build(BuildContext context) {
     final currencyState = ref.watch(currencyProvider);
     final exchangeRateState = ref.watch(exchangeRateProvider);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Currency Settings'),
@@ -56,7 +57,11 @@ class _CurrencySettingsScreenState extends ConsumerState<CurrencySettingsScreen>
                 color: Colors.orange.shade100,
                 child: Row(
                   children: [
-                    Icon(Icons.wifi_off, color: Colors.orange.shade700, size: 20),
+                    Icon(
+                      Icons.wifi_off,
+                      color: Colors.orange.shade700,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Offline - Using cached exchange rates',
@@ -68,17 +73,15 @@ class _CurrencySettingsScreenState extends ConsumerState<CurrencySettingsScreen>
                   ],
                 ),
               ),
-            
+
             // Current selection
             _buildCurrentSelection(currencyState),
-            
+
             // Search bar
             _buildSearchBar(),
-            
+
             // Currency list
-            Expanded(
-              child: _buildCurrencyList(currencyState),
-            ),
+            Expanded(child: _buildCurrencyList(currencyState)),
           ],
         ),
       ),
@@ -88,7 +91,7 @@ class _CurrencySettingsScreenState extends ConsumerState<CurrencySettingsScreen>
   Widget _buildCurrentSelection(CurrencyState currencyState) {
     final preferredCurrency = currencyState.userPreferredCurrency ?? 'MYR';
     final currencyAsync = ref.watch(currencyByCodeProvider(preferredCurrency));
-    
+
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -212,7 +215,7 @@ class _CurrencySettingsScreenState extends ConsumerState<CurrencySettingsScreen>
       return _buildSearchResults();
     }
 
-    final currencies = _showAllCurrencies 
+    final currencies = _showAllCurrencies
         ? currencyState.supportedCurrencies
         : currencyState.popularCurrencies;
 
@@ -221,9 +224,7 @@ class _CurrencySettingsScreenState extends ConsumerState<CurrencySettingsScreen>
     }
 
     if (currencies.isEmpty) {
-      return const Center(
-        child: Text('No currencies available'),
-      );
+      return const Center(child: Text('No currencies available'));
     }
 
     return ListView.builder(
@@ -232,7 +233,7 @@ class _CurrencySettingsScreenState extends ConsumerState<CurrencySettingsScreen>
       itemBuilder: (context, index) {
         final currency = currencies[index];
         final isSelected = currency.code == currencyState.userPreferredCurrency;
-        
+
         return _buildCurrencyTile(
           currency: currency,
           isSelected: isSelected,
@@ -244,22 +245,22 @@ class _CurrencySettingsScreenState extends ConsumerState<CurrencySettingsScreen>
 
   Widget _buildSearchResults() {
     final searchAsync = ref.watch(currencySearchProvider(_searchQuery));
-    
+
     return searchAsync.when(
       data: (currencies) {
         if (currencies.isEmpty) {
-          return const Center(
-            child: Text('No currencies found'),
-          );
+          return const Center(child: Text('No currencies found'));
         }
-        
+
         return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: currencies.length,
           itemBuilder: (context, index) {
             final currency = currencies[index];
-            final isSelected = currency.code == ref.read(currencyProvider).userPreferredCurrency;
-            
+            final isSelected =
+                currency.code ==
+                ref.read(currencyProvider).userPreferredCurrency;
+
             return _buildCurrencyTile(
               currency: currency,
               isSelected: isSelected,
@@ -286,7 +287,8 @@ class _CurrencySettingsScreenState extends ConsumerState<CurrencySettingsScreen>
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => ref.refresh(currencySearchProvider(_searchQuery)),
+              onPressed: () =>
+                  ref.refresh(currencySearchProvider(_searchQuery)),
               child: const Text('Retry'),
             ),
           ],
@@ -305,13 +307,13 @@ class _CurrencySettingsScreenState extends ConsumerState<CurrencySettingsScreen>
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: isSelected 
+          backgroundColor: isSelected
               ? Theme.of(context).colorScheme.primary
               : Theme.of(context).colorScheme.surfaceContainerHighest,
           child: Text(
             currency.symbol,
             style: TextStyle(
-              color: isSelected 
+              color: isSelected
                   ? Theme.of(context).colorScheme.onPrimary
                   : Theme.of(context).colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.bold,
@@ -331,16 +333,13 @@ class _CurrencySettingsScreenState extends ConsumerState<CurrencySettingsScreen>
             if (showExample) ...[
               const SizedBox(height: 4),
               Text(
-                'Example: ${CurrencyFormatter.formatAmount(
-                  amount: 1234.56,
-                  currency: currency,
-                )}',
+                'Example: ${CurrencyFormatter.formatAmount(amount: 1234.56, currency: currency)}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
           ],
         ),
-        trailing: isSelected 
+        trailing: isSelected
             ? Icon(
                 Icons.check_circle,
                 color: Theme.of(context).colorScheme.primary,
@@ -361,7 +360,9 @@ class _CurrencySettingsScreenState extends ConsumerState<CurrencySettingsScreen>
     final authState = ref.read(authProvider);
     if (!authState.isAuthenticated || authState.user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please log in to change currency settings')),
+        const SnackBar(
+          content: Text('Please log in to change currency settings'),
+        ),
       );
       return;
     }
@@ -401,10 +402,10 @@ class _CurrencySettingsScreenState extends ConsumerState<CurrencySettingsScreen>
   Future<void> _refreshRates() async {
     final currencyState = ref.read(currencyProvider);
     final preferredCurrency = currencyState.userPreferredCurrency ?? 'MYR';
-    
+
     final exchangeNotifier = ref.read(exchangeRateProvider.notifier);
     await exchangeNotifier.refreshExchangeRates(preferredCurrency);
-    
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

@@ -45,7 +45,7 @@ class ExchangeRateState extends Equatable {
   bool areRatesFresh(String baseCurrency) {
     final lastUpdate = lastUpdated[baseCurrency.toUpperCase()];
     if (lastUpdate == null) return false;
-    
+
     final now = DateTime.now();
     final ageInHours = now.difference(lastUpdate).inHours;
     return ageInHours < 24;
@@ -55,22 +55,22 @@ class ExchangeRateState extends Equatable {
   double? getExchangeRate(String fromCurrency, String toCurrency) {
     final normalizedFrom = fromCurrency.toUpperCase();
     final normalizedTo = toCurrency.toUpperCase();
-    
+
     if (normalizedFrom == normalizedTo) return 1.0;
-    
+
     final ratesData = rates[normalizedFrom];
     return ratesData?.getRateFor(normalizedTo);
   }
 
   @override
   List<Object?> get props => [
-        rates,
-        lastUpdated,
-        isLoading,
-        isUpdating,
-        error,
-        isOnline,
-      ];
+    rates,
+    lastUpdated,
+    isLoading,
+    isUpdating,
+    error,
+    isOnline,
+  ];
 }
 
 /// Exchange rate notifier
@@ -83,7 +83,7 @@ class ExchangeRateNotifier extends StateNotifier<ExchangeRateState> {
   void _initializeConnectivityListener() {
     ConnectivityService.connectivityStream.listen((isConnected) {
       state = state.copyWith(isOnline: isConnected);
-      
+
       // If we come back online, refresh stale rates
       if (isConnected) {
         _refreshStaleRates();
@@ -94,7 +94,7 @@ class ExchangeRateNotifier extends StateNotifier<ExchangeRateState> {
   /// Load exchange rates for a base currency
   Future<void> loadExchangeRates(String baseCurrency) async {
     final normalizedBase = baseCurrency.toUpperCase();
-    
+
     // Check if we already have fresh rates
     if (state.areRatesFresh(normalizedBase)) {
       return;
@@ -102,29 +102,37 @@ class ExchangeRateNotifier extends StateNotifier<ExchangeRateState> {
 
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       ExchangeRateResponse? ratesData;
-      
+
       if (state.isOnline) {
         // Try to fetch from API
-        ratesData = await CurrencyExchangeService.fetchExchangeRates(normalizedBase);
-        
+        ratesData = await CurrencyExchangeService.fetchExchangeRates(
+          normalizedBase,
+        );
+
         if (ratesData != null) {
           // Cache the rates
           await CurrencyCacheService.cacheExchangeRates(ratesData);
         }
       }
-      
+
       // If API failed or we're offline, try cache
-      ratesData ??= await CurrencyCacheService.getCachedExchangeRates(normalizedBase);
-      
+      ratesData ??= await CurrencyCacheService.getCachedExchangeRates(
+        normalizedBase,
+      );
+
       if (ratesData != null) {
-        final updatedRates = Map<String, ExchangeRateResponse>.from(state.rates);
-        final updatedLastUpdated = Map<String, DateTime>.from(state.lastUpdated);
-        
+        final updatedRates = Map<String, ExchangeRateResponse>.from(
+          state.rates,
+        );
+        final updatedLastUpdated = Map<String, DateTime>.from(
+          state.lastUpdated,
+        );
+
         updatedRates[normalizedBase] = ratesData;
         updatedLastUpdated[normalizedBase] = DateTime.now();
-        
+
         state = state.copyWith(
           rates: updatedRates,
           lastUpdated: updatedLastUpdated,
@@ -147,29 +155,33 @@ class ExchangeRateNotifier extends StateNotifier<ExchangeRateState> {
   /// Refresh exchange rates for a currency
   Future<void> refreshExchangeRates(String baseCurrency) async {
     final normalizedBase = baseCurrency.toUpperCase();
-    
+
     if (!state.isOnline) {
-      state = state.copyWith(
-        error: 'Cannot refresh rates while offline',
-      );
+      state = state.copyWith(error: 'Cannot refresh rates while offline');
       return;
     }
 
     try {
       state = state.copyWith(isUpdating: true, error: null);
-      
-      final ratesData = await CurrencyExchangeService.fetchExchangeRates(normalizedBase);
-      
+
+      final ratesData = await CurrencyExchangeService.fetchExchangeRates(
+        normalizedBase,
+      );
+
       if (ratesData != null) {
         // Cache the rates
         await CurrencyCacheService.cacheExchangeRates(ratesData);
-        
-        final updatedRates = Map<String, ExchangeRateResponse>.from(state.rates);
-        final updatedLastUpdated = Map<String, DateTime>.from(state.lastUpdated);
-        
+
+        final updatedRates = Map<String, ExchangeRateResponse>.from(
+          state.rates,
+        );
+        final updatedLastUpdated = Map<String, DateTime>.from(
+          state.lastUpdated,
+        );
+
         updatedRates[normalizedBase] = ratesData;
         updatedLastUpdated[normalizedBase] = DateTime.now();
-        
+
         state = state.copyWith(
           rates: updatedRates,
           lastUpdated: updatedLastUpdated,
@@ -195,45 +207,49 @@ class ExchangeRateNotifier extends StateNotifier<ExchangeRateState> {
         .map((c) => c.toUpperCase())
         .where((c) => !state.areRatesFresh(c))
         .toList();
-    
+
     if (currenciesToLoad.isEmpty) return;
 
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       final futures = currenciesToLoad.map((currency) async {
         try {
           ExchangeRateResponse? ratesData;
-          
+
           if (state.isOnline) {
-            ratesData = await CurrencyExchangeService.fetchExchangeRates(currency);
+            ratesData = await CurrencyExchangeService.fetchExchangeRates(
+              currency,
+            );
             if (ratesData != null) {
               await CurrencyCacheService.cacheExchangeRates(ratesData);
             }
           }
-          
+
           // Fallback to cache
-          ratesData ??= await CurrencyCacheService.getCachedExchangeRates(currency);
-          
+          ratesData ??= await CurrencyCacheService.getCachedExchangeRates(
+            currency,
+          );
+
           return MapEntry(currency, ratesData);
         } catch (e) {
           return MapEntry(currency, null);
         }
       });
-      
+
       final results = await Future.wait(futures);
-      
+
       final updatedRates = Map<String, ExchangeRateResponse>.from(state.rates);
       final updatedLastUpdated = Map<String, DateTime>.from(state.lastUpdated);
       final now = DateTime.now();
-      
+
       for (final result in results) {
         if (result.value != null) {
           updatedRates[result.key] = result.value!;
           updatedLastUpdated[result.key] = now;
         }
       }
-      
+
       state = state.copyWith(
         rates: updatedRates,
         lastUpdated: updatedLastUpdated,
@@ -248,19 +264,22 @@ class ExchangeRateNotifier extends StateNotifier<ExchangeRateState> {
   }
 
   /// Get exchange rate between two currencies
-  Future<double?> getExchangeRate(String fromCurrency, String toCurrency) async {
+  Future<double?> getExchangeRate(
+    String fromCurrency,
+    String toCurrency,
+  ) async {
     final normalizedFrom = fromCurrency.toUpperCase();
     final normalizedTo = toCurrency.toUpperCase();
-    
+
     if (normalizedFrom == normalizedTo) return 1.0;
-    
+
     // Check if we have the rate in memory
     final rate = state.getExchangeRate(normalizedFrom, normalizedTo);
     if (rate != null) return rate;
-    
+
     // Load rates if not available
     await loadExchangeRates(normalizedFrom);
-    
+
     // Try again after loading
     return state.getExchangeRate(normalizedFrom, normalizedTo);
   }
@@ -274,7 +293,7 @@ class ExchangeRateNotifier extends StateNotifier<ExchangeRateState> {
         })
         .map((entry) => entry.key)
         .toList();
-    
+
     if (staleRates.isNotEmpty) {
       await loadMultipleCurrencies(staleRates);
     }
@@ -293,23 +312,22 @@ class ExchangeRateNotifier extends StateNotifier<ExchangeRateState> {
   /// Clear cache
   Future<void> clearCache() async {
     await CurrencyCacheService.clearCache();
-    state = state.copyWith(
-      rates: {},
-      lastUpdated: {},
-    );
+    state = state.copyWith(rates: {}, lastUpdated: {});
   }
 }
 
 /// Exchange rate provider
-final exchangeRateProvider = StateNotifierProvider<ExchangeRateNotifier, ExchangeRateState>((ref) {
-  return ExchangeRateNotifier();
-});
+final exchangeRateProvider =
+    StateNotifierProvider<ExchangeRateNotifier, ExchangeRateState>((ref) {
+      return ExchangeRateNotifier();
+    });
 
 /// Provider for getting exchange rate between two currencies
-final exchangeRateForPairProvider = FutureProvider.family<double?, ExchangeRatePair>((ref, pair) async {
-  final notifier = ref.read(exchangeRateProvider.notifier);
-  return await notifier.getExchangeRate(pair.fromCurrency, pair.toCurrency);
-});
+final exchangeRateForPairProvider =
+    FutureProvider.family<double?, ExchangeRatePair>((ref, pair) async {
+      final notifier = ref.read(exchangeRateProvider.notifier);
+      return await notifier.getExchangeRate(pair.fromCurrency, pair.toCurrency);
+    });
 
 /// Exchange rate pair parameters
 class ExchangeRatePair extends Equatable {

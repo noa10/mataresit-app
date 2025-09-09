@@ -28,10 +28,7 @@ class CategoryExpenseData {
   final String category;
   final double totalSpent;
 
-  const CategoryExpenseData({
-    required this.category,
-    required this.totalSpent,
-  });
+  const CategoryExpenseData({required this.category, required this.totalSpent});
 
   factory CategoryExpenseData.fromJson(Map<String, dynamic> json) {
     return CategoryExpenseData(
@@ -132,8 +129,11 @@ class AnalyticsService {
           aggregated[dateKey] = {'total': 0.0, 'receiptIds': <String>[]};
         }
         aggregated[dateKey]!['total'] =
-            (aggregated[dateKey]!['total'] as double) + ((item['total'] as num?)?.toDouble() ?? 0.0);
-        (aggregated[dateKey]!['receiptIds'] as List<String>).add(item['id'] as String);
+            (aggregated[dateKey]!['total'] as double) +
+            ((item['total'] as num?)?.toDouble() ?? 0.0);
+        (aggregated[dateKey]!['receiptIds'] as List<String>).add(
+          item['id'] as String,
+        );
       }
 
       final result = aggregated.entries.map((entry) {
@@ -144,9 +144,10 @@ class AnalyticsService {
         );
       }).toList();
 
-      AppLogger.info('✅ Successfully fetched ${result.length} daily expense entries');
+      AppLogger.info(
+        '✅ Successfully fetched ${result.length} daily expense entries',
+      );
       return result;
-
     } catch (e) {
       AppLogger.error('❌ Error fetching daily expenses', e);
       throw Exception('Could not fetch daily expenses data: $e');
@@ -164,9 +165,7 @@ class AnalyticsService {
       AppLogger.info('🔍 Fetching category expenses for user: $userId');
 
       // Query receipts with custom category information (matching React implementation)
-      var query = SupabaseService.client
-          .from('receipts')
-          .select('''
+      var query = SupabaseService.client.from('receipts').select('''
             predicted_category,
             total,
             custom_categories (
@@ -200,14 +199,17 @@ class AnalyticsService {
       for (final item in response) {
         // Priority: custom category name → predicted category → 'Uncategorized'
         final customCategory = item['custom_categories'];
-        final categoryKey = (customCategory != null && customCategory['name'] != null)
+        final categoryKey =
+            (customCategory != null && customCategory['name'] != null)
             ? customCategory['name'] as String
             : (item['predicted_category'] as String?) ?? 'Uncategorized';
-        
+
         if (!aggregated.containsKey(categoryKey)) {
           aggregated[categoryKey] = 0.0;
         }
-        aggregated[categoryKey] = aggregated[categoryKey]! + ((item['total'] as num?)?.toDouble() ?? 0.0);
+        aggregated[categoryKey] =
+            aggregated[categoryKey]! +
+            ((item['total'] as num?)?.toDouble() ?? 0.0);
       }
 
       final result = aggregated.entries.map((entry) {
@@ -217,9 +219,10 @@ class AnalyticsService {
         );
       }).toList();
 
-      AppLogger.info('✅ Successfully fetched ${result.length} category expense entries');
+      AppLogger.info(
+        '✅ Successfully fetched ${result.length} category expense entries',
+      );
       return result;
-
     } catch (e) {
       AppLogger.error('❌ Error fetching category expenses', e);
       throw Exception('Could not fetch category expense data: $e');
@@ -265,9 +268,10 @@ class AnalyticsService {
         return ReceiptSummary.fromJson(item);
       }).toList();
 
-      AppLogger.info('✅ Successfully fetched ${result.length} receipt summaries');
+      AppLogger.info(
+        '✅ Successfully fetched ${result.length} receipt summaries',
+      );
       return result;
-
     } catch (e) {
       AppLogger.error('❌ Error fetching receipt details for range', e);
       throw Exception('Could not fetch detailed receipts data: $e');
@@ -276,7 +280,9 @@ class AnalyticsService {
 
   /// Transform receipt summaries to enhanced daily expense data
   /// Mirrors the select transformation logic from React web version
-  List<EnhancedDailyExpenseData> transformToEnhancedDailyData(List<ReceiptSummary> receipts) {
+  List<EnhancedDailyExpenseData> transformToEnhancedDailyData(
+    List<ReceiptSummary> receipts,
+  ) {
     final grouped = <String, List<ReceiptSummary>>{};
 
     for (final receipt in receipts) {
@@ -291,14 +297,16 @@ class AnalyticsService {
     }
 
     return grouped.entries.map((entry) {
-      final total = entry.value.fold<double>(0.0, (sum, receipt) => sum + (receipt.total ?? 0.0));
+      final total = entry.value.fold<double>(
+        0.0,
+        (sum, receipt) => sum + (receipt.total ?? 0.0),
+      );
       return EnhancedDailyExpenseData(
         date: entry.key,
         total: total,
         receipts: entry.value,
       );
-    }).toList()
-      ..sort((a, b) => a.date.compareTo(b.date)); // Sort by date
+    }).toList()..sort((a, b) => a.date.compareTo(b.date)); // Sort by date
   }
 }
 

@@ -31,14 +31,16 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    
+
     // Load claims when screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(claimsProvider.notifier).loadClaims(refresh: true);
       // Load stats but don't fail if it doesn't work
       ref.read(claimsProvider.notifier).loadClaimStats().catchError((error) {
         // Silently ignore stats loading errors for now
-        _logger.w('Stats loading failed (expected if database not set up): $error');
+        _logger.w(
+          'Stats loading failed (expected if database not set up): $error',
+        );
       });
     });
   }
@@ -50,7 +52,7 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= 
+    if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       ref.read(claimsProvider.notifier).loadMoreClaims();
     }
@@ -85,9 +87,7 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
 
     if (currentTeamState.currentTeam == null) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Claims'),
-        ),
+        appBar: AppBar(title: const Text('Claims')),
         body: const Center(
           child: Text(
             'Please select a team to view claims',
@@ -105,8 +105,8 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
           IconButton(
             icon: Icon(
               _showFilters ? Icons.filter_list_off : Icons.filter_list,
-              color: claimsState.filters.hasFilters 
-                  ? Theme.of(context).colorScheme.primary 
+              color: claimsState.filters.hasFilters
+                  ? Theme.of(context).colorScheme.primary
                   : null,
             ),
             onPressed: _toggleFilters,
@@ -116,9 +116,13 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: () {
               ref.read(claimsProvider.notifier).loadClaims(refresh: true);
-              ref.read(claimsProvider.notifier).loadClaimStats().catchError((error) {
+              ref.read(claimsProvider.notifier).loadClaimStats().catchError((
+                error,
+              ) {
                 // Silently ignore stats loading errors for now
-                _logger.w('Stats loading failed (expected if database not set up): $error');
+                _logger.w(
+                  'Stats loading failed (expected if database not set up): $error',
+                );
               });
             },
             tooltip: 'Refresh',
@@ -147,9 +151,7 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
             ),
 
           // Claims List
-          Expanded(
-            child: _buildClaimsList(claimsState),
-          ),
+          Expanded(child: _buildClaimsList(claimsState)),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -189,7 +191,9 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
         message: state.filters.hasFilters
             ? 'No claims match your current filters.\nTry adjusting your search criteria.'
             : 'You haven\'t created any claims yet.\nTap the + button to create your first claim.',
-        actionLabel: state.filters.hasFilters ? 'Clear Filters' : 'Create Claim',
+        actionLabel: state.filters.hasFilters
+            ? 'Clear Filters'
+            : 'Create Claim',
         onAction: state.filters.hasFilters
             ? () => ref.read(claimsProvider.notifier).clearFilters()
             : _showCreateClaimDialog,
@@ -203,7 +207,9 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
           await ref.read(claimsProvider.notifier).loadClaimStats();
         } catch (error) {
           // Silently ignore stats loading errors for now
-          _logger.w('Stats loading failed (expected if database not set up): $error');
+          _logger.w(
+            'Stats loading failed (expected if database not set up): $error',
+          );
         }
       },
       child: ListView.builder(
@@ -215,9 +221,7 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
             // Loading indicator for pagination
             return const Padding(
               padding: EdgeInsets.all(16.0),
-              child: Center(
-                child: CircularProgressIndicator(),
-              ),
+              child: Center(child: CircularProgressIndicator()),
             );
           }
 
@@ -256,9 +260,9 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
               onApprove: (claim) async {
                 final messenger = ScaffoldMessenger.of(context);
                 try {
-                  await ref.read(claimsProvider.notifier).approveClaim(
-                    ClaimApprovalRequest(claimId: claim.id),
-                  );
+                  await ref
+                      .read(claimsProvider.notifier)
+                      .approveClaim(ClaimApprovalRequest(claimId: claim.id));
                   if (mounted) {
                     messenger.showSnackBar(
                       const SnackBar(
@@ -308,7 +312,9 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
 
                 if (confirmed == true) {
                   try {
-                    await ref.read(claimsProvider.notifier).deleteClaim(claim.id);
+                    await ref
+                        .read(claimsProvider.notifier)
+                        .deleteClaim(claim.id);
                     if (mounted) {
                       messenger.showSnackBar(
                         const SnackBar(
@@ -346,7 +352,9 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
             Icon(
               Icons.construction,
               size: 80,
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.7),
             ),
             const SizedBox(height: 24),
             Text(
@@ -369,10 +377,14 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primaryContainer.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.3),
                 ),
               ),
               child: Column(

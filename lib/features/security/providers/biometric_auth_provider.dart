@@ -35,9 +35,8 @@ class BiometricAuthState {
 
 /// Notifier for biometric authentication
 class BiometricAuthNotifier extends StateNotifier<BiometricAuthState> {
-  BiometricAuthNotifier() : super(BiometricAuthState(
-    settings: SecurityService.biometricSettings,
-  )) {
+  BiometricAuthNotifier()
+    : super(BiometricAuthState(settings: SecurityService.biometricSettings)) {
     _initialize();
   }
 
@@ -47,19 +46,16 @@ class BiometricAuthNotifier extends StateNotifier<BiometricAuthState> {
   Future<void> _initialize() async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       await SecurityService.initialize();
-      
+
       state = state.copyWith(
         settings: SecurityService.biometricSettings,
         isLoading: false,
       );
     } catch (e) {
       _logger.e('Failed to initialize biometric auth: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -67,7 +63,7 @@ class BiometricAuthNotifier extends StateNotifier<BiometricAuthState> {
   Future<void> checkAvailability() async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       final localAuth = LocalAuthentication();
       final isAvailable = await localAuth.canCheckBiometrics;
       final availableTypes = await localAuth.getAvailableBiometrics();
@@ -79,17 +75,11 @@ class BiometricAuthNotifier extends StateNotifier<BiometricAuthState> {
       );
 
       await SecurityService.updateBiometricSettings(updatedSettings);
-      
-      state = state.copyWith(
-        settings: updatedSettings,
-        isLoading: false,
-      );
+
+      state = state.copyWith(settings: updatedSettings, isLoading: false);
     } catch (e) {
       _logger.e('Failed to check biometric availability: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -97,9 +87,9 @@ class BiometricAuthNotifier extends StateNotifier<BiometricAuthState> {
   Future<bool> enableBiometricAuth() async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       final success = await SecurityService.enableBiometricAuth();
-      
+
       if (success) {
         state = state.copyWith(
           settings: SecurityService.biometricSettings,
@@ -111,14 +101,11 @@ class BiometricAuthNotifier extends StateNotifier<BiometricAuthState> {
           error: 'Failed to enable biometric authentication',
         );
       }
-      
+
       return success;
     } catch (e) {
       _logger.e('Failed to enable biometric auth: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       return false;
     }
   }
@@ -127,19 +114,16 @@ class BiometricAuthNotifier extends StateNotifier<BiometricAuthState> {
   Future<void> disableBiometricAuth() async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       await SecurityService.disableBiometricAuth();
-      
+
       state = state.copyWith(
         settings: SecurityService.biometricSettings,
         isLoading: false,
       );
     } catch (e) {
       _logger.e('Failed to disable biometric auth: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }
@@ -152,22 +136,19 @@ class BiometricAuthNotifier extends StateNotifier<BiometricAuthState> {
   }) async {
     try {
       state = state.copyWith(isAuthenticating: true, error: null);
-      
+
       final isAuthenticated = await SecurityService.authenticateWithBiometrics(
         reason: reason,
         useErrorDialogs: useErrorDialogs,
         stickyAuth: stickyAuth,
       );
-      
+
       state = state.copyWith(isAuthenticating: false);
-      
+
       return isAuthenticated;
     } catch (e) {
       _logger.e('Failed to authenticate with biometrics: $e');
-      state = state.copyWith(
-        isAuthenticating: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isAuthenticating: false, error: e.toString());
       return false;
     }
   }
@@ -175,12 +156,10 @@ class BiometricAuthNotifier extends StateNotifier<BiometricAuthState> {
   /// Update biometric settings for app unlock
   Future<void> updateUseForAppUnlock(bool enabled) async {
     try {
-      final updatedSettings = state.settings.copyWith(
-        useForAppUnlock: enabled,
-      );
-      
+      final updatedSettings = state.settings.copyWith(useForAppUnlock: enabled);
+
       await SecurityService.updateBiometricSettings(updatedSettings);
-      
+
       state = state.copyWith(settings: updatedSettings);
     } catch (e) {
       _logger.e('Failed to update use for app unlock: $e');
@@ -195,9 +174,9 @@ class BiometricAuthNotifier extends StateNotifier<BiometricAuthState> {
       final updatedSettings = state.settings.copyWith(
         useForSensitiveOps: enabled,
       );
-      
+
       await SecurityService.updateBiometricSettings(updatedSettings);
-      
+
       state = state.copyWith(settings: updatedSettings);
     } catch (e) {
       _logger.e('Failed to update use for sensitive ops: $e');
@@ -228,9 +207,10 @@ class BiometricAuthNotifier extends StateNotifier<BiometricAuthState> {
 }
 
 /// Provider for biometric authentication
-final biometricAuthProvider = StateNotifierProvider<BiometricAuthNotifier, BiometricAuthState>((ref) {
-  return BiometricAuthNotifier();
-});
+final biometricAuthProvider =
+    StateNotifierProvider<BiometricAuthNotifier, BiometricAuthState>((ref) {
+      return BiometricAuthNotifier();
+    });
 
 /// Provider for current biometric settings (read-only)
 final currentBiometricSettingsProvider = Provider<BiometricSettings>((ref) {

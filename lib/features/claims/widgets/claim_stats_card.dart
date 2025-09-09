@@ -5,10 +5,7 @@ import '../../../shared/utils/currency_utils.dart';
 class ClaimStatsCard extends StatelessWidget {
   final ClaimStats stats;
 
-  const ClaimStatsCard({
-    super.key,
-    required this.stats,
-  });
+  const ClaimStatsCard({super.key, required this.stats});
 
   @override
   Widget build(BuildContext context) {
@@ -21,12 +18,12 @@ class ClaimStatsCard extends StatelessWidget {
           children: [
             Text(
               'Claims Overview',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             // Top row - Total claims and amounts
             Row(
               children: [
@@ -45,15 +42,18 @@ class ClaimStatsCard extends StatelessWidget {
                     context,
                     icon: Icons.attach_money,
                     label: 'Total Amount',
-                    value: CurrencyUtils.formatCurrency(stats.totalAmount, 'USD'),
+                    value: CurrencyUtils.formatCurrency(
+                      stats.totalAmount,
+                      'USD',
+                    ),
                     color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Second row - Status breakdown
             Row(
               children: [
@@ -90,9 +90,9 @@ class ClaimStatsCard extends StatelessWidget {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Third row - Approved amount and processing time
             Row(
               children: [
@@ -101,7 +101,10 @@ class ClaimStatsCard extends StatelessWidget {
                     context,
                     icon: Icons.payment,
                     label: 'Approved Amount',
-                    value: CurrencyUtils.formatCurrency(stats.approvedAmount, 'USD'),
+                    value: CurrencyUtils.formatCurrency(
+                      stats.approvedAmount,
+                      'USD',
+                    ),
                     color: Colors.green,
                   ),
                 ),
@@ -112,7 +115,9 @@ class ClaimStatsCard extends StatelessWidget {
                       context,
                       icon: Icons.schedule,
                       label: 'Avg. Processing',
-                      value: _formatProcessingTime(stats.averageProcessingTime!),
+                      value: _formatProcessingTime(
+                        stats.averageProcessingTime!,
+                      ),
                       color: Colors.blue,
                     ),
                   ),
@@ -138,10 +143,7 @@ class ClaimStatsCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: color.withValues(alpha: 0.2),
-          width: 1,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,11 +151,7 @@ class ClaimStatsCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
-                icon,
-                size: 20,
-                color: color,
-              ),
+              Icon(icon, size: 20, color: color),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(

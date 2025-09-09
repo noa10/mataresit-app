@@ -41,7 +41,9 @@ class StripeService {
 
     try {
       _setLoading(true);
-      _logger.i('Creating checkout session for ${tier.value} ${billingInterval.value}');
+      _logger.i(
+        'Creating checkout session for ${tier.value} ${billingInterval.value}',
+      );
 
       final user = _client.auth.currentUser;
       if (user == null) {
@@ -51,7 +53,9 @@ class StripeService {
       // Get price ID for the tier and billing interval
       final priceId = StripePriceIds.getPriceId(tier, billingInterval);
       if (priceId == null) {
-        throw Exception('No price ID found for ${tier.value} ${billingInterval.value}');
+        throw Exception(
+          'No price ID found for ${tier.value} ${billingInterval.value}',
+        );
       }
 
       _logger.d('Using price ID: $priceId');
@@ -59,10 +63,7 @@ class StripeService {
       // Call the create-checkout-session edge function
       final response = await _client.functions.invoke(
         'create-checkout-session',
-        body: {
-          'priceId': priceId,
-          'billingInterval': billingInterval.value,
-        },
+        body: {'priceId': priceId, 'billingInterval': billingInterval.value},
       );
 
       final data = response.data as Map<String, dynamic>;
@@ -103,9 +104,7 @@ class StripeService {
       // Call the manage-subscription edge function
       final response = await _client.functions.invoke(
         'manage-subscription',
-        body: {
-          'action': 'create_portal_session',
-        },
+        body: {'action': 'create_portal_session'},
       );
 
       final data = response.data as Map<String, dynamic>;
@@ -146,9 +145,7 @@ class StripeService {
       // Call the manage-subscription edge function
       await _client.functions.invoke(
         'manage-subscription',
-        body: {
-          'action': 'cancel_subscription',
-        },
+        body: {'action': 'cancel_subscription'},
       );
 
       _logger.i('Subscription canceled successfully');
@@ -210,11 +207,7 @@ class StripeService {
       }
 
       // Get basic profile data (billing preference columns don't exist yet)
-      await _client
-          .from('profiles')
-          .select('id')
-          .eq('id', user.id)
-          .single();
+      await _client.from('profiles').select('id').eq('id', user.id).single();
 
       _logger.d('Profile exists, returning default billing preferences');
 
@@ -227,7 +220,9 @@ class StripeService {
   }
 
   /// Update billing preferences
-  static Future<void> updateBillingPreferences(BillingPreferences preferences) async {
+  static Future<void> updateBillingPreferences(
+    BillingPreferences preferences,
+  ) async {
     try {
       _setLoading(true);
       _logger.i('Updating billing preferences');
@@ -262,11 +257,11 @@ class StripeService {
   static Future<bool> hasValidPaymentMethod() async {
     try {
       final subscription = await SubscriptionService.getSubscriptionStatus();
-      
+
       // If user has an active paid subscription, they likely have a valid payment method
-      return subscription.tier != SubscriptionTier.free && 
-             subscription.isActive && 
-             subscription.stripeCustomerId != null;
+      return subscription.tier != SubscriptionTier.free &&
+          subscription.isActive &&
+          subscription.stripeCustomerId != null;
     } catch (e) {
       _logger.e('Error checking payment method: $e');
       return false;
@@ -286,12 +281,18 @@ class StripeService {
   }
 
   /// Check if target tier is an upgrade
-  static bool isUpgrade(SubscriptionTier currentTier, SubscriptionTier targetTier) {
+  static bool isUpgrade(
+    SubscriptionTier currentTier,
+    SubscriptionTier targetTier,
+  ) {
     return getTierHierarchy(targetTier) > getTierHierarchy(currentTier);
   }
 
   /// Check if target tier is a downgrade
-  static bool isDowngrade(SubscriptionTier currentTier, SubscriptionTier targetTier) {
+  static bool isDowngrade(
+    SubscriptionTier currentTier,
+    SubscriptionTier targetTier,
+  ) {
     return getTierHierarchy(targetTier) < getTierHierarchy(currentTier);
   }
 

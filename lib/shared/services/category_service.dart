@@ -18,16 +18,18 @@ class CategoryService {
       }
 
       if (teamId != null) {
-        _logger.d('🏷️ Fetching team categories for team: $teamId, user: ${user.email}');
+        _logger.d(
+          '🏷️ Fetching team categories for team: $teamId, user: ${user.email}',
+        );
       } else {
         _logger.d('🏷️ Fetching personal categories for user: ${user.email}');
       }
 
       // Use the same RPC function as the React web version
-      final response = await _supabase.rpc('get_user_categories_with_counts', params: {
-        'p_user_id': user.id,
-        'p_team_id': teamId,
-      });
+      final response = await _supabase.rpc(
+        'get_user_categories_with_counts',
+        params: {'p_user_id': user.id, 'p_team_id': teamId},
+      );
 
       if (response == null) {
         return [];
@@ -62,18 +64,24 @@ class CategoryService {
         }
 
         // Fetch again after creating defaults
-        final newResponse = await _supabase.rpc('get_user_categories_with_counts', params: {
-          'p_user_id': user.id,
-          'p_team_id': teamId,
-        });
+        final newResponse = await _supabase.rpc(
+          'get_user_categories_with_counts',
+          params: {'p_user_id': user.id, 'p_team_id': teamId},
+        );
 
         if (newResponse != null) {
           final List<dynamic> newData = newResponse as List<dynamic>;
-          return newData.map((json) => CategoryModel.fromJson(json as Map<String, dynamic>)).toList();
+          return newData
+              .map(
+                (json) => CategoryModel.fromJson(json as Map<String, dynamic>),
+              )
+              .toList();
         }
       }
 
-      _logger.d('🏷️ Categories fetched successfully: ${categories.length} categories');
+      _logger.d(
+        '🏷️ Categories fetched successfully: ${categories.length} categories',
+      );
       return categories;
     } catch (error) {
       _logger.e('Error fetching categories: $error');
@@ -96,14 +104,14 @@ class CategoryService {
         _logger.d('🏷️ Fetching categories for display in team context');
 
         final futures = await Future.wait([
-          _supabase.rpc('get_user_categories_with_counts', params: {
-            'p_user_id': user.id,
-            'p_team_id': teamId,
-          }),
-          _supabase.rpc('get_user_categories_with_counts', params: {
-            'p_user_id': user.id,
-            'p_team_id': null,
-          }),
+          _supabase.rpc(
+            'get_user_categories_with_counts',
+            params: {'p_user_id': user.id, 'p_team_id': teamId},
+          ),
+          _supabase.rpc(
+            'get_user_categories_with_counts',
+            params: {'p_user_id': user.id, 'p_team_id': null},
+          ),
         ]);
 
         final teamCategoriesData = futures[0] as List<dynamic>? ?? [];
@@ -138,7 +146,9 @@ class CategoryService {
 
         // Combine both, prioritizing team categories
         final allCategories = [...teamCategories, ...personalCategories];
-        _logger.d('🏷️ Display categories: ${teamCategories.length} team + ${personalCategories.length} personal = ${allCategories.length} total');
+        _logger.d(
+          '🏷️ Display categories: ${teamCategories.length} team + ${personalCategories.length} personal = ${allCategories.length} total',
+        );
 
         return allCategories;
       } else {
@@ -154,9 +164,10 @@ class CategoryService {
   /// Create default team categories
   static Future<void> createDefaultTeamCategories(String teamId) async {
     try {
-      await _supabase.rpc('create_default_team_categories', params: {
-        'p_team_id': teamId,
-      });
+      await _supabase.rpc(
+        'create_default_team_categories',
+        params: {'p_team_id': teamId},
+      );
       _logger.d('🏷️ Default team categories created successfully');
     } catch (error) {
       _logger.e('Error creating default team categories: $error');
@@ -170,12 +181,15 @@ class CategoryService {
     String? teamId,
   }) async {
     try {
-      final response = await _supabase.rpc('create_custom_category', params: {
-        'p_name': categoryData.name,
-        'p_color': categoryData.color ?? '#3B82F6',
-        'p_icon': categoryData.icon ?? 'tag',
-        'p_team_id': teamId,
-      });
+      final response = await _supabase.rpc(
+        'create_custom_category',
+        params: {
+          'p_name': categoryData.name,
+          'p_color': categoryData.color ?? '#3B82F6',
+          'p_icon': categoryData.icon ?? 'tag',
+          'p_team_id': teamId,
+        },
+      );
 
       _logger.d('Category created successfully');
       return response as String?;
@@ -191,12 +205,15 @@ class CategoryService {
     UpdateCategoryRequest categoryData,
   ) async {
     try {
-      await _supabase.rpc('update_custom_category', params: {
-        'p_category_id': categoryId,
-        'p_name': categoryData.name,
-        'p_color': categoryData.color,
-        'p_icon': categoryData.icon,
-      });
+      await _supabase.rpc(
+        'update_custom_category',
+        params: {
+          'p_category_id': categoryId,
+          'p_name': categoryData.name,
+          'p_color': categoryData.color,
+          'p_icon': categoryData.icon,
+        },
+      );
 
       _logger.d('Category updated successfully');
       return true;
@@ -212,10 +229,13 @@ class CategoryService {
     String? reassignToCategoryId,
   }) async {
     try {
-      await _supabase.rpc('delete_custom_category', params: {
-        'p_category_id': categoryId,
-        'p_reassign_to_category_id': reassignToCategoryId,
-      });
+      await _supabase.rpc(
+        'delete_custom_category',
+        params: {
+          'p_category_id': categoryId,
+          'p_reassign_to_category_id': reassignToCategoryId,
+        },
+      );
 
       _logger.d('Category deleted successfully');
       return true;
@@ -231,14 +251,16 @@ class CategoryService {
     String? categoryId,
   }) async {
     try {
-      final response = await _supabase.rpc('bulk_assign_category', params: {
-        'p_receipt_ids': receiptIds,
-        'p_category_id': categoryId,
-      });
+      final response = await _supabase.rpc(
+        'bulk_assign_category',
+        params: {'p_receipt_ids': receiptIds, 'p_category_id': categoryId},
+      );
 
       final updatedCount = response as int? ?? 0;
       if (updatedCount > 0) {
-        final action = categoryId != null ? 'assigned to category' : 'removed from category';
+        final action = categoryId != null
+            ? 'assigned to category'
+            : 'removed from category';
         _logger.d('$updatedCount receipt(s) $action');
       }
 
@@ -273,9 +295,10 @@ class CategoryService {
         throw Exception('User not authenticated');
       }
 
-      await _supabase.rpc('create_default_categories_for_user', params: {
-        'p_user_id': user.id,
-      });
+      await _supabase.rpc(
+        'create_default_categories_for_user',
+        params: {'p_user_id': user.id},
+      );
 
       _logger.d('Default categories created successfully');
     } catch (error) {

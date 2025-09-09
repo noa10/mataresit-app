@@ -21,9 +21,7 @@ class SessionManagementScreen extends ConsumerWidget {
             onPressed: () {
               // TODO: Refresh sessions
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Refreshing sessions...'),
-                ),
+                const SnackBar(content: Text('Refreshing sessions...')),
               );
             },
           ),
@@ -53,16 +51,13 @@ class SessionManagementScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Current session
             const Text(
               'Current Session',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Card(
@@ -71,7 +66,10 @@ class SessionManagementScreen extends ConsumerWidget {
                 title: const Text('Current Device'),
                 subtitle: const Text('Active now • This device'),
                 trailing: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.green.shade100,
                     borderRadius: BorderRadius.circular(12),
@@ -87,19 +85,16 @@ class SessionManagementScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Other sessions
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
                   'Other Sessions',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
                 TextButton(
                   onPressed: () {
@@ -110,7 +105,7 @@ class SessionManagementScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 8),
-            
+
             // No other sessions message
             Expanded(
               child: Card(
@@ -136,9 +131,7 @@ class SessionManagementScreen extends ConsumerWidget {
                       const SizedBox(height: 8),
                       Text(
                         'You are only signed in on this device.',
-                        style: TextStyle(
-                          color: Colors.grey.shade500,
-                        ),
+                        style: TextStyle(color: Colors.grey.shade500),
                         textAlign: TextAlign.center,
                       ),
                     ],

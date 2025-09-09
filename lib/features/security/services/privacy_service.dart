@@ -82,19 +82,21 @@ class PrivacyService {
       _logger.d('Starting user data export as CSV');
 
       final userData = await _collectUserData();
-      
+
       // Create CSV content for receipts
       final receipts = userData['receipts'] as List<dynamic>? ?? [];
       final csvData = <List<dynamic>>[
         ['Date', 'Merchant', 'Amount', 'Currency', 'Category', 'Description'],
-        ...receipts.map((receipt) => [
-          receipt['date'] ?? '',
-          receipt['merchant_name'] ?? '',
-          receipt['total_amount'] ?? '',
-          receipt['currency'] ?? '',
-          receipt['category'] ?? '',
-          receipt['description'] ?? '',
-        ]),
+        ...receipts.map(
+          (receipt) => [
+            receipt['date'] ?? '',
+            receipt['merchant_name'] ?? '',
+            receipt['total_amount'] ?? '',
+            receipt['currency'] ?? '',
+            receipt['category'] ?? '',
+            receipt['description'] ?? '',
+          ],
+        ),
       ];
 
       final csvString = const ListToCsvConverter().convert(csvData);
@@ -199,13 +201,17 @@ class PrivacyService {
   /// Delete old data based on retention settings
   static Future<void> cleanupOldData() async {
     try {
-      if (privacySettings.dataRetentionDays == 0 || 
+      if (privacySettings.dataRetentionDays == 0 ||
           !privacySettings.autoDeleteOldReceipts) {
-        _logger.d('Data cleanup skipped - retention disabled or set to keep forever');
+        _logger.d(
+          'Data cleanup skipped - retention disabled or set to keep forever',
+        );
         return;
       }
 
-      _logger.d('Starting data cleanup for retention period: ${privacySettings.dataRetentionDays} days');
+      _logger.d(
+        'Starting data cleanup for retention period: ${privacySettings.dataRetentionDays} days',
+      );
 
       final cutoffDate = DateTime.now().subtract(
         Duration(days: privacySettings.dataRetentionDays),
@@ -223,7 +229,7 @@ class PrivacyService {
             .delete()
             .eq('user_id', currentUser.id)
             .lt('created_at', cutoffDate.toIso8601String());
-        
+
         _logger.d('Old receipts cleaned up successfully');
       } catch (e) {
         _logger.w('Failed to cleanup old receipts: $e');
@@ -236,7 +242,7 @@ class PrivacyService {
             .delete()
             .eq('user_id', currentUser.id)
             .lt('created_at', cutoffDate.toIso8601String());
-        
+
         _logger.d('Old claims cleaned up successfully');
       } catch (e) {
         _logger.w('Failed to cleanup old claims: $e');
@@ -273,14 +279,15 @@ class PrivacyService {
             .from('receipts')
             .select('id, created_at')
             .eq('user_id', currentUser.id);
-        
+
         stats['receipts_count'] = receiptsResponse.length;
-        
+
         if (receiptsResponse.isNotEmpty) {
-          final dates = receiptsResponse
-              .map((r) => DateTime.parse(r['created_at']))
-              .toList()
-            ..sort();
+          final dates =
+              receiptsResponse
+                  .map((r) => DateTime.parse(r['created_at']))
+                  .toList()
+                ..sort();
           stats['oldest_receipt_date'] = dates.first.toIso8601String();
           stats['newest_receipt_date'] = dates.last.toIso8601String();
         }
@@ -294,7 +301,7 @@ class PrivacyService {
             .from('claims')
             .select('id')
             .eq('user_id', currentUser.id);
-        
+
         stats['claims_count'] = claimsResponse.length;
       } catch (e) {
         _logger.w('Failed to fetch claims stats: $e');
@@ -349,7 +356,9 @@ class PrivacyService {
 
       // Clear privacy settings
       _cachedSettings = const PrivacySettings();
-      await SecureStorageService.storePrivacySettings(_cachedSettings!.toJson());
+      await SecureStorageService.storePrivacySettings(
+        _cachedSettings!.toJson(),
+      );
 
       _logger.d('All user data cleared successfully');
     } catch (e) {

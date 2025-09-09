@@ -21,18 +21,21 @@ class ClaimService {
     try {
       // Try RPC function first
       try {
-        final response = await _client.rpc('create_claim', params: {
-          '_team_id': request.teamId,
-          '_title': request.title,
-          '_description': request.description,
-          '_amount': request.amount,
-          '_currency': request.currency ?? 'USD',
-          '_category': request.category,
-          '_priority': request.priority?.name ?? 'medium',
-          '_attachments': request.attachments != null
-              ? request.attachments!.map((a) => a).toList()
-              : [],
-        });
+        final response = await _client.rpc(
+          'create_claim',
+          params: {
+            '_team_id': request.teamId,
+            '_title': request.title,
+            '_description': request.description,
+            '_amount': request.amount,
+            '_currency': request.currency ?? 'USD',
+            '_category': request.category,
+            '_priority': request.priority?.name ?? 'medium',
+            '_attachments': request.attachments != null
+                ? request.attachments!.map((a) => a).toList()
+                : [],
+          },
+        );
 
         if (response == null) {
           throw Exception('Failed to create claim');
@@ -117,13 +120,15 @@ class ClaimService {
       // The get_team_claims RPC function in the database migration only returns:
       // id, title, description, amount, currency, category, priority, status,
       // claimant_id, claimant_name, claimant_email, timestamps, approval fields
-      // 
+      //
       // But it's MISSING: team_id, metadata, attachments
       // which are required by our ClaimModel for proper functionality.
-      // 
+      //
       // The React app likely works because it handles missing fields differently
       // or has been updated to use a different approach.
-      _logger.i('Using direct table query to get complete claim data including team_id, metadata, attachments');
+      _logger.i(
+        'Using direct table query to get complete claim data including team_id, metadata, attachments',
+      );
 
       // First verify user has access to this team (security check like RPC function)
       final teamAccessCheck = await _client
@@ -141,10 +146,7 @@ class ClaimService {
       _logger.i('User has ${teamAccessCheck['role']} access to team: $teamId');
 
       // Direct table query with all required fields
-      dynamic query = _client
-          .from('claims')
-          .select('*')
-          .eq('team_id', teamId);
+      dynamic query = _client.from('claims').select('*').eq('team_id', teamId);
 
       // Apply filters
       if (filters != null) {
@@ -199,24 +201,34 @@ class ClaimService {
         for (int i = 0; i < response.length; i++) {
           try {
             final data = response[i];
-            _logger.i('Processing claim ${i + 1}/${response.length}: ${data['id']}');
+            _logger.i(
+              'Processing claim ${i + 1}/${response.length}: ${data['id']}',
+            );
 
             // Debug the problematic fields
-            _logger.i('  - attachments type: ${data['attachments'].runtimeType}, value: ${data['attachments']}');
-            _logger.i('  - metadata type: ${data['metadata'].runtimeType}, value: ${data['metadata']}');
+            _logger.i(
+              '  - attachments type: ${data['attachments'].runtimeType}, value: ${data['attachments']}',
+            );
+            _logger.i(
+              '  - metadata type: ${data['metadata'].runtimeType}, value: ${data['metadata']}',
+            );
             _logger.i('  - status: ${data['status']}');
 
             final claim = ClaimModel.fromJson(data);
             validClaims.add(claim);
             _logger.i('  ✅ Successfully parsed claim: ${claim.title}');
           } catch (parseError) {
-            _logger.e('  ❌ Error parsing claim data from direct query (item $i): $parseError');
+            _logger.e(
+              '  ❌ Error parsing claim data from direct query (item $i): $parseError',
+            );
             _logger.e('  Problematic data keys: ${response[i].keys.toList()}');
             // Skip this claim and continue with others
             continue;
           }
         }
-        _logger.i('Successfully parsed ${validClaims.length} out of ${response.length} claims');
+        _logger.i(
+          'Successfully parsed ${validClaims.length} out of ${response.length} claims',
+        );
         return validClaims;
       } catch (mappingError) {
         _logger.e('Error mapping claims from direct query: $mappingError');
@@ -226,7 +238,9 @@ class ClaimService {
       // Handle specific database errors gracefully
       if (e.toString().contains('relation "public.claims" does not exist') ||
           e.toString().contains('PGRST106') ||
-          e.toString().contains('type \'String\' is not a subtype of type \'List<dynamic>\'')) {
+          e.toString().contains(
+            'type \'String\' is not a subtype of type \'List<dynamic>\'',
+          )) {
         return []; // Return empty list for database setup issues
       }
       throw Exception('Failed to get team claims: $e');
@@ -294,7 +308,9 @@ class ClaimService {
       // Handle specific database errors gracefully
       if (e.toString().contains('relation "public.claims" does not exist') ||
           e.toString().contains('PGRST106') ||
-          e.toString().contains('type \'String\' is not a subtype of type \'List<dynamic>\'')) {
+          e.toString().contains(
+            'type \'String\' is not a subtype of type \'List<dynamic>\'',
+          )) {
         return []; // Return empty list for database setup issues
       }
       throw Exception('Failed to get user claims: $e');
@@ -306,10 +322,7 @@ class ClaimService {
     try {
       final updateData = request.toUpdateMap();
 
-      await _client
-          .from('claims')
-          .update(updateData)
-          .eq('id', claimId);
+      await _client.from('claims').update(updateData).eq('id', claimId);
 
       // Supabase update doesn't throw on no rows affected, so we don't need to check
     } catch (e) {
@@ -321,9 +334,7 @@ class ClaimService {
   Future<void> submitClaim(String claimId) async {
     try {
       try {
-        await _client.rpc('submit_claim', params: {
-          '_claim_id': claimId,
-        });
+        await _client.rpc('submit_claim', params: {'_claim_id': claimId});
       } catch (rpcError) {
         // If RPC function doesn't exist, use direct update
         if (rpcError.toString().contains('PGRST202') ||
@@ -349,10 +360,10 @@ class ClaimService {
   Future<void> approveClaim(ClaimApprovalRequest request) async {
     try {
       try {
-        await _client.rpc('approve_claim', params: {
-          '_claim_id': request.claimId,
-          '_comment': request.comment,
-        });
+        await _client.rpc(
+          'approve_claim',
+          params: {'_claim_id': request.claimId, '_comment': request.comment},
+        );
       } catch (rpcError) {
         // If RPC function doesn't exist, use direct update
         if (rpcError.toString().contains('PGRST202') ||
@@ -379,10 +390,13 @@ class ClaimService {
   Future<void> rejectClaim(ClaimRejectionRequest request) async {
     try {
       try {
-        await _client.rpc('reject_claim', params: {
-          '_claim_id': request.claimId,
-          '_rejection_reason': request.rejectionReason,
-        });
+        await _client.rpc(
+          'reject_claim',
+          params: {
+            '_claim_id': request.claimId,
+            '_rejection_reason': request.rejectionReason,
+          },
+        );
       } catch (rpcError) {
         // If RPC function doesn't exist, use direct update
         if (rpcError.toString().contains('PGRST202') ||
@@ -409,10 +423,7 @@ class ClaimService {
   /// Delete claim (only if in draft status)
   Future<void> deleteClaim(String claimId) async {
     try {
-      await _client
-          .from('claims')
-          .delete()
-          .eq('id', claimId);
+      await _client.from('claims').delete().eq('id', claimId);
     } catch (e) {
       throw Exception('Failed to delete claim: $e');
     }
@@ -426,9 +437,10 @@ class ClaimService {
   Future<ClaimStats> getTeamClaimStats(String teamId) async {
     try {
       // Try to use RPC function first
-      final response = await _client.rpc('get_team_claim_stats', params: {
-        '_team_id': teamId,
-      });
+      final response = await _client.rpc(
+        'get_team_claim_stats',
+        params: {'_team_id': teamId},
+      );
 
       if (response == null) {
         return const ClaimStats(
@@ -444,7 +456,8 @@ class ClaimService {
       return ClaimStats.fromJson(response as Map<String, dynamic>);
     } catch (e) {
       // If RPC function doesn't exist, calculate stats manually
-      if (e.toString().contains('PGRST202') || e.toString().contains('get_team_claim_stats')) {
+      if (e.toString().contains('PGRST202') ||
+          e.toString().contains('get_team_claim_stats')) {
         return await _calculateStatsManually(teamId);
       }
       throw Exception('Failed to get claim stats: $e');
@@ -549,10 +562,7 @@ class ClaimService {
   /// Check if claims table exists in the database
   Future<bool> _checkClaimsTableExists() async {
     try {
-      await _client
-          .from('claims')
-          .select('id')
-          .limit(1);
+      await _client.from('claims').select('id').limit(1);
       return true;
     } catch (e) {
       // If we get a table not found error, return false

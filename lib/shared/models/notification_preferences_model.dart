@@ -18,7 +18,7 @@ enum NotificationType {
   receiptBatchCompleted,
   @JsonValue('receipt_batch_failed')
   receiptBatchFailed,
-  
+
   // Team receipt collaboration notifications
   @JsonValue('receipt_shared')
   receiptShared,
@@ -30,7 +30,7 @@ enum NotificationType {
   receiptApprovedByTeam,
   @JsonValue('receipt_flagged_for_review')
   receiptFlaggedForReview,
-  
+
   // Team collaboration notifications
   @JsonValue('team_invitation_sent')
   teamInvitationSent,
@@ -46,7 +46,7 @@ enum NotificationType {
   teamMemberRoleChanged,
   @JsonValue('team_settings_updated')
   teamSettingsUpdated,
-  
+
   // Claims and billing notifications
   @JsonValue('claim_submitted')
   claimSubmitted,
@@ -79,7 +79,8 @@ class NotificationCategoryConfig {
 }
 
 /// Notification categories mapping
-const Map<NotificationCategory, NotificationCategoryConfig> notificationCategories = {
+const Map<NotificationCategory, NotificationCategoryConfig>
+notificationCategories = {
   NotificationCategory.receiptProcessing: NotificationCategoryConfig(
     label: 'Receipt Processing',
     description: 'Notifications about receipt upload and processing status',
@@ -94,7 +95,8 @@ const Map<NotificationCategory, NotificationCategoryConfig> notificationCategori
   ),
   NotificationCategory.teamCollaboration: NotificationCategoryConfig(
     label: 'Team Collaboration',
-    description: 'Notifications about team activities and receipt collaboration',
+    description:
+        'Notifications about team activities and receipt collaboration',
     types: [
       NotificationType.receiptShared,
       NotificationType.receiptCommentAdded,
@@ -445,53 +447,89 @@ class NotificationPreferences extends Equatable {
       id: id ?? this.id,
       userId: userId ?? this.userId,
       emailEnabled: emailEnabled ?? this.emailEnabled,
-      emailReceiptProcessingStarted: emailReceiptProcessingStarted ?? this.emailReceiptProcessingStarted,
-      emailReceiptProcessingCompleted: emailReceiptProcessingCompleted ?? this.emailReceiptProcessingCompleted,
-      emailReceiptProcessingFailed: emailReceiptProcessingFailed ?? this.emailReceiptProcessingFailed,
-      emailReceiptReadyForReview: emailReceiptReadyForReview ?? this.emailReceiptReadyForReview,
-      emailReceiptBatchCompleted: emailReceiptBatchCompleted ?? this.emailReceiptBatchCompleted,
-      emailReceiptBatchFailed: emailReceiptBatchFailed ?? this.emailReceiptBatchFailed,
+      emailReceiptProcessingStarted:
+          emailReceiptProcessingStarted ?? this.emailReceiptProcessingStarted,
+      emailReceiptProcessingCompleted:
+          emailReceiptProcessingCompleted ??
+          this.emailReceiptProcessingCompleted,
+      emailReceiptProcessingFailed:
+          emailReceiptProcessingFailed ?? this.emailReceiptProcessingFailed,
+      emailReceiptReadyForReview:
+          emailReceiptReadyForReview ?? this.emailReceiptReadyForReview,
+      emailReceiptBatchCompleted:
+          emailReceiptBatchCompleted ?? this.emailReceiptBatchCompleted,
+      emailReceiptBatchFailed:
+          emailReceiptBatchFailed ?? this.emailReceiptBatchFailed,
       emailReceiptShared: emailReceiptShared ?? this.emailReceiptShared,
-      emailReceiptCommentAdded: emailReceiptCommentAdded ?? this.emailReceiptCommentAdded,
-      emailReceiptEditedByTeamMember: emailReceiptEditedByTeamMember ?? this.emailReceiptEditedByTeamMember,
-      emailReceiptApprovedByTeam: emailReceiptApprovedByTeam ?? this.emailReceiptApprovedByTeam,
-      emailReceiptFlaggedForReview: emailReceiptFlaggedForReview ?? this.emailReceiptFlaggedForReview,
-      emailTeamInvitationSent: emailTeamInvitationSent ?? this.emailTeamInvitationSent,
-      emailTeamInvitationAccepted: emailTeamInvitationAccepted ?? this.emailTeamInvitationAccepted,
-      emailTeamMemberJoined: emailTeamMemberJoined ?? this.emailTeamMemberJoined,
+      emailReceiptCommentAdded:
+          emailReceiptCommentAdded ?? this.emailReceiptCommentAdded,
+      emailReceiptEditedByTeamMember:
+          emailReceiptEditedByTeamMember ?? this.emailReceiptEditedByTeamMember,
+      emailReceiptApprovedByTeam:
+          emailReceiptApprovedByTeam ?? this.emailReceiptApprovedByTeam,
+      emailReceiptFlaggedForReview:
+          emailReceiptFlaggedForReview ?? this.emailReceiptFlaggedForReview,
+      emailTeamInvitationSent:
+          emailTeamInvitationSent ?? this.emailTeamInvitationSent,
+      emailTeamInvitationAccepted:
+          emailTeamInvitationAccepted ?? this.emailTeamInvitationAccepted,
+      emailTeamMemberJoined:
+          emailTeamMemberJoined ?? this.emailTeamMemberJoined,
       emailTeamMemberLeft: emailTeamMemberLeft ?? this.emailTeamMemberLeft,
-      emailTeamMemberRemoved: emailTeamMemberRemoved ?? this.emailTeamMemberRemoved,
-      emailTeamMemberRoleChanged: emailTeamMemberRoleChanged ?? this.emailTeamMemberRoleChanged,
-      emailTeamSettingsUpdated: emailTeamSettingsUpdated ?? this.emailTeamSettingsUpdated,
+      emailTeamMemberRemoved:
+          emailTeamMemberRemoved ?? this.emailTeamMemberRemoved,
+      emailTeamMemberRoleChanged:
+          emailTeamMemberRoleChanged ?? this.emailTeamMemberRoleChanged,
+      emailTeamSettingsUpdated:
+          emailTeamSettingsUpdated ?? this.emailTeamSettingsUpdated,
       emailClaimSubmitted: emailClaimSubmitted ?? this.emailClaimSubmitted,
       emailClaimApproved: emailClaimApproved ?? this.emailClaimApproved,
       emailClaimRejected: emailClaimRejected ?? this.emailClaimRejected,
-      emailClaimReviewRequested: emailClaimReviewRequested ?? this.emailClaimReviewRequested,
+      emailClaimReviewRequested:
+          emailClaimReviewRequested ?? this.emailClaimReviewRequested,
       pushEnabled: pushEnabled ?? this.pushEnabled,
-      pushReceiptProcessingStarted: pushReceiptProcessingStarted ?? this.pushReceiptProcessingStarted,
-      pushReceiptProcessingCompleted: pushReceiptProcessingCompleted ?? this.pushReceiptProcessingCompleted,
-      pushReceiptProcessingFailed: pushReceiptProcessingFailed ?? this.pushReceiptProcessingFailed,
-      pushReceiptReadyForReview: pushReceiptReadyForReview ?? this.pushReceiptReadyForReview,
-      pushReceiptBatchCompleted: pushReceiptBatchCompleted ?? this.pushReceiptBatchCompleted,
-      pushReceiptBatchFailed: pushReceiptBatchFailed ?? this.pushReceiptBatchFailed,
+      pushReceiptProcessingStarted:
+          pushReceiptProcessingStarted ?? this.pushReceiptProcessingStarted,
+      pushReceiptProcessingCompleted:
+          pushReceiptProcessingCompleted ?? this.pushReceiptProcessingCompleted,
+      pushReceiptProcessingFailed:
+          pushReceiptProcessingFailed ?? this.pushReceiptProcessingFailed,
+      pushReceiptReadyForReview:
+          pushReceiptReadyForReview ?? this.pushReceiptReadyForReview,
+      pushReceiptBatchCompleted:
+          pushReceiptBatchCompleted ?? this.pushReceiptBatchCompleted,
+      pushReceiptBatchFailed:
+          pushReceiptBatchFailed ?? this.pushReceiptBatchFailed,
       pushReceiptShared: pushReceiptShared ?? this.pushReceiptShared,
-      pushReceiptCommentAdded: pushReceiptCommentAdded ?? this.pushReceiptCommentAdded,
-      pushReceiptEditedByTeamMember: pushReceiptEditedByTeamMember ?? this.pushReceiptEditedByTeamMember,
-      pushReceiptApprovedByTeam: pushReceiptApprovedByTeam ?? this.pushReceiptApprovedByTeam,
-      pushReceiptFlaggedForReview: pushReceiptFlaggedForReview ?? this.pushReceiptFlaggedForReview,
-      pushTeamInvitationSent: pushTeamInvitationSent ?? this.pushTeamInvitationSent,
-      pushTeamInvitationAccepted: pushTeamInvitationAccepted ?? this.pushTeamInvitationAccepted,
+      pushReceiptCommentAdded:
+          pushReceiptCommentAdded ?? this.pushReceiptCommentAdded,
+      pushReceiptEditedByTeamMember:
+          pushReceiptEditedByTeamMember ?? this.pushReceiptEditedByTeamMember,
+      pushReceiptApprovedByTeam:
+          pushReceiptApprovedByTeam ?? this.pushReceiptApprovedByTeam,
+      pushReceiptFlaggedForReview:
+          pushReceiptFlaggedForReview ?? this.pushReceiptFlaggedForReview,
+      pushTeamInvitationSent:
+          pushTeamInvitationSent ?? this.pushTeamInvitationSent,
+      pushTeamInvitationAccepted:
+          pushTeamInvitationAccepted ?? this.pushTeamInvitationAccepted,
       pushTeamMemberJoined: pushTeamMemberJoined ?? this.pushTeamMemberJoined,
       pushTeamMemberLeft: pushTeamMemberLeft ?? this.pushTeamMemberLeft,
-      pushTeamMemberRemoved: pushTeamMemberRemoved ?? this.pushTeamMemberRemoved,
-      pushTeamMemberRoleChanged: pushTeamMemberRoleChanged ?? this.pushTeamMemberRoleChanged,
-      pushTeamSettingsUpdated: pushTeamSettingsUpdated ?? this.pushTeamSettingsUpdated,
+      pushTeamMemberRemoved:
+          pushTeamMemberRemoved ?? this.pushTeamMemberRemoved,
+      pushTeamMemberRoleChanged:
+          pushTeamMemberRoleChanged ?? this.pushTeamMemberRoleChanged,
+      pushTeamSettingsUpdated:
+          pushTeamSettingsUpdated ?? this.pushTeamSettingsUpdated,
       pushClaimSubmitted: pushClaimSubmitted ?? this.pushClaimSubmitted,
       pushClaimApproved: pushClaimApproved ?? this.pushClaimApproved,
       pushClaimRejected: pushClaimRejected ?? this.pushClaimRejected,
-      pushClaimReviewRequested: pushClaimReviewRequested ?? this.pushClaimReviewRequested,
-      browserPermissionGranted: browserPermissionGranted ?? this.browserPermissionGranted,
-      browserPermissionRequestedAt: browserPermissionRequestedAt ?? this.browserPermissionRequestedAt,
+      pushClaimReviewRequested:
+          pushClaimReviewRequested ?? this.pushClaimReviewRequested,
+      browserPermissionGranted:
+          browserPermissionGranted ?? this.browserPermissionGranted,
+      browserPermissionRequestedAt:
+          browserPermissionRequestedAt ?? this.browserPermissionRequestedAt,
       quietHoursEnabled: quietHoursEnabled ?? this.quietHoursEnabled,
       quietHoursStart: quietHoursStart ?? this.quietHoursStart,
       quietHoursEnd: quietHoursEnd ?? this.quietHoursEnd,
@@ -506,66 +544,66 @@ class NotificationPreferences extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        emailEnabled,
-        emailReceiptProcessingStarted,
-        emailReceiptProcessingCompleted,
-        emailReceiptProcessingFailed,
-        emailReceiptReadyForReview,
-        emailReceiptBatchCompleted,
-        emailReceiptBatchFailed,
-        emailReceiptShared,
-        emailReceiptCommentAdded,
-        emailReceiptEditedByTeamMember,
-        emailReceiptApprovedByTeam,
-        emailReceiptFlaggedForReview,
-        emailTeamInvitationSent,
-        emailTeamInvitationAccepted,
-        emailTeamMemberJoined,
-        emailTeamMemberLeft,
-        emailTeamMemberRemoved,
-        emailTeamMemberRoleChanged,
-        emailTeamSettingsUpdated,
-        emailClaimSubmitted,
-        emailClaimApproved,
-        emailClaimRejected,
-        emailClaimReviewRequested,
-        pushEnabled,
-        pushReceiptProcessingStarted,
-        pushReceiptProcessingCompleted,
-        pushReceiptProcessingFailed,
-        pushReceiptReadyForReview,
-        pushReceiptBatchCompleted,
-        pushReceiptBatchFailed,
-        pushReceiptShared,
-        pushReceiptCommentAdded,
-        pushReceiptEditedByTeamMember,
-        pushReceiptApprovedByTeam,
-        pushReceiptFlaggedForReview,
-        pushTeamInvitationSent,
-        pushTeamInvitationAccepted,
-        pushTeamMemberJoined,
-        pushTeamMemberLeft,
-        pushTeamMemberRemoved,
-        pushTeamMemberRoleChanged,
-        pushTeamSettingsUpdated,
-        pushClaimSubmitted,
-        pushClaimApproved,
-        pushClaimRejected,
-        pushClaimReviewRequested,
-        browserPermissionGranted,
-        browserPermissionRequestedAt,
-        quietHoursEnabled,
-        quietHoursStart,
-        quietHoursEnd,
-        timezone,
-        dailyDigestEnabled,
-        weeklyDigestEnabled,
-        digestTime,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    userId,
+    emailEnabled,
+    emailReceiptProcessingStarted,
+    emailReceiptProcessingCompleted,
+    emailReceiptProcessingFailed,
+    emailReceiptReadyForReview,
+    emailReceiptBatchCompleted,
+    emailReceiptBatchFailed,
+    emailReceiptShared,
+    emailReceiptCommentAdded,
+    emailReceiptEditedByTeamMember,
+    emailReceiptApprovedByTeam,
+    emailReceiptFlaggedForReview,
+    emailTeamInvitationSent,
+    emailTeamInvitationAccepted,
+    emailTeamMemberJoined,
+    emailTeamMemberLeft,
+    emailTeamMemberRemoved,
+    emailTeamMemberRoleChanged,
+    emailTeamSettingsUpdated,
+    emailClaimSubmitted,
+    emailClaimApproved,
+    emailClaimRejected,
+    emailClaimReviewRequested,
+    pushEnabled,
+    pushReceiptProcessingStarted,
+    pushReceiptProcessingCompleted,
+    pushReceiptProcessingFailed,
+    pushReceiptReadyForReview,
+    pushReceiptBatchCompleted,
+    pushReceiptBatchFailed,
+    pushReceiptShared,
+    pushReceiptCommentAdded,
+    pushReceiptEditedByTeamMember,
+    pushReceiptApprovedByTeam,
+    pushReceiptFlaggedForReview,
+    pushTeamInvitationSent,
+    pushTeamInvitationAccepted,
+    pushTeamMemberJoined,
+    pushTeamMemberLeft,
+    pushTeamMemberRemoved,
+    pushTeamMemberRoleChanged,
+    pushTeamSettingsUpdated,
+    pushClaimSubmitted,
+    pushClaimApproved,
+    pushClaimRejected,
+    pushClaimReviewRequested,
+    browserPermissionGranted,
+    browserPermissionRequestedAt,
+    quietHoursEnabled,
+    quietHoursStart,
+    quietHoursEnd,
+    timezone,
+    dailyDigestEnabled,
+    weeklyDigestEnabled,
+    digestTime,
+    createdAt,
+    updatedAt,
+  ];
 
   /// Get email preference for a notification type
   bool getEmailPreference(NotificationType type) {

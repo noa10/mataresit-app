@@ -14,7 +14,7 @@ import '../../../core/services/app_logger.dart';
 /// Service for exporting receipts to various formats
 class ExportService {
   static const String _appName = 'Mataresit';
-  
+
   /// Export receipts to PDF format
   static Future<void> exportToPDF(List<ReceiptModel> receipts) async {
     if (receipts.isEmpty) {
@@ -54,7 +54,7 @@ class ExportService {
                     ],
                   ),
                 ),
-                
+
                 // Summary
                 pw.Container(
                   padding: const pw.EdgeInsets.only(bottom: 20),
@@ -101,24 +101,36 @@ class ExportService {
     try {
       final excel = Excel.createExcel();
       final sheet = excel['Receipts'];
-      
+
       // Add headers
       final headers = [
-        'ID', 'Date', 'Merchant', 'Total', 'Currency', 'Tax',
-        'Payment Method', 'Status', 'Category', 'Processing Status',
-        'Created At', 'Updated At'
+        'ID',
+        'Date',
+        'Merchant',
+        'Total',
+        'Currency',
+        'Tax',
+        'Payment Method',
+        'Status',
+        'Category',
+        'Processing Status',
+        'Created At',
+        'Updated At',
       ];
-      
+
       for (int i = 0; i < headers.length; i++) {
-        sheet.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
-            .value = TextCellValue(headers[i]);
+        sheet
+            .cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
+            .value = TextCellValue(
+          headers[i],
+        );
       }
 
       // Add receipt data
       for (int i = 0; i < receipts.length; i++) {
         final receipt = receipts[i];
         final row = i + 1;
-        
+
         final rowData = [
           receipt.id,
           _formatDate(receipt.transactionDate ?? receipt.createdAt),
@@ -135,8 +147,11 @@ class ExportService {
         ];
 
         for (int j = 0; j < rowData.length; j++) {
-          sheet.cell(CellIndex.indexByColumnRow(columnIndex: j, rowIndex: row))
-              .value = TextCellValue(rowData[j]);
+          sheet
+              .cell(CellIndex.indexByColumnRow(columnIndex: j, rowIndex: row))
+              .value = TextCellValue(
+            rowData[j],
+          );
         }
       }
 
@@ -167,9 +182,18 @@ class ExportService {
 
     try {
       final headers = [
-        'ID', 'Date', 'Merchant', 'Total', 'Currency', 'Tax',
-        'Payment Method', 'Status', 'Category', 'Processing Status',
-        'Created At', 'Updated At'
+        'ID',
+        'Date',
+        'Merchant',
+        'Total',
+        'Currency',
+        'Tax',
+        'Payment Method',
+        'Status',
+        'Category',
+        'Processing Status',
+        'Created At',
+        'Updated At',
       ];
 
       final rows = <List<String>>[headers];
@@ -214,14 +238,14 @@ class ExportService {
     final totalAmount = receipts
         .where((r) => r.totalAmount != null)
         .fold<double>(0.0, (sum, r) => sum + r.totalAmount!);
-    
+
     final statusCounts = <String, int>{};
     final categoryCounts = <String, int>{};
-    
+
     for (final receipt in receipts) {
-      statusCounts[receipt.status.name] = 
+      statusCounts[receipt.status.name] =
           (statusCounts[receipt.status.name] ?? 0) + 1;
-      
+
       final category = receipt.category ?? 'Uncategorized';
       categoryCounts[category] = (categoryCounts[category] ?? 0) + 1;
     }
@@ -232,12 +256,12 @@ class ExportService {
         pw.Text('Total Amount: ${currencyFormatter.format(totalAmount)}'),
         pw.SizedBox(height: 10),
         pw.Text('Status Breakdown:'),
-        ...statusCounts.entries.map((e) => 
-            pw.Text('  ${e.key}: ${e.value}')),
+        ...statusCounts.entries.map((e) => pw.Text('  ${e.key}: ${e.value}')),
         pw.SizedBox(height: 10),
         pw.Text('Category Breakdown:'),
-        ...categoryCounts.entries.take(10).map((e) => 
-            pw.Text('  ${e.key}: ${e.value}')),
+        ...categoryCounts.entries
+            .take(10)
+            .map((e) => pw.Text('  ${e.key}: ${e.value}')),
       ],
     );
   }
@@ -250,14 +274,16 @@ class ExportService {
       context: null,
       data: [
         ['Date', 'Merchant', 'Amount', 'Payment', 'Status', 'Category'],
-        ...receipts.map((receipt) => [
-          _formatDate(receipt.transactionDate ?? receipt.createdAt),
-          receipt.merchantName ?? 'Unknown',
-          currencyFormatter.format(receipt.totalAmount ?? 0),
-          receipt.paymentMethod ?? '',
-          receipt.status.name,
-          receipt.category ?? '',
-        ]),
+        ...receipts.map(
+          (receipt) => [
+            _formatDate(receipt.transactionDate ?? receipt.createdAt),
+            receipt.merchantName ?? 'Unknown',
+            currencyFormatter.format(receipt.totalAmount ?? 0),
+            receipt.paymentMethod ?? '',
+            receipt.status.name,
+            receipt.category ?? '',
+          ],
+        ),
       ],
       headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
       headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
@@ -275,22 +301,22 @@ class ExportService {
 
   static void _addSummaryToExcel(Sheet sheet, List<ReceiptModel> receipts) {
     // Add summary data to Excel sheet
-    sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 0))
-        .value = TextCellValue('Export Summary');
-    
-    sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 2))
-        .value = TextCellValue('Total Receipts');
-    sheet.cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: 2))
-        .value = IntCellValue(receipts.length);
+    sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 0)).value =
+        TextCellValue('Export Summary');
+
+    sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 2)).value =
+        TextCellValue('Total Receipts');
+    sheet.cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: 2)).value =
+        IntCellValue(receipts.length);
 
     final totalAmount = receipts
         .where((r) => r.totalAmount != null)
         .fold<double>(0.0, (sum, r) => sum + r.totalAmount!);
-    
-    sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 3))
-        .value = TextCellValue('Total Amount');
-    sheet.cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: 3))
-        .value = DoubleCellValue(totalAmount);
+
+    sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 3)).value =
+        TextCellValue('Total Amount');
+    sheet.cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: 3)).value =
+        DoubleCellValue(totalAmount);
   }
 
   static Future<void> _savePDF(pw.Document pdf, String filename) async {
@@ -309,10 +335,9 @@ class ExportService {
       await file.writeAsBytes(bytes);
 
       // Share the file
-      await Share.shareXFiles(
-        [XFile(file.path, mimeType: mimeType)],
-        text: 'Receipt export from $_appName',
-      );
+      await Share.shareXFiles([
+        XFile(file.path, mimeType: mimeType),
+      ], text: 'Receipt export from $_appName');
 
       AppLogger.info('✅ File exported and shared: $filename');
     } catch (e) {

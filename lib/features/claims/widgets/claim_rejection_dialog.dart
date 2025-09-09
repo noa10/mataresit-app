@@ -16,7 +16,8 @@ class ClaimRejectionDialog extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ClaimRejectionDialog> createState() => _ClaimRejectionDialogState();
+  ConsumerState<ClaimRejectionDialog> createState() =>
+      _ClaimRejectionDialogState();
 }
 
 class _ClaimRejectionDialogState extends ConsumerState<ClaimRejectionDialog> {
@@ -78,10 +79,7 @@ class _ClaimRejectionDialogState extends ConsumerState<ClaimRejectionDialog> {
     return AlertDialog(
       title: Row(
         children: [
-          Icon(
-            Icons.cancel,
-            color: Colors.red.shade700,
-          ),
+          Icon(Icons.cancel, color: Colors.red.shade700),
           const SizedBox(width: 8),
           const Text('Reject Claim'),
         ],
@@ -121,11 +119,15 @@ class _ClaimRejectionDialogState extends ConsumerState<ClaimRejectionDialog> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          CurrencyUtils.formatCurrency(widget.claim.amount, widget.claim.currency),
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red.shade700,
+                          CurrencyUtils.formatCurrency(
+                            widget.claim.amount,
+                            widget.claim.currency,
                           ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red.shade700,
+                              ),
                         ),
                       ],
                     ),
@@ -141,14 +143,14 @@ class _ClaimRejectionDialogState extends ConsumerState<ClaimRejectionDialog> {
                           const SizedBox(width: 4),
                           Text(
                             'Claimant: ${widget.claim.claimantName}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.red.shade600,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: Colors.red.shade600),
                           ),
                         ],
                       ),
                     ],
-                    if (widget.claim.description != null && widget.claim.description!.isNotEmpty) ...[
+                    if (widget.claim.description != null &&
+                        widget.claim.description!.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       Text(
                         widget.claim.description!,
@@ -195,7 +197,8 @@ class _ClaimRejectionDialogState extends ConsumerState<ClaimRejectionDialog> {
                 controller: _reasonController,
                 decoration: const InputDecoration(
                   labelText: 'Rejection Reason *',
-                  hintText: 'Please provide a clear reason for rejecting this claim...',
+                  hintText:
+                      'Please provide a clear reason for rejecting this claim...',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.comment),
                   errorMaxLines: 2,
@@ -218,29 +221,34 @@ class _ClaimRejectionDialogState extends ConsumerState<ClaimRejectionDialog> {
               // Common rejection reasons (quick select)
               Text(
                 'Common Reasons:',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
-                children: [
-                  'Insufficient documentation',
-                  'Amount exceeds policy limits',
-                  'Duplicate claim',
-                  'Invalid receipt',
-                  'Missing required information',
-                  'Policy violation',
-                ].map((reason) => ActionChip(
-                  label: Text(
-                    reason,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  onPressed: () {
-                    _reasonController.text = reason;
-                  },
-                )).toList(),
+                children:
+                    [
+                          'Insufficient documentation',
+                          'Amount exceeds policy limits',
+                          'Duplicate claim',
+                          'Invalid receipt',
+                          'Missing required information',
+                          'Policy violation',
+                        ]
+                        .map(
+                          (reason) => ActionChip(
+                            label: Text(
+                              reason,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            onPressed: () {
+                              _reasonController.text = reason;
+                            },
+                          ),
+                        )
+                        .toList(),
               ),
             ],
           ),

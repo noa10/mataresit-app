@@ -17,22 +17,22 @@ void main() {
       // Mock method channels using the new API
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('plugins.flutter.io/path_provider'),
-        (MethodCall methodCall) async {
-          return '/tmp';
-        },
-      );
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            (MethodCall methodCall) async {
+              return '/tmp';
+            },
+          );
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('plugins.flutter.io/shared_preferences'),
-        (MethodCall methodCall) async {
-          if (methodCall.method == 'getAll') {
-            return <String, Object>{};
-          }
-          return null;
-        },
-      );
+            const MethodChannel('plugins.flutter.io/shared_preferences'),
+            (MethodCall methodCall) async {
+              if (methodCall.method == 'getAll') {
+                return <String, Object>{};
+              }
+              return null;
+            },
+          );
     });
 
     setUp(() {
@@ -44,7 +44,10 @@ void main() {
     });
 
     test('should have correct Supabase configuration', () {
-      expect(AppConstants.supabaseUrl, equals('https://mpmkbtsufihzdelrlszs.supabase.co'));
+      expect(
+        AppConstants.supabaseUrl,
+        equals('https://mpmkbtsufihzdelrlszs.supabase.co'),
+      );
       expect(AppConstants.supabaseAnonKey, isNotEmpty);
       expect(AppConstants.supabaseAnonKey.startsWith('eyJ'), isTrue);
       // Supabase configuration verified through assertions above

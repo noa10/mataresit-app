@@ -40,7 +40,8 @@ class CurrencyState extends Equatable {
     return CurrencyState(
       supportedCurrencies: supportedCurrencies ?? this.supportedCurrencies,
       popularCurrencies: popularCurrencies ?? this.popularCurrencies,
-      userPreferredCurrency: userPreferredCurrency ?? this.userPreferredCurrency,
+      userPreferredCurrency:
+          userPreferredCurrency ?? this.userPreferredCurrency,
       userPreferences: userPreferences ?? this.userPreferences,
       isLoading: isLoading ?? this.isLoading,
       isUpdating: isUpdating ?? this.isUpdating,
@@ -50,14 +51,14 @@ class CurrencyState extends Equatable {
 
   @override
   List<Object?> get props => [
-        supportedCurrencies,
-        popularCurrencies,
-        userPreferredCurrency,
-        userPreferences,
-        isLoading,
-        isUpdating,
-        error,
-      ];
+    supportedCurrencies,
+    popularCurrencies,
+    userPreferredCurrency,
+    userPreferences,
+    isLoading,
+    isUpdating,
+    error,
+  ];
 }
 
 /// Currency notifier
@@ -68,13 +69,11 @@ class CurrencyNotifier extends StateNotifier<CurrencyState> {
   Future<void> loadSupportedCurrencies() async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
-      final currencies = await CurrencyPreferenceService.getSupportedCurrencies();
-      
-      state = state.copyWith(
-        supportedCurrencies: currencies,
-        isLoading: false,
-      );
+
+      final currencies =
+          await CurrencyPreferenceService.getSupportedCurrencies();
+
+      state = state.copyWith(supportedCurrencies: currencies, isLoading: false);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -87,7 +86,7 @@ class CurrencyNotifier extends StateNotifier<CurrencyState> {
   Future<void> loadPopularCurrencies() async {
     try {
       final currencies = await CurrencyPreferenceService.getPopularCurrencies();
-      
+
       state = state.copyWith(popularCurrencies: currencies);
     } catch (e) {
       state = state.copyWith(
@@ -100,9 +99,10 @@ class CurrencyNotifier extends StateNotifier<CurrencyState> {
   Future<void> loadUserPreferences(String userId) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
-      final preferences = await CurrencyPreferenceService.getUserCurrencyPreferences(userId);
-      
+
+      final preferences =
+          await CurrencyPreferenceService.getUserCurrencyPreferences(userId);
+
       state = state.copyWith(
         userPreferences: preferences,
         userPreferredCurrency: preferences.preferredCurrency,
@@ -120,9 +120,13 @@ class CurrencyNotifier extends StateNotifier<CurrencyState> {
   Future<bool> updatePreferredCurrency(String userId, String currency) async {
     try {
       state = state.copyWith(isUpdating: true, error: null);
-      
-      final success = await CurrencyPreferenceService.updateUserPreferredCurrency(userId, currency);
-      
+
+      final success =
+          await CurrencyPreferenceService.updateUserPreferredCurrency(
+            userId,
+            currency,
+          );
+
       if (success) {
         state = state.copyWith(
           userPreferredCurrency: currency,
@@ -138,7 +142,7 @@ class CurrencyNotifier extends StateNotifier<CurrencyState> {
           error: 'Failed to update preferred currency',
         );
       }
-      
+
       return success;
     } catch (e) {
       state = state.copyWith(
@@ -166,9 +170,7 @@ class CurrencyNotifier extends StateNotifier<CurrencyState> {
     try {
       return await CurrencyPreferenceService.getCurrencyByCode(code);
     } catch (e) {
-      state = state.copyWith(
-        error: 'Failed to get currency: ${e.toString()}',
-      );
+      state = state.copyWith(error: 'Failed to get currency: ${e.toString()}');
       return null;
     }
   }
@@ -180,23 +182,25 @@ class CurrencyNotifier extends StateNotifier<CurrencyState> {
 }
 
 /// Currency provider
-final currencyProvider = StateNotifierProvider<CurrencyNotifier, CurrencyState>((ref) {
-  final notifier = CurrencyNotifier();
-  
-  // Listen to auth state changes
-  ref.listen<AuthState>(authProvider, (previous, next) {
-    if (next.isAuthenticated && next.user != null) {
-      // Load user preferences when authenticated
-      notifier.loadUserPreferences(next.user!.id);
-    }
-  });
-  
-  // Load initial data
-  notifier.loadPopularCurrencies();
-  notifier.loadSupportedCurrencies();
-  
-  return notifier;
-});
+final currencyProvider = StateNotifierProvider<CurrencyNotifier, CurrencyState>(
+  (ref) {
+    final notifier = CurrencyNotifier();
+
+    // Listen to auth state changes
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (next.isAuthenticated && next.user != null) {
+        // Load user preferences when authenticated
+        notifier.loadUserPreferences(next.user!.id);
+      }
+    });
+
+    // Load initial data
+    notifier.loadPopularCurrencies();
+    notifier.loadSupportedCurrencies();
+
+    return notifier;
+  },
+);
 
 /// Provider for user's preferred currency
 final userPreferredCurrencyProvider = Provider<String>((ref) {
@@ -217,37 +221,45 @@ final supportedCurrenciesProvider = Provider<List<CurrencyModel>>((ref) {
 });
 
 /// Provider for currency search
-final currencySearchProvider = FutureProvider.family<List<CurrencyModel>, String>((ref, query) async {
-  final notifier = ref.read(currencyProvider.notifier);
-  return await notifier.searchCurrencies(query);
-});
+final currencySearchProvider =
+    FutureProvider.family<List<CurrencyModel>, String>((ref, query) async {
+      final notifier = ref.read(currencyProvider.notifier);
+      return await notifier.searchCurrencies(query);
+    });
 
 /// Provider for getting currency by code
-final currencyByCodeProvider = FutureProvider.family<CurrencyModel?, String>((ref, code) async {
+final currencyByCodeProvider = FutureProvider.family<CurrencyModel?, String>((
+  ref,
+  code,
+) async {
   final notifier = ref.read(currencyProvider.notifier);
   return await notifier.getCurrencyByCode(code);
 });
 
 /// Provider for currency conversion
-final currencyConversionProvider = FutureProvider.family<CurrencyConversionResult, CurrencyConversionParams>((ref, params) async {
-  // Try cached conversion first
-  final cachedResult = await CurrencyCacheService.convertWithCachedRates(
-    amount: params.amount,
-    fromCurrency: params.fromCurrency,
-    toCurrency: params.toCurrency,
-  );
-  
-  if (cachedResult != null) {
-    return cachedResult;
-  }
-  
-  // Fall back to live API
-  return await CurrencyExchangeService.convertCurrency(
-    amount: params.amount,
-    fromCurrency: params.fromCurrency,
-    toCurrency: params.toCurrency,
-  );
-});
+final currencyConversionProvider =
+    FutureProvider.family<CurrencyConversionResult, CurrencyConversionParams>((
+      ref,
+      params,
+    ) async {
+      // Try cached conversion first
+      final cachedResult = await CurrencyCacheService.convertWithCachedRates(
+        amount: params.amount,
+        fromCurrency: params.fromCurrency,
+        toCurrency: params.toCurrency,
+      );
+
+      if (cachedResult != null) {
+        return cachedResult;
+      }
+
+      // Fall back to live API
+      return await CurrencyExchangeService.convertCurrency(
+        amount: params.amount,
+        fromCurrency: params.fromCurrency,
+        toCurrency: params.toCurrency,
+      );
+    });
 
 /// Parameters for currency conversion
 class CurrencyConversionParams extends Equatable {
@@ -266,21 +278,26 @@ class CurrencyConversionParams extends Equatable {
 }
 
 /// Provider for formatting currency amounts
-final currencyFormatterProvider = Provider.family<String, CurrencyFormatterParams>((ref, params) {
-  // Get currency model if available
-  final currencyAsync = ref.watch(currencyByCodeProvider(params.currencyCode));
-  
-  return currencyAsync.when(
-    data: (currency) {
-      if (currency != null) {
-        return currency.formatAmount(params.amount);
-      }
-      return '${params.amount.toStringAsFixed(2)} ${params.currencyCode}';
-    },
-    loading: () => '${params.amount.toStringAsFixed(2)} ${params.currencyCode}',
-    error: (error, stackTrace) => '${params.amount.toStringAsFixed(2)} ${params.currencyCode}',
-  );
-});
+final currencyFormatterProvider =
+    Provider.family<String, CurrencyFormatterParams>((ref, params) {
+      // Get currency model if available
+      final currencyAsync = ref.watch(
+        currencyByCodeProvider(params.currencyCode),
+      );
+
+      return currencyAsync.when(
+        data: (currency) {
+          if (currency != null) {
+            return currency.formatAmount(params.amount);
+          }
+          return '${params.amount.toStringAsFixed(2)} ${params.currencyCode}';
+        },
+        loading: () =>
+            '${params.amount.toStringAsFixed(2)} ${params.currencyCode}',
+        error: (error, stackTrace) =>
+            '${params.amount.toStringAsFixed(2)} ${params.currencyCode}',
+      );
+    });
 
 /// Parameters for currency formatting
 class CurrencyFormatterParams extends Equatable {

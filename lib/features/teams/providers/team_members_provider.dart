@@ -93,18 +93,12 @@ class TeamMembersNotifier extends StateNotifier<TeamMembersState> {
         return aName.compareTo(bName);
       });
 
-      state = state.copyWith(
-        members: members,
-        isLoading: false,
-      );
+      state = state.copyWith(members: members, isLoading: false);
 
       AppLogger.info('✅ Loaded ${members.length} team members');
     } catch (e) {
       AppLogger.error('Error loading team members', e);
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -129,28 +123,37 @@ class TeamMembersNotifier extends StateNotifier<TeamMembersState> {
 }
 
 /// Team members provider
-final teamMembersProvider = StateNotifierProvider.family<TeamMembersNotifier, TeamMembersState, List<String>>((ref, memberIds) {
-  final notifier = TeamMembersNotifier(ref);
-  // Auto-load members when provider is created
-  Future.microtask(() => notifier.loadTeamMembers(memberIds));
-  return notifier;
-});
+final teamMembersProvider =
+    StateNotifierProvider.family<
+      TeamMembersNotifier,
+      TeamMembersState,
+      List<String>
+    >((ref, memberIds) {
+      final notifier = TeamMembersNotifier(ref);
+      // Auto-load members when provider is created
+      Future.microtask(() => notifier.loadTeamMembers(memberIds));
+      return notifier;
+    });
 
 /// Provider for a specific team's members
-final teamMembersForTeamProvider = Provider.family<AsyncValue<List<UserModel>>, List<String>>((ref, memberIds) {
-  if (memberIds.isEmpty) {
-    return const AsyncValue.data([]);
-  }
+final teamMembersForTeamProvider =
+    Provider.family<AsyncValue<List<UserModel>>, List<String>>((
+      ref,
+      memberIds,
+    ) {
+      if (memberIds.isEmpty) {
+        return const AsyncValue.data([]);
+      }
 
-  final membersState = ref.watch(teamMembersProvider(memberIds));
-  
-  if (membersState.isLoading) {
-    return const AsyncValue.loading();
-  }
-  
-  if (membersState.error != null) {
-    return AsyncValue.error(membersState.error!, StackTrace.current);
-  }
-  
-  return AsyncValue.data(membersState.members);
-});
+      final membersState = ref.watch(teamMembersProvider(memberIds));
+
+      if (membersState.isLoading) {
+        return const AsyncValue.loading();
+      }
+
+      if (membersState.error != null) {
+        return AsyncValue.error(membersState.error!, StackTrace.current);
+      }
+
+      return AsyncValue.data(membersState.members);
+    });

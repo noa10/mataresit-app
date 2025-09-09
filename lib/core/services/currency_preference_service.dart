@@ -30,9 +30,14 @@ class CurrencyPreferenceService {
   }
 
   /// Update user's preferred currency
-  static Future<bool> updateUserPreferredCurrency(String userId, String currency) async {
+  static Future<bool> updateUserPreferredCurrency(
+    String userId,
+    String currency,
+  ) async {
     try {
-      AppLogger.info('Updating preferred currency for user $userId to $currency');
+      AppLogger.info(
+        'Updating preferred currency for user $userId to $currency',
+      );
 
       // Validate currency code
       if (!_isValidCurrencyCode(currency)) {
@@ -57,17 +62,17 @@ class CurrencyPreferenceService {
   static Future<List<CurrencyModel>> getSupportedCurrencies() async {
     try {
       AppLogger.info('Fetching supported currencies from database');
-      
+
       final response = await _supabase
           .from('supported_currencies')
           .select()
           .eq('is_active', true)
           .order('display_order');
-      
+
       final currencies = (response as List)
           .map((json) => CurrencyModel.fromJson(json))
           .toList();
-      
+
       AppLogger.info('Fetched ${currencies.length} supported currencies');
       return currencies;
     } catch (e) {
@@ -81,18 +86,18 @@ class CurrencyPreferenceService {
   static Future<List<CurrencyModel>> getPopularCurrencies() async {
     try {
       AppLogger.info('Fetching popular currencies from database');
-      
+
       final response = await _supabase
           .from('supported_currencies')
           .select()
           .eq('is_popular', true)
           .eq('is_active', true)
           .order('display_order');
-      
+
       final currencies = (response as List)
           .map((json) => CurrencyModel.fromJson(json))
           .toList();
-      
+
       AppLogger.info('Fetched ${currencies.length} popular currencies');
       return currencies.isNotEmpty ? currencies : PopularCurrencies.all;
     } catch (e) {
@@ -106,14 +111,14 @@ class CurrencyPreferenceService {
     try {
       final normalizedCode = code.toUpperCase();
       AppLogger.info('Fetching currency details for: $normalizedCode');
-      
+
       final response = await _supabase
           .from('supported_currencies')
           .select()
           .eq('code', normalizedCode)
           .eq('is_active', true)
           .maybeSingle();
-      
+
       if (response != null) {
         final currency = CurrencyModel.fromJson(response);
         AppLogger.info('Found currency: ${currency.name}');
@@ -138,46 +143,50 @@ class CurrencyPreferenceService {
     try {
       final normalizedQuery = query.trim().toLowerCase();
       AppLogger.info('Searching currencies with query: $normalizedQuery');
-      
+
       final response = await _supabase
           .from('supported_currencies')
           .select()
           .eq('is_active', true)
-          .or('currency_code.ilike.%$normalizedQuery%,currency_name.ilike.%$normalizedQuery%')
+          .or(
+            'currency_code.ilike.%$normalizedQuery%,currency_name.ilike.%$normalizedQuery%',
+          )
           .order('display_order');
-      
+
       final currencies = (response as List)
           .map((json) => CurrencyModel.fromJson(json))
           .toList();
-      
+
       AppLogger.info('Found ${currencies.length} currencies matching query');
       return currencies;
     } catch (e) {
       AppLogger.error('Error searching currencies: $e');
-      
+
       // Fallback to local search in popular currencies
       final popularCurrencies = PopularCurrencies.all;
       final normalizedQuery = query.trim().toLowerCase();
-      
+
       return popularCurrencies.where((currency) {
         return currency.code.toLowerCase().contains(normalizedQuery) ||
-               currency.name.toLowerCase().contains(normalizedQuery);
+            currency.name.toLowerCase().contains(normalizedQuery);
       }).toList();
     }
   }
 
   /// Get user's complete currency preferences
-  static Future<CurrencyPreferenceModel> getUserCurrencyPreferences(String userId) async {
+  static Future<CurrencyPreferenceModel> getUserCurrencyPreferences(
+    String userId,
+  ) async {
     try {
       AppLogger.info('Getting currency preferences for user: $userId');
-      
+
       final preferredCurrency = await getUserPreferredCurrency(userId);
-      
+
       // For now, return default preferences with the user's preferred currency
       // In the future, this could be expanded to include more preference fields
-      return CurrencyPreferenceModel.defaultFor(userId).copyWith(
-        preferredCurrency: preferredCurrency,
-      );
+      return CurrencyPreferenceModel.defaultFor(
+        userId,
+      ).copyWith(preferredCurrency: preferredCurrency);
     } catch (e) {
       AppLogger.error('Error getting user currency preferences: $e');
       return CurrencyPreferenceModel.defaultFor(userId);
@@ -191,15 +200,18 @@ class CurrencyPreferenceService {
   ) async {
     try {
       AppLogger.info('Updating currency preferences for user: $userId');
-      
+
       // For now, only update the preferred currency in the profiles table
       // In the future, this could be expanded to include a separate preferences table
-      final success = await updateUserPreferredCurrency(userId, preferences.preferredCurrency);
-      
+      final success = await updateUserPreferredCurrency(
+        userId,
+        preferences.preferredCurrency,
+      );
+
       if (success) {
         AppLogger.info('Successfully updated currency preferences');
       }
-      
+
       return success;
     } catch (e) {
       AppLogger.error('Error updating currency preferences: $e');
@@ -214,7 +226,9 @@ class CurrencyPreferenceService {
   }
 
   /// Get currency formatting information
-  static Future<Map<String, dynamic>> getCurrencyFormatting(String currencyCode) async {
+  static Future<Map<String, dynamic>> getCurrencyFormatting(
+    String currencyCode,
+  ) async {
     try {
       final currency = await getCurrencyByCode(currencyCode);
       if (currency != null) {

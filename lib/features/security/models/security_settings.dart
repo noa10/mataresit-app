@@ -8,22 +8,22 @@ part 'security_settings.g.dart';
 class SecuritySettings extends Equatable {
   /// Whether biometric authentication is enabled
   final bool biometricEnabled;
-  
+
   /// Whether app lock/PIN is enabled
   final bool appLockEnabled;
-  
+
   /// App lock PIN (stored securely, this is just a flag)
   final bool hasPinSet;
-  
+
   /// Auto-logout timeout in minutes (0 = never)
   final int autoLogoutMinutes;
-  
+
   /// Whether two-factor authentication is enabled
   final bool twoFactorEnabled;
-  
+
   /// Whether to require authentication for sensitive operations
   final bool requireAuthForSensitiveOps;
-  
+
   /// Last time security settings were updated
   final DateTime? lastUpdated;
 
@@ -60,7 +60,8 @@ class SecuritySettings extends Equatable {
       hasPinSet: hasPinSet ?? this.hasPinSet,
       autoLogoutMinutes: autoLogoutMinutes ?? this.autoLogoutMinutes,
       twoFactorEnabled: twoFactorEnabled ?? this.twoFactorEnabled,
-      requireAuthForSensitiveOps: requireAuthForSensitiveOps ?? this.requireAuthForSensitiveOps,
+      requireAuthForSensitiveOps:
+          requireAuthForSensitiveOps ?? this.requireAuthForSensitiveOps,
       lastUpdated: lastUpdated ?? this.lastUpdated,
     );
   }
@@ -88,12 +89,12 @@ class SecuritySettings extends Equatable {
 
   @override
   List<Object?> get props => [
-        biometricEnabled,
-        appLockEnabled,
-        hasPinSet,
-        autoLogoutMinutes,
-        twoFactorEnabled,
-        requireAuthForSensitiveOps,
-        lastUpdated,
-      ];
+    biometricEnabled,
+    appLockEnabled,
+    hasPinSet,
+    autoLogoutMinutes,
+    twoFactorEnabled,
+    requireAuthForSensitiveOps,
+    lastUpdated,
+  ];
 }

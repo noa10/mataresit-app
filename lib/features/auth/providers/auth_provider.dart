@@ -86,7 +86,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
         if (authState.event == AuthChangeEvent.signedIn) {
           final user = authState.session?.user;
           if (user != null) {
-            AppLogger.info('👤 User signed in via auth state change: ${user.email}');
+            AppLogger.info(
+              '👤 User signed in via auth state change: ${user.email}',
+            );
             _loadUserProfile(user.id);
           } else {
             AppLogger.warning('⚠️ SignedIn event but no user in session');
@@ -97,7 +99,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
         }
       });
     } else {
-      AppLogger.warning('⚠️ Cannot set up auth state listener - Supabase not initialized');
+      AppLogger.warning(
+        '⚠️ Cannot set up auth state listener - Supabase not initialized',
+      );
     }
   }
 
@@ -134,7 +138,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
           // Continue to profile creation fallback
         }
       } else {
-        AppLogger.info('No profile data found for user $userId, will create new profile');
+        AppLogger.info(
+          'No profile data found for user $userId, will create new profile',
+        );
       }
 
       // If no profile exists, try to create one from auth data
@@ -145,15 +151,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
           final fullName = authUser.userMetadata?['full_name'] as String?;
           final nameParts = fullName?.split(' ') ?? [];
 
-          final firstName = authUser.userMetadata?['given_name'] as String? ??
-                           (nameParts.isNotEmpty ? nameParts.first : null);
-          final lastName = authUser.userMetadata?['family_name'] as String? ??
-                          (nameParts.length > 1 ? nameParts.skip(1).join(' ') : null);
-          final googleAvatarUrl = authUser.userMetadata?['avatar_url'] as String?;
+          final firstName =
+              authUser.userMetadata?['given_name'] as String? ??
+              (nameParts.isNotEmpty ? nameParts.first : null);
+          final lastName =
+              authUser.userMetadata?['family_name'] as String? ??
+              (nameParts.length > 1 ? nameParts.skip(1).join(' ') : null);
+          final googleAvatarUrl =
+              authUser.userMetadata?['avatar_url'] as String?;
 
           // Try to create profile in database
           try {
-            AppLogger.info('Creating new profile in database for user: ${authUser.email}');
+            AppLogger.info(
+              'Creating new profile in database for user: ${authUser.email}',
+            );
             profileData = await SupabaseService.createUserProfile(
               userId: authUser.id,
               email: authUser.email,
@@ -164,7 +175,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
             );
 
             if (profileData != null) {
-              AppLogger.info('Successfully created profile in database for user: ${authUser.email}');
+              AppLogger.info(
+                'Successfully created profile in database for user: ${authUser.email}',
+              );
               final user = UserModel.fromJson(profileData);
               state = state.copyWith(
                 user: user,
@@ -173,10 +186,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
               );
               return;
             } else {
-              AppLogger.warning('Profile creation returned null for user: ${authUser.email}');
+              AppLogger.warning(
+                'Profile creation returned null for user: ${authUser.email}',
+              );
             }
           } catch (e, stackTrace) {
-            AppLogger.error('Failed to create profile in database for user: ${authUser.email}', e);
+            AppLogger.error(
+              'Failed to create profile in database for user: ${authUser.email}',
+              e,
+            );
             AppLogger.debug('Profile creation error stack trace: $stackTrace');
           }
 
@@ -243,7 +261,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
 
       if (response.user != null) {
-        AppLogger.info('✅ Supabase authentication successful for: ${response.user!.email}');
+        AppLogger.info(
+          '✅ Supabase authentication successful for: ${response.user!.email}',
+        );
         AppLogger.info('🔄 Loading user profile for ID: ${response.user!.id}');
         await _loadUserProfile(response.user!.id);
       } else {
@@ -255,10 +275,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
     } on AuthException catch (e) {
       AppLogger.error('❌ Supabase authentication error: ${e.message}', e);
-      state = state.copyWith(
-        isLoading: false,
-        error: e.message,
-      );
+      state = state.copyWith(isLoading: false, error: e.message);
     } catch (e) {
       AppLogger.error('❌ Unexpected sign-in error', e);
       state = state.copyWith(
@@ -291,19 +308,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
           AppLogger.warning('Failed to create user profile in database', e);
           // Continue anyway - we'll use minimal user data
         }
-        
+
         await _loadUserProfile(response.user!.id);
       } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Sign up failed',
-        );
+        state = state.copyWith(isLoading: false, error: 'Sign up failed');
       }
     } on AuthException catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.message,
-      );
+      state = state.copyWith(isLoading: false, error: e.message);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -342,10 +353,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await SupabaseService.signOut();
       state = const AuthState(isLoading: false, isAuthenticated: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Sign out failed',
-      );
+      state = state.copyWith(isLoading: false, error: 'Sign out failed');
     }
   }
 
@@ -356,10 +364,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await SupabaseService.resetPassword(email);
       state = state.copyWith(isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Password reset failed',
-      );
+      state = state.copyWith(isLoading: false, error: 'Password reset failed');
     }
   }
 
@@ -367,28 +372,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> updateProfile(Map<String, dynamic> data) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       if (state.user != null) {
         try {
           await SupabaseService.updateUserProfile(
             userId: state.user!.id,
-            updates: {
-              ...data,
-              'updated_at': DateTime.now().toIso8601String(),
-            },
+            updates: {...data, 'updated_at': DateTime.now().toIso8601String()},
           );
         } catch (e) {
           AppLogger.warning('Failed to update profile in database', e);
           // Continue anyway - update local state
         }
-        
+
         await _loadUserProfile(state.user!.id);
       }
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Profile update failed',
-      );
+      state = state.copyWith(isLoading: false, error: 'Profile update failed');
     }
   }
 

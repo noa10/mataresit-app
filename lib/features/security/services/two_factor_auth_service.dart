@@ -21,7 +21,7 @@ class TwoFactorAuthService {
   static List<String> generateBackupCodes() {
     final random = Random.secure();
     final codes = <String>[];
-    
+
     for (int i = 0; i < _backupCodesCount; i++) {
       String code = '';
       for (int j = 0; j < _backupCodeLength; j++) {
@@ -31,7 +31,7 @@ class TwoFactorAuthService {
       code = '${code.substring(0, 4)}-${code.substring(4)}';
       codes.add(code);
     }
-    
+
     return codes;
   }
 
@@ -58,27 +58,27 @@ class TwoFactorAuthService {
   static bool verifyTOTP(String secret, String code, {DateTime? time}) {
     try {
       final currentTime = time ?? DateTime.now();
-      
+
       // Check current time window
       final currentCode = generateTOTP(secret, time: currentTime);
       if (currentCode == code) {
         return true;
       }
-      
+
       // Check previous time window (30 seconds ago)
       final previousTime = currentTime.subtract(const Duration(seconds: 30));
       final previousCode = generateTOTP(secret, time: previousTime);
       if (previousCode == code) {
         return true;
       }
-      
+
       // Check next time window (30 seconds ahead)
       final nextTime = currentTime.add(const Duration(seconds: 30));
       final nextCode = generateTOTP(secret, time: nextTime);
       if (nextCode == code) {
         return true;
       }
-      
+
       return false;
     } catch (e) {
       _logger.e('Failed to verify TOTP code: $e');
@@ -100,8 +100,10 @@ class TwoFactorAuthService {
 
       // Generate QR code data
       final issuer = 'Mataresit';
-      final accountName = 'user@mataresit.com'; // This should be the actual user email
-      final qrCodeData = 'otpauth://totp/$issuer:$accountName?secret=$secret&issuer=$issuer';
+      final accountName =
+          'user@mataresit.com'; // This should be the actual user email
+      final qrCodeData =
+          'otpauth://totp/$issuer:$accountName?secret=$secret&issuer=$issuer';
 
       _logger.d('2FA setup completed successfully');
 
@@ -160,7 +162,7 @@ class TwoFactorAuthService {
         // Remove used backup code
         backupCodes.remove(code);
         await SecureStorageService.storeBackupCodes(backupCodes);
-        
+
         _logger.d('2FA code verified successfully (backup code)');
         return true;
       }

@@ -9,7 +9,6 @@ import '../../../app/router/app_router.dart';
 import '../../subscription/widgets/subscription_status_card.dart';
 import '../../subscription/widgets/subscription_limits_widget.dart';
 
-
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
@@ -17,8 +16,6 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
     final stats = ref.watch(dashboardStatsProvider);
-
-
 
     return Scaffold(
       appBar: AppBar(
@@ -68,15 +65,13 @@ class DashboardScreen extends ConsumerWidget {
                           children: [
                             Text(
                               'Welcome back,',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Colors.grey[600],
-                              ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: Colors.grey[600]),
                             ),
                             Text(
                               user?.fullName ?? 'User',
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
@@ -104,13 +99,13 @@ class DashboardScreen extends ConsumerWidget {
               // Quick Stats
               Text(
                 'Quick Stats',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
-              
+
               const SizedBox(height: AppConstants.defaultPadding),
-              
+
               Row(
                 children: [
                   Expanded(
@@ -134,9 +129,9 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: AppConstants.defaultPadding),
-              
+
               Row(
                 children: [
                   Expanded(
@@ -160,19 +155,19 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: AppConstants.largePadding),
-              
+
               // Quick Actions
               Text(
                 'Quick Actions',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
-              
+
               const SizedBox(height: AppConstants.defaultPadding),
-              
+
               Row(
                 children: [
                   Expanded(
@@ -196,19 +191,19 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: AppConstants.largePadding),
-              
+
               // Recent Activity
               Text(
                 'Recent Activity',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
-              
+
               const SizedBox(height: AppConstants.defaultPadding),
-              
+
               if (stats.recentReceipts.isEmpty)
                 Card(
                   child: Padding(
@@ -228,9 +223,8 @@ class DashboardScreen extends ConsumerWidget {
                         const SizedBox(height: AppConstants.smallPadding),
                         Text(
                           'Start by capturing your first receipt!',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: Colors.grey[600]),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -238,38 +232,43 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 )
               else
-                ...stats.recentReceipts.map((receipt) => Card(
-                  margin: const EdgeInsets.only(bottom: AppConstants.smallPadding),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                      child: Icon(
-                        Icons.receipt,
-                        color: Theme.of(context).primaryColor,
-                      ),
+                ...stats.recentReceipts.map(
+                  (receipt) => Card(
+                    margin: const EdgeInsets.only(
+                      bottom: AppConstants.smallPadding,
                     ),
-                    title: Text(receipt.merchantName ?? 'Unknown Merchant'),
-                    subtitle: Text(timeago.format(receipt.createdAt)),
-                    trailing: receipt.totalAmount != null
-                        ? Text(
-                            '\$${receipt.totalAmount!.toStringAsFixed(2)}',
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          )
-                        : null,
-                    onTap: () => context.push('/receipts/${receipt.id}'),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Theme.of(
+                          context,
+                        ).primaryColor.withValues(alpha: 0.1),
+                        child: Icon(
+                          Icons.receipt,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                      title: Text(receipt.merchantName ?? 'Unknown Merchant'),
+                      subtitle: Text(timeago.format(receipt.createdAt)),
+                      trailing: receipt.totalAmount != null
+                          ? Text(
+                              '\$${receipt.totalAmount!.toStringAsFixed(2)}',
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            )
+                          : null,
+                      onTap: () => context.push('/receipts/${receipt.id}'),
+                    ),
                   ),
-                )),
-              
+                ),
+
               // Category Breakdown
               if (stats.categoryBreakdown.isNotEmpty) ...[
                 const SizedBox(height: AppConstants.largePadding),
                 Text(
                   'Category Breakdown',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: AppConstants.defaultPadding),
                 Card(
@@ -277,14 +276,15 @@ class DashboardScreen extends ConsumerWidget {
                     padding: const EdgeInsets.all(AppConstants.defaultPadding),
                     child: Column(
                       children: stats.categoryBreakdown.entries.map((entry) {
-                        final percentage = (entry.value / stats.totalReceipts * 100).round();
+                        final percentage =
+                            (entry.value / stats.totalReceipts * 100).round();
                         return Padding(
-                          padding: const EdgeInsets.only(bottom: AppConstants.smallPadding),
+                          padding: const EdgeInsets.only(
+                            bottom: AppConstants.smallPadding,
+                          ),
                           child: Row(
                             children: [
-                              Expanded(
-                                child: Text(entry.key),
-                              ),
+                              Expanded(child: Text(entry.key)),
                               Text('${entry.value} ($percentage%)'),
                             ],
                           ),
@@ -321,9 +321,9 @@ class DashboardScreen extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                   ),
                 ),
               ],
@@ -361,16 +361,18 @@ class DashboardScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(AppConstants.defaultPadding),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.borderRadius,
+                  ),
                 ),
                 child: Icon(icon, color: color, size: 32),
               ),
               const SizedBox(height: AppConstants.defaultPadding),
               Text(
                 title,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center,
               ),
             ],

@@ -33,24 +33,27 @@ class MataresitApp extends ConsumerWidget {
       theme: _buildTheme(themeState.config.variant, Brightness.light),
       darkTheme: _buildTheme(themeState.config.variant, Brightness.dark),
       themeMode: currentThemeMode,
-      
+
       // Router
       routerConfig: router,
-      
+
       // Builder for global loading state
       builder: (context, child) {
         if (authState.isLoading) {
-          return const Scaffold(
-            body: LoadingWidget(),
-          );
+          return const Scaffold(body: LoadingWidget());
         }
         return child ?? const SizedBox.shrink();
       },
     );
   }
 
-  ThemeData _buildTheme(theme_model.ThemeVariant variant, Brightness brightness) {
-    final definition = theme_model.ThemeVariantDefinition.getDefinition(variant);
+  ThemeData _buildTheme(
+    theme_model.ThemeVariant variant,
+    Brightness brightness,
+  ) {
+    final definition = theme_model.ThemeVariantDefinition.getDefinition(
+      variant,
+    );
 
     return ThemeData(
       useMaterial3: true,
@@ -110,8 +113,8 @@ class MataresitApp extends ConsumerWidget {
           borderRadius: BorderRadius.circular(AppConstants.borderRadius),
           borderSide: BorderSide(
             color: brightness == Brightness.light
-              ? Colors.grey.shade300
-              : Colors.grey.shade600,
+                ? Colors.grey.shade300
+                : Colors.grey.shade600,
           ),
         ),
         focusedBorder: OutlineInputBorder(
@@ -131,14 +134,14 @@ class MataresitApp extends ConsumerWidget {
         type: BottomNavigationBarType.fixed,
         elevation: 8,
         selectedItemColor: brightness == Brightness.light
-          ? definition.seedColor
-          : Color.lerp(definition.seedColor, Colors.white, 0.3),
+            ? definition.seedColor
+            : Color.lerp(definition.seedColor, Colors.white, 0.3),
         unselectedItemColor: brightness == Brightness.light
-          ? Colors.grey.shade600
-          : Colors.grey.shade400,
+            ? Colors.grey.shade600
+            : Colors.grey.shade400,
         backgroundColor: brightness == Brightness.light
-          ? null // Use default light background
-          : const Color(0xFF1A1A1A), // Dark background with better contrast
+            ? null // Use default light background
+            : const Color(0xFF1A1A1A), // Dark background with better contrast
       ),
     );
   }

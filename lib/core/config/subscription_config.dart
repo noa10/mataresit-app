@@ -243,7 +243,10 @@ class PricingInfo {
   }
 
   /// Get monthly equivalent price for annual billing
-  static double getMonthlyEquivalentPrice(SubscriptionTier tier, BillingInterval interval) {
+  static double getMonthlyEquivalentPrice(
+    SubscriptionTier tier,
+    BillingInterval interval,
+  ) {
     final price = getPrice(tier, interval);
     return interval == BillingInterval.annual ? price / 12 : price;
   }
@@ -266,5 +269,6 @@ class PricingInfo {
 
 /// Stripe public key configuration
 class StripeConfig {
-  static const String publicKey = 'pk_test_51RShZxPHa6JfBjtMAj3ijFQOzUhyGUwwMRsjfuy7p4lAmW4IoBFhoVLnfU8WxUNfJZN7kxAKHkLX0vYprLVmB9lW00o2s0rYkK';
+  static const String publicKey =
+      'pk_test_51RShZxPHa6JfBjtMAj3ijFQOzUhyGUwwMRsjfuy7p4lAmW4IoBFhoVLnfU8WxUNfJZN7kxAKHkLX0vYprLVmB9lW00o2s0rYkK';
 }

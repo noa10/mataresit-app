@@ -28,7 +28,9 @@ class SupabaseService {
   /// Get Supabase client instance
   static SupabaseClient get client {
     if (_client == null) {
-      throw Exception('Supabase not initialized. Call SupabaseService.initialize() first.');
+      throw Exception(
+        'Supabase not initialized. Call SupabaseService.initialize() first.',
+      );
     }
     return _client!;
   }
@@ -86,11 +88,7 @@ class SupabaseService {
     Map<String, dynamic>? data,
   }) async {
     return await client.auth.updateUser(
-      UserAttributes(
-        email: email,
-        password: password,
-        data: data,
-      ),
+      UserAttributes(email: email, password: password, data: data),
     );
   }
 
@@ -123,7 +121,9 @@ class SupabaseService {
       'subscription_tier': 'free',
       'subscription_status': 'active',
       'receipts_used_this_month': 0,
-      'monthly_reset_date': DateTime.now().add(const Duration(days: 30)).toIso8601String(),
+      'monthly_reset_date': DateTime.now()
+          .add(const Duration(days: 30))
+          .toIso8601String(),
       'created_at': DateTime.now().toIso8601String(),
       'updated_at': DateTime.now().toIso8601String(),
     };
@@ -159,8 +159,6 @@ class SupabaseService {
     return response;
   }
 
-
-
   /// Upload file to storage
   static Future<String> uploadFile({
     required String bucket,
@@ -168,15 +166,14 @@ class SupabaseService {
     required Uint8List bytes,
     String? contentType,
   }) async {
-    await client.storage.from(bucket).uploadBinary(
-      path,
-      bytes,
-      fileOptions: FileOptions(
-        contentType: contentType,
-        upsert: true,
-      ),
-    );
-    
+    await client.storage
+        .from(bucket)
+        .uploadBinary(
+          path,
+          bytes,
+          fileOptions: FileOptions(contentType: contentType, upsert: true),
+        );
+
     return client.storage.from(bucket).getPublicUrl(path);
   }
 
@@ -189,10 +186,7 @@ class SupabaseService {
   }
 
   /// Get public URL for file
-  static String getPublicUrl({
-    required String bucket,
-    required String path,
-  }) {
+  static String getPublicUrl({required String bucket, required String path}) {
     return client.storage.from(bucket).getPublicUrl(path);
   }
 
@@ -205,49 +199,55 @@ class SupabaseService {
     void Function(PostgresChangePayload)? onDelete,
   }) {
     final channel = client.channel('public:$table');
-    
+
     if (onInsert != null) {
       channel.onPostgresChanges(
         event: PostgresChangeEvent.insert,
         schema: 'public',
         table: table,
-        filter: filter != null ? PostgresChangeFilter(
-          type: PostgresChangeFilterType.eq,
-          column: filter.split('=')[0],
-          value: filter.split('=')[1],
-        ) : null,
+        filter: filter != null
+            ? PostgresChangeFilter(
+                type: PostgresChangeFilterType.eq,
+                column: filter.split('=')[0],
+                value: filter.split('=')[1],
+              )
+            : null,
         callback: onInsert,
       );
     }
-    
+
     if (onUpdate != null) {
       channel.onPostgresChanges(
         event: PostgresChangeEvent.update,
         schema: 'public',
         table: table,
-        filter: filter != null ? PostgresChangeFilter(
-          type: PostgresChangeFilterType.eq,
-          column: filter.split('=')[0],
-          value: filter.split('=')[1],
-        ) : null,
+        filter: filter != null
+            ? PostgresChangeFilter(
+                type: PostgresChangeFilterType.eq,
+                column: filter.split('=')[0],
+                value: filter.split('=')[1],
+              )
+            : null,
         callback: onUpdate,
       );
     }
-    
+
     if (onDelete != null) {
       channel.onPostgresChanges(
         event: PostgresChangeEvent.delete,
         schema: 'public',
         table: table,
-        filter: filter != null ? PostgresChangeFilter(
-          type: PostgresChangeFilterType.eq,
-          column: filter.split('=')[0],
-          value: filter.split('=')[1],
-        ) : null,
+        filter: filter != null
+            ? PostgresChangeFilter(
+                type: PostgresChangeFilterType.eq,
+                column: filter.split('=')[0],
+                value: filter.split('=')[1],
+              )
+            : null,
         callback: onDelete,
       );
     }
-    
+
     channel.subscribe();
     return channel;
   }
@@ -258,7 +258,10 @@ class SupabaseService {
   }
 
   /// Execute RPC function
-  static Future<dynamic> rpc(String functionName, {Map<String, dynamic>? params}) async {
+  static Future<dynamic> rpc(
+    String functionName, {
+    Map<String, dynamic>? params,
+  }) async {
     return await client.rpc(functionName, params: params);
   }
 }

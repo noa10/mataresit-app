@@ -12,9 +12,7 @@ class CurrencyConversionTestApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Currency Conversion Test',
         home: Scaffold(
-          appBar: AppBar(
-            title: const Text('Currency Conversion Test'),
-          ),
+          appBar: AppBar(title: const Text('Currency Conversion Test')),
           body: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -25,22 +23,16 @@ class CurrencyConversionTestApp extends StatelessWidget {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 20),
-                
+
                 Text('Original MYR 23.35:'),
                 SizedBox(height: 8),
-                CompactCurrencyDisplay(
-                  amount: 23.35,
-                  currencyCode: 'MYR',
-                ),
-                
+                CompactCurrencyDisplay(amount: 23.35, currencyCode: 'MYR'),
+
                 SizedBox(height: 20),
                 Text('Original MYR 832.84:'),
                 SizedBox(height: 8),
-                CompactCurrencyDisplay(
-                  amount: 832.84,
-                  currencyCode: 'MYR',
-                ),
-                
+                CompactCurrencyDisplay(amount: 832.84, currencyCode: 'MYR'),
+
                 SizedBox(height: 20),
                 Text('With conversion details:'),
                 SizedBox(height: 8),

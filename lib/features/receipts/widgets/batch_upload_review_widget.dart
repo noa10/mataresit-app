@@ -21,7 +21,8 @@ class BatchUploadReviewWidget extends StatefulWidget {
   });
 
   @override
-  State<BatchUploadReviewWidget> createState() => _BatchUploadReviewWidgetState();
+  State<BatchUploadReviewWidget> createState() =>
+      _BatchUploadReviewWidgetState();
 }
 
 class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
@@ -53,10 +54,7 @@ class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
         Expanded(
           child: TabBarView(
             controller: _tabController,
-            children: [
-              _buildCompletedTab(),
-              _buildFailedTab(),
-            ],
+            children: [_buildCompletedTab(), _buildFailedTab()],
           ),
         ),
         _buildBottomActions(),
@@ -73,7 +71,9 @@ class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
     return Container(
       padding: const EdgeInsets.all(AppConstants.defaultPadding),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+        color: Theme.of(
+          context,
+        ).colorScheme.primaryContainer.withValues(alpha: 0.3),
         border: Border(
           bottom: BorderSide(
             color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
@@ -86,7 +86,7 @@ class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
             children: [
               Icon(
                 successRate >= 100 ? Icons.check_circle : Icons.info,
-                color: successRate >= 100 
+                color: successRate >= 100
                     ? Theme.of(context).colorScheme.primary
                     : Theme.of(context).colorScheme.secondary,
                 size: 32,
@@ -103,7 +103,9 @@ class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
                     Text(
                       '$completedCount of $totalCount files processed successfully',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -147,7 +149,12 @@ class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
     );
   }
 
-  Widget _buildStatCard(String label, String value, Color color, IconData icon) {
+  Widget _buildStatCard(
+    String label,
+    String value,
+    Color color,
+    IconData icon,
+  ) {
     return Container(
       padding: const EdgeInsets.all(AppConstants.defaultPadding),
       decoration: BoxDecoration(
@@ -168,9 +175,9 @@ class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
           ),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: color,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: color),
           ),
         ],
       ),
@@ -195,7 +202,7 @@ class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
 
   Widget _buildCompletedTab() {
     final completedItems = widget.batchState.completedItems;
-    
+
     if (completedItems.isEmpty) {
       return _buildEmptyState(
         'No Completed Uploads',
@@ -219,9 +226,7 @@ class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
             title: Text(item.fileName),
             subtitle: Text(
               'Processed successfully',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-              ),
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
             ),
             trailing: item.receiptId != null
                 ? IconButton(
@@ -241,7 +246,7 @@ class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
 
   Widget _buildFailedTab() {
     final failedItems = widget.batchState.failedItems;
-    
+
     if (failedItems.isEmpty) {
       return _buildEmptyState(
         'No Failed Uploads',
@@ -265,9 +270,7 @@ class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
             title: Text(item.fileName),
             subtitle: Text(
               item.error ?? 'Processing failed',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.error,
-              ),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
             children: [
               if (item.processingLogs.isNotEmpty) ...[
@@ -291,9 +294,8 @@ class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
                               padding: const EdgeInsets.symmetric(vertical: 2),
                               child: Text(
                                 item.processingLogs[logIndex],
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontFamily: 'monospace',
-                                ),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(fontFamily: 'monospace'),
                               ),
                             );
                           },
@@ -320,13 +322,17 @@ class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
             Icon(
               icon,
               size: 64,
-              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.outline.withValues(alpha: 0.5),
             ),
             const SizedBox(height: AppConstants.defaultPadding),
             Text(
               title,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: AppConstants.smallPadding),
@@ -334,7 +340,9 @@ class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
               subtitle,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -357,15 +365,16 @@ class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
       child: Row(
         children: [
           // Retry failed button
-          if (widget.batchState.failedItems.isNotEmpty && widget.onRetryFailed != null)
+          if (widget.batchState.failedItems.isNotEmpty &&
+              widget.onRetryFailed != null)
             TextButton.icon(
               onPressed: widget.onRetryFailed,
               icon: const Icon(Icons.refresh),
               label: const Text('Retry Failed'),
             ),
-          
+
           const Spacer(),
-          
+
           // View all receipts button
           if (widget.batchState.completedItems.isNotEmpty)
             ElevatedButton.icon(
@@ -376,9 +385,9 @@ class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
               icon: const Icon(Icons.receipt_long),
               label: const Text('View Receipts'),
             ),
-          
+
           const SizedBox(width: AppConstants.smallPadding),
-          
+
           // Start new batch button
           ElevatedButton.icon(
             onPressed: widget.onReset,

@@ -35,7 +35,8 @@ class CategoryModel extends Equatable {
     this.isTeamCategory,
   });
 
-  factory CategoryModel.fromJson(Map<String, dynamic> json) => _$CategoryModelFromJson(json);
+  factory CategoryModel.fromJson(Map<String, dynamic> json) =>
+      _$CategoryModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$CategoryModelToJson(this);
 
@@ -67,17 +68,17 @@ class CategoryModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        teamId,
-        name,
-        color,
-        icon,
-        createdAt,
-        updatedAt,
-        receiptCount,
-        isTeamCategory,
-      ];
+    id,
+    userId,
+    teamId,
+    name,
+    color,
+    icon,
+    createdAt,
+    updatedAt,
+    receiptCount,
+    isTeamCategory,
+  ];
 }
 
 @JsonSerializable()
@@ -86,13 +87,10 @@ class CreateCategoryRequest extends Equatable {
   final String? color;
   final String? icon;
 
-  const CreateCategoryRequest({
-    required this.name,
-    this.color,
-    this.icon,
-  });
+  const CreateCategoryRequest({required this.name, this.color, this.icon});
 
-  factory CreateCategoryRequest.fromJson(Map<String, dynamic> json) => _$CreateCategoryRequestFromJson(json);
+  factory CreateCategoryRequest.fromJson(Map<String, dynamic> json) =>
+      _$CreateCategoryRequestFromJson(json);
 
   Map<String, dynamic> toJson() => _$CreateCategoryRequestToJson(this);
 
@@ -106,13 +104,10 @@ class UpdateCategoryRequest extends Equatable {
   final String? color;
   final String? icon;
 
-  const UpdateCategoryRequest({
-    this.name,
-    this.color,
-    this.icon,
-  });
+  const UpdateCategoryRequest({this.name, this.color, this.icon});
 
-  factory UpdateCategoryRequest.fromJson(Map<String, dynamic> json) => _$UpdateCategoryRequestFromJson(json);
+  factory UpdateCategoryRequest.fromJson(Map<String, dynamic> json) =>
+      _$UpdateCategoryRequestFromJson(json);
 
   Map<String, dynamic> toJson() => _$UpdateCategoryRequestToJson(this);
 

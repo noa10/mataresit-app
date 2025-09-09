@@ -8,16 +8,13 @@ import '../widgets/avatar_upload_widget.dart';
 class ProfileHeader extends ConsumerWidget {
   final UserModel profile;
 
-  const ProfileHeader({
-    super.key,
-    required this.profile,
-  });
+  const ProfileHeader({super.key, required this.profile});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final fullName = ProfileService.getFullName(profile);
-    
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppConstants.largePadding),
@@ -34,13 +31,10 @@ class ProfileHeader extends ConsumerWidget {
       child: Column(
         children: [
           // Avatar
-          AvatarUploadWidget(
-            profile: profile,
-            size: 120,
-          ),
-          
+          AvatarUploadWidget(profile: profile, size: 120),
+
           const SizedBox(height: AppConstants.defaultPadding),
-          
+
           // Name
           Text(
             fullName,
@@ -50,9 +44,9 @@ class ProfileHeader extends ConsumerWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          
+
           const SizedBox(height: AppConstants.smallPadding),
-          
+
           // Email
           if (profile.email != null)
             Text(
@@ -62,9 +56,9 @@ class ProfileHeader extends ConsumerWidget {
               ),
               textAlign: TextAlign.center,
             ),
-          
+
           const SizedBox(height: AppConstants.defaultPadding),
-          
+
           // Subscription Badge
           if (profile.subscriptionTier != null)
             Container(

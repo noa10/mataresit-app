@@ -140,16 +140,16 @@ class BatchUploadItem extends Equatable {
 
   /// Check if the item is in a final state (completed, failed, or cancelled)
   bool get isFinished => [
-        BatchUploadItemStatus.completed,
-        BatchUploadItemStatus.failed,
-        BatchUploadItemStatus.cancelled,
-      ].contains(status);
+    BatchUploadItemStatus.completed,
+    BatchUploadItemStatus.failed,
+    BatchUploadItemStatus.cancelled,
+  ].contains(status);
 
   /// Check if the item is currently being processed
   bool get isActive => [
-        BatchUploadItemStatus.uploading,
-        BatchUploadItemStatus.processing,
-      ].contains(status);
+    BatchUploadItemStatus.uploading,
+    BatchUploadItemStatus.processing,
+  ].contains(status);
 
   /// Get human-readable status description
   String get statusDescription {
@@ -172,7 +172,7 @@ class BatchUploadItem extends Equatable {
   /// Get human-readable stage description
   String get stageDescription {
     if (currentStage == null) return statusDescription;
-    
+
     switch (currentStage!) {
       case BatchProcessingStage.initializing:
         return 'Initializing...';
@@ -191,26 +191,24 @@ class BatchUploadItem extends Equatable {
     }
   }
 
-
-
   @override
   List<Object?> get props => [
-        id,
-        file,
-        fileName,
-        fileSize,
-        mimeType,
-        status,
-        currentStage,
-        progress,
-        error,
-        receiptId,
-        createdAt,
-        startedAt,
-        completedAt,
-        processingLogs,
-        metadata,
-      ];
+    id,
+    file,
+    fileName,
+    fileSize,
+    mimeType,
+    status,
+    currentStage,
+    progress,
+    error,
+    receiptId,
+    createdAt,
+    startedAt,
+    completedAt,
+    processingLogs,
+    metadata,
+  ];
 }
 
 /// Overall state of the batch upload operation
@@ -237,8 +235,6 @@ class BatchUploadState extends Equatable {
     this.settings,
   });
 
-
-
   BatchUploadState copyWith({
     BatchUploadStatus? status,
     List<BatchUploadItem>? items,
@@ -262,17 +258,20 @@ class BatchUploadState extends Equatable {
   }
 
   /// Get items by status
-  List<BatchUploadItem> get queuedItems =>
-      items.where((item) => item.status == BatchUploadItemStatus.queued).toList();
+  List<BatchUploadItem> get queuedItems => items
+      .where((item) => item.status == BatchUploadItemStatus.queued)
+      .toList();
 
   List<BatchUploadItem> get activeItems =>
       items.where((item) => item.isActive).toList();
 
-  List<BatchUploadItem> get completedItems =>
-      items.where((item) => item.status == BatchUploadItemStatus.completed).toList();
+  List<BatchUploadItem> get completedItems => items
+      .where((item) => item.status == BatchUploadItemStatus.completed)
+      .toList();
 
-  List<BatchUploadItem> get failedItems =>
-      items.where((item) => item.status == BatchUploadItemStatus.failed).toList();
+  List<BatchUploadItem> get failedItems => items
+      .where((item) => item.status == BatchUploadItemStatus.failed)
+      .toList();
 
   /// Get processing statistics
   int get totalItems => items.length;
@@ -297,8 +296,10 @@ class BatchUploadState extends Equatable {
   }
 
   /// Get list of successful receipt IDs
-  List<String> get successfulReceiptIds =>
-      completedItems.where((item) => item.receiptId != null).map((item) => item.receiptId!).toList();
+  List<String> get successfulReceiptIds => completedItems
+      .where((item) => item.receiptId != null)
+      .map((item) => item.receiptId!)
+      .toList();
 
   factory BatchUploadState.fromJson(Map<String, dynamic> json) =>
       _$BatchUploadStateFromJson(json);
@@ -307,13 +308,13 @@ class BatchUploadState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        items,
-        maxConcurrentUploads,
-        totalProgress,
-        error,
-        startedAt,
-        completedAt,
-        settings,
-      ];
+    status,
+    items,
+    maxConcurrentUploads,
+    totalProgress,
+    error,
+    startedAt,
+    completedAt,
+    settings,
+  ];
 }

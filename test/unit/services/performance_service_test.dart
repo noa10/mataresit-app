@@ -18,7 +18,7 @@ void main() {
         0x54, 0x08, 0x99, 0x01, 0x01, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x37, 0x6E, 0xF9, 0x24, 0x00, 0x00,
         0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, // IEND chunk
-        0x60, 0x82
+        0x60, 0x82,
       ]);
 
       final tempDir = Directory.systemTemp;
@@ -32,22 +32,32 @@ void main() {
       }
     });
 
-    test('optimizeImageForUpload should handle small files correctly', () async {
-      // Test with a small file (< 1MB) - should return original
-      final result = await PerformanceService.optimizeImageForUpload(testImageFile);
-      
-      // For small files, it should return the original file
-      expect(result.path, equals(testImageFile.path));
-    });
+    test(
+      'optimizeImageForUpload should handle small files correctly',
+      () async {
+        // Test with a small file (< 1MB) - should return original
+        final result = await PerformanceService.optimizeImageForUpload(
+          testImageFile,
+        );
 
-    test('optimizeImageForUpload should handle missing files gracefully', () async {
-      final tempDir = Directory.systemTemp;
-      final nonExistentFile = File('${tempDir.path}/non_existent.png');
+        // For small files, it should return the original file
+        expect(result.path, equals(testImageFile.path));
+      },
+    );
 
-      // Should not throw an exception and return the original file
-      final result = await PerformanceService.optimizeImageForUpload(nonExistentFile);
-      expect(result.path, equals(nonExistentFile.path));
-    });
+    test(
+      'optimizeImageForUpload should handle missing files gracefully',
+      () async {
+        final tempDir = Directory.systemTemp;
+        final nonExistentFile = File('${tempDir.path}/non_existent.png');
+
+        // Should not throw an exception and return the original file
+        final result = await PerformanceService.optimizeImageForUpload(
+          nonExistentFile,
+        );
+        expect(result.path, equals(nonExistentFile.path));
+      },
+    );
 
     test('service methods should not throw exceptions', () async {
       // Test that core methods don't throw exceptions even in test environment

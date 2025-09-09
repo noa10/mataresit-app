@@ -8,25 +8,25 @@ part 'privacy_settings.g.dart';
 class PrivacySettings extends Equatable {
   /// Whether to allow analytics data collection
   final bool allowAnalytics;
-  
+
   /// Whether to allow crash reporting
   final bool allowCrashReporting;
-  
+
   /// Whether to allow usage data collection
   final bool allowUsageData;
-  
+
   /// Data retention period in days (0 = keep forever)
   final int dataRetentionDays;
-  
+
   /// Whether to automatically delete old receipts
   final bool autoDeleteOldReceipts;
-  
+
   /// Whether to allow data sharing with team members
   final bool allowTeamDataSharing;
-  
+
   /// Whether to allow export of personal data
   final bool allowDataExport;
-  
+
   /// Last time privacy settings were updated
   final DateTime? lastUpdated;
 
@@ -64,7 +64,8 @@ class PrivacySettings extends Equatable {
       allowCrashReporting: allowCrashReporting ?? this.allowCrashReporting,
       allowUsageData: allowUsageData ?? this.allowUsageData,
       dataRetentionDays: dataRetentionDays ?? this.dataRetentionDays,
-      autoDeleteOldReceipts: autoDeleteOldReceipts ?? this.autoDeleteOldReceipts,
+      autoDeleteOldReceipts:
+          autoDeleteOldReceipts ?? this.autoDeleteOldReceipts,
       allowTeamDataSharing: allowTeamDataSharing ?? this.allowTeamDataSharing,
       allowDataExport: allowDataExport ?? this.allowDataExport,
       lastUpdated: lastUpdated ?? this.lastUpdated,
@@ -96,13 +97,13 @@ class PrivacySettings extends Equatable {
 
   @override
   List<Object?> get props => [
-        allowAnalytics,
-        allowCrashReporting,
-        allowUsageData,
-        dataRetentionDays,
-        autoDeleteOldReceipts,
-        allowTeamDataSharing,
-        allowDataExport,
-        lastUpdated,
-      ];
+    allowAnalytics,
+    allowCrashReporting,
+    allowUsageData,
+    dataRetentionDays,
+    autoDeleteOldReceipts,
+    allowTeamDataSharing,
+    allowDataExport,
+    lastUpdated,
+  ];
 }

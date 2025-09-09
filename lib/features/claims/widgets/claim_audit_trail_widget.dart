@@ -9,10 +9,7 @@ import '../providers/claims_provider.dart';
 class ClaimAuditTrailWidget extends ConsumerWidget {
   final String claimId;
 
-  const ClaimAuditTrailWidget({
-    super.key,
-    required this.claimId,
-  });
+  const ClaimAuditTrailWidget({super.key, required this.claimId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -41,7 +38,8 @@ class ClaimAuditTrailWidget extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             auditTrailAsync.when(
-              loading: () => const LoadingWidget(message: 'Loading audit trail...'),
+              loading: () =>
+                  const LoadingWidget(message: 'Loading audit trail...'),
               error: (error, stack) => AppErrorWidget(
                 error: error.toString(),
                 onRetry: () => ref.invalidate(claimAuditTrailProvider(claimId)),
@@ -76,7 +74,11 @@ class ClaimAuditTrailWidget extends ConsumerWidget {
     );
   }
 
-  Widget _buildAuditItem(BuildContext context, ClaimAuditTrailModel audit, bool isLast) {
+  Widget _buildAuditItem(
+    BuildContext context,
+    ClaimAuditTrailModel audit,
+    bool isLast,
+  ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -97,16 +99,12 @@ class ClaimAuditTrailWidget extends ConsumerWidget {
               ),
             ),
             if (!isLast)
-              Container(
-                width: 2,
-                height: 40,
-                color: Colors.grey.shade300,
-              ),
+              Container(width: 2, height: 40, color: Colors.grey.shade300),
           ],
         ),
-        
+
         const SizedBox(width: 12),
-        
+
         // Content
         Expanded(
           child: Column(
@@ -131,7 +129,7 @@ class ClaimAuditTrailWidget extends ConsumerWidget {
                   ),
                 ],
               ),
-              
+
               // User info
               if (audit.userName != null) ...[
                 const SizedBox(height: 2),
@@ -142,7 +140,7 @@ class ClaimAuditTrailWidget extends ConsumerWidget {
                   ),
                 ),
               ],
-              
+
               // Status change
               if (audit.oldStatus != null && audit.newStatus != null) ...[
                 const SizedBox(height: 4),
@@ -160,7 +158,7 @@ class ClaimAuditTrailWidget extends ConsumerWidget {
                   ],
                 ),
               ],
-              
+
               // Comment
               if (audit.comment != null && audit.comment!.isNotEmpty) ...[
                 const SizedBox(height: 6),
@@ -177,7 +175,7 @@ class ClaimAuditTrailWidget extends ConsumerWidget {
                   ),
                 ),
               ],
-              
+
               if (!isLast) const SizedBox(height: 16),
             ],
           ),
@@ -291,9 +289,12 @@ class ClaimAuditTrailWidget extends ConsumerWidget {
       case 'reviewed':
         return 'Claim Reviewed';
       default:
-        return action.split('_').map((word) => 
-          word[0].toUpperCase() + word.substring(1).toLowerCase()
-        ).join(' ');
+        return action
+            .split('_')
+            .map(
+              (word) => word[0].toUpperCase() + word.substring(1).toLowerCase(),
+            )
+            .join(' ');
     }
   }
 }

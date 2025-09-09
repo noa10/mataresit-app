@@ -52,7 +52,8 @@ class AnalyticsData {
       totalTransactions: totalTransactions ?? this.totalTransactions,
       topCategory: topCategory ?? this.topCategory,
       monthOverMonthGrowth: monthOverMonthGrowth ?? this.monthOverMonthGrowth,
-      paymentMethodBreakdown: paymentMethodBreakdown ?? this.paymentMethodBreakdown,
+      paymentMethodBreakdown:
+          paymentMethodBreakdown ?? this.paymentMethodBreakdown,
     );
   }
 }
@@ -145,7 +146,6 @@ class AnalyticsNotifier extends StateNotifier<AnalyticsState> {
         isLoading: false,
         lastUpdated: DateTime.now(),
       );
-
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -179,7 +179,8 @@ class AnalyticsNotifier extends StateNotifier<AnalyticsState> {
     for (final daily in dailyExpenses) {
       final date = DateTime.parse(daily.date);
       final monthName = _getMonthName(date.month);
-      monthlySpending[monthName] = (monthlySpending[monthName] ?? 0.0) + daily.total;
+      monthlySpending[monthName] =
+          (monthlySpending[monthName] ?? 0.0) + daily.total;
     }
 
     // Calculate spending trend for chart
@@ -195,18 +196,28 @@ class AnalyticsNotifier extends StateNotifier<AnalyticsState> {
     final paymentMethodBreakdown = <String, double>{};
     for (final receipt in receiptSummaries) {
       final method = receipt.paymentMethod ?? 'Unknown';
-      paymentMethodBreakdown[method] = (paymentMethodBreakdown[method] ?? 0.0) + (receipt.total ?? 0.0);
+      paymentMethodBreakdown[method] =
+          (paymentMethodBreakdown[method] ?? 0.0) + (receipt.total ?? 0.0);
     }
 
     // Calculate summary statistics
-    final totalSpending = receiptSummaries.fold<double>(0.0, (sum, receipt) => sum + (receipt.total ?? 0.0));
-    final validReceipts = receiptSummaries.where((r) => r.total != null && r.total! > 0).toList();
-    final averageTransaction = validReceipts.isNotEmpty ? totalSpending / validReceipts.length : 0.0;
+    final totalSpending = receiptSummaries.fold<double>(
+      0.0,
+      (sum, receipt) => sum + (receipt.total ?? 0.0),
+    );
+    final validReceipts = receiptSummaries
+        .where((r) => r.total != null && r.total! > 0)
+        .toList();
+    final averageTransaction = validReceipts.isNotEmpty
+        ? totalSpending / validReceipts.length
+        : 0.0;
     final totalTransactions = validReceipts.length;
 
     // Find top category
     final topCategory = categorySpending.isNotEmpty
-        ? categorySpending.entries.reduce((a, b) => a.value > b.value ? a : b).key
+        ? categorySpending.entries
+              .reduce((a, b) => a.value > b.value ? a : b)
+              .key
         : 'N/A';
 
     // Calculate month-over-month growth
@@ -244,37 +255,56 @@ class AnalyticsNotifier extends StateNotifier<AnalyticsState> {
 }
 
 /// Analytics provider that uses the new service-based approach
-final analyticsProvider = StateNotifierProvider<AnalyticsNotifier, AnalyticsState>((ref) {
-  return AnalyticsNotifier(ref);
-});
+final analyticsProvider =
+    StateNotifierProvider<AnalyticsNotifier, AnalyticsState>((ref) {
+      return AnalyticsNotifier(ref);
+    });
 
 /// Convenience provider for just the analytics data
 final analyticsDataProvider = Provider<AnalyticsData>((ref) {
   return ref.watch(analyticsProvider).data;
 });
 
-
-
 /// Get month name from month number
 String _getMonthName(int month) {
   const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
-  
+
   // Handle negative months (for previous year)
   if (month <= 0) {
     return months[12 + month - 1];
   }
-  
+
   return months[month - 1];
 }
 
 /// Get month index for sorting
 int _getMonthIndex(String monthName) {
   const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
   return months.indexOf(monthName);
 }
@@ -305,7 +335,7 @@ final categoryPieChartProvider = Provider<List<PieChartSectionData>>((ref) {
   for (int i = 0; i < entries.length && i < colors.length; i++) {
     final entry = entries[i];
     final percentage = (entry.value / analyticsData.totalSpending) * 100;
-    
+
     sections.add(
       PieChartSectionData(
         color: colors[i],

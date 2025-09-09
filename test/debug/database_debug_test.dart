@@ -17,7 +17,7 @@ void main() {
       try {
         // First, let's check what columns exist in the receipts table
         print('🔍 Checking receipts table structure...');
-        
+
         final response = await SupabaseService.client
             .from('receipts')
             .select('*')
@@ -36,7 +36,7 @@ void main() {
 
         // Now let's check the custom_categories table
         print('🏷️ Checking custom_categories table...');
-        
+
         final categoriesResponse = await SupabaseService.client
             .from('custom_categories')
             .select('*')
@@ -54,7 +54,7 @@ void main() {
 
         // Test the join query that should work
         print('🔗 Testing join query...');
-        
+
         final joinResponse = await SupabaseService.client
             .from('receipts')
             .select('''
@@ -79,7 +79,6 @@ void main() {
           print('  - custom_categories: ${receipt['custom_categories']}');
           print('---');
         }
-
       } catch (e) {
         print('❌ Error: $e');
         fail('Database query failed: $e');
@@ -93,7 +92,9 @@ void main() {
             .from('receipts')
             .select('id, custom_category_id');
 
-        final withCategories = allReceipts.where((r) => r['custom_category_id'] != null).length;
+        final withCategories = allReceipts
+            .where((r) => r['custom_category_id'] != null)
+            .length;
         final withoutCategories = allReceipts.length - withCategories;
 
         print('📊 Receipt category statistics:');
@@ -105,7 +106,6 @@ void main() {
           print('⚠️  WARNING: No receipts have custom_category_id assigned!');
           print('   This explains why all receipts show as "Uncategorized"');
         }
-
       } catch (e) {
         print('❌ Error checking category assignments: $e');
       }

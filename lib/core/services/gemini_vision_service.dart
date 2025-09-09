@@ -7,7 +7,8 @@ import 'ai_vision_service.dart';
 
 /// Service for processing receipt images using Google Gemini Vision API
 class GeminiVisionService implements AIVisionService {
-  static const String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models';
+  static const String _baseUrl =
+      'https://generativelanguage.googleapis.com/v1beta/models';
   static const String _model = 'gemini-1.5-flash';
 
   final Logger _logger = Logger();
@@ -109,7 +110,8 @@ class GeminiVisionService implements AIVisionService {
             );
           }
 
-          if (e.toString().contains('quota') || e.toString().contains('rate_limit')) {
+          if (e.toString().contains('quota') ||
+              e.toString().contains('rate_limit')) {
             throw QuotaExceededException(
               'Gemini API quota exceeded or rate limited.',
               serviceName,
@@ -128,7 +130,6 @@ class GeminiVisionService implements AIVisionService {
       }
 
       throw lastError ?? Exception('All retry attempts failed');
-
     } catch (e) {
       _logger.e('Error processing receipt image with Gemini: $e');
 
@@ -146,21 +147,19 @@ class GeminiVisionService implements AIVisionService {
     }
   }
 
-  Future<ReceiptData> _callGeminiAPI(String base64Image, String mimeType) async {
+  Future<ReceiptData> _callGeminiAPI(
+    String base64Image,
+    String mimeType,
+  ) async {
     final prompt = _buildReceiptExtractionPrompt();
 
     final requestBody = {
       'contents': [
         {
           'parts': [
+            {'text': prompt},
             {
-              'text': prompt,
-            },
-            {
-              'inline_data': {
-                'mime_type': mimeType,
-                'data': base64Image,
-              },
+              'inline_data': {'mime_type': mimeType, 'data': base64Image},
             },
           ],
         },
@@ -174,10 +173,10 @@ class GeminiVisionService implements AIVisionService {
     };
 
     final response = await http.post(
-      Uri.parse('$_baseUrl/$_model:generateContent?key=${AppConstants.geminiApiKey}'),
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      Uri.parse(
+        '$_baseUrl/$_model:generateContent?key=${AppConstants.geminiApiKey}',
+      ),
+      headers: {'Content-Type': 'application/json'},
       body: jsonEncode(requestBody),
     );
 
@@ -210,7 +209,9 @@ class GeminiVisionService implements AIVisionService {
       throw Exception('Empty response from Gemini API');
     }
 
-    _logger.i('Gemini response preview: ${text.substring(0, text.length > 200 ? 200 : text.length)}...');
+    _logger.i(
+      'Gemini response preview: ${text.substring(0, text.length > 200 ? 200 : text.length)}...',
+    );
 
     // Parse the structured response
     return _parseReceiptData(text);
@@ -274,7 +275,7 @@ IMPORTANT: Return ONLY the JSON object, no additional text, markdown formatting,
     try {
       // Clean the response to ensure it's valid JSON
       String cleanedResponse = response.trim();
-      
+
       // Remove any markdown formatting if present
       if (cleanedResponse.startsWith('```json')) {
         cleanedResponse = cleanedResponse.substring(7);
@@ -283,11 +284,14 @@ IMPORTANT: Return ONLY the JSON object, no additional text, markdown formatting,
         cleanedResponse = cleanedResponse.substring(3);
       }
       if (cleanedResponse.endsWith('```')) {
-        cleanedResponse = cleanedResponse.substring(0, cleanedResponse.length - 3);
+        cleanedResponse = cleanedResponse.substring(
+          0,
+          cleanedResponse.length - 3,
+        );
       }
-      
+
       cleanedResponse = cleanedResponse.trim();
-      
+
       _logger.i('Parsing Gemini response: $cleanedResponse');
 
       // Parse the JSON response
@@ -295,11 +299,10 @@ IMPORTANT: Return ONLY the JSON object, no additional text, markdown formatting,
 
       // Validate required fields and parse the response
       return ReceiptData.fromJson(jsonData, cleanedResponse);
-
     } catch (e) {
       _logger.e('Error parsing receipt data: $e');
       _logger.e('Raw response: $response');
-      
+
       // Return a fallback response
       return ReceiptData(
         merchantName: 'Unknown Merchant',
@@ -329,22 +332,20 @@ IMPORTANT: Return ONLY the JSON object, no additional text, markdown formatting,
           {
             'parts': [
               {
-                'text': 'Hello, can you confirm you are working? Please respond with "OK".',
+                'text':
+                    'Hello, can you confirm you are working? Please respond with "OK".',
               },
             ],
           },
         ],
-        'generationConfig': {
-          'temperature': 0,
-          'maxOutputTokens': 10,
-        },
+        'generationConfig': {'temperature': 0, 'maxOutputTokens': 10},
       };
 
       final response = await http.post(
-        Uri.parse('$_baseUrl/$_model:generateContent?key=${AppConstants.geminiApiKey}'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        Uri.parse(
+          '$_baseUrl/$_model:generateContent?key=${AppConstants.geminiApiKey}',
+        ),
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
       );
 
@@ -370,8 +371,8 @@ IMPORTANT: Return ONLY the JSON object, no additional text, markdown formatting,
       'isInitialized': true,
       'hasApiKey': AppConstants.geminiApiKey.isNotEmpty,
       'apiKeyPreview': AppConstants.geminiApiKey.isNotEmpty
-        ? '${AppConstants.geminiApiKey.substring(0, 8)}...'
-        : 'Not set',
+          ? '${AppConstants.geminiApiKey.substring(0, 8)}...'
+          : 'Not set',
       'model': 'gemini-1.5-flash',
     };
   }

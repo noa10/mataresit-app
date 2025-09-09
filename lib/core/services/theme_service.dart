@@ -9,18 +9,19 @@ class ThemeService {
   static final SupabaseClient _supabase = Supabase.instance.client;
 
   /// Save theme preference to database
-  static Future<void> saveThemePreference(String userId, theme_model.ThemeConfig config) async {
+  static Future<void> saveThemePreference(
+    String userId,
+    theme_model.ThemeConfig config,
+  ) async {
     try {
       _logger.d('Saving theme preference for user: $userId');
-      
-      await _supabase
-          .from('theme_preferences')
-          .upsert({
-            'user_id': userId,
-            'theme_mode': config.mode.value,
-            'theme_variant': config.variant.value,
-            'updated_at': DateTime.now().toIso8601String(),
-          }, onConflict: 'user_id');
+
+      await _supabase.from('theme_preferences').upsert({
+        'user_id': userId,
+        'theme_mode': config.mode.value,
+        'theme_variant': config.variant.value,
+        'updated_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'user_id');
 
       _logger.i('Theme preference saved successfully');
     } catch (e) {
@@ -30,10 +31,12 @@ class ThemeService {
   }
 
   /// Load theme preference from database
-  static Future<theme_model.ThemeConfig?> loadThemePreference(String userId) async {
+  static Future<theme_model.ThemeConfig?> loadThemePreference(
+    String userId,
+  ) async {
     try {
       _logger.d('Loading theme preference for user: $userId');
-      
+
       final response = await _supabase
           .from('theme_preferences')
           .select('theme_mode, theme_variant')
@@ -46,11 +49,17 @@ class ThemeService {
       }
 
       final config = theme_model.ThemeConfig(
-        mode: theme_model.ThemeMode.fromString(response['theme_mode'] ?? 'auto'),
-        variant: theme_model.ThemeVariant.fromString(response['theme_variant'] ?? 'default'),
+        mode: theme_model.ThemeMode.fromString(
+          response['theme_mode'] ?? 'auto',
+        ),
+        variant: theme_model.ThemeVariant.fromString(
+          response['theme_variant'] ?? 'default',
+        ),
       );
 
-      _logger.i('Theme preference loaded successfully: ${config.mode.value}, ${config.variant.value}');
+      _logger.i(
+        'Theme preference loaded successfully: ${config.mode.value}, ${config.variant.value}',
+      );
       return config;
     } catch (e) {
       _logger.e('Failed to load theme preference: $e');
@@ -62,11 +71,8 @@ class ThemeService {
   static Future<void> deleteThemePreference(String userId) async {
     try {
       _logger.d('Deleting theme preference for user: $userId');
-      
-      await _supabase
-          .from('theme_preferences')
-          .delete()
-          .eq('user_id', userId);
+
+      await _supabase.from('theme_preferences').delete().eq('user_id', userId);
 
       _logger.i('Theme preference deleted successfully');
     } catch (e) {
@@ -79,11 +85,8 @@ class ThemeService {
   static Future<bool> ensureThemePreferencesTable() async {
     try {
       // Try to query the table to see if it exists
-      await _supabase
-          .from('theme_preferences')
-          .select('user_id')
-          .limit(1);
-      
+      await _supabase.from('theme_preferences').select('user_id').limit(1);
+
       _logger.d('theme_preferences table exists');
       return true;
     } catch (e) {

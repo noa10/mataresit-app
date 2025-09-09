@@ -35,15 +35,15 @@ class CreateClaimRequest extends Equatable {
 
   @override
   List<Object?> get props => [
-        teamId,
-        title,
-        description,
-        amount,
-        currency,
-        category,
-        priority,
-        attachments,
-      ];
+    teamId,
+    title,
+    description,
+    amount,
+    currency,
+    category,
+    priority,
+    attachments,
+  ];
 }
 
 /// Request model for updating an existing claim
@@ -88,14 +88,14 @@ class UpdateClaimRequest extends Equatable {
 
   @override
   List<Object?> get props => [
-        title,
-        description,
-        amount,
-        currency,
-        category,
-        priority,
-        attachments,
-      ];
+    title,
+    description,
+    amount,
+    currency,
+    category,
+    priority,
+    attachments,
+  ];
 }
 
 /// Request model for approving a claim
@@ -105,10 +105,7 @@ class ClaimApprovalRequest extends Equatable {
   final String claimId;
   final String? comment;
 
-  const ClaimApprovalRequest({
-    required this.claimId,
-    this.comment,
-  });
+  const ClaimApprovalRequest({required this.claimId, this.comment});
 
   factory ClaimApprovalRequest.fromJson(Map<String, dynamic> json) =>
       _$ClaimApprovalRequestFromJson(json);
@@ -215,15 +212,15 @@ class ClaimFilters extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        priority,
-        claimantId,
-        dateFrom,
-        dateTo,
-        amountMin,
-        amountMax,
-        category,
-      ];
+    status,
+    priority,
+    claimantId,
+    dateFrom,
+    dateTo,
+    amountMin,
+    amountMax,
+    category,
+  ];
 }
 
 /// Statistics model for claims dashboard
@@ -274,14 +271,14 @@ class ClaimStats extends Equatable {
 
   @override
   List<Object?> get props => [
-        totalClaims,
-        pendingClaims,
-        approvedClaims,
-        rejectedClaims,
-        totalAmount,
-        approvedAmount,
-        averageProcessingTime,
-      ];
+    totalClaims,
+    pendingClaims,
+    approvedClaims,
+    rejectedClaims,
+    totalAmount,
+    approvedAmount,
+    averageProcessingTime,
+  ];
 }
 
 /// Claim permissions constants

@@ -47,22 +47,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             ? TabBar(
                 controller: _tabController,
                 tabs: const [
-                  Tab(
-                    icon: Icon(Icons.person_outline),
-                    text: 'Profile',
-                  ),
+                  Tab(icon: Icon(Icons.person_outline), text: 'Profile'),
                   Tab(
                     icon: Icon(Icons.credit_card_outlined),
                     text: 'Subscription',
                   ),
-                  Tab(
-                    icon: Icon(Icons.settings_outlined),
-                    text: 'Preferences',
-                  ),
-                  Tab(
-                    icon: Icon(Icons.security_outlined),
-                    text: 'Security',
-                  ),
+                  Tab(icon: Icon(Icons.settings_outlined), text: 'Preferences'),
+                  Tab(icon: Icon(Icons.security_outlined), text: 'Security'),
                 ],
                 labelColor: Theme.of(context).primaryColor,
                 unselectedLabelColor: Colors.grey[600],
@@ -104,7 +95,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             ElevatedButton(
               onPressed: () {
                 if (authState.user != null) {
-                  ref.read(profileProvider.notifier).loadProfile(authState.user!.id);
+                  ref
+                      .read(profileProvider.notifier)
+                      .loadProfile(authState.user!.id);
                 }
               },
               child: Text('Retry'),
@@ -121,10 +114,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           children: [
             Icon(Icons.person_off, size: 64, color: Colors.grey),
             SizedBox(height: 16),
-            Text(
-              'Profile not found',
-              style: TextStyle(color: Colors.grey),
-            ),
+            Text('Profile not found', style: TextStyle(color: Colors.grey)),
           ],
         ),
       );
@@ -134,9 +124,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       children: [
         // Profile Header
         ProfileHeader(profile: profileState.profile!),
-        
+
         const SizedBox(height: AppConstants.defaultPadding),
-        
+
         // Tab Content
         Expanded(
           child: TabBarView(
@@ -147,19 +137,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 padding: const EdgeInsets.all(AppConstants.defaultPadding),
                 child: ProfileInfoEditor(profile: profileState.profile!),
               ),
-              
+
               // Subscription Tab
               SingleChildScrollView(
                 padding: const EdgeInsets.all(AppConstants.defaultPadding),
                 child: ProfileSubscription(profile: profileState.profile!),
               ),
-              
+
               // Preferences Tab
               SingleChildScrollView(
                 padding: const EdgeInsets.all(AppConstants.defaultPadding),
                 child: ProfilePreferences(profile: profileState.profile!),
               ),
-              
+
               // Security Tab
               SingleChildScrollView(
                 padding: const EdgeInsets.all(AppConstants.defaultPadding),

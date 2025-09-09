@@ -16,10 +16,7 @@ import '../widgets/claim_rejection_dialog.dart';
 class ClaimDetailScreen extends ConsumerStatefulWidget {
   final String claimId;
 
-  const ClaimDetailScreen({
-    super.key,
-    required this.claimId,
-  });
+  const ClaimDetailScreen({super.key, required this.claimId});
 
   @override
   ConsumerState<ClaimDetailScreen> createState() => _ClaimDetailScreenState();
@@ -41,9 +38,7 @@ class _ClaimDetailScreenState extends ConsumerState<ClaimDetailScreen> {
         ),
         actions: [
           IconButton(
-            icon: Icon(
-              _showAuditTrail ? Icons.visibility_off : Icons.history,
-            ),
+            icon: Icon(_showAuditTrail ? Icons.visibility_off : Icons.history),
             onPressed: () {
               setState(() {
                 _showAuditTrail = !_showAuditTrail;
@@ -61,9 +56,7 @@ class _ClaimDetailScreenState extends ConsumerState<ClaimDetailScreen> {
         ),
         data: (claim) {
           if (claim == null) {
-            return const Center(
-              child: Text('Claim not found'),
-            );
+            return const Center(child: Text('Claim not found'));
           }
           return _buildClaimDetails(claim);
         },
@@ -82,33 +75,31 @@ class _ClaimDetailScreenState extends ConsumerState<ClaimDetailScreen> {
               children: [
                 // Header Card
                 _buildHeaderCard(claim),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Details Card
                 _buildDetailsCard(claim),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Attachments Card
-                if (claim.attachments.isNotEmpty)
-                  _buildAttachmentsCard(claim),
-                
+                if (claim.attachments.isNotEmpty) _buildAttachmentsCard(claim),
+
                 const SizedBox(height: 16),
-                
+
                 // Workflow Card
                 _buildWorkflowCard(claim),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Audit Trail
-                if (_showAuditTrail)
-                  ClaimAuditTrailWidget(claimId: claim.id),
+                if (_showAuditTrail) ClaimAuditTrailWidget(claimId: claim.id),
               ],
             ),
           ),
         ),
-        
+
         // Action Buttons
         _buildActionButtons(claim),
       ],
@@ -135,9 +126,9 @@ class _ClaimDetailScreenState extends ConsumerState<ClaimDetailScreen> {
                 _buildStatusBadge(claim.status),
               ],
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             Row(
               children: [
                 Icon(
@@ -156,7 +147,7 @@ class _ClaimDetailScreenState extends ConsumerState<ClaimDetailScreen> {
                 _buildPriorityBadge(claim.priority),
               ],
             ),
-            
+
             if (claim.description != null && claim.description!.isNotEmpty) ...[
               const SizedBox(height: 12),
               Text(
@@ -179,39 +170,39 @@ class _ClaimDetailScreenState extends ConsumerState<ClaimDetailScreen> {
           children: [
             Text(
               'Details',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             _buildDetailRow(
               icon: Icons.person,
               label: 'Claimant',
               value: claim.claimantName ?? 'Unknown',
             ),
-            
+
             if (claim.category != null)
               _buildDetailRow(
                 icon: Icons.category,
                 label: 'Category',
                 value: claim.category!,
               ),
-            
+
             _buildDetailRow(
               icon: Icons.schedule,
               label: 'Created',
               value: AppDateUtils.formatDateTime(claim.createdAt),
             ),
-            
+
             if (claim.submittedAt != null)
               _buildDetailRow(
                 icon: Icons.send,
                 label: 'Submitted',
                 value: AppDateUtils.formatDateTime(claim.submittedAt!),
               ),
-            
+
             if (claim.approvedAt != null)
               _buildDetailRow(
                 icon: Icons.check_circle,
@@ -219,7 +210,7 @@ class _ClaimDetailScreenState extends ConsumerState<ClaimDetailScreen> {
                 value: AppDateUtils.formatDateTime(claim.approvedAt!),
                 subtitle: claim.approverName,
               ),
-            
+
             if (claim.rejectionReason != null) ...[
               const SizedBox(height: 8),
               Container(
@@ -234,7 +225,11 @@ class _ClaimDetailScreenState extends ConsumerState<ClaimDetailScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.cancel, color: Colors.red.shade700, size: 20),
+                        Icon(
+                          Icons.cancel,
+                          color: Colors.red.shade700,
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'Rejection Reason',
@@ -288,9 +283,9 @@ class _ClaimDetailScreenState extends ConsumerState<ClaimDetailScreen> {
                 ),
                 Text(
                   value,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
                 ),
                 if (subtitle != null)
                   Text(
@@ -316,9 +311,9 @@ class _ClaimDetailScreenState extends ConsumerState<ClaimDetailScreen> {
           children: [
             Text(
               'Attachments (${claim.attachments.length})',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             ...claim.attachments.map((attachment) {
@@ -348,9 +343,9 @@ class _ClaimDetailScreenState extends ConsumerState<ClaimDetailScreen> {
           children: [
             Text(
               'Workflow Status',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             _buildWorkflowStep(
@@ -369,8 +364,12 @@ class _ClaimDetailScreenState extends ConsumerState<ClaimDetailScreen> {
               date: claim.reviewedAt,
             ),
             _buildWorkflowStep(
-              title: claim.status == ClaimStatus.approved ? 'Approved' : 'Processed',
-              isCompleted: claim.approvedAt != null || claim.status == ClaimStatus.rejected,
+              title: claim.status == ClaimStatus.approved
+                  ? 'Approved'
+                  : 'Processed',
+              isCompleted:
+                  claim.approvedAt != null ||
+                  claim.status == ClaimStatus.rejected,
               date: claim.approvedAt,
               isLast: true,
             ),
@@ -395,8 +394,8 @@ class _ClaimDetailScreenState extends ConsumerState<ClaimDetailScreen> {
               height: 20,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isCompleted 
-                    ? Theme.of(context).colorScheme.primary 
+                color: isCompleted
+                    ? Theme.of(context).colorScheme.primary
                     : Colors.grey.shade300,
               ),
               child: isCompleted
@@ -411,8 +410,8 @@ class _ClaimDetailScreenState extends ConsumerState<ClaimDetailScreen> {
               Container(
                 width: 2,
                 height: 30,
-                color: isCompleted 
-                    ? Theme.of(context).colorScheme.primary 
+                color: isCompleted
+                    ? Theme.of(context).colorScheme.primary
                     : Colors.grey.shade300,
               ),
           ],
@@ -426,7 +425,7 @@ class _ClaimDetailScreenState extends ConsumerState<ClaimDetailScreen> {
                 title,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w500,
-                  color: isCompleted 
+                  color: isCompleted
                       ? Theme.of(context).colorScheme.onSurface
                       : Colors.grey.shade600,
                 ),
@@ -434,9 +433,9 @@ class _ClaimDetailScreenState extends ConsumerState<ClaimDetailScreen> {
               if (date != null)
                 Text(
                   AppDateUtils.formatDateTime(date),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey.shade600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
                 ),
             ],
           ),
@@ -630,9 +629,7 @@ class _ClaimDetailScreenState extends ConsumerState<ClaimDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Theme.of(context).dividerColor),
-        ),
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       ),
       child: Row(
         children: actions

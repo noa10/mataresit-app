@@ -8,12 +8,15 @@ import 'package:logger/logger.dart';
 /// This service handles local notifications only, without Firebase/FCM dependencies
 class NotificationService {
   static final Logger _logger = Logger();
-  static final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
-  
-  static final StreamController<NotificationAction> _actionController = StreamController<NotificationAction>.broadcast();
+  static final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
+
+  static final StreamController<NotificationAction> _actionController =
+      StreamController<NotificationAction>.broadcast();
 
   /// Stream of notification actions
-  static Stream<NotificationAction> get actionStream => _actionController.stream;
+  static Stream<NotificationAction> get actionStream =>
+      _actionController.stream;
 
   /// Initialize notification service (local notifications only)
   static Future<void> initialize() async {
@@ -28,13 +31,15 @@ class NotificationService {
 
   /// Initialize local notifications
   static Future<void> _initializeLocalNotifications() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
     );
-    
+
     const initSettings = InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
@@ -52,14 +57,13 @@ class NotificationService {
   /// Handle notification response
   static void _onNotificationResponse(NotificationResponse response) {
     _logger.i('Notification tapped: ${response.id}');
-    
+
     if (response.payload != null) {
       try {
         final data = jsonDecode(response.payload!);
-        _actionController.add(NotificationAction(
-          type: data['type'] ?? 'unknown',
-          data: data,
-        ));
+        _actionController.add(
+          NotificationAction(type: data['type'] ?? 'unknown', data: data),
+        );
       } catch (e) {
         _logger.e('Failed to parse notification payload: $e');
       }
@@ -91,7 +95,9 @@ class NotificationService {
 
     for (final channel in channels) {
       await _localNotifications
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
           ?.createNotificationChannel(channel);
     }
   }
@@ -145,7 +151,7 @@ class NotificationService {
     Map<String, dynamic>? data,
   }) async {
     final payload = data != null ? jsonEncode(data) : null;
-    
+
     await showNotification(
       id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       title: title,
@@ -162,7 +168,7 @@ class NotificationService {
     Map<String, dynamic>? data,
   }) async {
     final payload = data != null ? jsonEncode(data) : null;
-    
+
     await showNotification(
       id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       title: title,
@@ -185,12 +191,14 @@ class NotificationService {
   /// Check if notifications are enabled
   static Future<bool> areNotificationsEnabled() async {
     final androidImplementation = _localNotifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-    
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+
     if (androidImplementation != null) {
       return await androidImplementation.areNotificationsEnabled() ?? false;
     }
-    
+
     // For iOS, assume enabled if we got this far
     return true;
   }
@@ -198,16 +206,19 @@ class NotificationService {
   /// Request notification permissions (iOS)
   static Future<bool> requestPermissions() async {
     final iosImplementation = _localNotifications
-        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
-    
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
+
     if (iosImplementation != null) {
       return await iosImplementation.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
-      ) ?? false;
+            alert: true,
+            badge: true,
+            sound: true,
+          ) ??
+          false;
     }
-    
+
     return true; // Android permissions are handled at install time
   }
 
@@ -222,10 +233,7 @@ class NotificationAction {
   final String type;
   final Map<String, dynamic> data;
 
-  const NotificationAction({
-    required this.type,
-    required this.data,
-  });
+  const NotificationAction({required this.type, required this.data});
 
   @override
   String toString() => 'NotificationAction(type: $type, data: $data)';

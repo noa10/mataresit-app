@@ -49,14 +49,14 @@ class ProfileState extends Equatable {
 
   @override
   List<Object?> get props => [
-        profile,
-        isLoading,
-        isUpdating,
-        isUploadingAvatar,
-        error,
-        updateError,
-        avatarError,
-      ];
+    profile,
+    isLoading,
+    isUpdating,
+    isUploadingAvatar,
+    error,
+    updateError,
+    avatarError,
+  ];
 }
 
 /// Profile notifier
@@ -70,19 +70,13 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       state = state.copyWith(isLoading: true, error: null);
 
       final profile = await ProfileService.getUserProfile(userId);
-      
+
       if (profile != null) {
         AppLogger.info('Profile loaded successfully for user: $userId');
-        state = state.copyWith(
-          profile: profile,
-          isLoading: false,
-        );
+        state = state.copyWith(profile: profile, isLoading: false);
       } else {
         AppLogger.warning('No profile found for user: $userId');
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Profile not found',
-        );
+        state = state.copyWith(isLoading: false, error: 'Profile not found');
       }
     } catch (e) {
       AppLogger.error('Error loading profile for user: $userId', e);
@@ -108,10 +102,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       final validationErrors = ProfileService.validateProfileData(updates);
       if (validationErrors.isNotEmpty) {
         final errorMessage = validationErrors.values.first;
-        state = state.copyWith(
-          isUpdating: false,
-          updateError: errorMessage,
-        );
+        state = state.copyWith(isUpdating: false, updateError: errorMessage);
         return false;
       }
 
@@ -121,14 +112,15 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       );
 
       if (updatedProfile != null) {
-        AppLogger.info('Profile updated successfully for user: ${state.profile!.id}');
-        state = state.copyWith(
-          profile: updatedProfile,
-          isUpdating: false,
+        AppLogger.info(
+          'Profile updated successfully for user: ${state.profile!.id}',
         );
+        state = state.copyWith(profile: updatedProfile, isUpdating: false);
         return true;
       } else {
-        AppLogger.warning('Failed to update profile for user: ${state.profile!.id}');
+        AppLogger.warning(
+          'Failed to update profile for user: ${state.profile!.id}',
+        );
         state = state.copyWith(
           isUpdating: false,
           updateError: 'Failed to update profile',
@@ -136,7 +128,10 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         return false;
       }
     } catch (e) {
-      AppLogger.error('Error updating profile for user: ${state.profile?.id}', e);
+      AppLogger.error(
+        'Error updating profile for user: ${state.profile?.id}',
+        e,
+      );
       state = state.copyWith(
         isUpdating: false,
         updateError: 'Failed to update profile: ${e.toString()}',
@@ -162,21 +157,25 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       );
 
       if (avatarUrl != null) {
-        AppLogger.info('Avatar uploaded successfully for user: ${state.profile!.id}');
-        
+        AppLogger.info(
+          'Avatar uploaded successfully for user: ${state.profile!.id}',
+        );
+
         // Update profile with new avatar URL
         final updatedProfile = state.profile!.copyWith(
           avatarUrl: avatarUrl,
           avatarUpdatedAt: DateTime.now(),
         );
-        
+
         state = state.copyWith(
           profile: updatedProfile,
           isUploadingAvatar: false,
         );
         return true;
       } else {
-        AppLogger.warning('Failed to upload avatar for user: ${state.profile!.id}');
+        AppLogger.warning(
+          'Failed to upload avatar for user: ${state.profile!.id}',
+        );
         state = state.copyWith(
           isUploadingAvatar: false,
           avatarError: 'Failed to upload avatar',
@@ -184,7 +183,10 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         return false;
       }
     } catch (e) {
-      AppLogger.error('Error uploading avatar for user: ${state.profile?.id}', e);
+      AppLogger.error(
+        'Error uploading avatar for user: ${state.profile?.id}',
+        e,
+      );
       state = state.copyWith(
         isUploadingAvatar: false,
         avatarError: 'Failed to upload avatar: ${e.toString()}',
@@ -194,14 +196,19 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
   }
 
   /// Upload avatar from bytes
-  Future<bool> uploadAvatarFromBytes(Uint8List imageBytes, String fileName) async {
+  Future<bool> uploadAvatarFromBytes(
+    Uint8List imageBytes,
+    String fileName,
+  ) async {
     if (state.profile == null) {
       AppLogger.warning('Cannot upload avatar: no profile loaded');
       return false;
     }
 
     try {
-      AppLogger.info('Uploading avatar from bytes for user: ${state.profile!.id}');
+      AppLogger.info(
+        'Uploading avatar from bytes for user: ${state.profile!.id}',
+      );
       state = state.copyWith(isUploadingAvatar: true, avatarError: null);
 
       final avatarUrl = await ProfileService.uploadAvatarFromBytes(
@@ -211,21 +218,25 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       );
 
       if (avatarUrl != null) {
-        AppLogger.info('Avatar uploaded from bytes successfully for user: ${state.profile!.id}');
-        
+        AppLogger.info(
+          'Avatar uploaded from bytes successfully for user: ${state.profile!.id}',
+        );
+
         // Update profile with new avatar URL
         final updatedProfile = state.profile!.copyWith(
           avatarUrl: avatarUrl,
           avatarUpdatedAt: DateTime.now(),
         );
-        
+
         state = state.copyWith(
           profile: updatedProfile,
           isUploadingAvatar: false,
         );
         return true;
       } else {
-        AppLogger.warning('Failed to upload avatar from bytes for user: ${state.profile!.id}');
+        AppLogger.warning(
+          'Failed to upload avatar from bytes for user: ${state.profile!.id}',
+        );
         state = state.copyWith(
           isUploadingAvatar: false,
           avatarError: 'Failed to upload avatar',
@@ -233,7 +244,10 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         return false;
       }
     } catch (e) {
-      AppLogger.error('Error uploading avatar from bytes for user: ${state.profile?.id}', e);
+      AppLogger.error(
+        'Error uploading avatar from bytes for user: ${state.profile?.id}',
+        e,
+      );
       state = state.copyWith(
         isUploadingAvatar: false,
         avatarError: 'Failed to upload avatar: ${e.toString()}',
@@ -256,21 +270,25 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       final success = await ProfileService.removeAvatar(state.profile!.id);
 
       if (success) {
-        AppLogger.info('Avatar removed successfully for user: ${state.profile!.id}');
-        
+        AppLogger.info(
+          'Avatar removed successfully for user: ${state.profile!.id}',
+        );
+
         // Update profile to remove avatar URL
         final updatedProfile = state.profile!.copyWith(
           avatarUrl: null,
           avatarUpdatedAt: DateTime.now(),
         );
-        
+
         state = state.copyWith(
           profile: updatedProfile,
           isUploadingAvatar: false,
         );
         return true;
       } else {
-        AppLogger.warning('Failed to remove avatar for user: ${state.profile!.id}');
+        AppLogger.warning(
+          'Failed to remove avatar for user: ${state.profile!.id}',
+        );
         state = state.copyWith(
           isUploadingAvatar: false,
           avatarError: 'Failed to remove avatar',
@@ -278,7 +296,10 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         return false;
       }
     } catch (e) {
-      AppLogger.error('Error removing avatar for user: ${state.profile?.id}', e);
+      AppLogger.error(
+        'Error removing avatar for user: ${state.profile?.id}',
+        e,
+      );
       state = state.copyWith(
         isUploadingAvatar: false,
         avatarError: 'Failed to remove avatar: ${e.toString()}',
@@ -289,11 +310,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 
   /// Clear errors
   void clearErrors() {
-    state = state.copyWith(
-      error: null,
-      updateError: null,
-      avatarError: null,
-    );
+    state = state.copyWith(error: null, updateError: null, avatarError: null);
   }
 
   /// Clear profile (on logout)
@@ -303,7 +320,9 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 }
 
 /// Profile provider
-final profileProvider = StateNotifierProvider<ProfileNotifier, ProfileState>((ref) {
+final profileProvider = StateNotifierProvider<ProfileNotifier, ProfileState>((
+  ref,
+) {
   final notifier = ProfileNotifier();
 
   // Check current auth state on initialization

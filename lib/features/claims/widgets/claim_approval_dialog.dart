@@ -16,7 +16,8 @@ class ClaimApprovalDialog extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ClaimApprovalDialog> createState() => _ClaimApprovalDialogState();
+  ConsumerState<ClaimApprovalDialog> createState() =>
+      _ClaimApprovalDialogState();
 }
 
 class _ClaimApprovalDialogState extends ConsumerState<ClaimApprovalDialog> {
@@ -37,8 +38,8 @@ class _ClaimApprovalDialogState extends ConsumerState<ClaimApprovalDialog> {
     try {
       final request = ClaimApprovalRequest(
         claimId: widget.claim.id,
-        comment: _commentController.text.trim().isEmpty 
-            ? null 
+        comment: _commentController.text.trim().isEmpty
+            ? null
             : _commentController.text.trim(),
       );
 
@@ -77,10 +78,7 @@ class _ClaimApprovalDialogState extends ConsumerState<ClaimApprovalDialog> {
     return AlertDialog(
       title: Row(
         children: [
-          Icon(
-            Icons.check_circle,
-            color: Colors.green.shade700,
-          ),
+          Icon(Icons.check_circle, color: Colors.green.shade700),
           const SizedBox(width: 8),
           const Text('Approve Claim'),
         ],
@@ -118,11 +116,15 @@ class _ClaimApprovalDialogState extends ConsumerState<ClaimApprovalDialog> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        CurrencyUtils.formatCurrency(widget.claim.amount, widget.claim.currency),
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green.shade700,
+                        CurrencyUtils.formatCurrency(
+                          widget.claim.amount,
+                          widget.claim.currency,
                         ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green.shade700,
+                            ),
                       ),
                     ],
                   ),
@@ -138,14 +140,14 @@ class _ClaimApprovalDialogState extends ConsumerState<ClaimApprovalDialog> {
                         const SizedBox(width: 4),
                         Text(
                           'Claimant: ${widget.claim.claimantName}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.green.shade600,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: Colors.green.shade600),
                         ),
                       ],
                     ),
                   ],
-                  if (widget.claim.description != null && widget.claim.description!.isNotEmpty) ...[
+                  if (widget.claim.description != null &&
+                      widget.claim.description!.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Text(
                       widget.claim.description!,

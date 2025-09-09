@@ -101,7 +101,7 @@ class SubscriptionLimitsWidget extends ConsumerWidget {
     final total = subscription.limits.monthlyReceipts;
     final used = subscription.receiptsUsedThisMonth;
     final percentage = subscription.receiptUsagePercentage;
-    
+
     final isAtLimit = remaining <= 0;
     final isNearLimit = percentage > 0.9;
 
@@ -112,15 +112,15 @@ class SubscriptionLimitsWidget extends ConsumerWidget {
         color: isAtLimit
             ? Theme.of(context).colorScheme.errorContainer
             : isNearLimit
-                ? Colors.orange.withValues(alpha: 0.1)
-                : Theme.of(context).colorScheme.primaryContainer,
+            ? Colors.orange.withValues(alpha: 0.1)
+            : Theme.of(context).colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isAtLimit
               ? Theme.of(context).colorScheme.error.withValues(alpha: 0.3)
               : isNearLimit
-                  ? Colors.orange.withValues(alpha: 0.3)
-                  : Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+              ? Colors.orange.withValues(alpha: 0.3)
+              : Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -134,8 +134,8 @@ class SubscriptionLimitsWidget extends ConsumerWidget {
                 color: isAtLimit
                     ? Theme.of(context).colorScheme.error
                     : isNearLimit
-                        ? Colors.orange[700]
-                        : Theme.of(context).colorScheme.primary,
+                    ? Colors.orange[700]
+                    : Theme.of(context).colorScheme.primary,
                 size: 20,
               ),
               const SizedBox(width: 8),
@@ -144,19 +144,20 @@ class SubscriptionLimitsWidget extends ConsumerWidget {
                   isAtLimit
                       ? 'Receipt Limit Reached'
                       : isNearLimit
-                          ? 'Approaching Receipt Limit'
-                          : 'Receipt Usage',
+                      ? 'Approaching Receipt Limit'
+                      : 'Receipt Usage',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: isAtLimit
                         ? Theme.of(context).colorScheme.error
                         : isNearLimit
-                            ? Colors.orange[700]
-                            : Theme.of(context).colorScheme.primary,
+                        ? Colors.orange[700]
+                        : Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-              if (showUpgradePrompt && subscription.tier != SubscriptionTier.max) ...[
+              if (showUpgradePrompt &&
+                  subscription.tier != SubscriptionTier.max) ...[
                 TextButton(
                   onPressed: () => context.push('/pricing'),
                   child: const Text('Upgrade'),
@@ -164,50 +165,52 @@ class SubscriptionLimitsWidget extends ConsumerWidget {
               ],
             ],
           ),
-          
+
           if (!compact) ...[
             const SizedBox(height: 8),
-            
+
             // Usage bar
             Row(
               children: [
                 Expanded(
                   child: LinearProgressIndicator(
                     value: percentage,
-                    backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                     valueColor: AlwaysStoppedAnimation<Color>(
                       isAtLimit
                           ? Theme.of(context).colorScheme.error
                           : isNearLimit
-                              ? Colors.orange
-                              : Theme.of(context).colorScheme.primary,
+                          ? Colors.orange
+                          : Theme.of(context).colorScheme.primary,
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   total == -1 ? '$used' : '$used / $total',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 4),
-            
+
             Text(
               isAtLimit
                   ? 'You\'ve reached your monthly receipt limit. Upgrade to continue uploading.'
                   : isNearLimit
-                      ? 'You have $remaining receipts remaining this month.'
-                      : 'You have $remaining receipts remaining this month.',
+                  ? 'You have $remaining receipts remaining this month.'
+                  : 'You have $remaining receipts remaining this month.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: isAtLimit
                     ? Theme.of(context).colorScheme.error
                     : isNearLimit
-                        ? Colors.orange[700]
-                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                    ? Colors.orange[700]
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -288,9 +291,9 @@ class UpgradePromptWidget extends ConsumerWidget {
         Expanded(
           child: Text(
             title,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
         ),
         TextButton(
@@ -316,9 +319,9 @@ class UpgradePromptWidget extends ConsumerWidget {
             Expanded(
               child: Text(
                 title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
             ),
           ],

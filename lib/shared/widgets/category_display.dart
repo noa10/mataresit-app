@@ -84,10 +84,7 @@ class CategoryDisplay extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.secondaryContainer,
         borderRadius: BorderRadius.circular(sizeConfig.borderRadius),
-        border: Border.all(
-          color: Colors.transparent,
-          width: 1,
-        ),
+        border: Border.all(color: Colors.transparent, width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -118,7 +115,9 @@ class CategoryDisplay extends StatelessWidget {
               '(${category.receiptCount})',
               style: theme.textTheme.bodySmall?.copyWith(
                 fontSize: sizeConfig.fontSize * 0.9,
-                color: theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.7),
+                color: theme.colorScheme.onSecondaryContainer.withValues(
+                  alpha: 0.7,
+                ),
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -164,11 +163,7 @@ class CategoryDisplay extends StatelessWidget {
   }
 }
 
-enum CategoryDisplaySize {
-  small,
-  medium,
-  large,
-}
+enum CategoryDisplaySize { small, medium, large }
 
 class _CategorySizeConfig {
   final double fontSize;
@@ -221,35 +216,34 @@ class CategorySelector extends StatelessWidget {
           value: null,
           child: Text('Uncategorized'),
         ),
-        ...categories.map((category) => DropdownMenuItem<CategoryModel?>(
-              value: category,
-              child: Row(
-                children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: _parseColor(category.color),
-                      shape: BoxShape.circle,
+        ...categories.map(
+          (category) => DropdownMenuItem<CategoryModel?>(
+            value: category,
+            child: Row(
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: _parseColor(category.color),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(category.name, overflow: TextOverflow.ellipsis),
+                ),
+                if (category.receiptCount != null)
+                  Text(
+                    '(${category.receiptCount})',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      category.name,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (category.receiptCount != null)
-                    Text(
-                      '(${category.receiptCount})',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                    ),
-                ],
-              ),
-            )),
+              ],
+            ),
+          ),
+        ),
       ],
       onChanged: enabled ? onCategorySelected : null,
     );

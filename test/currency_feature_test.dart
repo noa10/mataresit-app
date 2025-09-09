@@ -202,7 +202,7 @@ void main() {
   group('Popular Currencies Tests', () {
     test('should have predefined popular currencies', () {
       final currencies = PopularCurrencies.all;
-      
+
       expect(currencies.isNotEmpty, isTrue);
       expect(currencies.any((c) => c.code == 'USD'), isTrue);
       expect(currencies.any((c) => c.code == 'EUR'), isTrue);
@@ -237,15 +237,11 @@ void main() {
     test('should parse API response correctly', () {
       final apiResponse = {
         'date': '2024-01-01',
-        'usd': {
-          'eur': 0.85,
-          'gbp': 0.75,
-          'jpy': 110.0,
-        }
+        'usd': {'eur': 0.85, 'gbp': 0.75, 'jpy': 110.0},
       };
 
       final response = ExchangeRateResponse.fromJson(apiResponse);
-      
+
       expect(response.baseCurrency, equals('USD'));
       expect(response.date, isNotNull);
       expect(response.rates['EUR'], equals(0.85));
@@ -257,11 +253,7 @@ void main() {
       final response = ExchangeRateResponse(
         baseCurrency: 'USD',
         date: DateTime.now(),
-        rates: {
-          'EUR': 0.85,
-          'GBP': 0.75,
-          'JPY': 110.0,
-        },
+        rates: {'EUR': 0.85, 'GBP': 0.75, 'JPY': 110.0},
       );
 
       expect(response.getRateFor('EUR'), equals(0.85));

@@ -46,9 +46,9 @@ class PrivacyControlsScreen extends ConsumerWidget {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Privacy Settings Section
           _buildSectionHeader('Privacy Settings'),
           Card(
@@ -57,13 +57,17 @@ class PrivacyControlsScreen extends ConsumerWidget {
                 SwitchListTile(
                   secondary: const Icon(Icons.analytics),
                   title: const Text('Analytics'),
-                  subtitle: const Text('Help improve the app with usage analytics'),
+                  subtitle: const Text(
+                    'Help improve the app with usage analytics',
+                  ),
                   value: true,
                   onChanged: (value) {
                     // TODO: Implement analytics toggle
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Analytics ${value ? 'enabled' : 'disabled'}'),
+                        content: Text(
+                          'Analytics ${value ? 'enabled' : 'disabled'}',
+                        ),
                       ),
                     );
                   },
@@ -78,7 +82,9 @@ class PrivacyControlsScreen extends ConsumerWidget {
                     // TODO: Implement crash reporting toggle
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Crash reporting ${value ? 'enabled' : 'disabled'}'),
+                        content: Text(
+                          'Crash reporting ${value ? 'enabled' : 'disabled'}',
+                        ),
                       ),
                     );
                   },
@@ -93,7 +99,9 @@ class PrivacyControlsScreen extends ConsumerWidget {
                     // TODO: Implement team data sharing toggle
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Team data sharing ${value ? 'enabled' : 'disabled'}'),
+                        content: Text(
+                          'Team data sharing ${value ? 'enabled' : 'disabled'}',
+                        ),
                       ),
                     );
                   },
@@ -101,9 +109,9 @@ class PrivacyControlsScreen extends ConsumerWidget {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Data Retention Section
           _buildSectionHeader('Data Retention'),
           Card(
@@ -122,13 +130,17 @@ class PrivacyControlsScreen extends ConsumerWidget {
                 SwitchListTile(
                   secondary: const Icon(Icons.auto_delete),
                   title: const Text('Auto-delete Old Receipts'),
-                  subtitle: const Text('Automatically delete old receipts based on retention period'),
+                  subtitle: const Text(
+                    'Automatically delete old receipts based on retention period',
+                  ),
                   value: false,
                   onChanged: (value) {
                     // TODO: Implement auto-delete toggle
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Auto-delete ${value ? 'enabled' : 'disabled'}'),
+                        content: Text(
+                          'Auto-delete ${value ? 'enabled' : 'disabled'}',
+                        ),
                       ),
                     );
                   },
@@ -136,9 +148,9 @@ class PrivacyControlsScreen extends ConsumerWidget {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Data Usage Stats
           _buildSectionHeader('Data Usage'),
           Card(
@@ -194,10 +206,7 @@ class PrivacyControlsScreen extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label),
-          Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.w500),
-          ),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -221,9 +230,7 @@ class PrivacyControlsScreen extends ConsumerWidget {
               Navigator.of(context).pop();
               // TODO: Implement data export
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Exporting data as $format...'),
-                ),
+                SnackBar(content: Text('Exporting data as $format...')),
               );
             },
             child: const Text('Export'),
@@ -322,24 +329,24 @@ class PrivacyControlsScreen extends ConsumerWidget {
               ),
             ],
           ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Data retention period updated'),
-                ),
-              );
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Data retention period updated'),
+                  ),
+                );
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
       ),
     );
   }

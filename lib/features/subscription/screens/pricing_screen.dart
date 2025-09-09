@@ -47,7 +47,9 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          await ref.read(subscriptionProvider.notifier).refreshSubscriptionData();
+          await ref
+              .read(subscriptionProvider.notifier)
+              .refreshSubscriptionData();
         },
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -100,9 +102,9 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       children: [
         Text(
           'Choose Your Plan',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Text(
@@ -154,9 +156,9 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       children: [
         Text(
           'Frequently Asked Questions',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         _buildFAQItem(
@@ -219,9 +221,9 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           const SizedBox(height: 16),
           Text(
             'Need Help Choosing?',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
@@ -266,7 +268,10 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
         // Handle paid tier selection (upgrade or change)
         if (StripeService.isUpgrade(currentTier, tier)) {
           // This is an upgrade - create checkout session
-          await subscriptionNotifier.createCheckoutSession(tier, _selectedInterval);
+          await subscriptionNotifier.createCheckoutSession(
+            tier,
+            _selectedInterval,
+          );
         } else if (StripeService.isDowngrade(currentTier, tier)) {
           // This is a downgrade - show confirmation
           final confirmed = await _showDowngradeConfirmation(tier);
@@ -275,7 +280,9 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Successfully downgraded to ${tier.value.toUpperCase()} plan'),
+                  content: Text(
+                    'Successfully downgraded to ${tier.value.toUpperCase()} plan',
+                  ),
                 ),
               );
             }
@@ -285,7 +292,9 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('You are already on the ${tier.value.toUpperCase()} plan'),
+                content: Text(
+                  'You are already on the ${tier.value.toUpperCase()} plan',
+                ),
               ),
             );
           }
@@ -305,33 +314,32 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
 
   Future<bool> _showDowngradeConfirmation(SubscriptionTier targetTier) async {
     return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirm Downgrade'),
-        content: Text(
-          'Are you sure you want to downgrade to the ${targetTier.value.toUpperCase()} plan? '
-          'This change will take effect at the end of your current billing cycle.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Confirm Downgrade'),
+            content: Text(
+              'Are you sure you want to downgrade to the ${targetTier.value.toUpperCase()} plan? '
+              'This change will take effect at the end of your current billing cycle.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Confirm'),
+              ),
+            ],
           ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Confirm'),
-          ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
   }
 
   void _contactSupport() {
     // TODO: Implement contact support functionality
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Contact support feature coming soon!'),
-      ),
+      const SnackBar(content: Text('Contact support feature coming soon!')),
     );
   }
 }

@@ -16,7 +16,8 @@ class TeamWorkspaceSelector extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<TeamWorkspaceSelector> createState() => _TeamWorkspaceSelectorState();
+  ConsumerState<TeamWorkspaceSelector> createState() =>
+      _TeamWorkspaceSelectorState();
 }
 
 class _TeamWorkspaceSelectorState extends ConsumerState<TeamWorkspaceSelector> {
@@ -42,9 +43,9 @@ class _TeamWorkspaceSelectorState extends ConsumerState<TeamWorkspaceSelector> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              currentTeamState.currentTeam != null 
-                ? Icons.business 
-                : Icons.person,
+              currentTeamState.currentTeam != null
+                  ? Icons.business
+                  : Icons.person,
               size: 20,
               color: Theme.of(context).primaryColor,
             ),
@@ -68,7 +69,9 @@ class _TeamWorkspaceSelectorState extends ConsumerState<TeamWorkspaceSelector> {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: _getRoleColor(currentTeamState.currentRole!).withValues(alpha: 0.1),
+                        color: _getRoleColor(
+                          currentTeamState.currentRole!,
+                        ).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -85,14 +88,15 @@ class _TeamWorkspaceSelectorState extends ConsumerState<TeamWorkspaceSelector> {
             ),
             const SizedBox(width: AppConstants.smallPadding),
             Icon(
-              _isDropdownOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+              _isDropdownOpen
+                  ? Icons.keyboard_arrow_up
+                  : Icons.keyboard_arrow_down,
               size: 20,
               color: Colors.grey.shade600,
             ),
           ],
         ),
       ),
-
     );
   }
 
@@ -139,9 +143,9 @@ class _TeamWorkspaceSelectorState extends ConsumerState<TeamWorkspaceSelector> {
               // Header
               Text(
                 'Switch Workspace',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: AppConstants.defaultPadding),
 
@@ -171,12 +175,15 @@ class _TeamWorkspaceSelectorState extends ConsumerState<TeamWorkspaceSelector> {
                 const SizedBox(height: AppConstants.smallPadding),
                 ...teamsState.teams.map((team) {
                   final userRole = team.getUserRole(currentUser?.id ?? '');
-                  final isCurrentTeam = currentTeamState.currentTeam?.id == team.id;
+                  final isCurrentTeam =
+                      currentTeamState.currentTeam?.id == team.id;
 
                   return ListTile(
                     leading: const Icon(Icons.business),
                     title: Text(team.name),
-                    subtitle: Text('${team.memberCount} member${team.memberCount != 1 ? 's' : ''}'),
+                    subtitle: Text(
+                      '${team.memberCount} member${team.memberCount != 1 ? 's' : ''}',
+                    ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -186,7 +193,9 @@ class _TeamWorkspaceSelectorState extends ConsumerState<TeamWorkspaceSelector> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: _getRoleColor(userRole).withValues(alpha: 0.1),
+                            color: _getRoleColor(
+                              userRole,
+                            ).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -207,7 +216,9 @@ class _TeamWorkspaceSelectorState extends ConsumerState<TeamWorkspaceSelector> {
                     ),
                     onTap: () {
                       Navigator.pop(context);
-                      ref.read(currentTeamProvider.notifier).switchTeam(team.id);
+                      ref
+                          .read(currentTeamProvider.notifier)
+                          .switchTeam(team.id);
                     },
                   );
                 }),
@@ -217,7 +228,10 @@ class _TeamWorkspaceSelectorState extends ConsumerState<TeamWorkspaceSelector> {
               if (widget.showCreateButton) ...[
                 const Divider(),
                 ListTile(
-                  leading: Icon(Icons.add, color: Theme.of(context).primaryColor),
+                  leading: Icon(
+                    Icons.add,
+                    color: Theme.of(context).primaryColor,
+                  ),
                   title: Text(
                     'Create Team',
                     style: TextStyle(color: Theme.of(context).primaryColor),

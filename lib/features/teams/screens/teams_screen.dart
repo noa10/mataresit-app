@@ -44,10 +44,20 @@ class TeamsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildBody(BuildContext context, WidgetRef ref, TeamsState teamsState, CurrentTeamState currentTeamState) {
+  Widget _buildBody(
+    BuildContext context,
+    WidgetRef ref,
+    TeamsState teamsState,
+    CurrentTeamState currentTeamState,
+  ) {
     if (currentTeamState.currentTeam != null) {
       // Show current team workspace view
-      return _buildTeamWorkspaceView(context, ref, currentTeamState.currentTeam!, currentTeamState.currentRole);
+      return _buildTeamWorkspaceView(
+        context,
+        ref,
+        currentTeamState.currentTeam!,
+        currentTeamState.currentRole,
+      );
     } else {
       // Show teams list or empty state
       return teamsState.teams.isEmpty && !teamsState.isLoading
@@ -56,7 +66,12 @@ class TeamsScreen extends ConsumerWidget {
     }
   }
 
-  Widget _buildTeamWorkspaceView(BuildContext context, WidgetRef ref, TeamModel team, TeamRole? role) {
+  Widget _buildTeamWorkspaceView(
+    BuildContext context,
+    WidgetRef ref,
+    TeamModel team,
+    TeamRole? role,
+  ) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppConstants.defaultPadding),
       child: Column(
@@ -81,7 +96,11 @@ class TeamsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTeamHeader(BuildContext context, TeamModel team, TeamRole? role) {
+  Widget _buildTeamHeader(
+    BuildContext context,
+    TeamModel team,
+    TeamRole? role,
+  ) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
@@ -109,9 +128,8 @@ class TeamsScreen extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           team.name,
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ),
                       if (role != null)
@@ -159,25 +177,16 @@ class TeamsScreen extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.groups_outlined,
-            size: 64,
-            color: Colors.grey,
-          ),
+          Icon(Icons.groups_outlined, size: 64, color: Colors.grey),
           SizedBox(height: AppConstants.defaultPadding),
           Text(
             'No teams yet',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           SizedBox(height: AppConstants.smallPadding),
           Text(
             'Create or join a team to collaborate on receipts',
-            style: TextStyle(
-              color: Colors.grey,
-            ),
+            style: TextStyle(color: Colors.grey),
             textAlign: TextAlign.center,
           ),
         ],
@@ -202,16 +211,26 @@ class TeamsScreen extends ConsumerWidget {
           child: _buildStatCard(
             context,
             'Your Role',
-            _getRoleDisplayName(team.getUserRole(ref.read(currentUserProvider)?.id ?? '')),
+            _getRoleDisplayName(
+              team.getUserRole(ref.read(currentUserProvider)?.id ?? ''),
+            ),
             Icons.admin_panel_settings,
-            _getRoleColor(team.getUserRole(ref.read(currentUserProvider)?.id ?? '')),
+            _getRoleColor(
+              team.getUserRole(ref.read(currentUserProvider)?.id ?? ''),
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildStatCard(BuildContext context, String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    BuildContext context,
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
@@ -245,7 +264,12 @@ class TeamsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context, WidgetRef ref, TeamModel team, TeamRole? role) {
+  Widget _buildQuickActions(
+    BuildContext context,
+    WidgetRef ref,
+    TeamModel team,
+    TeamRole? role,
+  ) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
@@ -254,9 +278,9 @@ class TeamsScreen extends ConsumerWidget {
           children: [
             Text(
               'Quick Actions',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: AppConstants.defaultPadding),
             Row(
@@ -316,7 +340,11 @@ class TeamsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildAllTeamsSection(BuildContext context, WidgetRef ref, TeamsState state) {
+  Widget _buildAllTeamsSection(
+    BuildContext context,
+    WidgetRef ref,
+    TeamsState state,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -325,27 +353,38 @@ class TeamsScreen extends ConsumerWidget {
           children: [
             Text(
               'All Teams',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             TextButton.icon(
-              onPressed: () => ref.read(currentTeamProvider.notifier).switchTeam(null),
+              onPressed: () =>
+                  ref.read(currentTeamProvider.notifier).switchTeam(null),
               icon: const Icon(Icons.view_list),
               label: const Text('View All'),
             ),
           ],
         ),
         const SizedBox(height: AppConstants.defaultPadding),
-        ...state.teams.take(3).map((team) => Padding(
-          padding: const EdgeInsets.only(bottom: AppConstants.defaultPadding),
-          child: _buildCompactTeamCard(context, ref, team),
-        )),
+        ...state.teams
+            .take(3)
+            .map(
+              (team) => Padding(
+                padding: const EdgeInsets.only(
+                  bottom: AppConstants.defaultPadding,
+                ),
+                child: _buildCompactTeamCard(context, ref, team),
+              ),
+            ),
       ],
     );
   }
 
-  Widget _buildCompactTeamCard(BuildContext context, WidgetRef ref, TeamModel team) {
+  Widget _buildCompactTeamCard(
+    BuildContext context,
+    WidgetRef ref,
+    TeamModel team,
+  ) {
     final currentUser = ref.read(currentUserProvider);
     final userRole = team.getUserRole(currentUser?.id ?? '');
 
@@ -390,7 +429,11 @@ class TeamsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTeamsList(BuildContext context, WidgetRef ref, TeamsState state) {
+  Widget _buildTeamsList(
+    BuildContext context,
+    WidgetRef ref,
+    TeamsState state,
+  ) {
     return Column(
       children: [
         // Error display
@@ -460,16 +503,14 @@ class TeamsScreen extends ConsumerWidget {
                     children: [
                       Text(
                         team.name,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       if (team.description != null)
                         Text(
                           team.description!,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: Colors.grey[600]),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -487,11 +528,7 @@ class TeamsScreen extends ConsumerWidget {
             // Team details
             Row(
               children: [
-                Icon(
-                  Icons.people,
-                  size: 16,
-                  color: Colors.grey[600],
-                ),
+                Icon(Icons.people, size: 16, color: Colors.grey[600]),
                 const SizedBox(width: 4),
                 Text(
                   '${team.memberCount} members',
@@ -507,7 +544,9 @@ class TeamsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  team.isOwner(ref.read(currentUserProvider)?.id ?? '') ? 'Owner' : 'Member',
+                  team.isOwner(ref.read(currentUserProvider)?.id ?? '')
+                      ? 'Owner'
+                      : 'Member',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
@@ -618,16 +657,20 @@ class TeamsScreen extends ConsumerWidget {
               if (nameController.text.trim().isNotEmpty) {
                 Navigator.of(context).pop();
                 try {
-                  final teamId = await ref.read(teamsProvider.notifier).createTeam(
-                    name: nameController.text.trim(),
-                    description: descriptionController.text.trim().isEmpty
-                        ? null
-                        : descriptionController.text.trim(),
-                  );
+                  final teamId = await ref
+                      .read(teamsProvider.notifier)
+                      .createTeam(
+                        name: nameController.text.trim(),
+                        description: descriptionController.text.trim().isEmpty
+                            ? null
+                            : descriptionController.text.trim(),
+                      );
 
                   // Switch to the newly created team
                   if (teamId != null) {
-                    await ref.read(currentTeamProvider.notifier).switchTeam(teamId);
+                    await ref
+                        .read(currentTeamProvider.notifier)
+                        .switchTeam(teamId);
                   }
 
                   if (context.mounted) {
@@ -657,7 +700,11 @@ class TeamsScreen extends ConsumerWidget {
     );
   }
 
-  void _showEnhancedInviteMemberDialog(BuildContext context, WidgetRef ref, TeamModel team) {
+  void _showEnhancedInviteMemberDialog(
+    BuildContext context,
+    WidgetRef ref,
+    TeamModel team,
+  ) {
     final emailController = TextEditingController();
     final customMessageController = TextEditingController();
     TeamRole selectedRole = TeamRole.member;
@@ -677,9 +724,9 @@ class TeamsScreen extends ConsumerWidget {
               children: [
                 Text(
                   'Invite a new member to join ${team.name}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                 ),
                 const SizedBox(height: AppConstants.defaultPadding),
 
@@ -717,11 +764,13 @@ class TeamsScreen extends ConsumerWidget {
                       child: Text(role.displayName),
                     );
                   }).toList(),
-                  onChanged: isLoading ? null : (role) {
-                    if (role != null) {
-                      setState(() => selectedRole = role);
-                    }
-                  },
+                  onChanged: isLoading
+                      ? null
+                      : (role) {
+                          if (role != null) {
+                            setState(() => selectedRole = role);
+                          }
+                        },
                 ),
                 const SizedBox(height: AppConstants.defaultPadding),
 
@@ -759,11 +808,13 @@ class TeamsScreen extends ConsumerWidget {
                       child: Text('$days Days'),
                     );
                   }).toList(),
-                  onChanged: isLoading ? null : (days) {
-                    if (days != null) {
-                      setState(() => expiresInDays = days);
-                    }
-                  },
+                  onChanged: isLoading
+                      ? null
+                      : (days) {
+                          if (days != null) {
+                            setState(() => expiresInDays = days);
+                          }
+                        },
                 ),
                 const SizedBox(height: AppConstants.defaultPadding),
 
@@ -771,9 +822,11 @@ class TeamsScreen extends ConsumerWidget {
                 SwitchListTile(
                   title: const Text('Send email notification'),
                   value: sendEmailNotification,
-                  onChanged: isLoading ? null : (value) {
-                    setState(() => sendEmailNotification = value);
-                  },
+                  onChanged: isLoading
+                      ? null
+                      : (value) {
+                          setState(() => sendEmailNotification = value);
+                        },
                   contentPadding: EdgeInsets.zero,
                 ),
               ],
@@ -785,37 +838,48 @@ class TeamsScreen extends ConsumerWidget {
               child: const Text('Cancel'),
             ),
             ElevatedButton.icon(
-              onPressed: isLoading || emailController.text.trim().isEmpty ? null : () async {
-                setState(() => isLoading = true);
+              onPressed: isLoading || emailController.text.trim().isEmpty
+                  ? null
+                  : () async {
+                      setState(() => isLoading = true);
 
-                try {
-                  await ref.read(teamInvitationProvider(team.id).notifier).sendInvitation(
-                    teamId: team.id,
-                    email: emailController.text.trim(),
-                    role: selectedRole,
-                    customMessage: customMessageController.text.trim().isEmpty
-                        ? null
-                        : customMessageController.text.trim(),
-                    expiresInDays: expiresInDays,
-                    sendEmail: sendEmailNotification,
-                  );
+                      try {
+                        await ref
+                            .read(teamInvitationProvider(team.id).notifier)
+                            .sendInvitation(
+                              teamId: team.id,
+                              email: emailController.text.trim(),
+                              role: selectedRole,
+                              customMessage:
+                                  customMessageController.text.trim().isEmpty
+                                  ? null
+                                  : customMessageController.text.trim(),
+                              expiresInDays: expiresInDays,
+                              sendEmail: sendEmailNotification,
+                            );
 
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Invitation sent successfully!')),
-                    );
-                  }
-                } catch (error) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to send invitation: $error')),
-                    );
-                  }
-                } finally {
-                  setState(() => isLoading = false);
-                }
-              },
+                        if (context.mounted) {
+                          Navigator.of(context).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Invitation sent successfully!'),
+                            ),
+                          );
+                        }
+                      } catch (error) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Failed to send invitation: $error',
+                              ),
+                            ),
+                          );
+                        }
+                      } finally {
+                        setState(() => isLoading = false);
+                      }
+                    },
               icon: isLoading
                   ? const SizedBox(
                       width: 16,

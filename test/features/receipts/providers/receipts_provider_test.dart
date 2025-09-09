@@ -19,7 +19,7 @@ void main() {
 
     test('initial state should have correct defaults', () {
       final state = container.read(receiptsProvider);
-      
+
       expect(state.receipts, isEmpty);
       expect(state.groupedReceipts, isEmpty);
       expect(state.isLoading, false);
@@ -34,12 +34,14 @@ void main() {
 
     test('date filter should update correctly', () async {
       final notifier = container.read(receiptsProvider.notifier);
-      final todayFilter = AppDateUtils.getDateRangeForOption(DateFilterOption.today);
-      
+      final todayFilter = AppDateUtils.getDateRangeForOption(
+        DateFilterOption.today,
+      );
+
       // This would normally trigger a network call, but we're testing state changes
       // In a real test, you'd mock the Supabase client
       notifier.state = notifier.state.copyWith(dateFilter: todayFilter);
-      
+
       final state = container.read(receiptsProvider);
       expect(state.dateFilter.option, DateFilterOption.today);
     });
@@ -47,9 +49,9 @@ void main() {
     test('search query should update correctly', () {
       final notifier = container.read(receiptsProvider.notifier);
       const searchQuery = 'Starbucks';
-      
+
       notifier.state = notifier.state.copyWith(searchQuery: searchQuery);
-      
+
       final state = container.read(receiptsProvider);
       expect(state.searchQuery, searchQuery);
     });
@@ -57,25 +59,25 @@ void main() {
     test('grouped view toggle should work', () {
       final notifier = container.read(receiptsProvider.notifier);
       final initialGroupedView = container.read(receiptsProvider).isGroupedView;
-      
+
       notifier.toggleGroupedView();
-      
+
       final state = container.read(receiptsProvider);
       expect(state.isGroupedView, !initialGroupedView);
     });
 
     test('hasActiveFilters should return correct value', () {
       final notifier = container.read(receiptsProvider.notifier);
-      
+
       // Initially should have active filters (default is last7Days)
       expect(container.read(receiptsProvider).hasActiveFilters, true);
-      
+
       // Set to all time filter
       notifier.state = notifier.state.copyWith(
         dateFilter: const DateRange(option: DateFilterOption.all),
       );
       expect(container.read(receiptsProvider).hasActiveFilters, false);
-      
+
       // Add search query
       notifier.state = notifier.state.copyWith(searchQuery: 'test');
       expect(container.read(receiptsProvider).hasActiveFilters, true);
@@ -107,9 +109,9 @@ void main() {
           updatedAt: DateTime.now(),
         ),
       ];
-      
+
       notifier.state = notifier.state.copyWith(receipts: mockReceipts);
-      
+
       final state = container.read(receiptsProvider);
       expect(state.totalAmount, 36.25);
       expect(state.totalCount, 2);
@@ -124,12 +126,16 @@ void main() {
       expect(today.endDate, isNotNull);
       expect(AppDateUtils.isSameDay(today.startDate!, today.endDate!), true);
 
-      final last7Days = AppDateUtils.getDateRangeForOption(DateFilterOption.last7Days);
+      final last7Days = AppDateUtils.getDateRangeForOption(
+        DateFilterOption.last7Days,
+      );
       expect(last7Days.option, DateFilterOption.last7Days);
       expect(last7Days.startDate, isNotNull);
       expect(last7Days.endDate, isNotNull);
-      
-      final daysDifference = last7Days.endDate!.difference(last7Days.startDate!).inDays;
+
+      final daysDifference = last7Days.endDate!
+          .difference(last7Days.startDate!)
+          .inDays;
       expect(daysDifference, 6); // 7 days inclusive
     });
 
@@ -138,10 +144,13 @@ void main() {
       final today = DateTime(now.year, now.month, now.day);
       final yesterday = today.subtract(const Duration(days: 1));
       final lastWeek = today.subtract(const Duration(days: 7));
-      
+
       expect(AppDateUtils.formatDisplayDate(today), 'Today');
       expect(AppDateUtils.formatDisplayDate(yesterday), 'Yesterday');
-      expect(AppDateUtils.formatDisplayDate(lastWeek), contains(RegExp(r'[A-Za-z]{3} \d{1,2}')));
+      expect(
+        AppDateUtils.formatDisplayDate(lastWeek),
+        contains(RegExp(r'[A-Za-z]{3} \d{1,2}')),
+      );
     });
 
     test('isDateInRange should work correctly', () {
@@ -150,7 +159,7 @@ void main() {
         endDate: DateTime(2024, 1, 31),
         option: DateFilterOption.custom,
       );
-      
+
       expect(AppDateUtils.isDateInRange(DateTime(2024, 1, 15), range), true);
       expect(AppDateUtils.isDateInRange(DateTime(2024, 2, 1), range), false);
       expect(AppDateUtils.isDateInRange(DateTime(2023, 12, 31), range), false);
@@ -162,7 +171,7 @@ void main() {
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       final yesterday = today.subtract(const Duration(days: 1));
-      
+
       final receipts = [
         ReceiptModel(
           id: '1',
@@ -201,9 +210,9 @@ void main() {
           updatedAt: today,
         ),
       ];
-      
+
       final grouped = ReceiptGrouper.groupReceiptsByDate(receipts);
-      
+
       expect(grouped.length, 2); // Two different dates
       expect(grouped[0].count, 2); // Today should have 2 receipts
       expect(grouped[1].count, 1); // Yesterday should have 1 receipt

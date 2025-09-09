@@ -16,9 +16,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
     final themeNotifier = ref.read(themeProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('settings.general.theme.title'.tr()),
-      ),
+      appBar: AppBar(title: Text('settings.general.theme.title'.tr())),
       body: ListView(
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
         children: [
@@ -38,9 +36,8 @@ class ThemeSettingsScreen extends ConsumerWidget {
                       const SizedBox(width: AppConstants.smallPadding),
                       Text(
                         'Current Theme',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -49,12 +46,16 @@ class ThemeSettingsScreen extends ConsumerWidget {
                     children: [
                       Chip(
                         label: Text(themeState.config.mode.displayName),
-                        backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                        backgroundColor: Theme.of(
+                          context,
+                        ).primaryColor.withValues(alpha: 0.1),
                       ),
                       const SizedBox(width: AppConstants.smallPadding),
                       Chip(
                         label: Text(themeState.config.variant.displayName),
-                        backgroundColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.secondary.withValues(alpha: 0.1),
                       ),
                     ],
                   ),
@@ -66,12 +67,22 @@ class ThemeSettingsScreen extends ConsumerWidget {
           const SizedBox(height: AppConstants.largePadding),
 
           // Theme Mode Section
-          _buildThemeModeSection(context, themeState, themeNotifier, authState.user?.id),
+          _buildThemeModeSection(
+            context,
+            themeState,
+            themeNotifier,
+            authState.user?.id,
+          ),
 
           const SizedBox(height: AppConstants.largePadding),
 
           // Theme Variant Section
-          _buildThemeVariantSection(context, themeState, themeNotifier, authState.user?.id),
+          _buildThemeVariantSection(
+            context,
+            themeState,
+            themeNotifier,
+            authState.user?.id,
+          ),
 
           if (themeState.error != null) ...[
             const SizedBox(height: AppConstants.largePadding),
@@ -122,9 +133,9 @@ class ThemeSettingsScreen extends ConsumerWidget {
           children: [
             Text(
               'Theme Mode',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: AppConstants.smallPadding),
             Text(
@@ -134,7 +145,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: AppConstants.defaultPadding),
-            
+
             // Theme Mode Buttons
             Wrap(
               spacing: AppConstants.smallPadding,
@@ -142,32 +153,31 @@ class ThemeSettingsScreen extends ConsumerWidget {
               children: theme_model.ThemeMode.values.map((mode) {
                 final isSelected = themeState.config.mode == mode;
                 final isLoading = themeState.isLoading;
-                
+
                 return FilterChip(
                   selected: isSelected,
-                  onSelected: isLoading ? null : (selected) {
-                    if (selected) {
-                      themeNotifier.updateThemeMode(mode, userId: userId);
-                    }
-                  },
+                  onSelected: isLoading
+                      ? null
+                      : (selected) {
+                          if (selected) {
+                            themeNotifier.updateThemeMode(mode, userId: userId);
+                          }
+                        },
                   label: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        _getThemeModeIcon(mode),
-                        size: 16,
-                      ),
+                      Icon(_getThemeModeIcon(mode), size: 16),
                       const SizedBox(width: AppConstants.smallPadding),
                       Text(mode.displayName),
                     ],
                   ),
-                  avatar: isLoading && isSelected 
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : null,
+                  avatar: isLoading && isSelected
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : null,
                 );
               }).toList(),
             ),
@@ -191,9 +201,9 @@ class ThemeSettingsScreen extends ConsumerWidget {
           children: [
             Text(
               'Theme Variant',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: AppConstants.smallPadding),
             Text(
@@ -203,7 +213,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: AppConstants.defaultPadding),
-            
+
             // Theme Variant Grid
             GridView.builder(
               shrinkWrap: true,
@@ -217,29 +227,41 @@ class ThemeSettingsScreen extends ConsumerWidget {
               itemCount: theme_model.ThemeVariant.values.length,
               itemBuilder: (context, index) {
                 final variant = theme_model.ThemeVariant.values[index];
-                final definition = theme_model.ThemeVariantDefinition.getDefinition(variant);
+                final definition =
+                    theme_model.ThemeVariantDefinition.getDefinition(variant);
                 final isSelected = themeState.config.variant == variant;
                 final isLoading = themeState.isLoading;
-                
+
                 return GestureDetector(
-                  onTap: isLoading ? null : () {
-                    themeNotifier.updateThemeVariant(variant, userId: userId);
-                  },
+                  onTap: isLoading
+                      ? null
+                      : () {
+                          themeNotifier.updateThemeVariant(
+                            variant,
+                            userId: userId,
+                          );
+                        },
                   child: Container(
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: isSelected 
-                          ? Theme.of(context).primaryColor
-                          : Theme.of(context).dividerColor,
+                        color: isSelected
+                            ? Theme.of(context).primaryColor
+                            : Theme.of(context).dividerColor,
                         width: isSelected ? 2 : 1,
                       ),
-                      borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-                      color: isSelected 
-                        ? Theme.of(context).primaryColor.withValues(alpha: 0.05)
-                        : null,
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.borderRadius,
+                      ),
+                      color: isSelected
+                          ? Theme.of(
+                              context,
+                            ).primaryColor.withValues(alpha: 0.05)
+                          : null,
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(AppConstants.defaultPadding),
+                      padding: const EdgeInsets.all(
+                        AppConstants.defaultPadding,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -248,16 +270,17 @@ class ThemeSettingsScreen extends ConsumerWidget {
                               Expanded(
                                 child: Text(
                                   variant.displayName,
-                                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  style: Theme.of(context).textTheme.titleSmall
+                                      ?.copyWith(fontWeight: FontWeight.bold),
                                 ),
                               ),
                               if (isLoading && isSelected)
                                 const SizedBox(
                                   width: 16,
                                   height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 ),
                             ],
                           ),
@@ -272,11 +295,17 @@ class ThemeSettingsScreen extends ConsumerWidget {
                           // Color Preview
                           Row(
                             children: [
-                              _buildColorPreview(definition.preview.primaryColor),
+                              _buildColorPreview(
+                                definition.preview.primaryColor,
+                              ),
                               const SizedBox(width: 4),
-                              _buildColorPreview(definition.preview.secondaryColor),
+                              _buildColorPreview(
+                                definition.preview.secondaryColor,
+                              ),
                               const SizedBox(width: 4),
-                              _buildColorPreview(definition.preview.accentColor),
+                              _buildColorPreview(
+                                definition.preview.accentColor,
+                              ),
                             ],
                           ),
                         ],
@@ -299,10 +328,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: color,
         shape: BoxShape.circle,
-        border: Border.all(
-          color: Colors.white,
-          width: 2,
-        ),
+        border: Border.all(color: Colors.white, width: 2),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),

@@ -51,21 +51,13 @@ class _ProcessingTimelineWidgetState
       vsync: this,
     );
 
-    _progressAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _progressController,
-      curve: Curves.easeInOut,
-    ));
+    _progressAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _progressController, curve: Curves.easeInOut),
+    );
 
-    _pulseAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.2,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
+    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
 
     if (widget.isProgressUpdating) {
       _pulseController.repeat(reverse: true);
@@ -115,14 +107,14 @@ class _ProcessingTimelineWidgetState
           // Header with progress info
           _buildHeader(theme),
           const SizedBox(height: 16),
-          
+
           // Progress bar
           _buildProgressBar(theme),
           const SizedBox(height: 20),
-          
+
           // Stage timeline
           _buildStageTimeline(theme, orderedStages, currentStageIndex),
-          
+
           // Time estimate
           if (widget.startTime != null) ...[
             const SizedBox(height: 16),
@@ -135,14 +127,10 @@ class _ProcessingTimelineWidgetState
 
   Widget _buildHeader(ThemeData theme) {
     final remainingTime = _calculateRemainingTime();
-    
+
     return Row(
       children: [
-        Icon(
-          Icons.schedule,
-          size: 16,
-          color: theme.textTheme.bodySmall?.color,
-        ),
+        Icon(Icons.schedule, size: 16, color: theme.textTheme.bodySmall?.color),
         const SizedBox(width: 8),
         Text(
           remainingTime != null ? '$remainingTime remaining' : 'Processing...',
@@ -154,7 +142,9 @@ class _ProcessingTimelineWidgetState
           decoration: BoxDecoration(
             color: theme.primaryColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: theme.primaryColor.withValues(alpha: 0.3)),
+            border: Border.all(
+              color: theme.primaryColor.withValues(alpha: 0.3),
+            ),
           ),
           child: Text(
             'high confidence',
@@ -235,10 +225,7 @@ class _ProcessingTimelineWidgetState
               ),
               if (!isLast)
                 Expanded(
-                  child: _buildStageConnector(
-                    theme,
-                    isCompleted || isActive,
-                  ),
+                  child: _buildStageConnector(theme, isCompleted || isActive),
                 ),
             ],
           ),
@@ -284,10 +271,7 @@ class _ProcessingTimelineWidgetState
       return Container(
         width: 8,
         height: 8,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-        ),
+        decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
       );
     }
 
@@ -299,10 +283,7 @@ class _ProcessingTimelineWidgetState
           decoration: BoxDecoration(
             color: getColor(),
             shape: BoxShape.circle,
-            border: Border.all(
-              color: getColor(),
-              width: 2,
-            ),
+            border: Border.all(color: getColor(), width: 2),
           ),
           child: Center(child: getIcon()),
         ),
@@ -336,7 +317,7 @@ class _ProcessingTimelineWidgetState
   Widget _buildTimeEstimate(ThemeData theme) {
     final elapsed = DateTime.now().difference(widget.startTime!);
     final elapsedSeconds = elapsed.inSeconds;
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -366,18 +347,19 @@ class _ProcessingTimelineWidgetState
 
   String? _calculateRemainingTime() {
     if (widget.startTime == null || widget.uploadProgress == 0) return null;
-    
+
     final elapsed = DateTime.now().difference(widget.startTime!);
     final elapsedSeconds = elapsed.inSeconds;
-    
+
     if (elapsedSeconds < 5) return null; // Not enough data
-    
+
     final progressRate = widget.uploadProgress / elapsedSeconds;
     final remainingProgress = 100 - widget.uploadProgress;
-    final estimatedRemainingSeconds = (remainingProgress / progressRate).round();
-    
+    final estimatedRemainingSeconds = (remainingProgress / progressRate)
+        .round();
+
     if (estimatedRemainingSeconds <= 0) return null;
-    
+
     if (estimatedRemainingSeconds < 60) {
       return '$estimatedRemainingSeconds seconds';
     } else {

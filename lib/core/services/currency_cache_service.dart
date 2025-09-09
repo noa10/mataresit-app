@@ -9,7 +9,7 @@ class CurrencyCacheService {
   static const String _boxName = 'currency_rates_cache';
   static const String _metadataBoxName = 'currency_cache_metadata';
   static const Duration _defaultCacheExpiry = Duration(hours: 24);
-  
+
   static Box<String>? _cacheBox;
   static Box<String>? _metadataBox;
 
@@ -64,14 +64,18 @@ class CurrencyCacheService {
       };
       await _metadataBox!.put(metadataKey, json.encode(metadata));
 
-      AppLogger.info('Cached exchange rates for $baseCurrency (${response.rates.length} rates)');
+      AppLogger.info(
+        'Cached exchange rates for $baseCurrency (${response.rates.length} rates)',
+      );
     } catch (e) {
       AppLogger.error('Failed to cache exchange rates: $e');
     }
   }
 
   /// Get cached exchange rates
-  static Future<ExchangeRateResponse?> getCachedExchangeRates(String baseCurrency) async {
+  static Future<ExchangeRateResponse?> getCachedExchangeRates(
+    String baseCurrency,
+  ) async {
     if (_cacheBox == null || _metadataBox == null) {
       AppLogger.warning('Cache not initialized');
       return null;
@@ -114,7 +118,10 @@ class CurrencyCacheService {
   }
 
   /// Get cached exchange rate between two currencies
-  static Future<double?> getCachedExchangeRate(String fromCurrency, String toCurrency) async {
+  static Future<double?> getCachedExchangeRate(
+    String fromCurrency,
+    String toCurrency,
+  ) async {
     if (fromCurrency.toUpperCase() == toCurrency.toUpperCase()) {
       return 1.0;
     }
@@ -148,11 +155,14 @@ class CurrencyCacheService {
     }
 
     try {
-      final exchangeRate = await getCachedExchangeRate(normalizedFrom, normalizedTo);
-      
+      final exchangeRate = await getCachedExchangeRate(
+        normalizedFrom,
+        normalizedTo,
+      );
+
       if (exchangeRate != null) {
         final convertedAmount = amount * exchangeRate;
-        
+
         return CurrencyConversionResult(
           originalAmount: amount,
           originalCurrency: normalizedFrom,
@@ -175,12 +185,12 @@ class CurrencyCacheService {
   /// Check if rates are cached for a currency
   static Future<bool> hasCachedRates(String baseCurrency) async {
     if (_metadataBox == null) return false;
-    
+
     final metadataKey = _getMetadataKey(baseCurrency);
     final metadataJson = _metadataBox!.get(metadataKey);
-    
+
     if (metadataJson == null) return false;
-    
+
     try {
       final metadata = json.decode(metadataJson) as Map<String, dynamic>;
       final expiresAt = DateTime.parse(metadata['expires_at'] as String);
@@ -199,11 +209,11 @@ class CurrencyCacheService {
     try {
       final totalEntries = _cacheBox!.length;
       final metadataEntries = _metadataBox!.length;
-      
+
       int validEntries = 0;
       int expiredEntries = 0;
       final currencies = <String>[];
-      
+
       for (final key in _metadataBox!.keys) {
         try {
           final metadataJson = _metadataBox!.get(key);
@@ -211,9 +221,9 @@ class CurrencyCacheService {
             final metadata = json.decode(metadataJson) as Map<String, dynamic>;
             final expiresAt = DateTime.parse(metadata['expires_at'] as String);
             final baseCurrency = metadata['base_currency'] as String;
-            
+
             currencies.add(baseCurrency);
-            
+
             if (DateTime.now().isBefore(expiresAt)) {
               validEntries++;
             } else {
@@ -224,7 +234,7 @@ class CurrencyCacheService {
           expiredEntries++;
         }
       }
-      
+
       return {
         'total_entries': totalEntries,
         'metadata_entries': metadataEntries,
@@ -241,7 +251,7 @@ class CurrencyCacheService {
   /// Clear all cached data
   static Future<void> clearCache() async {
     if (_cacheBox == null || _metadataBox == null) return;
-    
+
     try {
       await _cacheBox!.clear();
       await _metadataBox!.clear();
@@ -254,11 +264,11 @@ class CurrencyCacheService {
   /// Remove cached rates for a specific currency
   static Future<void> _removeCachedRates(String baseCurrency) async {
     if (_cacheBox == null || _metadataBox == null) return;
-    
+
     try {
       final cacheKey = _getCacheKey(baseCurrency);
       final metadataKey = _getMetadataKey(baseCurrency);
-      
+
       await _cacheBox!.delete(cacheKey);
       await _metadataBox!.delete(metadataKey);
 
@@ -271,18 +281,18 @@ class CurrencyCacheService {
   /// Clean up expired entries
   static Future<void> _cleanupExpiredEntries() async {
     if (_metadataBox == null) return;
-    
+
     try {
       final expiredKeys = <String>[];
       final now = DateTime.now();
-      
+
       for (final key in _metadataBox!.keys) {
         try {
           final metadataJson = _metadataBox!.get(key);
           if (metadataJson != null) {
             final metadata = json.decode(metadataJson) as Map<String, dynamic>;
             final expiresAt = DateTime.parse(metadata['expires_at'] as String);
-            
+
             if (now.isAfter(expiresAt)) {
               expiredKeys.add(key);
             }
@@ -291,14 +301,16 @@ class CurrencyCacheService {
           expiredKeys.add(key); // Remove corrupted entries
         }
       }
-      
+
       for (final key in expiredKeys) {
         final baseCurrency = key.replaceAll('metadata_', '');
         await _removeCachedRates(baseCurrency);
       }
-      
+
       if (expiredKeys.isNotEmpty) {
-        AppLogger.info('Cleaned up ${expiredKeys.length} expired cache entries');
+        AppLogger.info(
+          'Cleaned up ${expiredKeys.length} expired cache entries',
+        );
       }
     } catch (e) {
       AppLogger.error('Failed to cleanup expired entries: $e');
@@ -306,10 +318,12 @@ class CurrencyCacheService {
   }
 
   /// Generate cache key for rates
-  static String _getCacheKey(String baseCurrency) => 'rates_${baseCurrency.toLowerCase()}';
+  static String _getCacheKey(String baseCurrency) =>
+      'rates_${baseCurrency.toLowerCase()}';
 
   /// Generate metadata key
-  static String _getMetadataKey(String baseCurrency) => 'metadata_${baseCurrency.toLowerCase()}';
+  static String _getMetadataKey(String baseCurrency) =>
+      'metadata_${baseCurrency.toLowerCase()}';
 
   /// Dispose resources
   static Future<void> dispose() async {

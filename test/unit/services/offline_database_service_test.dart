@@ -39,7 +39,9 @@ void main() {
 
         // Act
         await OfflineDatabaseService.saveReceipt(receipt);
-        final retrievedReceipt = OfflineDatabaseService.getReceipt('test-receipt-1');
+        final retrievedReceipt = OfflineDatabaseService.getReceipt(
+          'test-receipt-1',
+        );
 
         // Assert
         expect(retrievedReceipt, isNotNull);
@@ -117,7 +119,9 @@ void main() {
 
         // Act
         await OfflineDatabaseService.deleteReceipt('test-receipt');
-        final retrievedReceipt = OfflineDatabaseService.getReceipt('test-receipt');
+        final retrievedReceipt = OfflineDatabaseService.getReceipt(
+          'test-receipt',
+        );
 
         // Assert
         expect(retrievedReceipt, isNull);
@@ -164,7 +168,8 @@ void main() {
 
         // Act
         await OfflineDatabaseService.removeFromSyncQueue(syncId);
-        final updatedOperations = OfflineDatabaseService.getPendingSyncOperations();
+        final updatedOperations =
+            OfflineDatabaseService.getPendingSyncOperations();
 
         // Assert
         expect(updatedOperations.length, equals(0));
@@ -184,7 +189,8 @@ void main() {
 
         // Act
         await OfflineDatabaseService.updateSyncRetryCount(syncId, 2);
-        final updatedOperations = OfflineDatabaseService.getPendingSyncOperations();
+        final updatedOperations =
+            OfflineDatabaseService.getPendingSyncOperations();
 
         // Assert
         expect(updatedOperations.first['retryCount'], equals(2));
@@ -203,7 +209,10 @@ void main() {
 
       test('should return default value for non-existent setting', () {
         // Act
-        final value = OfflineDatabaseService.getSetting<String>('non_existent', 'default');
+        final value = OfflineDatabaseService.getSetting<String>(
+          'non_existent',
+          'default',
+        );
 
         // Assert
         expect(value, equals('default'));

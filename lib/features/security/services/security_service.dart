@@ -82,7 +82,9 @@ class SecurityService {
   static Future<void> updateSecuritySettings(SecuritySettings settings) async {
     try {
       final updatedSettings = settings.copyWith(lastUpdated: DateTime.now());
-      await SecureStorageService.storeSecuritySettings(updatedSettings.toJson());
+      await SecureStorageService.storeSecuritySettings(
+        updatedSettings.toJson(),
+      );
       _cachedSettings = updatedSettings;
       _logger.d('Security settings updated successfully');
     } catch (e) {
@@ -92,7 +94,9 @@ class SecurityService {
   }
 
   /// Update biometric settings
-  static Future<void> updateBiometricSettings(BiometricSettings settings) async {
+  static Future<void> updateBiometricSettings(
+    BiometricSettings settings,
+  ) async {
     try {
       await SecureStorageService.storeBiometricSettings(settings.toJson());
       _cachedBiometricSettings = settings;
@@ -137,14 +141,14 @@ class SecurityService {
     try {
       final hashedPin = _hashPin(pin);
       await SecureStorageService.storeAppPin(hashedPin);
-      
+
       final updatedSettings = securitySettings.copyWith(
         hasPinSet: true,
         appLockEnabled: true,
         lastUpdated: DateTime.now(),
       );
       await updateSecuritySettings(updatedSettings);
-      
+
       _logger.d('App PIN set successfully');
     } catch (e) {
       _logger.e('Failed to set app PIN: $e');
@@ -163,7 +167,7 @@ class SecurityService {
 
       final hashedPin = _hashPin(pin);
       final isValid = hashedPin == storedHashedPin;
-      
+
       _logger.d('PIN verification result: $isValid');
       return isValid;
     } catch (e) {
@@ -176,14 +180,14 @@ class SecurityService {
   static Future<void> removeAppPin() async {
     try {
       await SecureStorageService.removeAppPin();
-      
+
       final updatedSettings = securitySettings.copyWith(
         hasPinSet: false,
         appLockEnabled: false,
         lastUpdated: DateTime.now(),
       );
       await updateSecuritySettings(updatedSettings);
-      
+
       _logger.d('App PIN removed successfully');
     } catch (e) {
       _logger.e('Failed to remove app PIN: $e');
@@ -215,8 +219,10 @@ class SecurityService {
     }
 
     final timeSinceLastActive = DateTime.now().difference(lastActiveTime);
-    final timeoutDuration = Duration(minutes: securitySettings.autoLogoutMinutes);
-    
+    final timeoutDuration = Duration(
+      minutes: securitySettings.autoLogoutMinutes,
+    );
+
     return timeSinceLastActive >= timeoutDuration;
   }
 
@@ -225,7 +231,7 @@ class SecurityService {
     try {
       // First check if biometrics are available
       await _checkBiometricAvailability();
-      
+
       if (!biometricSettings.isAvailable) {
         _logger.w('Biometric authentication not available on this device');
         return false;

@@ -9,19 +9,19 @@ part 'biometric_settings.g.dart';
 class BiometricSettings extends Equatable {
   /// Whether biometric authentication is available on device
   final bool isAvailable;
-  
+
   /// Whether biometric authentication is enabled by user
   final bool isEnabled;
-  
+
   /// Available biometric types on device
   final List<BiometricType> availableTypes;
-  
+
   /// Whether to use biometric for app unlock
   final bool useForAppUnlock;
-  
+
   /// Whether to use biometric for sensitive operations
   final bool useForSensitiveOps;
-  
+
   /// Last time biometric settings were checked
   final DateTime? lastChecked;
 
@@ -63,7 +63,7 @@ class BiometricSettings extends Equatable {
   /// Get display text for available biometric types
   String get availableTypesDisplayText {
     if (availableTypes.isEmpty) return 'None available';
-    
+
     final typeNames = availableTypes.map((type) {
       switch (type) {
         case BiometricType.face:
@@ -78,7 +78,7 @@ class BiometricSettings extends Equatable {
           return 'Weak biometric';
       }
     }).toList();
-    
+
     return typeNames.join(', ');
   }
 
@@ -87,11 +87,11 @@ class BiometricSettings extends Equatable {
 
   @override
   List<Object?> get props => [
-        isAvailable,
-        isEnabled,
-        availableTypes,
-        useForAppUnlock,
-        useForSensitiveOps,
-        lastChecked,
-      ];
+    isAvailable,
+    isEnabled,
+    availableTypes,
+    useForAppUnlock,
+    useForSensitiveOps,
+    lastChecked,
+  ];
 }

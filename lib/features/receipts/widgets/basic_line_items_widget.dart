@@ -146,13 +146,17 @@ class BasicLineItemsWidget extends StatelessWidget {
                                 ),
                               ),
                               onChanged: (value) {
-                                final updatedItem = item.copyWith(description: value);
+                                final updatedItem = item.copyWith(
+                                  description: value,
+                                );
                                 onLineItemChanged(index, updatedItem);
                               },
                             )
                           else
                             Text(
-                              item.description.isEmpty ? 'Unnamed item' : item.description,
+                              item.description.isEmpty
+                                  ? 'Unnamed item'
+                                  : item.description,
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 0.1,
@@ -186,7 +190,9 @@ class BasicLineItemsWidget extends StatelessWidget {
                               textAlign: TextAlign.right,
                               onChanged: (value) {
                                 final amount = double.tryParse(value) ?? 0.0;
-                                final updatedItem = item.copyWith(amount: amount);
+                                final updatedItem = item.copyWith(
+                                  amount: amount,
+                                );
                                 onLineItemChanged(index, updatedItem);
                               },
                             ),
@@ -200,7 +206,7 @@ class BasicLineItemsWidget extends StatelessWidget {
                               color: colorScheme.primary,
                             ),
                           ),
-                        
+
                         if (isEditing) ...[
                           const SizedBox(height: 8),
                           IconButton(

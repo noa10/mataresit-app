@@ -6,8 +6,11 @@ class ConfidenceUtils {
   /// Matches the React web version's calculateAggregateConfidence logic
   static double calculateAggregateConfidence(ReceiptModel receipt) {
     // First, check if we have a direct confidence score from ai_suggestions
-    if (receipt.aiSuggestions != null && receipt.aiSuggestions!.containsKey('confidence')) {
-      final confidence = _parseConfidenceValue(receipt.aiSuggestions!['confidence']);
+    if (receipt.aiSuggestions != null &&
+        receipt.aiSuggestions!.containsKey('confidence')) {
+      final confidence = _parseConfidenceValue(
+        receipt.aiSuggestions!['confidence'],
+      );
       if (confidence != null) {
         // Convert from decimal (0.95) to percentage (95) if needed
         final result = confidence > 1 ? confidence : confidence * 100;
@@ -20,7 +23,9 @@ class ConfidenceUtils {
 
     // Handle legacy format from older Flutter app versions (backward compatibility)
     if (receipt.confidenceScores!.containsKey('overall')) {
-      final confidence = _parseConfidenceValue(receipt.confidenceScores!['overall']);
+      final confidence = _parseConfidenceValue(
+        receipt.confidenceScores!['overall'],
+      );
       if (confidence != null) {
         // Convert from decimal (0.95) to percentage (95) if needed
         final result = confidence > 1 ? confidence : confidence * 100;
@@ -31,11 +36,11 @@ class ConfidenceUtils {
     // Define weights for each field (total = 1.0)
     // These weights match the React web version
     const weights = {
-      'merchant': 0.3,  // 30% weight for merchant name
-      'date': 0.2,      // 20% weight for date
-      'total': 0.3,     // 30% weight for total amount
-      'payment_method': 0.1,  // 10% weight for payment method
-      'tax': 0.1        // 10% weight for tax
+      'merchant': 0.3, // 30% weight for merchant name
+      'date': 0.2, // 20% weight for date
+      'total': 0.3, // 30% weight for total amount
+      'payment_method': 0.1, // 10% weight for payment method
+      'tax': 0.1, // 10% weight for tax
     };
 
     // Calculate weighted average
@@ -47,7 +52,9 @@ class ConfidenceUtils {
       final weight = entry.value;
 
       if (receipt.confidenceScores!.containsKey(field)) {
-        final confidence = _parseConfidenceValue(receipt.confidenceScores![field]);
+        final confidence = _parseConfidenceValue(
+          receipt.confidenceScores![field],
+        );
         if (confidence != null) {
           weightedSum += (confidence * weight);
           totalWeight += weight;
@@ -66,21 +73,21 @@ class ConfidenceUtils {
   /// Parse confidence value from various formats (decimal, percentage, string)
   static double? _parseConfidenceValue(dynamic value) {
     if (value == null) return null;
-    
+
     if (value is num) {
       final doubleValue = value.toDouble();
       // If value is > 1, assume it's already a percentage (0-100)
       // If value is <= 1, assume it's a decimal (0-1) and convert to percentage
       return doubleValue > 1 ? doubleValue : doubleValue * 100;
     }
-    
+
     if (value is String) {
       final parsed = double.tryParse(value);
       if (parsed != null) {
         return parsed > 1 ? parsed : parsed * 100;
       }
     }
-    
+
     return null;
   }
 
@@ -89,7 +96,7 @@ class ConfidenceUtils {
     if (score == null) return 50.0; // Default to 50% instead of 0
     final numScore = score;
     if (numScore.isNaN) return 50.0; // Default to 50% if invalid
-    
+
     // Assume scores > 1 are already percentages, otherwise convert decimal
     final normalized = numScore > 1 ? numScore : numScore * 100;
     return normalized.clamp(0.0, 100.0);
@@ -134,28 +141,28 @@ class ConfidenceUtils {
   /// This handles the confidence score from the AI processing
   static double getAIConfidenceScore(Map<String, dynamic>? metadata) {
     if (metadata == null) return 0.0;
-    
+
     // Check for confidence in metadata
     if (metadata.containsKey('confidence')) {
       final confidence = _parseConfidenceValue(metadata['confidence']);
       return confidence ?? 0.0;
     }
-    
+
     // Check for ai_confidence
     if (metadata.containsKey('ai_confidence')) {
       final confidence = _parseConfidenceValue(metadata['ai_confidence']);
       return confidence ?? 0.0;
     }
-    
+
     return 0.0;
   }
 }
 
 /// Enum for confidence color categories
 enum ConfidenceColor {
-  high,    // Green - 80% and above
-  medium,  // Yellow - 60-79%
-  low,     // Red - below 60%
+  high, // Green - 80% and above
+  medium, // Yellow - 60-79%
+  low, // Red - below 60%
 }
 
 /// Extension to get color values for confidence colors

@@ -22,16 +22,15 @@ import '../../claims/widgets/claim_from_receipt_dialog.dart';
 class ModernReceiptDetailScreen extends ConsumerStatefulWidget {
   final String receiptId;
 
-  const ModernReceiptDetailScreen({
-    super.key,
-    required this.receiptId,
-  });
+  const ModernReceiptDetailScreen({super.key, required this.receiptId});
 
   @override
-  ConsumerState<ModernReceiptDetailScreen> createState() => _ModernReceiptDetailScreenState();
+  ConsumerState<ModernReceiptDetailScreen> createState() =>
+      _ModernReceiptDetailScreenState();
 }
 
-class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailScreen>
+class _ModernReceiptDetailScreenState
+    extends ConsumerState<ModernReceiptDetailScreen>
     with TickerProviderStateMixin {
   bool _isEditing = false;
   final bool _isImageExpanded = false;
@@ -64,7 +63,9 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
     // Load categories when the screen initializes with team context
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final currentTeam = ref.read(currentTeamModelProvider);
-      ref.read(categoriesProvider.notifier).loadCategories(teamId: currentTeam?.id);
+      ref
+          .read(categoriesProvider.notifier)
+          .loadCategories(teamId: currentTeam?.id);
     });
   }
 
@@ -203,7 +204,9 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
                 // Show info about embedding sync
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Search index is being updated in the background'),
+                    content: Text(
+                      'Search index is being updated in the background',
+                    ),
                     duration: Duration(seconds: 2),
                   ),
                 );
@@ -233,7 +236,10 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
                     SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     ),
                     SizedBox(width: 8),
                     Text('Updating search index...'),
@@ -341,25 +347,16 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
       data: (receipt) {
         if (receipt == null) {
           return Scaffold(
-            appBar: AppBar(
-              title: const Text('Receipt Details'),
-            ),
+            appBar: AppBar(title: const Text('Receipt Details')),
             body: const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: Colors.grey,
-                  ),
+                  Icon(Icons.error_outline, size: 64, color: Colors.grey),
                   SizedBox(height: AppConstants.defaultPadding),
                   Text(
                     'Receipt not found',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -377,9 +374,7 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
         return _buildReceiptScaffold(context, theme, colorScheme, receipt);
       },
       loading: () => Scaffold(
-        appBar: AppBar(
-          title: const Text('Receipt Details'),
-        ),
+        appBar: AppBar(title: const Text('Receipt Details')),
         body: const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -392,9 +387,7 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
         ),
       ),
       error: (error, stack) => Scaffold(
-        appBar: AppBar(
-          title: const Text('Receipt Details'),
-        ),
+        appBar: AppBar(title: const Text('Receipt Details')),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -404,7 +397,8 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
               Text('Error loading receipt: $error'),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () => ref.invalidate(receiptProvider(widget.receiptId)),
+                onPressed: () =>
+                    ref.invalidate(receiptProvider(widget.receiptId)),
                 child: const Text('Retry'),
               ),
             ],
@@ -414,8 +408,12 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
     );
   }
 
-  Widget _buildReceiptScaffold(BuildContext context, ThemeData theme, ColorScheme colorScheme, ReceiptModel receipt) {
-
+  Widget _buildReceiptScaffold(
+    BuildContext context,
+    ThemeData theme,
+    ColorScheme colorScheme,
+    ReceiptModel receipt,
+  ) {
     return Scaffold(
       body: FadeTransition(
         opacity: _fadeAnimation,
@@ -448,7 +446,9 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
                   ),
                   child: SafeArea(
                     child: Padding(
-                      padding: const EdgeInsets.all(AppConstants.defaultPadding),
+                      padding: const EdgeInsets.all(
+                        AppConstants.defaultPadding,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.end,
@@ -460,7 +460,9 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
                                 Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: colorScheme.primary.withValues(alpha: 0.1),
+                                    color: colorScheme.primary.withValues(
+                                      alpha: 0.1,
+                                    ),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Icon(
@@ -472,16 +474,19 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
-                                        receipt.merchantName ?? 'Unnamed Receipt',
-                                        style: theme.textTheme.headlineSmall?.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                          color: colorScheme.onSurface,
-                                          letterSpacing: -0.5,
-                                        ),
+                                        receipt.merchantName ??
+                                            'Unnamed Receipt',
+                                        style: theme.textTheme.headlineSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                              color: colorScheme.onSurface,
+                                              letterSpacing: -0.5,
+                                            ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -497,12 +502,16 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
                                           Flexible(
                                             child: Text(
                                               receipt.transactionDate != null
-                                                  ? _formatDate(receipt.transactionDate!)
+                                                  ? _formatDate(
+                                                      receipt.transactionDate!,
+                                                    )
                                                   : 'No date',
-                                              style: theme.textTheme.bodyMedium?.copyWith(
-                                                color: colorScheme.onSurfaceVariant,
-                                                fontWeight: FontWeight.w500,
-                                              ),
+                                              style: theme.textTheme.bodyMedium
+                                                  ?.copyWith(
+                                                    color: colorScheme
+                                                        .onSurfaceVariant,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                             ),
@@ -510,11 +519,12 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
                                           const SizedBox(width: 16),
                                           Text(
                                             '${receipt.currency ?? 'MYR'} ${receipt.totalAmount?.toStringAsFixed(2) ?? '0.00'}',
-                                            style: theme.textTheme.titleLarge?.copyWith(
-                                              fontWeight: FontWeight.w700,
-                                              color: colorScheme.primary,
-                                              letterSpacing: -0.25,
-                                            ),
+                                            style: theme.textTheme.titleLarge
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                  color: colorScheme.primary,
+                                                  letterSpacing: -0.25,
+                                                ),
                                           ),
                                         ],
                                       ),
@@ -670,11 +680,7 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.receipt_long,
-                  color: colorScheme.primary,
-                  size: 24,
-                ),
+                Icon(Icons.receipt_long, color: colorScheme.primary, size: 24),
                 const SizedBox(width: 12),
                 Text(
                   'Create Expense Claim',
@@ -727,14 +733,6 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
     );
   }
 
-
-
-
-
-
-
-
-
   Widget _buildDetailRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -770,14 +768,18 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
     return '${date.day}/${date.month}/${date.year}';
   }
 
-
-
-  void _showDeleteDialog(BuildContext context, WidgetRef ref, ReceiptModel receipt) {
+  void _showDeleteDialog(
+    BuildContext context,
+    WidgetRef ref,
+    ReceiptModel receipt,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Receipt'),
-        content: Text('Are you sure you want to delete the receipt from ${receipt.merchantName ?? 'Unknown Merchant'}?'),
+        content: Text(
+          'Are you sure you want to delete the receipt from ${receipt.merchantName ?? 'Unknown Merchant'}?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -786,7 +788,9 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
           TextButton(
             onPressed: () async {
               Navigator.of(context).pop();
-              await ref.read(receiptsProvider.notifier).deleteReceipt(receipt.id);
+              await ref
+                  .read(receiptsProvider.notifier)
+                  .deleteReceipt(receipt.id);
               if (context.mounted) {
                 context.pop();
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -864,7 +868,9 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                border: Border.all(color: Theme.of(context).colorScheme.outline),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline,
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -914,7 +920,11 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
             // If category not found by ID, try to find by name (case-insensitive)
             if (category == null && receipt.category != null) {
               category = categoriesState.displayCategories
-                  .where((cat) => cat.name.toLowerCase() == receipt.category!.toLowerCase())
+                  .where(
+                    (cat) =>
+                        cat.name.toLowerCase() ==
+                        receipt.category!.toLowerCase(),
+                  )
                   .firstOrNull;
             }
           }
@@ -959,7 +969,9 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -1004,8 +1016,8 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
                   ),
 
                   // Category items
-                  ...categoriesState.displayCategories.map((category) =>
-                    _buildCategoryModalItem(
+                  ...categoriesState.displayCategories.map(
+                    (category) => _buildCategoryModalItem(
                       context: context,
                       category: category,
                       isSelected: _selectedCategory?.id == category.id,
@@ -1042,7 +1054,9 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         margin: const EdgeInsets.only(bottom: 4),
         decoration: BoxDecoration(
-          color: isSelected ? colorScheme.primaryContainer.withValues(alpha: 0.3) : null,
+          color: isSelected
+              ? colorScheme.primaryContainer.withValues(alpha: 0.3)
+              : null,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -1058,14 +1072,14 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  category.name,
-                  style: theme.textTheme.bodyMedium,
-                ),
+                child: Text(category.name, style: theme.textTheme.bodyMedium),
               ),
               if (category.receiptCount != null) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(12),
@@ -1096,11 +1110,7 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
             ],
             if (isSelected) ...[
               const SizedBox(width: 8),
-              Icon(
-                Icons.check,
-                size: 20,
-                color: colorScheme.primary,
-              ),
+              Icon(Icons.check, size: 20, color: colorScheme.primary),
             ],
           ],
         ),
@@ -1108,7 +1118,11 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
     );
   }
 
-  Widget _buildBasicReceiptCard(ReceiptModel receipt, ThemeData theme, ColorScheme colorScheme) {
+  Widget _buildBasicReceiptCard(
+    ReceiptModel receipt,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
@@ -1229,7 +1243,9 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
                           vertical: 16,
                         ),
                       ),
-                      items: ['MYR', 'USD', 'EUR', 'GBP', 'SGD'].map((currency) {
+                      items: ['MYR', 'USD', 'EUR', 'GBP', 'SGD'].map((
+                        currency,
+                      ) {
                         return DropdownMenuItem(
                           value: currency,
                           child: Text(
@@ -1251,8 +1267,16 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
               ),
             ] else ...[
               _buildDetailRow('Merchant', receipt.merchantName ?? 'Unknown'),
-              _buildDetailRow('Total', '${receipt.currency ?? 'MYR'} ${receipt.totalAmount?.toStringAsFixed(2) ?? '0.00'}'),
-              _buildDetailRow('Date', receipt.transactionDate != null ? _formatDate(receipt.transactionDate!) : 'No date'),
+              _buildDetailRow(
+                'Total',
+                '${receipt.currency ?? 'MYR'} ${receipt.totalAmount?.toStringAsFixed(2) ?? '0.00'}',
+              ),
+              _buildDetailRow(
+                'Date',
+                receipt.transactionDate != null
+                    ? _formatDate(receipt.transactionDate!)
+                    : 'No date',
+              ),
               if (receipt.paymentMethod != null)
                 _buildDetailRow('Payment Method', receipt.paymentMethod!),
             ],
@@ -1291,18 +1315,27 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
             _buildDetailRow('Created', timeago.format(receipt.createdAt)),
             _buildDetailRow('Updated', timeago.format(receipt.updatedAt)),
             _buildDetailRow('Expense', receipt.isExpense ? 'Yes' : 'No'),
-            _buildDetailRow('Reimbursable', receipt.isReimbursable ? 'Yes' : 'No'),
+            _buildDetailRow(
+              'Reimbursable',
+              receipt.isReimbursable ? 'Yes' : 'No',
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildReceiptImageSection(ReceiptModel receipt, ThemeData theme, ColorScheme colorScheme) {
+  Widget _buildReceiptImageSection(
+    ReceiptModel receipt,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
-      height: _isImageExpanded ? 350 : 200, // Increased heights for better viewing
+      height: _isImageExpanded
+          ? 350
+          : 200, // Increased heights for better viewing
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
@@ -1317,7 +1350,8 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
       child: receipt.imageUrl != null
           ? EnhancedImageViewer(
               imageUrl: receipt.imageUrl!,
-              title: 'Receipt from ${receipt.merchantName ?? 'Unknown Merchant'}',
+              title:
+                  'Receipt from ${receipt.merchantName ?? 'Unknown Merchant'}',
               heroTag: 'receipt_${receipt.id}',
               showControls: true,
               enableRotation: true,
@@ -1352,5 +1386,4 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
             ),
     );
   }
-
 }

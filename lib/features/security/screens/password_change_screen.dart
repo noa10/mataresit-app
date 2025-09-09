@@ -7,7 +7,8 @@ class PasswordChangeScreen extends ConsumerStatefulWidget {
   const PasswordChangeScreen({super.key});
 
   @override
-  ConsumerState<PasswordChangeScreen> createState() => _PasswordChangeScreenState();
+  ConsumerState<PasswordChangeScreen> createState() =>
+      _PasswordChangeScreenState();
 }
 
 class _PasswordChangeScreenState extends ConsumerState<PasswordChangeScreen> {
@@ -15,7 +16,7 @@ class _PasswordChangeScreenState extends ConsumerState<PasswordChangeScreen> {
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   bool _obscureCurrentPassword = true;
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
@@ -65,9 +66,9 @@ class _PasswordChangeScreenState extends ConsumerState<PasswordChangeScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Current password field
               TextFormField(
                 controller: _currentPasswordController,
@@ -77,7 +78,9 @@ class _PasswordChangeScreenState extends ConsumerState<PasswordChangeScreen> {
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscureCurrentPassword ? Icons.visibility : Icons.visibility_off,
+                      _obscureCurrentPassword
+                          ? Icons.visibility
+                          : Icons.visibility_off,
                     ),
                     onPressed: () {
                       setState(() {
@@ -94,9 +97,9 @@ class _PasswordChangeScreenState extends ConsumerState<PasswordChangeScreen> {
                   return null;
                 },
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // New password field
               TextFormField(
                 controller: _newPasswordController,
@@ -106,7 +109,9 @@ class _PasswordChangeScreenState extends ConsumerState<PasswordChangeScreen> {
                   prefixIcon: const Icon(Icons.lock),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscureNewPassword ? Icons.visibility : Icons.visibility_off,
+                      _obscureNewPassword
+                          ? Icons.visibility
+                          : Icons.visibility_off,
                     ),
                     onPressed: () {
                       setState(() {
@@ -129,9 +134,9 @@ class _PasswordChangeScreenState extends ConsumerState<PasswordChangeScreen> {
                   return null;
                 },
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Confirm password field
               TextFormField(
                 controller: _confirmPasswordController,
@@ -141,7 +146,9 @@ class _PasswordChangeScreenState extends ConsumerState<PasswordChangeScreen> {
                   prefixIcon: const Icon(Icons.lock),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
+                      _obscureConfirmPassword
+                          ? Icons.visibility
+                          : Icons.visibility_off,
                     ),
                     onPressed: () {
                       setState(() {
@@ -161,9 +168,9 @@ class _PasswordChangeScreenState extends ConsumerState<PasswordChangeScreen> {
                   return null;
                 },
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Change password button
               ElevatedButton(
                 onPressed: _isLoading ? null : _changePassword,
@@ -178,9 +185,9 @@ class _PasswordChangeScreenState extends ConsumerState<PasswordChangeScreen> {
                       )
                     : const Text('Change Password'),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Cancel button
               TextButton(
                 onPressed: _isLoading ? null : () => context.pop(),
@@ -205,7 +212,7 @@ class _PasswordChangeScreenState extends ConsumerState<PasswordChangeScreen> {
     try {
       // TODO: Implement password change using AuthSecurityService
       await Future.delayed(const Duration(seconds: 2)); // Simulate API call
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

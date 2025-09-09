@@ -12,10 +12,12 @@ class NotificationSettingsScreen extends ConsumerStatefulWidget {
   const NotificationSettingsScreen({super.key});
 
   @override
-  ConsumerState<NotificationSettingsScreen> createState() => _NotificationSettingsScreenState();
+  ConsumerState<NotificationSettingsScreen> createState() =>
+      _NotificationSettingsScreenState();
 }
 
-class _NotificationSettingsScreenState extends ConsumerState<NotificationSettingsScreen> {
+class _NotificationSettingsScreenState
+    extends ConsumerState<NotificationSettingsScreen> {
   @override
   void initState() {
     super.initState();
@@ -61,9 +63,7 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
     }
 
     if (state.preferences == null) {
-      return const Center(
-        child: Text('No notification preferences found'),
-      );
+      return const Center(child: Text('No notification preferences found'));
     }
 
     return SingleChildScrollView(
@@ -73,29 +73,39 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
         children: [
           // Push Notifications Section
           _buildPushNotificationsSection(context, state.preferences!, notifier),
-          
+
           const SizedBox(height: AppConstants.largePadding),
-          
+
           // Email Notifications Section
-          _buildEmailNotificationsSection(context, state.preferences!, notifier),
-          
-          const SizedBox(height: AppConstants.largePadding),
-          
-          // Notification Categories
-          ...notificationCategories.entries.map((entry) =>
-            _buildCategorySection(context, entry.key, entry.value, state.preferences!, notifier),
+          _buildEmailNotificationsSection(
+            context,
+            state.preferences!,
+            notifier,
           ),
-          
+
           const SizedBox(height: AppConstants.largePadding),
-          
+
+          // Notification Categories
+          ...notificationCategories.entries.map(
+            (entry) => _buildCategorySection(
+              context,
+              entry.key,
+              entry.value,
+              state.preferences!,
+              notifier,
+            ),
+          ),
+
+          const SizedBox(height: AppConstants.largePadding),
+
           // Quiet Hours Section
           _buildQuietHoursSection(context, state.preferences!, notifier),
-          
+
           const SizedBox(height: AppConstants.largePadding),
-          
+
           // Digest Settings Section
           _buildDigestSection(context, state.preferences!, notifier),
-          
+
           const SizedBox(height: AppConstants.largePadding * 2),
         ],
       ),
@@ -131,9 +141,9 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
             const SizedBox(height: AppConstants.smallPadding),
             Text(
               'Get instant notifications on your device',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: AppConstants.defaultPadding),
             SwitchListTile(
@@ -162,10 +172,7 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.email,
-                  color: Theme.of(context).primaryColor,
-                ),
+                Icon(Icons.email, color: Theme.of(context).primaryColor),
                 const SizedBox(width: AppConstants.smallPadding),
                 Text(
                   'Email Notifications',
@@ -178,9 +185,9 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
             const SizedBox(height: AppConstants.smallPadding),
             Text(
               'Receive notifications via email',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: AppConstants.defaultPadding),
             SwitchListTile(
@@ -222,9 +229,8 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                     children: [
                       Text(
                         config.label,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       Text(
                         config.description,
@@ -238,12 +244,14 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
               ],
             ),
             const SizedBox(height: AppConstants.defaultPadding),
-            ...config.types.map((type) => _buildNotificationTypeRow(
-              context,
-              type,
-              preferences,
-              notifier,
-            )),
+            ...config.types.map(
+              (type) => _buildNotificationTypeRow(
+                context,
+                type,
+                preferences,
+                notifier,
+              ),
+            ),
           ],
         ),
       ),
@@ -258,7 +266,7 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
   ) {
     final emailEnabled = preferences.getEmailPreference(type);
     final pushEnabled = preferences.getPushPreference(type);
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppConstants.smallPadding),
       child: Row(
@@ -276,13 +284,15 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
               Icon(
                 Icons.email,
                 size: 16,
-                color: preferences.emailEnabled ? Colors.grey[600] : Colors.grey[400],
+                color: preferences.emailEnabled
+                    ? Colors.grey[600]
+                    : Colors.grey[400],
               ),
               Switch(
                 value: emailEnabled,
-                onChanged: preferences.emailEnabled 
-                  ? (value) => notifier.updateEmailPreference(type, value)
-                  : null,
+                onChanged: preferences.emailEnabled
+                    ? (value) => notifier.updateEmailPreference(type, value)
+                    : null,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ],
@@ -295,13 +305,15 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
               Icon(
                 Icons.notifications,
                 size: 16,
-                color: preferences.pushEnabled ? Colors.grey[600] : Colors.grey[400],
+                color: preferences.pushEnabled
+                    ? Colors.grey[600]
+                    : Colors.grey[400],
               ),
               Switch(
                 value: pushEnabled,
-                onChanged: preferences.pushEnabled 
-                  ? (value) => notifier.updatePushPreference(type, value)
-                  : null,
+                onChanged: preferences.pushEnabled
+                    ? (value) => notifier.updatePushPreference(type, value)
+                    : null,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ],
@@ -324,10 +336,7 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.bedtime,
-                  color: Theme.of(context).primaryColor,
-                ),
+                Icon(Icons.bedtime, color: Theme.of(context).primaryColor),
                 const SizedBox(width: AppConstants.smallPadding),
                 Text(
                   'Quiet Hours',
@@ -340,14 +349,16 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
             const SizedBox(height: AppConstants.smallPadding),
             Text(
               'Disable notifications during specific hours',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: AppConstants.defaultPadding),
             SwitchListTile(
               title: const Text('Enable quiet hours'),
-              subtitle: const Text('Notifications will be silenced during these hours'),
+              subtitle: const Text(
+                'Notifications will be silenced during these hours',
+              ),
               value: preferences.quietHoursEnabled,
               onChanged: (value) => notifier.updateQuietHours(enabled: value),
               contentPadding: EdgeInsets.zero,
@@ -401,10 +412,7 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.summarize,
-                  color: Theme.of(context).primaryColor,
-                ),
+                Icon(Icons.summarize, color: Theme.of(context).primaryColor),
                 const SizedBox(width: AppConstants.smallPadding),
                 Text(
                   'Digest Settings',
@@ -417,26 +425,29 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
             const SizedBox(height: AppConstants.smallPadding),
             Text(
               'Receive periodic summaries of your notifications',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: AppConstants.defaultPadding),
             SwitchListTile(
               title: const Text('Daily digest'),
               subtitle: const Text('Receive a daily summary of notifications'),
               value: preferences.dailyDigestEnabled,
-              onChanged: (value) => notifier.updateDigestPreferences(dailyEnabled: value),
+              onChanged: (value) =>
+                  notifier.updateDigestPreferences(dailyEnabled: value),
               contentPadding: EdgeInsets.zero,
             ),
             SwitchListTile(
               title: const Text('Weekly digest'),
               subtitle: const Text('Receive a weekly summary of notifications'),
               value: preferences.weeklyDigestEnabled,
-              onChanged: (value) => notifier.updateDigestPreferences(weeklyEnabled: value),
+              onChanged: (value) =>
+                  notifier.updateDigestPreferences(weeklyEnabled: value),
               contentPadding: EdgeInsets.zero,
             ),
-            if (preferences.dailyDigestEnabled || preferences.weeklyDigestEnabled) ...[
+            if (preferences.dailyDigestEnabled ||
+                preferences.weeklyDigestEnabled) ...[
               const SizedBox(height: AppConstants.defaultPadding),
               _buildTimeSelector(
                 context,
@@ -471,7 +482,8 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
         );
 
         if (selectedTime != null) {
-          final formattedTime = '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}';
+          final formattedTime =
+              '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}';
           onTimeChanged(formattedTime);
         }
       },
@@ -486,15 +498,12 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
           children: [
             Text(
               label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: AppConstants.smallPadding),
-            Text(
-              currentTime,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+            Text(currentTime, style: Theme.of(context).textTheme.bodyLarge),
           ],
         ),
       ),

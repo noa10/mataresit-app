@@ -7,10 +7,7 @@ import '../../../shared/models/user_model.dart';
 class ProfileSubscription extends ConsumerWidget {
   final UserModel profile;
 
-  const ProfileSubscription({
-    super.key,
-    required this.profile,
-  });
+  const ProfileSubscription({super.key, required this.profile});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -26,13 +23,13 @@ class ProfileSubscription extends ConsumerWidget {
               children: [
                 Text(
                   'Current Plan',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                
+
                 const SizedBox(height: AppConstants.defaultPadding),
-                
+
                 Row(
                   children: [
                     Container(
@@ -41,27 +38,33 @@ class ProfileSubscription extends ConsumerWidget {
                         vertical: AppConstants.smallPadding,
                       ),
                       decoration: BoxDecoration(
-                        color: _getSubscriptionColor(profile.subscriptionTier ?? 'free'),
+                        color: _getSubscriptionColor(
+                          profile.subscriptionTier ?? 'free',
+                        ),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        _getSubscriptionDisplayName(profile.subscriptionTier ?? 'free'),
+                        _getSubscriptionDisplayName(
+                          profile.subscriptionTier ?? 'free',
+                        ),
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                    
+
                     const Spacer(),
-                    
+
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppConstants.smallPadding,
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(profile.subscriptionStatus ?? 'active'),
+                        color: _getStatusColor(
+                          profile.subscriptionStatus ?? 'active',
+                        ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -75,9 +78,9 @@ class ProfileSubscription extends ConsumerWidget {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: AppConstants.defaultPadding),
-                
+
                 // Usage Information
                 if (profile.receiptsUsedThisMonth != null)
                   Column(
@@ -85,13 +88,12 @@ class ProfileSubscription extends ConsumerWidget {
                     children: [
                       Text(
                         'Usage This Month',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
                       ),
-                      
+
                       const SizedBox(height: AppConstants.smallPadding),
-                      
+
                       Row(
                         children: [
                           Icon(
@@ -112,11 +114,12 @@ class ProfileSubscription extends ConsumerWidget {
             ),
           ),
         ),
-        
+
         const SizedBox(height: AppConstants.defaultPadding),
-        
+
         // Subscription Dates
-        if (profile.subscriptionStartDate != null || profile.subscriptionEndDate != null)
+        if (profile.subscriptionStartDate != null ||
+            profile.subscriptionEndDate != null)
           Card(
             child: Padding(
               padding: const EdgeInsets.all(AppConstants.defaultPadding),
@@ -129,9 +132,9 @@ class ProfileSubscription extends ConsumerWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  
+
                   const SizedBox(height: AppConstants.defaultPadding),
-                  
+
                   if (profile.subscriptionStartDate != null)
                     _buildDetailRow(
                       context,
@@ -139,7 +142,7 @@ class ProfileSubscription extends ConsumerWidget {
                       _formatDate(profile.subscriptionStartDate!),
                       Icons.play_arrow,
                     ),
-                  
+
                   if (profile.subscriptionEndDate != null)
                     _buildDetailRow(
                       context,
@@ -147,7 +150,7 @@ class ProfileSubscription extends ConsumerWidget {
                       _formatDate(profile.subscriptionEndDate!),
                       Icons.event,
                     ),
-                  
+
                   if (profile.nextBillingDate != null)
                     _buildDetailRow(
                       context,
@@ -159,9 +162,9 @@ class ProfileSubscription extends ConsumerWidget {
               ),
             ),
           ),
-        
+
         const SizedBox(height: AppConstants.defaultPadding),
-        
+
         // Action Buttons
         Card(
           child: Padding(
@@ -171,13 +174,13 @@ class ProfileSubscription extends ConsumerWidget {
               children: [
                 Text(
                   'Manage Subscription',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                
+
                 const SizedBox(height: AppConstants.defaultPadding),
-                
+
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -186,9 +189,9 @@ class ProfileSubscription extends ConsumerWidget {
                     label: const Text('Upgrade Plan'),
                   ),
                 ),
-                
+
                 const SizedBox(height: AppConstants.smallPadding),
-                
+
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
@@ -205,27 +208,25 @@ class ProfileSubscription extends ConsumerWidget {
     );
   }
 
-  Widget _buildDetailRow(BuildContext context, String label, String value, IconData icon) {
+  Widget _buildDetailRow(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppConstants.smallPadding),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: 16,
-            color: Colors.grey[600],
-          ),
+          Icon(icon, size: 16, color: Colors.grey[600]),
           const SizedBox(width: AppConstants.smallPadding),
           Text(
             '$label: ',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          Text(value, style: Theme.of(context).textTheme.bodyMedium),
         ],
       ),
     );

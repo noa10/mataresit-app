@@ -67,7 +67,7 @@ class ClaimModel extends Equatable {
   final String? category;
   final ClaimPriority priority;
   final ClaimStatus status;
-  
+
   // Approval workflow fields
   @JsonKey(name: 'submitted_at')
   final DateTime? submittedAt;
@@ -81,17 +81,17 @@ class ClaimModel extends Equatable {
   final DateTime? approvedAt;
   @JsonKey(name: 'rejection_reason')
   final String? rejectionReason;
-  
+
   // Metadata and attachments
   final Map<String, dynamic> metadata;
   final List<dynamic> attachments;
-  
+
   // Timestamps
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
   @JsonKey(name: 'updated_at')
   final DateTime updatedAt;
-  
+
   // Joined data (optional, populated by queries with joins)
   @JsonKey(name: 'claimant_name')
   final String? claimantName;
@@ -101,7 +101,7 @@ class ClaimModel extends Equatable {
   final String? reviewerName;
   @JsonKey(name: 'approver_name')
   final String? approverName;
-  
+
   // Multilingual fields (optional)
   @JsonKey(name: 'title_ms')
   final String? titleMs;
@@ -143,7 +143,9 @@ class ClaimModel extends Equatable {
     // Handle attachments field that might be stored as JSON string or array
     List<dynamic> attachments = const [];
     if (json['attachments'] != null) {
-      _logger.i('    Raw attachments: ${json['attachments']} (${json['attachments'].runtimeType})');
+      _logger.i(
+        '    Raw attachments: ${json['attachments']} (${json['attachments'].runtimeType})',
+      );
       if (json['attachments'] is String) {
         try {
           // Try to parse JSON string
@@ -162,16 +164,20 @@ class ClaimModel extends Equatable {
       } else if (json['attachments'] is List) {
         attachments = List<dynamic>.from(json['attachments']);
       } else {
-        _logger.w('    Warning: Unexpected attachments type: ${json['attachments'].runtimeType}');
+        _logger.w(
+          '    Warning: Unexpected attachments type: ${json['attachments'].runtimeType}',
+        );
         attachments = const [];
       }
     }
     _logger.i('    Processed attachments: $attachments');
-    
+
     // Handle metadata field that might be stored as JSON string or map
     Map<String, dynamic> metadata = const {};
     if (json['metadata'] != null) {
-      _logger.i('    Raw metadata: ${json['metadata']} (${json['metadata'].runtimeType})');
+      _logger.i(
+        '    Raw metadata: ${json['metadata']} (${json['metadata'].runtimeType})',
+      );
       if (json['metadata'] is String) {
         try {
           // Try to parse JSON string
@@ -190,7 +196,9 @@ class ClaimModel extends Equatable {
       } else if (json['metadata'] is Map) {
         metadata = Map<String, dynamic>.from(json['metadata']);
       } else {
-        _logger.w('    Warning: Unexpected metadata type: ${json['metadata'].runtimeType}');
+        _logger.w(
+          '    Warning: Unexpected metadata type: ${json['metadata'].runtimeType}',
+        );
         metadata = const {};
       }
     }
@@ -270,13 +278,20 @@ class ClaimModel extends Equatable {
   bool get canEdit => status == ClaimStatus.draft;
 
   /// Check if claim can be submitted
-  bool get canSubmit => status == ClaimStatus.draft && title.isNotEmpty && amount > 0;
+  bool get canSubmit =>
+      status == ClaimStatus.draft && title.isNotEmpty && amount > 0;
 
   /// Check if claim can be approved
-  bool get canApprove => status == ClaimStatus.submitted || status == ClaimStatus.pending || status == ClaimStatus.underReview;
+  bool get canApprove =>
+      status == ClaimStatus.submitted ||
+      status == ClaimStatus.pending ||
+      status == ClaimStatus.underReview;
 
   /// Check if claim can be rejected
-  bool get canReject => status == ClaimStatus.submitted || status == ClaimStatus.pending || status == ClaimStatus.underReview;
+  bool get canReject =>
+      status == ClaimStatus.submitted ||
+      status == ClaimStatus.pending ||
+      status == ClaimStatus.underReview;
 
   /// Get status display name
   String get statusDisplayName {
@@ -314,33 +329,33 @@ class ClaimModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        teamId,
-        claimantId,
-        title,
-        description,
-        amount,
-        currency,
-        category,
-        priority,
-        status,
-        submittedAt,
-        reviewedBy,
-        reviewedAt,
-        approvedBy,
-        approvedAt,
-        rejectionReason,
-        metadata,
-        attachments,
-        createdAt,
-        updatedAt,
-        claimantName,
-        claimantEmail,
-        reviewerName,
-        approverName,
-        titleMs,
-        descriptionMs,
-      ];
+    id,
+    teamId,
+    claimantId,
+    title,
+    description,
+    amount,
+    currency,
+    category,
+    priority,
+    status,
+    submittedAt,
+    reviewedBy,
+    reviewedAt,
+    approvedBy,
+    approvedAt,
+    rejectionReason,
+    metadata,
+    attachments,
+    createdAt,
+    updatedAt,
+    claimantName,
+    claimantEmail,
+    reviewerName,
+    approverName,
+    titleMs,
+    descriptionMs,
+  ];
 }
 
 /// Claim audit trail model
@@ -360,7 +375,7 @@ class ClaimAuditTrailModel extends Equatable {
   final Map<String, dynamic> metadata;
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
-  
+
   // Joined data
   @JsonKey(name: 'user_name')
   final String? userName;
@@ -388,16 +403,16 @@ class ClaimAuditTrailModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        claimId,
-        userId,
-        action,
-        oldStatus,
-        newStatus,
-        comment,
-        metadata,
-        createdAt,
-        userName,
-        userEmail,
-      ];
+    id,
+    claimId,
+    userId,
+    action,
+    oldStatus,
+    newStatus,
+    comment,
+    metadata,
+    createdAt,
+    userName,
+    userEmail,
+  ];
 }

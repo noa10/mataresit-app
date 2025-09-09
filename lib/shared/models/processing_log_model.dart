@@ -51,13 +51,13 @@ class ProcessingLogModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        receiptId,
-        createdAt,
-        statusMessage,
-        stepName,
-        progress,
-      ];
+    id,
+    receiptId,
+    createdAt,
+    statusMessage,
+    stepName,
+    progress,
+  ];
 }
 
 /// Processing stage information
@@ -147,18 +147,19 @@ class ProcessingStages {
   }
 
   static List<String> get orderedStages => [
-        'START',
-        'FETCH',
-        'PROCESSING',
-        'SAVE',
-        'COMPLETE'
-      ];
+    'START',
+    'FETCH',
+    'PROCESSING',
+    'SAVE',
+    'COMPLETE',
+  ];
 }
 
 /// Enhanced upload state for detailed progress tracking
 class ReceiptUploadState extends Equatable {
   final String id;
-  final String status; // 'pending', 'uploading', 'processing', 'completed', 'error'
+  final String
+  status; // 'pending', 'uploading', 'processing', 'completed', 'error'
   final int uploadProgress; // 0-100
   final String? currentStage;
   final List<String> stageHistory;
@@ -214,15 +215,15 @@ class ReceiptUploadState extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        status,
-        uploadProgress,
-        currentStage,
-        stageHistory,
-        processLogs,
-        startTime,
-        endTime,
-        error,
-        isProgressUpdating,
-      ];
+    id,
+    status,
+    uploadProgress,
+    currentStage,
+    stageHistory,
+    processLogs,
+    startTime,
+    endTime,
+    error,
+    isProgressUpdating,
+  ];
 }

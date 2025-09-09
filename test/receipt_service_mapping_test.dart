@@ -9,7 +9,8 @@ void main() {
         'merchant_name': 'Test Merchant',
         'transaction_date': DateTime.now().toIso8601String(),
         'total_amount': 100.0,
-        'processing_status': 'complete', // React app value - should not cause validation errors
+        'processing_status':
+            'complete', // React app value - should not cause validation errors
       };
 
       // The validation should pass without errors (processing_status is not validated here)
@@ -25,7 +26,10 @@ void main() {
       };
 
       // This should not throw an exception
-      expect(() => ReceiptService.validateReceiptData(receiptData), returnsNormally);
+      expect(
+        () => ReceiptService.validateReceiptData(receiptData),
+        returnsNormally,
+      );
     });
 
     test('should validate required fields correctly', () {

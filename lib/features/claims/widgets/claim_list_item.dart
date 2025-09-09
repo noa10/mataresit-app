@@ -44,9 +44,8 @@ class ClaimListItem extends StatelessWidget {
                       children: [
                         Text(
                           claim.title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -54,9 +53,12 @@ class ClaimListItem extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             claim.category!,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
                           ),
                         ],
                       ],
@@ -125,7 +127,8 @@ class ClaimListItem extends StatelessWidget {
               ),
 
               // Description if available
-              if (claim.description != null && claim.description!.isNotEmpty) ...[
+              if (claim.description != null &&
+                  claim.description!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
                   claim.description!,
@@ -371,9 +374,6 @@ class ClaimListItem extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return Wrap(
-      spacing: 8,
-      children: actions,
-    );
+    return Wrap(spacing: 8, children: actions);
   }
 }

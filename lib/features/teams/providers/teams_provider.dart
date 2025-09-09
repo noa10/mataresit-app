@@ -13,11 +13,7 @@ class TeamsState {
   final bool isLoading;
   final String? error;
 
-  const TeamsState({
-    this.teams = const [],
-    this.isLoading = false,
-    this.error,
-  });
+  const TeamsState({this.teams = const [], this.isLoading = false, this.error});
 
   TeamsState copyWith({
     List<TeamModel>? teams,
@@ -89,12 +85,16 @@ class TeamsNotifier extends StateNotifier<TeamsState> {
 
         // Log the raw team data to understand the structure
         if (allTeamsMap.isNotEmpty) {
-          AppLogger.debug('Raw team data from database: ${allTeamsMap.values.first}');
+          AppLogger.debug(
+            'Raw team data from database: ${allTeamsMap.values.first}',
+          );
         }
 
         // Convert to TeamModel with proper field mapping and fetch member data
         teams = await Future.wait(
-          allTeamsMap.values.map((json) => _mapDatabaseTeamToModelWithMembers(json))
+          allTeamsMap.values.map(
+            (json) => _mapDatabaseTeamToModelWithMembers(json),
+          ),
         );
 
         // Sort by created_at descending
@@ -105,20 +105,16 @@ class TeamsNotifier extends StateNotifier<TeamsState> {
         teams = _createMockTeams(user.id);
       }
 
-      state = state.copyWith(
-        teams: teams,
-        isLoading: false,
-      );
+      state = state.copyWith(teams: teams, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
   /// Maps database team data to TeamModel format with proper member data fetching
-  Future<TeamModel> _mapDatabaseTeamToModelWithMembers(Map<String, dynamic> json) async {
+  Future<TeamModel> _mapDatabaseTeamToModelWithMembers(
+    Map<String, dynamic> json,
+  ) async {
     final teamId = json['id'] as String;
     final ownerId = json['owner_id'] as String;
 
@@ -127,8 +123,10 @@ class TeamsNotifier extends StateNotifier<TeamsState> {
     Map<String, TeamRole> memberRoles = {};
 
     try {
-      final membersResponse = await SupabaseService.client
-          .rpc('get_team_members', params: {'_team_id': teamId});
+      final membersResponse = await SupabaseService.client.rpc(
+        'get_team_members',
+        params: {'_team_id': teamId},
+      );
 
       if (membersResponse is List) {
         for (final member in membersResponse) {
@@ -178,8 +176,6 @@ class TeamsNotifier extends StateNotifier<TeamsState> {
     );
   }
 
-
-
   TeamRole _parseTeamRole(String? role) {
     switch (role?.toLowerCase()) {
       case 'owner':
@@ -212,10 +208,12 @@ class TeamsNotifier extends StateNotifier<TeamsState> {
     if (settings is Map<String, dynamic>) {
       return TeamSettings(
         allowMemberInvites: settings['allowMemberInvites'] as bool? ?? false,
-        requireApprovalForExpenses: settings['requireApprovalForExpenses'] as bool? ?? false,
+        requireApprovalForExpenses:
+            settings['requireApprovalForExpenses'] as bool? ?? false,
         expenseApprovalLimit: settings['expenseApprovalLimit'] as double?,
         enableNotifications: settings['enableNotifications'] as bool? ?? true,
-        allowedCategories: (settings['allowedCategories'] as List?)?.cast<String>() ?? [],
+        allowedCategories:
+            (settings['allowedCategories'] as List?)?.cast<String>() ?? [],
       );
     }
     return const TeamSettings(
@@ -312,19 +310,13 @@ class TeamsNotifier extends StateNotifier<TeamsState> {
       }
 
       // Add to local state
-      state = state.copyWith(
-        teams: [team, ...state.teams],
-        isLoading: false,
-      );
+      state = state.copyWith(teams: [team, ...state.teams], isLoading: false);
 
       AppLogger.info('✅ Team created successfully: ${team.name}');
       return team.id;
     } catch (e) {
       AppLogger.error('Error creating team', e);
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }
@@ -345,9 +337,7 @@ class TeamsNotifier extends StateNotifier<TeamsState> {
       'updated_at': team.updatedAt.toIso8601String(),
     };
 
-    await SupabaseService.client
-        .from('teams')
-        .insert(teamData);
+    await SupabaseService.client.from('teams').insert(teamData);
   }
 
   /// Join a team
@@ -374,10 +364,7 @@ class TeamsNotifier extends StateNotifier<TeamsState> {
       // Update team with new member
       final updatedTeam = team.copyWith(
         memberIds: [...team.memberIds, user.id],
-        memberRoles: {
-          ...team.memberRoles,
-          user.id: TeamRole.member,
-        },
+        memberRoles: {...team.memberRoles, user.id: TeamRole.member},
         updatedAt: DateTime.now(),
       );
 
@@ -392,15 +379,9 @@ class TeamsNotifier extends StateNotifier<TeamsState> {
       final updatedTeams = [...state.teams];
       updatedTeams[teamIndex] = updatedTeam;
 
-      state = state.copyWith(
-        teams: updatedTeams,
-        isLoading: false,
-      );
+      state = state.copyWith(teams: updatedTeams, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }
@@ -427,7 +408,9 @@ class TeamsNotifier extends StateNotifier<TeamsState> {
       }
 
       // Update team by removing member
-      final updatedMemberIds = team.memberIds.where((id) => id != user.id).toList();
+      final updatedMemberIds = team.memberIds
+          .where((id) => id != user.id)
+          .toList();
       final updatedMemberRoles = Map<String, TeamRole>.from(team.memberRoles)
         ..remove(user.id);
 
@@ -448,15 +431,9 @@ class TeamsNotifier extends StateNotifier<TeamsState> {
       final updatedTeams = [...state.teams];
       updatedTeams[teamIndex] = updatedTeam;
 
-      state = state.copyWith(
-        teams: updatedTeams,
-        isLoading: false,
-      );
+      state = state.copyWith(teams: updatedTeams, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }
@@ -560,21 +537,32 @@ class CurrentTeamNotifier extends StateNotifier<CurrentTeamState> {
       final teamsState = ref.read(teamsProvider);
       final teams = teamsState.teams;
 
-      AppLogger.debug('🏢 Teams loaded for current team initialization: ${teams.length} teams');
+      AppLogger.debug(
+        '🏢 Teams loaded for current team initialization: ${teams.length} teams',
+      );
       for (final team in teams) {
-        AppLogger.debug('🏢 Team: ${team.id} - ${team.name} (Owner: ${team.ownerId}, Members: ${team.memberIds.length})');
+        AppLogger.debug(
+          '🏢 Team: ${team.id} - ${team.name} (Owner: ${team.ownerId}, Members: ${team.memberIds.length})',
+        );
         AppLogger.debug('🏢 Member roles: ${team.memberRoles}');
       }
 
       // Try to restore last selected workspace from preferences
-      final savedWorkspaceId = await WorkspacePreferencesService.getCurrentWorkspaceId();
-      AppLogger.debug('🏢 Saved workspace ID from preferences: $savedWorkspaceId');
+      final savedWorkspaceId =
+          await WorkspacePreferencesService.getCurrentWorkspaceId();
+      AppLogger.debug(
+        '🏢 Saved workspace ID from preferences: $savedWorkspaceId',
+      );
 
       if (savedWorkspaceId != null) {
         // Try to find the saved team
-        final savedTeam = teams.where((t) => t.id == savedWorkspaceId).firstOrNull;
+        final savedTeam = teams
+            .where((t) => t.id == savedWorkspaceId)
+            .firstOrNull;
         if (savedTeam != null) {
-          AppLogger.debug('🏢 Restoring saved team: ${savedTeam.id} - ${savedTeam.name}');
+          AppLogger.debug(
+            '🏢 Restoring saved team: ${savedTeam.id} - ${savedTeam.name}',
+          );
           await switchTeam(savedTeam.id);
           return;
         } else {
@@ -584,23 +572,25 @@ class CurrentTeamNotifier extends StateNotifier<CurrentTeamState> {
       }
 
       // If no saved workspace or saved team not found, check if auto-switch is enabled
-      final autoSwitchEnabled = await WorkspacePreferencesService.getAutoSwitchEnabled();
+      final autoSwitchEnabled =
+          await WorkspacePreferencesService.getAutoSwitchEnabled();
 
       if (teams.isNotEmpty && autoSwitchEnabled) {
         // Select the first team
         final firstTeam = teams.first;
-        AppLogger.debug('🏢 Auto-switching to first team: ${firstTeam.id} - ${firstTeam.name}');
+        AppLogger.debug(
+          '🏢 Auto-switching to first team: ${firstTeam.id} - ${firstTeam.name}',
+        );
         await switchTeam(firstTeam.id);
       } else {
-        AppLogger.info('🏢 No teams found or auto-switch disabled, staying in personal workspace');
+        AppLogger.info(
+          '🏢 No teams found or auto-switch disabled, staying in personal workspace',
+        );
         state = state.copyWith(isLoading: false);
       }
     } catch (e) {
       AppLogger.error('Error initializing current team', e);
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -620,12 +610,16 @@ class CurrentTeamNotifier extends StateNotifier<CurrentTeamState> {
           clearCurrentRole: true,
         );
         AppLogger.info('🏢 Switched to personal workspace');
-        AppLogger.debug('🔍 State after switch - currentTeam: ${state.currentTeam?.name}, currentRole: ${state.currentRole}');
+        AppLogger.debug(
+          '🔍 State after switch - currentTeam: ${state.currentTeam?.name}, currentRole: ${state.currentRole}',
+        );
         return;
       }
 
       final teams = ref.read(teamsProvider).teams;
-      AppLogger.debug('🔄 Available teams: ${teams.map((t) => '${t.id}:${t.name}').toList()}');
+      AppLogger.debug(
+        '🔄 Available teams: ${teams.map((t) => '${t.id}:${t.name}').toList()}',
+      );
 
       TeamModel? team;
       try {
@@ -661,10 +655,7 @@ class CurrentTeamNotifier extends StateNotifier<CurrentTeamState> {
       AppLogger.info('🏢 Switched to team: ${team.name} (${role.name})');
     } catch (e) {
       AppLogger.error('Error switching team', e);
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -675,9 +666,10 @@ class CurrentTeamNotifier extends StateNotifier<CurrentTeamState> {
 }
 
 /// Current team provider
-final currentTeamProvider = StateNotifierProvider<CurrentTeamNotifier, CurrentTeamState>((ref) {
-  return CurrentTeamNotifier(ref);
-});
+final currentTeamProvider =
+    StateNotifierProvider<CurrentTeamNotifier, CurrentTeamState>((ref) {
+      return CurrentTeamNotifier(ref);
+    });
 
 /// Provider for current team model
 final currentTeamModelProvider = Provider<TeamModel?>((ref) {

@@ -6,12 +6,7 @@ class LoadingWidget extends StatelessWidget {
   final double? size;
   final Color? color;
 
-  const LoadingWidget({
-    super.key,
-    this.message,
-    this.size,
-    this.color,
-  });
+  const LoadingWidget({super.key, this.message, this.size, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -31,9 +26,9 @@ class LoadingWidget extends StatelessWidget {
             const SizedBox(height: AppConstants.defaultPadding),
             Text(
               message!,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
           ],

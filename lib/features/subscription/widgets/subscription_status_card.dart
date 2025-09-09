@@ -34,12 +34,13 @@ class SubscriptionStatusCard extends ConsumerWidget {
           children: [
             // Header with tier info
             _buildHeader(context, ref, subscription),
-            
+
             if (!compact) ...[
               const SizedBox(height: 16),
 
               // Usage information
-              if (usage != null) _buildUsageSection(context, subscription, usage),
+              if (usage != null)
+                _buildUsageSection(context, subscription, usage),
 
               if (showUpgradeButton) ...[
                 const SizedBox(height: 16),
@@ -183,15 +184,15 @@ class SubscriptionStatusCard extends ConsumerWidget {
 
   Widget _buildUsageSection(BuildContext context, subscription, usage) {
     final limits = subscription.limits;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Usage This Month',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
 
@@ -257,10 +258,7 @@ class SubscriptionStatusCard extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    label,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
+                  Text(label, style: Theme.of(context).textTheme.bodySmall),
                   Text(
                     isUnlimited
                         ? '$used$unit'
@@ -276,9 +274,13 @@ class SubscriptionStatusCard extends ConsumerWidget {
                 const SizedBox(height: 4),
                 LinearProgressIndicator(
                   value: percentage,
-                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    isNearLimit ? Colors.orange : Theme.of(context).colorScheme.primary,
+                    isNearLimit
+                        ? Colors.orange
+                        : Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ],
@@ -289,11 +291,9 @@ class SubscriptionStatusCard extends ConsumerWidget {
     );
   }
 
-
-
   Widget _buildActionButtons(BuildContext context, subscription) {
     final tier = subscription.tier;
-    
+
     return Row(
       children: [
         if (tier != SubscriptionTier.max) ...[
@@ -301,7 +301,9 @@ class SubscriptionStatusCard extends ConsumerWidget {
             child: FilledButton.icon(
               onPressed: () => context.push('/pricing'),
               icon: const Icon(Icons.upgrade),
-              label: Text(tier == SubscriptionTier.free ? 'Upgrade' : 'Upgrade to Max'),
+              label: Text(
+                tier == SubscriptionTier.free ? 'Upgrade' : 'Upgrade to Max',
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -362,6 +364,4 @@ class SubscriptionStatusCard extends ConsumerWidget {
         return Colors.purple;
     }
   }
-
-
 }

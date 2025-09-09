@@ -9,7 +9,9 @@ class ReceiptService {
   static final _logger = Logger();
 
   /// Map receipt data from model format to database format
-  static Map<String, dynamic> _mapReceiptDataForDatabase(Map<String, dynamic> data) {
+  static Map<String, dynamic> _mapReceiptDataForDatabase(
+    Map<String, dynamic> data,
+  ) {
     final mappedData = Map<String, dynamic>.from(data);
 
     // Map category to predicted_category
@@ -64,7 +66,8 @@ class ReceiptService {
     // No mapping needed for custom_category_id
 
     // Handle enum conversion for status
-    if (mappedData.containsKey('status') && mappedData['status'] is ReceiptStatus) {
+    if (mappedData.containsKey('status') &&
+        mappedData['status'] is ReceiptStatus) {
       final status = mappedData['status'] as ReceiptStatus;
       switch (status) {
         case ReceiptStatus.draft:
@@ -83,8 +86,10 @@ class ReceiptService {
     }
 
     // Handle enum conversion for processing_status
-    if (mappedData.containsKey('processing_status') && mappedData['processing_status'] is ProcessingStatus) {
-      final processingStatus = mappedData['processing_status'] as ProcessingStatus;
+    if (mappedData.containsKey('processing_status') &&
+        mappedData['processing_status'] is ProcessingStatus) {
+      final processingStatus =
+          mappedData['processing_status'] as ProcessingStatus;
       switch (processingStatus) {
         case ProcessingStatus.pending:
           mappedData['processing_status'] = 'pending';
@@ -105,17 +110,28 @@ class ReceiptService {
     }
 
     // Handle string processing_status values (cross-platform compatibility)
-    if (mappedData.containsKey('processing_status') && mappedData['processing_status'] is String) {
+    if (mappedData.containsKey('processing_status') &&
+        mappedData['processing_status'] is String) {
       final processingStatusStr = mappedData['processing_status'] as String;
       // Map React app's 'complete' to Flutter's 'completed'
       if (processingStatusStr.toLowerCase() == 'complete') {
         mappedData['processing_status'] = 'completed';
-        _logger.d('Mapped processing_status from "complete" to "completed" for database compatibility');
+        _logger.d(
+          'Mapped processing_status from "complete" to "completed" for database compatibility',
+        );
       }
       // Ensure only valid values are used
-      final validStatuses = ['pending', 'processing', 'completed', 'failed', 'manual_review'];
+      final validStatuses = [
+        'pending',
+        'processing',
+        'completed',
+        'failed',
+        'manual_review',
+      ];
       if (!validStatuses.contains(mappedData['processing_status'])) {
-        _logger.w('Invalid processing_status value: ${mappedData['processing_status']}, defaulting to completed');
+        _logger.w(
+          'Invalid processing_status value: ${mappedData['processing_status']}, defaulting to completed',
+        );
         mappedData['processing_status'] = 'completed';
       }
     }
@@ -130,7 +146,9 @@ class ReceiptService {
     required List<LineItemModel> lineItems,
   }) async {
     try {
-      _logger.i('🔄 Updating receipt $receiptId with ${lineItems.length} line items');
+      _logger.i(
+        '🔄 Updating receipt $receiptId with ${lineItems.length} line items',
+      );
 
       // Map receipt data to database format
       final mappedReceiptData = _mapReceiptDataForDatabase(receiptData);
@@ -151,46 +169,39 @@ class ReceiptService {
       if (lineItems.isNotEmpty) {
         _logger.d('🗑️ Deleting existing line items...');
         // Delete existing line items first
-        await _supabase
-            .from('line_items')
-            .delete()
-            .eq('receipt_id', receiptId);
+        await _supabase.from('line_items').delete().eq('receipt_id', receiptId);
         _logger.d('✅ Existing line items deleted');
 
         // Filter out items with empty descriptions and format for insertion
         final formattedLineItems = lineItems
             .where((item) => item.description.trim().isNotEmpty)
             .map((item) {
-          final data = <String, dynamic>{
-            'description': item.description.trim(),
-            'amount': item.amount,
-            'receipt_id': receiptId,
-            'created_at': DateTime.now().toIso8601String(),
-            'updated_at': DateTime.now().toIso8601String(),
-          };
+              final data = <String, dynamic>{
+                'description': item.description.trim(),
+                'amount': item.amount,
+                'receipt_id': receiptId,
+                'created_at': DateTime.now().toIso8601String(),
+                'updated_at': DateTime.now().toIso8601String(),
+              };
 
-          // Don't include temp IDs
-          if (!item.id.startsWith('temp-')) {
-            data['id'] = item.id;
-          }
+              // Don't include temp IDs
+              if (!item.id.startsWith('temp-')) {
+                data['id'] = item.id;
+              }
 
-          return data;
-        }).toList();
+              return data;
+            })
+            .toList();
 
         if (formattedLineItems.isNotEmpty) {
           _logger.d('➕ Inserting ${formattedLineItems.length} line items...');
-          await _supabase
-              .from('line_items')
-              .insert(formattedLineItems);
+          await _supabase.from('line_items').insert(formattedLineItems);
           _logger.i('✅ Line items inserted successfully');
         }
       } else {
         _logger.d('🗑️ Deleting all line items (empty array provided)...');
         // If empty array is explicitly passed, delete all line items
-        await _supabase
-            .from('line_items')
-            .delete()
-            .eq('receipt_id', receiptId);
+        await _supabase.from('line_items').delete().eq('receipt_id', receiptId);
         _logger.d('✅ All line items deleted');
       }
 
@@ -200,9 +211,15 @@ class ReceiptService {
       _logger.i('✅ Receipt update completed successfully');
 
       // Trigger embedding synchronization to update search index
-      _logger.d('🔄 Triggering embedding synchronization for updated receipt...');
-      EmbeddingService.syncEmbeddingsAfterReceiptUpdate(receiptId).catchError((error) {
-        _logger.w('⚠️ Embedding synchronization failed but receipt update succeeded: $error');
+      _logger.d(
+        '🔄 Triggering embedding synchronization for updated receipt...',
+      );
+      EmbeddingService.syncEmbeddingsAfterReceiptUpdate(receiptId).catchError((
+        error,
+      ) {
+        _logger.w(
+          '⚠️ Embedding synchronization failed but receipt update succeeded: $error',
+        );
       });
 
       return result;
@@ -211,10 +228,16 @@ class ReceiptService {
 
       // Handle specific database constraint violations
       final errorMessage = error.toString().toLowerCase();
-      if (errorMessage.contains('processing_status') && errorMessage.contains('not one of the supported values')) {
-        throw Exception('Invalid processing status value. Please try again or contact support if the issue persists.');
-      } else if (errorMessage.contains('constraint') || errorMessage.contains('check')) {
-        throw Exception('Data validation failed. Please check your input values and try again.');
+      if (errorMessage.contains('processing_status') &&
+          errorMessage.contains('not one of the supported values')) {
+        throw Exception(
+          'Invalid processing status value. Please try again or contact support if the issue persists.',
+        );
+      } else if (errorMessage.contains('constraint') ||
+          errorMessage.contains('check')) {
+        throw Exception(
+          'Data validation failed. Please check your input values and try again.',
+        );
       }
 
       rethrow;
@@ -243,7 +266,9 @@ class ReceiptService {
             .map((item) => LineItemModel.fromJson(item))
             .toList();
 
-        _logger.i('✅ Receipt fetched successfully with ${lineItems.length} line items');
+        _logger.i(
+          '✅ Receipt fetched successfully with ${lineItems.length} line items',
+        );
         return receipt.copyWith(lineItems: lineItems);
       }
 
@@ -254,10 +279,15 @@ class ReceiptService {
 
       // Handle specific database constraint violations
       final errorMessage = error.toString().toLowerCase();
-      if (errorMessage.contains('processing_status') && errorMessage.contains('not one of the supported values')) {
-        throw Exception('Receipt data contains invalid processing status. This may be due to cross-platform compatibility issues.');
+      if (errorMessage.contains('processing_status') &&
+          errorMessage.contains('not one of the supported values')) {
+        throw Exception(
+          'Receipt data contains invalid processing status. This may be due to cross-platform compatibility issues.',
+        );
       } else if (errorMessage.contains('invalid argument')) {
-        throw Exception('Invalid data format detected. Please try refreshing the receipt.');
+        throw Exception(
+          'Invalid data format detected. Please try refreshing the receipt.',
+        );
       }
 
       rethrow;
@@ -268,7 +298,8 @@ class ReceiptService {
   static Map<String, String> validateReceiptData(Map<String, dynamic> data) {
     final errors = <String, String>{};
 
-    if (data['merchant_name'] == null || data['merchant_name'].toString().trim().isEmpty) {
+    if (data['merchant_name'] == null ||
+        data['merchant_name'].toString().trim().isEmpty) {
       errors['merchant_name'] = 'Merchant name is required';
     }
 
@@ -298,8 +329,6 @@ class ReceiptService {
     return errors;
   }
 
-
-
   /// Create a new line item with default values
   static LineItemModel createNewLineItem(String receiptId) {
     return LineItemModel(
@@ -313,19 +342,16 @@ class ReceiptService {
   }
 
   /// Calculate receipt totals from line items
-  static Map<String, double> calculateReceiptTotals(List<LineItemModel> lineItems) {
+  static Map<String, double> calculateReceiptTotals(
+    List<LineItemModel> lineItems,
+  ) {
     double total = 0.0;
 
     for (final item in lineItems) {
       total += item.amount;
     }
 
-    return {
-      'subtotal': total,
-      'tax': 0.0,
-      'discount': 0.0,
-      'total': total,
-    };
+    return {'subtotal': total, 'tax': 0.0, 'discount': 0.0, 'total': total};
   }
 
   /// Format currency for display
@@ -343,7 +369,7 @@ class ReceiptService {
   /// Validate and format date
   static DateTime? parseDate(String? dateString) {
     if (dateString == null || dateString.isEmpty) return null;
-    
+
     try {
       return DateTime.parse(dateString);
     } catch (e) {
@@ -369,7 +395,7 @@ class ReceiptService {
               final part1 = int.parse(match.group(1)!);
               final part2 = int.parse(match.group(2)!);
               final part3 = int.parse(match.group(3)!);
-              
+
               if (part1 > 1000) {
                 // YYYY-MM-DD
                 return DateTime(part1, part2, part3);
@@ -383,7 +409,7 @@ class ReceiptService {
           }
         }
       }
-      
+
       return null;
     }
   }
@@ -402,7 +428,7 @@ class ReceiptService {
       'Bank Transfer',
       'Digital Wallet',
       'Check',
-      'Other'
+      'Other',
     ];
   }
 }

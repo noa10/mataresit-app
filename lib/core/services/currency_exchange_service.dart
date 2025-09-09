@@ -9,33 +9,38 @@ class CurrencyAmount {
   final double amount;
   final String currency;
 
-  const CurrencyAmount({
-    required this.amount,
-    required this.currency,
-  });
+  const CurrencyAmount({required this.amount, required this.currency});
 }
 
 /// Service for fetching and managing currency exchange rates
 class CurrencyExchangeService {
-  
   // Primary API endpoint (jsdelivr CDN)
-  static const String _primaryApiBase = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies';
-  
+  static const String _primaryApiBase =
+      'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies';
+
   // Fallback API endpoint (Cloudflare Pages)
-  static const String _fallbackApiBase = 'https://latest.currency-api.pages.dev/v1/currencies';
-  
+  static const String _fallbackApiBase =
+      'https://latest.currency-api.pages.dev/v1/currencies';
+
   // HTTP client with timeout
   static final http.Client _httpClient = http.Client();
   static const Duration _requestTimeout = Duration(seconds: 10);
 
   /// Fetch exchange rates for a base currency from the API
-  static Future<ExchangeRateResponse?> fetchExchangeRates(String baseCurrency) async {
+  static Future<ExchangeRateResponse?> fetchExchangeRates(
+    String baseCurrency,
+  ) async {
     final normalizedBase = baseCurrency.toLowerCase();
-    
+
     // Try primary API first
     try {
-      AppLogger.info('Fetching exchange rates for $baseCurrency from primary API');
-      final response = await _fetchFromEndpoint(_primaryApiBase, normalizedBase);
+      AppLogger.info(
+        'Fetching exchange rates for $baseCurrency from primary API',
+      );
+      final response = await _fetchFromEndpoint(
+        _primaryApiBase,
+        normalizedBase,
+      );
       if (response != null) {
         AppLogger.info('Successfully fetched rates from primary API');
         return response;
@@ -47,7 +52,10 @@ class CurrencyExchangeService {
     // Try fallback API
     try {
       AppLogger.info('Trying fallback API for $baseCurrency');
-      final response = await _fetchFromEndpoint(_fallbackApiBase, normalizedBase);
+      final response = await _fetchFromEndpoint(
+        _fallbackApiBase,
+        normalizedBase,
+      );
       if (response != null) {
         AppLogger.info('Successfully fetched rates from fallback API');
         return response;
@@ -61,9 +69,12 @@ class CurrencyExchangeService {
   }
 
   /// Fetch from a specific endpoint
-  static Future<ExchangeRateResponse?> _fetchFromEndpoint(String baseUrl, String baseCurrency) async {
+  static Future<ExchangeRateResponse?> _fetchFromEndpoint(
+    String baseUrl,
+    String baseCurrency,
+  ) async {
     final url = '$baseUrl/$baseCurrency.min.json';
-    
+
     try {
       final response = await _httpClient
           .get(Uri.parse(url))
@@ -73,7 +84,9 @@ class CurrencyExchangeService {
         final jsonData = json.decode(response.body) as Map<String, dynamic>;
         return ExchangeRateResponse.fromJson(jsonData);
       } else {
-        AppLogger.warning('API returned status ${response.statusCode} for $url');
+        AppLogger.warning(
+          'API returned status ${response.statusCode} for $url',
+        );
         return null;
       }
     } catch (e) {
@@ -83,7 +96,10 @@ class CurrencyExchangeService {
   }
 
   /// Get exchange rate between two currencies
-  static Future<double?> getExchangeRate(String fromCurrency, String toCurrency) async {
+  static Future<double?> getExchangeRate(
+    String fromCurrency,
+    String toCurrency,
+  ) async {
     if (fromCurrency.toUpperCase() == toCurrency.toUpperCase()) {
       return 1.0;
     }
@@ -94,7 +110,9 @@ class CurrencyExchangeService {
         return rates.getRateFor(toCurrency.toUpperCase());
       }
     } catch (e) {
-      AppLogger.error('Error getting exchange rate from $fromCurrency to $toCurrency: $e');
+      AppLogger.error(
+        'Error getting exchange rate from $fromCurrency to $toCurrency: $e',
+      );
     }
 
     return null;
@@ -120,10 +138,10 @@ class CurrencyExchangeService {
 
     try {
       final exchangeRate = await getExchangeRate(normalizedFrom, normalizedTo);
-      
+
       if (exchangeRate != null) {
         final convertedAmount = amount * exchangeRate;
-        
+
         return CurrencyConversionResult(
           originalAmount: amount,
           originalCurrency: normalizedFrom,
@@ -161,7 +179,7 @@ class CurrencyExchangeService {
     required String targetCurrency,
   }) async {
     final results = <CurrencyConversionResult>[];
-    
+
     // Group by source currency to minimize API calls
     final groupedAmounts = <String, List<CurrencyAmount>>{};
     for (final amount in amounts) {
@@ -173,33 +191,40 @@ class CurrencyExchangeService {
     for (final entry in groupedAmounts.entries) {
       final sourceCurrency = entry.key;
       final currencyAmounts = entry.value;
-      
+
       // Get exchange rate once per currency
-      final exchangeRate = await getExchangeRate(sourceCurrency, targetCurrency);
-      
+      final exchangeRate = await getExchangeRate(
+        sourceCurrency,
+        targetCurrency,
+      );
+
       for (final currencyAmount in currencyAmounts) {
         if (exchangeRate != null) {
           final convertedAmount = currencyAmount.amount * exchangeRate;
-          
-          results.add(CurrencyConversionResult(
-            originalAmount: currencyAmount.amount,
-            originalCurrency: sourceCurrency,
-            convertedAmount: convertedAmount,
-            targetCurrency: targetCurrency.toUpperCase(),
-            exchangeRate: exchangeRate,
-            conversionApplied: true,
-            confidence: 'high',
-            reasoning: 'Batch converted using live exchange rate',
-            rateDate: DateTime.now(),
-            rateSource: 'fawazahmed0',
-          ));
+
+          results.add(
+            CurrencyConversionResult(
+              originalAmount: currencyAmount.amount,
+              originalCurrency: sourceCurrency,
+              convertedAmount: convertedAmount,
+              targetCurrency: targetCurrency.toUpperCase(),
+              exchangeRate: exchangeRate,
+              conversionApplied: true,
+              confidence: 'high',
+              reasoning: 'Batch converted using live exchange rate',
+              rateDate: DateTime.now(),
+              rateSource: 'fawazahmed0',
+            ),
+          );
         } else {
-          results.add(CurrencyConversionResult.failed(
-            amount: currencyAmount.amount,
-            originalCurrency: sourceCurrency,
-            targetCurrency: targetCurrency,
-            reasoning: 'Exchange rate not available for $sourceCurrency',
-          ));
+          results.add(
+            CurrencyConversionResult.failed(
+              amount: currencyAmount.amount,
+              originalCurrency: sourceCurrency,
+              targetCurrency: targetCurrency,
+              reasoning: 'Exchange rate not available for $sourceCurrency',
+            ),
+          );
         }
       }
     }
@@ -213,7 +238,7 @@ class CurrencyExchangeService {
       final response = await _httpClient
           .get(Uri.parse('$_primaryApiBase/usd.min.json'))
           .timeout(const Duration(seconds: 5));
-      
+
       return response.statusCode == 200;
     } catch (e) {
       AppLogger.warning('Service availability check failed: $e');

@@ -49,19 +49,13 @@ class SessionManagementNotifier extends StateNotifier<SessionManagementState> {
   Future<void> loadSessions() async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       final sessions = await AuthSecurityService.getUserSessions();
-      
-      state = state.copyWith(
-        sessions: sessions,
-        isLoading: false,
-      );
+
+      state = state.copyWith(sessions: sessions, isLoading: false);
     } catch (e) {
       _logger.e('Failed to load sessions: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -69,19 +63,16 @@ class SessionManagementNotifier extends StateNotifier<SessionManagementState> {
   Future<void> signOutFromOtherSessions() async {
     try {
       state = state.copyWith(isSigningOut: true, error: null);
-      
+
       await AuthSecurityService.signOutFromOtherSessions();
-      
+
       // Reload sessions after signing out
       await loadSessions();
-      
+
       state = state.copyWith(isSigningOut: false);
     } catch (e) {
       _logger.e('Failed to sign out from other sessions: $e');
-      state = state.copyWith(
-        isSigningOut: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isSigningOut: false, error: e.toString());
       rethrow;
     }
   }
@@ -90,24 +81,18 @@ class SessionManagementNotifier extends StateNotifier<SessionManagementState> {
   Future<void> signOutFromSession(String sessionId) async {
     try {
       state = state.copyWith(isSigningOut: true, error: null);
-      
+
       await AuthSecurityService.signOutFromSession(sessionId);
-      
+
       // Remove the session from the list
       final updatedSessions = state.sessions
           .where((session) => session.sessionId != sessionId)
           .toList();
-      
-      state = state.copyWith(
-        sessions: updatedSessions,
-        isSigningOut: false,
-      );
+
+      state = state.copyWith(sessions: updatedSessions, isSigningOut: false);
     } catch (e) {
       _logger.e('Failed to sign out from session: $e');
-      state = state.copyWith(
-        isSigningOut: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isSigningOut: false, error: e.toString());
       rethrow;
     }
   }
@@ -153,9 +138,12 @@ class SessionManagementNotifier extends StateNotifier<SessionManagementState> {
 }
 
 /// Provider for session management
-final sessionManagementProvider = StateNotifierProvider<SessionManagementNotifier, SessionManagementState>((ref) {
-  return SessionManagementNotifier();
-});
+final sessionManagementProvider =
+    StateNotifierProvider<SessionManagementNotifier, SessionManagementState>((
+      ref,
+    ) {
+      return SessionManagementNotifier();
+    });
 
 /// Provider for current sessions list
 final currentSessionsProvider = Provider<List<SessionInfo>>((ref) {

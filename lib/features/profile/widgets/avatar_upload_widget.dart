@@ -12,11 +12,7 @@ class AvatarUploadWidget extends ConsumerStatefulWidget {
   final UserModel profile;
   final double size;
 
-  const AvatarUploadWidget({
-    super.key,
-    required this.profile,
-    this.size = 80,
-  });
+  const AvatarUploadWidget({super.key, required this.profile, this.size = 80});
 
   @override
   ConsumerState<AvatarUploadWidget> createState() => _AvatarUploadWidgetState();
@@ -64,7 +60,7 @@ class _AvatarUploadWidgetState extends ConsumerState<AvatarUploadWidget> {
                     : _buildInitialsAvatar(initials),
               ),
             ),
-            
+
             // Upload/Loading Overlay
             if (profileState.isUploadingAvatar)
               Positioned.fill(
@@ -81,7 +77,7 @@ class _AvatarUploadWidgetState extends ConsumerState<AvatarUploadWidget> {
                   ),
                 ),
               ),
-            
+
             // Edit Button
             if (!profileState.isUploadingAvatar)
               Positioned(
@@ -110,7 +106,7 @@ class _AvatarUploadWidgetState extends ConsumerState<AvatarUploadWidget> {
               ),
           ],
         ),
-        
+
         // Error Message
         if (profileState.avatarError != null)
           Padding(
@@ -164,9 +160,7 @@ class _AvatarUploadWidgetState extends ConsumerState<AvatarUploadWidget> {
         shape: BoxShape.circle,
         color: Colors.grey[300],
       ),
-      child: const Center(
-        child: CircularProgressIndicator(strokeWidth: 2),
-      ),
+      child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
     );
   }
 
@@ -196,7 +190,10 @@ class _AvatarUploadWidgetState extends ConsumerState<AvatarUploadWidget> {
             if (ProfileService.getAvatarUrl(widget.profile) != null)
               ListTile(
                 leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('Remove Photo', style: TextStyle(color: Colors.red)),
+                title: const Text(
+                  'Remove Photo',
+                  style: TextStyle(color: Colors.red),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _removeAvatar();
@@ -222,10 +219,9 @@ class _AvatarUploadWidgetState extends ConsumerState<AvatarUploadWidget> {
         if (kIsWeb) {
           // For web, use bytes
           final bytes = await image.readAsBytes();
-          await ref.read(profileProvider.notifier).uploadAvatarFromBytes(
-            bytes,
-            image.name,
-          );
+          await ref
+              .read(profileProvider.notifier)
+              .uploadAvatarFromBytes(bytes, image.name);
         } else {
           // For mobile, use file
           final file = File(image.path);
@@ -246,15 +242,15 @@ class _AvatarUploadWidgetState extends ConsumerState<AvatarUploadWidget> {
 
   Future<void> _removeAvatar() async {
     final success = await ref.read(profileProvider.notifier).removeAvatar();
-    
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             success ? 'Avatar removed successfully' : 'Failed to remove avatar',
           ),
-          backgroundColor: success 
-              ? Colors.green 
+          backgroundColor: success
+              ? Colors.green
               : Theme.of(context).colorScheme.error,
         ),
       );

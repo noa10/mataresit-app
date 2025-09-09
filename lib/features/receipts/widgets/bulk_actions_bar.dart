@@ -26,7 +26,8 @@ class _BulkActionsBarState extends ConsumerState<BulkActionsBar> {
     final categoriesState = ref.watch(categoriesProvider);
 
     // Only show when in selection mode and items are selected
-    if (!receiptsState.isSelectionMode || receiptsState.selectedReceiptIds.isEmpty) {
+    if (!receiptsState.isSelectionMode ||
+        receiptsState.selectedReceiptIds.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -52,7 +53,9 @@ class _BulkActionsBarState extends ConsumerState<BulkActionsBar> {
               ),
               const SizedBox(width: 12),
               FilledButton.icon(
-                onPressed: selectedCategoryId != null && !receiptsState.isPerformingBulkOperation
+                onPressed:
+                    selectedCategoryId != null &&
+                        !receiptsState.isPerformingBulkOperation
                     ? () => _assignCategory(receiptsNotifier)
                     : null,
                 icon: receiptsState.isPerformingBulkOperation
@@ -71,7 +74,10 @@ class _BulkActionsBarState extends ConsumerState<BulkActionsBar> {
                 style: FilledButton.styleFrom(
                   backgroundColor: Theme.of(context).colorScheme.primary,
                   foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   minimumSize: const Size(0, 36),
                 ),
               ),
@@ -84,10 +90,8 @@ class _BulkActionsBarState extends ConsumerState<BulkActionsBar> {
           Row(
             children: [
               // Export dropdown
-              Expanded(
-                child: _buildExportDropdown(),
-              ),
-              
+              Expanded(child: _buildExportDropdown()),
+
               const SizedBox(width: 12),
 
               // Delete button
@@ -111,7 +115,10 @@ class _BulkActionsBarState extends ConsumerState<BulkActionsBar> {
                 style: FilledButton.styleFrom(
                   backgroundColor: Theme.of(context).colorScheme.error,
                   foregroundColor: Theme.of(context).colorScheme.onError,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   minimumSize: const Size(0, 36),
                 ),
               ),
@@ -127,9 +134,7 @@ class _BulkActionsBarState extends ConsumerState<BulkActionsBar> {
       initialValue: selectedCategoryId,
       decoration: InputDecoration(
         labelText: 'Select Category',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         isDense: true,
       ),
@@ -138,24 +143,28 @@ class _BulkActionsBarState extends ConsumerState<BulkActionsBar> {
           value: null,
           child: Text('Remove Category'),
         ),
-        ...categories.map((category) => DropdownMenuItem<String>(
-          value: category.id,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: Color(int.parse(category.color.replaceFirst('#', '0xFF'))),
-                  shape: BoxShape.circle,
+        ...categories.map(
+          (category) => DropdownMenuItem<String>(
+            value: category.id,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: Color(
+                      int.parse(category.color.replaceFirst('#', '0xFF')),
+                    ),
+                    shape: BoxShape.circle,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Flexible(child: Text(category.name)),
-            ],
+                const SizedBox(width: 8),
+                Flexible(child: Text(category.name)),
+              ],
+            ),
           ),
-        )),
+        ),
       ],
       onChanged: (value) {
         setState(() {
@@ -241,16 +250,17 @@ class _BulkActionsBarState extends ConsumerState<BulkActionsBar> {
     final categoriesState = ref.read(categoriesProvider);
     final categoryName = selectedCategoryId != null
         ? categoriesState.categories
-            .where((cat) => cat.id == selectedCategoryId)
-            .firstOrNull
-            ?.name
+              .where((cat) => cat.id == selectedCategoryId)
+              .firstOrNull
+              ?.name
         : null;
 
-    final confirmed = await ConfirmationDialogs.showBulkCategoryAssignmentConfirmation(
-      currentContext,
-      count,
-      categoryName,
-    );
+    final confirmed =
+        await ConfirmationDialogs.showBulkCategoryAssignmentConfirmation(
+          currentContext,
+          count,
+          categoryName,
+        );
 
     if (confirmed && mounted) {
       await receiptsNotifier.bulkAssignCategory(selectedCategoryId);
@@ -260,7 +270,10 @@ class _BulkActionsBarState extends ConsumerState<BulkActionsBar> {
     }
   }
 
-  void _showDeleteConfirmation(BuildContext context, ReceiptsNotifier receiptsNotifier) async {
+  void _showDeleteConfirmation(
+    BuildContext context,
+    ReceiptsNotifier receiptsNotifier,
+  ) async {
     final currentContext = context;
     final count = ref.read(receiptsProvider).selectedReceiptIds.length;
 
@@ -282,7 +295,9 @@ class _BulkActionsBarState extends ConsumerState<BulkActionsBar> {
     try {
       final receiptsState = ref.read(receiptsProvider);
       final selectedReceipts = receiptsState.receipts
-          .where((receipt) => receiptsState.selectedReceiptIds.contains(receipt.id))
+          .where(
+            (receipt) => receiptsState.selectedReceiptIds.contains(receipt.id),
+          )
           .toList();
 
       switch (format) {
@@ -300,7 +315,9 @@ class _BulkActionsBarState extends ConsumerState<BulkActionsBar> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Successfully exported ${selectedReceipts.length} receipts as ${format.toUpperCase()}'),
+            content: Text(
+              'Successfully exported ${selectedReceipts.length} receipts as ${format.toUpperCase()}',
+            ),
             backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );

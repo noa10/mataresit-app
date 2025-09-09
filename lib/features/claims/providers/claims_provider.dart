@@ -65,16 +65,16 @@ class ClaimsState extends Equatable {
 
   @override
   List<Object?> get props => [
-        claims,
-        selectedClaim,
-        filters,
-        isLoading,
-        isLoadingMore,
-        error,
-        hasMore,
-        currentPage,
-        stats,
-      ];
+    claims,
+    selectedClaim,
+    filters,
+    isLoading,
+    isLoadingMore,
+    error,
+    hasMore,
+    currentPage,
+    stats,
+  ];
 }
 
 /// Claims notifier
@@ -90,7 +90,7 @@ class ClaimsNotifier extends StateNotifier<ClaimsState> {
   Future<void> loadClaims({bool refresh = false}) async {
     final currentTeamState = _ref.read(currentTeamProvider);
     final currentUser = _ref.read(currentUserProvider);
-    
+
     if (currentTeamState.currentTeam == null) {
       _logger.w('❌ No current team selected');
       return;
@@ -101,10 +101,14 @@ class ClaimsNotifier extends StateNotifier<ClaimsState> {
       return;
     }
 
-    _logger.i('Loading claims for team: ${currentTeamState.currentTeam!.id} - ${currentTeamState.currentTeam!.name}');
+    _logger.i(
+      'Loading claims for team: ${currentTeamState.currentTeam!.id} - ${currentTeamState.currentTeam!.name}',
+    );
     _logger.i('Current user: ${_ref.read(currentUserProvider)?.email}');
     _logger.i('Filter status: ${state.filters.status?.name ?? 'none'}');
-    _logger.i('Refresh mode: $refresh, Current claims count: ${state.claims.length}');
+    _logger.i(
+      'Refresh mode: $refresh, Current claims count: ${state.claims.length}',
+    );
 
     if (refresh) {
       state = state.copyWith(
@@ -131,7 +135,9 @@ class ClaimsNotifier extends StateNotifier<ClaimsState> {
       );
 
       _logger.i('Service returned ${claims.length} claims');
-      _logger.i('Claims IDs: ${claims.map((c) => '${c.id.substring(0, 8)}...${c.title}').join(', ')}');
+      _logger.i(
+        'Claims IDs: ${claims.map((c) => '${c.id.substring(0, 8)}...${c.title}').join(', ')}',
+      );
 
       if (refresh) {
         _logger.i('Refreshing claims list with ${claims.length} claims');
@@ -144,7 +150,9 @@ class ClaimsNotifier extends StateNotifier<ClaimsState> {
         );
         _logger.i('State updated: ${state.claims.length} claims in state');
       } else {
-        _logger.i('Appending ${claims.length} claims to existing ${state.claims.length} claims');
+        _logger.i(
+          'Appending ${claims.length} claims to existing ${state.claims.length} claims',
+        );
         state = state.copyWith(
           claims: [...state.claims, ...claims],
           isLoadingMore: false,
@@ -196,10 +204,10 @@ class ClaimsNotifier extends StateNotifier<ClaimsState> {
   Future<String> createClaim(CreateClaimRequest request) async {
     try {
       final claimId = await _claimService.createClaim(request);
-      
+
       // Refresh claims list to include the new claim
       await loadClaims(refresh: true);
-      
+
       return claimId;
     } catch (e) {
       state = state.copyWith(error: e.toString());
@@ -211,7 +219,7 @@ class ClaimsNotifier extends StateNotifier<ClaimsState> {
   Future<void> updateClaim(String claimId, UpdateClaimRequest request) async {
     try {
       await _claimService.updateClaim(claimId, request);
-      
+
       // Update the claim in the local state
       final updatedClaims = state.claims.map((claim) {
         if (claim.id == claimId) {
@@ -246,7 +254,7 @@ class ClaimsNotifier extends StateNotifier<ClaimsState> {
   Future<void> submitClaim(String claimId) async {
     try {
       await _claimService.submitClaim(claimId);
-      
+
       // Update the claim status in local state
       final updatedClaims = state.claims.map((claim) {
         if (claim.id == claimId) {
@@ -276,7 +284,7 @@ class ClaimsNotifier extends StateNotifier<ClaimsState> {
   Future<void> approveClaim(ClaimApprovalRequest request) async {
     try {
       await _claimService.approveClaim(request);
-      
+
       // Update the claim status in local state
       final updatedClaims = state.claims.map((claim) {
         if (claim.id == request.claimId) {
@@ -293,7 +301,9 @@ class ClaimsNotifier extends StateNotifier<ClaimsState> {
 
       // Also update selected claim if it's the one being approved
       if (state.selectedClaim?.id == request.claimId) {
-        final updatedClaim = updatedClaims.firstWhere((c) => c.id == request.claimId);
+        final updatedClaim = updatedClaims.firstWhere(
+          (c) => c.id == request.claimId,
+        );
         state = state.copyWith(selectedClaim: updatedClaim);
       }
     } catch (e) {
@@ -306,7 +316,7 @@ class ClaimsNotifier extends StateNotifier<ClaimsState> {
   Future<void> rejectClaim(ClaimRejectionRequest request) async {
     try {
       await _claimService.rejectClaim(request);
-      
+
       // Update the claim status in local state
       final updatedClaims = state.claims.map((claim) {
         if (claim.id == request.claimId) {
@@ -323,7 +333,9 @@ class ClaimsNotifier extends StateNotifier<ClaimsState> {
 
       // Also update selected claim if it's the one being rejected
       if (state.selectedClaim?.id == request.claimId) {
-        final updatedClaim = updatedClaims.firstWhere((c) => c.id == request.claimId);
+        final updatedClaim = updatedClaims.firstWhere(
+          (c) => c.id == request.claimId,
+        );
         state = state.copyWith(selectedClaim: updatedClaim);
       }
     } catch (e) {
@@ -336,9 +348,11 @@ class ClaimsNotifier extends StateNotifier<ClaimsState> {
   Future<void> deleteClaim(String claimId) async {
     try {
       await _claimService.deleteClaim(claimId);
-      
+
       // Remove the claim from local state
-      final updatedClaims = state.claims.where((claim) => claim.id != claimId).toList();
+      final updatedClaims = state.claims
+          .where((claim) => claim.id != claimId)
+          .toList();
       state = state.copyWith(claims: updatedClaims);
 
       // Clear selected claim if it's the one being deleted
@@ -357,7 +371,9 @@ class ClaimsNotifier extends StateNotifier<ClaimsState> {
     if (currentTeamState.currentTeam == null) return;
 
     try {
-      final stats = await _claimService.getTeamClaimStats(currentTeamState.currentTeam!.id);
+      final stats = await _claimService.getTeamClaimStats(
+        currentTeamState.currentTeam!.id,
+      );
       state = state.copyWith(stats: stats);
     } catch (e) {
       state = state.copyWith(error: e.toString());
@@ -371,19 +387,28 @@ class ClaimsNotifier extends StateNotifier<ClaimsState> {
 }
 
 /// Claims provider
-final claimsProvider = StateNotifierProvider<ClaimsNotifier, ClaimsState>((ref) {
+final claimsProvider = StateNotifierProvider<ClaimsNotifier, ClaimsState>((
+  ref,
+) {
   final claimService = ref.watch(claimServiceProvider);
   return ClaimsNotifier(claimService, ref);
 });
 
 /// Provider for getting a specific claim by ID
-final claimByIdProvider = FutureProvider.family<ClaimModel?, String>((ref, claimId) async {
+final claimByIdProvider = FutureProvider.family<ClaimModel?, String>((
+  ref,
+  claimId,
+) async {
   final claimService = ref.watch(claimServiceProvider);
   return await claimService.getClaimById(claimId);
 });
 
 /// Provider for claim audit trail
-final claimAuditTrailProvider = FutureProvider.family<List<ClaimAuditTrailModel>, String>((ref, claimId) async {
-  final claimService = ref.watch(claimServiceProvider);
-  return await claimService.getClaimAuditTrail(claimId);
-});
+final claimAuditTrailProvider =
+    FutureProvider.family<List<ClaimAuditTrailModel>, String>((
+      ref,
+      claimId,
+    ) async {
+      final claimService = ref.watch(claimServiceProvider);
+      return await claimService.getClaimAuditTrail(claimId);
+    });

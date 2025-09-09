@@ -31,7 +31,7 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
   late AnimationController _streamController;
   late Animation<double> _expandAnimation;
   late Animation<double> _fadeAnimation;
-  
+
   final ScrollController _scrollController = ScrollController();
   List<ProcessingLogModel> _displayedLogs = [];
   bool _isStreaming = true;
@@ -41,12 +41,12 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
   @override
   void initState() {
     super.initState();
-    
+
     _expandController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    
+
     _streamController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -80,7 +80,7 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
   @override
   void didUpdateWidget(ProcessingLogsWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     // Auto-expand when logs start appearing
     if (widget.processLogs.isNotEmpty && !_isExpanded) {
       setState(() {
@@ -126,7 +126,9 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
     _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (widget.startTime != null) {
         setState(() {
-          _elapsedSeconds = DateTime.now().difference(widget.startTime!).inSeconds;
+          _elapsedSeconds = DateTime.now()
+              .difference(widget.startTime!)
+              .inSeconds;
         });
       }
     });
@@ -181,7 +183,7 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.only(top: 16),
@@ -234,12 +236,19 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
                   if (widget.currentStage != null) ...[
                     const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: _getStageColor(widget.currentStage!).withValues(alpha: 0.1),
+                        color: _getStageColor(
+                          widget.currentStage!,
+                        ).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: _getStageColor(widget.currentStage!).withValues(alpha: 0.3),
+                          color: _getStageColor(
+                            widget.currentStage!,
+                          ).withValues(alpha: 0.3),
                         ),
                       ),
                       child: Text(
@@ -264,11 +273,7 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.circle,
-                      size: 8,
-                      color: Colors.green,
-                    ),
+                    Icon(Icons.circle, size: 8, color: Colors.green),
                     const SizedBox(width: 6),
                     Text(
                       'Live',
@@ -373,9 +378,7 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
         decoration: BoxDecoration(
           color: theme.cardColor.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: theme.dividerColor.withValues(alpha: 0.2),
-          ),
+          border: Border.all(color: theme.dividerColor.withValues(alpha: 0.2)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -408,7 +411,9 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
                       Text(
                         _formatTime(log.createdAt),
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+                          color: theme.textTheme.bodySmall?.color?.withValues(
+                            alpha: 0.6,
+                          ),
                           fontSize: 10,
                         ),
                       ),
@@ -418,7 +423,9 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
                   Text(
                     log.statusMessage,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.8),
+                      color: theme.textTheme.bodySmall?.color?.withValues(
+                        alpha: 0.8,
+                      ),
                       height: 1.4,
                     ),
                   ),

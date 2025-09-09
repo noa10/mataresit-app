@@ -102,7 +102,12 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
   }
 
   /// Add a processing log entry
-  void _addLog(String stepName, String message, {int? progress, String? receiptId}) {
+  void _addLog(
+    String stepName,
+    String message, {
+    int? progress,
+    String? receiptId,
+  }) {
     final log = ProcessingLogModel(
       id: const Uuid().v4(),
       receiptId: receiptId ?? 'pending',
@@ -127,8 +132,18 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
 
     // Save to real-time service if receipt ID is available
     if (receiptId != null && receiptId != 'pending') {
-      _logsService.addLocalLog(receiptId, stepName, message, progress: progress);
-      _logsService.saveProcessingLog(receiptId, stepName, message, progress: progress);
+      _logsService.addLocalLog(
+        receiptId,
+        stepName,
+        message,
+        progress: progress,
+      );
+      _logsService.saveProcessingLog(
+        receiptId,
+        stepName,
+        message,
+        progress: progress,
+      );
     }
 
     // Auto-stop progress updating after a delay
@@ -141,17 +156,12 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
 
   /// Update upload progress
   void _updateProgress(int progress, {String? message}) {
-    state = state.copyWith(
-      uploadProgress: progress,
-      isProgressUpdating: true,
-    );
+    state = state.copyWith(uploadProgress: progress, isProgressUpdating: true);
 
     if (message != null) {
       _addLog(state.currentStage ?? 'PROCESSING', message, progress: progress);
     }
   }
-
-
 
   /// Start processing with initial setup
   void _startProcessing() {
@@ -183,7 +193,7 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
         isLoading: true,
         isProcessing: true,
         error: null,
-        processingStep: 'Initializing...'
+        processingStep: 'Initializing...',
       );
 
       final user = ref.read(currentUserProvider);
@@ -203,7 +213,9 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
 
       // Optimize image before upload (match React app behavior)
       _updateProgress(15, message: 'Optimizing image...');
-      final optimizedFile = await PerformanceService.optimizeImageForUpload(imageFile);
+      final optimizedFile = await PerformanceService.optimizeImageForUpload(
+        imageFile,
+      );
 
       final imageBytes = await optimizedFile.readAsBytes();
 
@@ -212,7 +224,8 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
         bucket: AppConstants.receiptImagesBucket,
         path: filePath,
         bytes: Uint8List.fromList(imageBytes),
-        contentType: 'image/jpeg', // Always JPEG after optimization (match React app)
+        contentType:
+            'image/jpeg', // Always JPEG after optimization (match React app)
       );
 
       _addLog('FETCH', 'Image uploaded successfully', receiptId: receiptId);
@@ -220,7 +233,11 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
 
       // Step 2: Create initial receipt record
       state = state.copyWith(processingStep: 'Creating receipt record...');
-      _addLog('SAVE', 'Creating initial receipt record...', receiptId: receiptId);
+      _addLog(
+        'SAVE',
+        'Creating initial receipt record...',
+        receiptId: receiptId,
+      );
 
       // Get current team for team_id
       final currentTeamState = ref.read(currentTeamProvider);
@@ -237,16 +254,18 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
         'updated_at': DateTime.now().toIso8601String(),
       };
 
-      await SupabaseService.client
-          .from('receipts')
-          .insert(initialReceiptData);
+      await SupabaseService.client.from('receipts').insert(initialReceiptData);
 
       _addLog('SAVE', 'Initial receipt record created', receiptId: receiptId);
       _updateProgress(50, message: 'Receipt record created');
 
       // Step 3: Call process-receipt edge function for AI processing and embedding generation
       state = state.copyWith(processingStep: 'Processing with AI...');
-      _addLog('PROCESSING', 'Starting AI processing with edge function...', receiptId: receiptId);
+      _addLog(
+        'PROCESSING',
+        'Starting AI processing with edge function...',
+        receiptId: receiptId,
+      );
       _updateProgress(60, message: 'Starting AI analysis...');
 
       try {
@@ -261,10 +280,16 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
 
         final responseData = response.data;
         if (responseData == null || responseData['success'] != true) {
-          throw Exception('Processing failed: ${responseData?['error'] ?? 'Unknown error'}');
+          throw Exception(
+            'Processing failed: ${responseData?['error'] ?? 'Unknown error'}',
+          );
         }
 
-        _addLog('PROCESSING', 'AI processing completed successfully', receiptId: receiptId);
+        _addLog(
+          'PROCESSING',
+          'AI processing completed successfully',
+          receiptId: receiptId,
+        );
         _updateProgress(85, message: 'AI processing completed');
 
         // Extract the processed data from the response
@@ -274,7 +299,9 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
           final extractedData = ReceiptData(
             merchantName: result['merchant']?.toString(),
             totalAmount: _parseDouble(result['total']),
-            transactionDate: result['date'] != null ? DateTime.tryParse(result['date']) : null,
+            transactionDate: result['date'] != null
+                ? DateTime.tryParse(result['date'])
+                : null,
             currency: result['currency']?.toString() ?? 'MYR',
             paymentMethod: result['payment_method']?.toString(),
             category: result['predicted_category']?.toString(),
@@ -292,7 +319,6 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
             'confidence': extractedData.confidence,
           });
         }
-
       } catch (e) {
         _addLog('ERROR', 'Edge function processing failed: ${e.toString()}');
         AppLogger.error('Process-receipt edge function failed', e);
@@ -303,26 +329,44 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
 
         final errorString = e.toString().toLowerCase();
 
-        if (errorString.contains('api key') || errorString.contains('not configured') || errorString.contains('unauthorized')) {
-          errorMessage = 'AI vision services not configured on server. Please contact support.';
+        if (errorString.contains('api key') ||
+            errorString.contains('not configured') ||
+            errorString.contains('unauthorized')) {
+          errorMessage =
+              'AI vision services not configured on server. Please contact support.';
           errorCategory = 'configuration';
-        } else if (errorString.contains('quota') || errorString.contains('limit') || errorString.contains('rate limit')) {
+        } else if (errorString.contains('quota') ||
+            errorString.contains('limit') ||
+            errorString.contains('rate limit')) {
           errorMessage = 'AI service quotas exceeded. Please try again later.';
           errorCategory = 'quota';
-        } else if (errorString.contains('network') || errorString.contains('connection') || errorString.contains('fetch')) {
-          errorMessage = 'Network error. Please check your internet connection and try again.';
+        } else if (errorString.contains('network') ||
+            errorString.contains('connection') ||
+            errorString.contains('fetch')) {
+          errorMessage =
+              'Network error. Please check your internet connection and try again.';
           errorCategory = 'network';
-        } else if (errorString.contains('timeout') || errorString.contains('time out')) {
-          errorMessage = 'Processing timeout. Please try again with a smaller or clearer image.';
+        } else if (errorString.contains('timeout') ||
+            errorString.contains('time out')) {
+          errorMessage =
+              'Processing timeout. Please try again with a smaller or clearer image.';
           errorCategory = 'timeout';
-        } else if (errorString.contains('image') || errorString.contains('format') || errorString.contains('invalid')) {
-          errorMessage = 'Image processing failed. Please try with a different image format or clearer photo.';
+        } else if (errorString.contains('image') ||
+            errorString.contains('format') ||
+            errorString.contains('invalid')) {
+          errorMessage =
+              'Image processing failed. Please try with a different image format or clearer photo.';
           errorCategory = 'image';
-        } else if (errorString.contains('server') || errorString.contains('internal') || errorString.contains('500')) {
-          errorMessage = 'Server error occurred. Please try again in a few moments.';
+        } else if (errorString.contains('server') ||
+            errorString.contains('internal') ||
+            errorString.contains('500')) {
+          errorMessage =
+              'Server error occurred. Please try again in a few moments.';
           errorCategory = 'server';
-        } else if (errorString.contains('function') || errorString.contains('edge')) {
-          errorMessage = 'Processing service temporarily unavailable. Please try again.';
+        } else if (errorString.contains('function') ||
+            errorString.contains('edge')) {
+          errorMessage =
+              'Processing service temporarily unavailable. Please try again.';
           errorCategory = 'service';
         }
 
@@ -349,11 +393,19 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
 
       // Step 4: Set up real-time subscription to listen for processing completion
       _updateProgress(90, message: 'Waiting for processing completion...');
-      _addLog('PROCESSING', 'Setting up real-time subscription for processing updates...', receiptId: receiptId);
+      _addLog(
+        'PROCESSING',
+        'Setting up real-time subscription for processing updates...',
+        receiptId: receiptId,
+      );
 
       // Subscribe to receipt updates for processing status changes
-      await _subscribeToProcessingUpdates(receiptId, imageFile, imageBytes, imageUrl);
-
+      await _subscribeToProcessingUpdates(
+        receiptId,
+        imageFile,
+        imageBytes,
+        imageUrl,
+      );
     } catch (e) {
       _addLog('ERROR', 'Processing failed: ${e.toString()}');
       state = state.copyWith(
@@ -367,8 +419,6 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
       rethrow;
     }
   }
-
-
 
   /// Get content type from file extension
   String _getContentType(String extension) {
@@ -397,7 +447,7 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
     String receiptId,
     File imageFile,
     Uint8List imageBytes,
-    String imageUrl
+    String imageUrl,
   ) async {
     try {
       // Set up real-time subscription for receipt processing status updates
@@ -413,28 +463,44 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
               value: receiptId,
             ),
             callback: (payload) {
-              _handleProcessingStatusUpdate(payload.newRecord, receiptId, imageFile, imageBytes, imageUrl);
+              _handleProcessingStatusUpdate(
+                payload.newRecord,
+                receiptId,
+                imageFile,
+                imageBytes,
+                imageUrl,
+              );
             },
           )
           .subscribe();
 
       // Set a timeout for processing completion (5 minutes max)
       Timer(const Duration(minutes: 5), () {
-        _addLog('WARNING', 'Processing timeout reached, checking final status...', receiptId: receiptId);
+        _addLog(
+          'WARNING',
+          'Processing timeout reached, checking final status...',
+          receiptId: receiptId,
+        );
         _finalizeProcessing(receiptId, imageFile, imageBytes, imageUrl);
         SupabaseService.client.removeChannel(channel);
       });
-
     } catch (e) {
-      _addLog('ERROR', 'Failed to set up real-time subscription: ${e.toString()}');
+      _addLog(
+        'ERROR',
+        'Failed to set up real-time subscription: ${e.toString()}',
+      );
       AppLogger.error('Real-time subscription failed', {
         'error': e.toString(),
         'receiptId': receiptId,
-        'fallbackMethod': 'polling'
+        'fallbackMethod': 'polling',
       });
 
       // Fallback to polling with user notification
-      _addLog('INFO', 'Falling back to polling method for status updates...', receiptId: receiptId);
+      _addLog(
+        'INFO',
+        'Falling back to polling method for status updates...',
+        receiptId: receiptId,
+      );
       await _fallbackToPolling(receiptId, imageFile, imageBytes, imageUrl);
     }
   }
@@ -445,7 +511,7 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
     String receiptId,
     File imageFile,
     Uint8List imageBytes,
-    String imageUrl
+    String imageUrl,
   ) {
     try {
       if (newData.isEmpty) return;
@@ -453,29 +519,59 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
       final processingStatus = newData['processing_status']?.toString();
       final processingError = newData['processing_error']?.toString();
 
-      _addLog('UPDATE', 'Processing status updated: $processingStatus', receiptId: receiptId);
+      _addLog(
+        'UPDATE',
+        'Processing status updated: $processingStatus',
+        receiptId: receiptId,
+      );
 
       if (processingError != null && processingError.isNotEmpty) {
-        _addLog('ERROR', 'Processing error: $processingError', receiptId: receiptId);
-        _handleProcessingError(processingError, receiptId, imageFile, imageBytes, imageUrl);
+        _addLog(
+          'ERROR',
+          'Processing error: $processingError',
+          receiptId: receiptId,
+        );
+        _handleProcessingError(
+          processingError,
+          receiptId,
+          imageFile,
+          imageBytes,
+          imageUrl,
+        );
         return;
       }
 
       switch (processingStatus?.toLowerCase()) {
         case 'processing':
           _updateProgress(95, message: 'AI processing in progress...');
-          state = state.copyWith(processingStep: 'AI processing in progress...');
+          state = state.copyWith(
+            processingStep: 'AI processing in progress...',
+          );
           break;
         case 'complete':
         case 'completed':
-          _addLog('SUCCESS', 'Processing completed successfully!', receiptId: receiptId);
+          _addLog(
+            'SUCCESS',
+            'Processing completed successfully!',
+            receiptId: receiptId,
+          );
           _finalizeProcessing(receiptId, imageFile, imageBytes, imageUrl);
           break;
         case 'failed':
         case 'failed_ai':
         case 'failed_ocr':
-          _addLog('ERROR', 'Processing failed with status: $processingStatus', receiptId: receiptId);
-          _handleProcessingError('Processing failed', receiptId, imageFile, imageBytes, imageUrl);
+          _addLog(
+            'ERROR',
+            'Processing failed with status: $processingStatus',
+            receiptId: receiptId,
+          );
+          _handleProcessingError(
+            'Processing failed',
+            receiptId,
+            imageFile,
+            imageBytes,
+            imageUrl,
+          );
           break;
       }
     } catch (e) {
@@ -489,11 +585,15 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
     String receiptId,
     File imageFile,
     Uint8List imageBytes,
-    String imageUrl
+    String imageUrl,
   ) async {
     try {
       _updateProgress(98, message: 'Fetching processed receipt...');
-      _addLog('FETCH', 'Fetching processed receipt from database...', receiptId: receiptId);
+      _addLog(
+        'FETCH',
+        'Fetching processed receipt from database...',
+        receiptId: receiptId,
+      );
 
       final response = await SupabaseService.client
           .from('receipts')
@@ -512,7 +612,9 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
         merchantAddress: null, // Not available from edge function
         merchantPhone: null, // Not available from edge function
         receiptNumber: null, // Not available from edge function
-        transactionDate: receiptData['date'] != null ? DateTime.tryParse(receiptData['date']) : null,
+        transactionDate: receiptData['date'] != null
+            ? DateTime.tryParse(receiptData['date'])
+            : null,
         totalAmount: _parseAmount(receiptData['total']) ?? 0.0,
         taxAmount: _parseAmount(receiptData['tax']),
         discountAmount: null, // Not available from edge function
@@ -526,7 +628,9 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
         fileSize: imageBytes.length,
         mimeType: _getContentType(path.extension(imageFile.path)),
         status: ReceiptStatus.active,
-        processingStatus: _mapProcessingStatusFromString(receiptData['processing_status']?.toString() ?? 'completed'),
+        processingStatus: _mapProcessingStatusFromString(
+          receiptData['processing_status']?.toString() ?? 'completed',
+        ),
         ocrData: receiptData['ai_suggestions'] ?? {},
         isExpense: true,
         isReimbursable: false,
@@ -535,11 +639,19 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
         processedAt: DateTime.now(),
       );
 
-      _addLog('SUCCESS', 'Receipt processing completed successfully!', receiptId: receiptId);
+      _addLog(
+        'SUCCESS',
+        'Receipt processing completed successfully!',
+        receiptId: receiptId,
+      );
 
       // Complete processing
       _updateProgress(100, message: 'Processing completed successfully');
-      _addLog('COMPLETE', 'Receipt processing completed successfully', receiptId: receiptId);
+      _addLog(
+        'COMPLETE',
+        'Receipt processing completed successfully',
+        receiptId: receiptId,
+      );
 
       state = state.copyWith(
         isLoading: false,
@@ -556,24 +668,31 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
           reset();
         }
       });
-
     } catch (e) {
       _addLog('ERROR', 'Failed to fetch processed receipt: ${e.toString()}');
       AppLogger.error('Failed to fetch processed receipt', {
         'error': e.toString(),
         'receiptId': receiptId,
-        'stage': 'finalization'
+        'stage': 'finalization',
       });
 
       // Provide more specific error message based on the error type
       String errorMessage = 'Failed to fetch processed receipt';
       if (e.toString().toLowerCase().contains('not found')) {
-        errorMessage = 'Receipt not found in database. Processing may have failed.';
+        errorMessage =
+            'Receipt not found in database. Processing may have failed.';
       } else if (e.toString().toLowerCase().contains('network')) {
-        errorMessage = 'Network error while fetching processed receipt. Please check your connection.';
+        errorMessage =
+            'Network error while fetching processed receipt. Please check your connection.';
       }
 
-      _handleProcessingError(errorMessage, receiptId, imageFile, imageBytes, imageUrl);
+      _handleProcessingError(
+        errorMessage,
+        receiptId,
+        imageFile,
+        imageBytes,
+        imageUrl,
+      );
     }
   }
 
@@ -583,7 +702,7 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
     String receiptId,
     File imageFile,
     Uint8List imageBytes,
-    String imageUrl
+    String imageUrl,
   ) {
     final user = ref.read(currentUserProvider);
 
@@ -625,9 +744,13 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
     String receiptId,
     File imageFile,
     Uint8List imageBytes,
-    String imageUrl
+    String imageUrl,
   ) async {
-    _addLog('INFO', 'Using polling fallback for processing status...', receiptId: receiptId);
+    _addLog(
+      'INFO',
+      'Using polling fallback for processing status...',
+      receiptId: receiptId,
+    );
 
     const maxAttempts = 30; // 5 minutes with 10-second intervals
     int attempts = 0;
@@ -646,10 +769,20 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
         final processingStatus = response['processing_status']?.toString();
         final processingError = response['processing_error']?.toString();
 
-        _addLog('POLL', 'Polling attempt $attempts: status = $processingStatus', receiptId: receiptId);
+        _addLog(
+          'POLL',
+          'Polling attempt $attempts: status = $processingStatus',
+          receiptId: receiptId,
+        );
 
         if (processingError != null && processingError.isNotEmpty) {
-          _handleProcessingError(processingError, receiptId, imageFile, imageBytes, imageUrl);
+          _handleProcessingError(
+            processingError,
+            receiptId,
+            imageFile,
+            imageBytes,
+            imageUrl,
+          );
           return;
         }
 
@@ -657,14 +790,22 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
           await _finalizeProcessing(receiptId, imageFile, imageBytes, imageUrl);
           return;
         } else if (processingStatus?.startsWith('failed') == true) {
-          _handleProcessingError('Processing failed', receiptId, imageFile, imageBytes, imageUrl);
+          _handleProcessingError(
+            'Processing failed',
+            receiptId,
+            imageFile,
+            imageBytes,
+            imageUrl,
+          );
           return;
         }
 
         // Update progress based on attempts
         final progress = 90 + (attempts * 8 ~/ maxAttempts);
-        _updateProgress(progress, message: 'Processing... (attempt $attempts/$maxAttempts)');
-
+        _updateProgress(
+          progress,
+          message: 'Processing... (attempt $attempts/$maxAttempts)',
+        );
       } catch (e) {
         _addLog('WARNING', 'Polling attempt $attempts failed: ${e.toString()}');
         AppLogger.warning('Polling attempt failed', {
@@ -676,8 +817,17 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
 
         // If we're getting consistent errors, fail faster
         if (attempts >= 3 && e.toString().toLowerCase().contains('not found')) {
-          _addLog('ERROR', 'Receipt not found after multiple attempts, stopping polling');
-          _handleProcessingError('Receipt not found in database', receiptId, imageFile, imageBytes, imageUrl);
+          _addLog(
+            'ERROR',
+            'Receipt not found after multiple attempts, stopping polling',
+          );
+          _handleProcessingError(
+            'Receipt not found in database',
+            receiptId,
+            imageFile,
+            imageBytes,
+            imageUrl,
+          );
           return;
         }
       }
@@ -685,7 +835,13 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
 
     // Timeout reached
     _addLog('ERROR', 'Processing timeout reached after $maxAttempts attempts');
-    _handleProcessingError('Processing timeout', receiptId, imageFile, imageBytes, imageUrl);
+    _handleProcessingError(
+      'Processing timeout',
+      receiptId,
+      imageFile,
+      imageBytes,
+      imageUrl,
+    );
   }
 
   /// Parse amount from dynamic value
@@ -729,6 +885,7 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
 }
 
 /// Receipt capture provider
-final receiptCaptureProvider = StateNotifierProvider<ReceiptCaptureNotifier, ReceiptCaptureState>((ref) {
-  return ReceiptCaptureNotifier(ref);
-});
+final receiptCaptureProvider =
+    StateNotifierProvider<ReceiptCaptureNotifier, ReceiptCaptureState>((ref) {
+      return ReceiptCaptureNotifier(ref);
+    });

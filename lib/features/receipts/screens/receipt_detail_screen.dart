@@ -13,10 +13,7 @@ import '../../../shared/models/team_model.dart';
 class ReceiptDetailScreen extends ConsumerWidget {
   final String receiptId;
 
-  const ReceiptDetailScreen({
-    super.key,
-    required this.receiptId,
-  });
+  const ReceiptDetailScreen({super.key, required this.receiptId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -25,7 +22,9 @@ class ReceiptDetailScreen extends ConsumerWidget {
     // Load categories when the widget is first built with team context
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final currentTeam = ref.read(currentTeamModelProvider);
-      ref.read(categoriesProvider.notifier).loadCategories(teamId: currentTeam?.id);
+      ref
+          .read(categoriesProvider.notifier)
+          .loadCategories(teamId: currentTeam?.id);
     });
 
     // Listen for team changes and reload categories
@@ -40,25 +39,16 @@ class ReceiptDetailScreen extends ConsumerWidget {
       data: (receipt) {
         if (receipt == null) {
           return Scaffold(
-            appBar: AppBar(
-              title: const Text('Receipt Details'),
-            ),
+            appBar: AppBar(title: const Text('Receipt Details')),
             body: const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: Colors.grey,
-                  ),
+                  Icon(Icons.error_outline, size: 64, color: Colors.grey),
                   SizedBox(height: AppConstants.defaultPadding),
                   Text(
                     'Receipt not found',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -68,33 +58,20 @@ class ReceiptDetailScreen extends ConsumerWidget {
         return _buildReceiptDetails(context, ref, receipt);
       },
       loading: () => Scaffold(
-        appBar: AppBar(
-          title: const Text('Receipt Details'),
-        ),
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
+        appBar: AppBar(title: const Text('Receipt Details')),
+        body: const Center(child: CircularProgressIndicator()),
       ),
       error: (error, stack) => Scaffold(
-        appBar: AppBar(
-          title: const Text('Receipt Details'),
-        ),
+        appBar: AppBar(title: const Text('Receipt Details')),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red,
-              ),
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: AppConstants.defaultPadding),
               Text(
                 'Error loading receipt: $error',
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.red,
-                ),
+                style: const TextStyle(fontSize: 16, color: Colors.red),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -104,8 +81,11 @@ class ReceiptDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildReceiptDetails(BuildContext context, WidgetRef ref, ReceiptModel receipt) {
-
+  Widget _buildReceiptDetails(
+    BuildContext context,
+    WidgetRef ref,
+    ReceiptModel receipt,
+  ) {
     return Scaffold(
       appBar: AppBar(
         title: Text(receipt.merchantName ?? 'Receipt Details'),
@@ -157,7 +137,8 @@ class ReceiptDetailScreen extends ConsumerWidget {
                   height: 300,
                   child: EnhancedImageViewer(
                     imageUrl: receipt.imageUrl!,
-                    title: 'Receipt from ${receipt.merchantName ?? 'Unknown Merchant'}',
+                    title:
+                        'Receipt from ${receipt.merchantName ?? 'Unknown Merchant'}',
                     heroTag: 'receipt_${receipt.id}',
                     showControls: true,
                     enableRotation: true,
@@ -172,67 +153,71 @@ class ReceiptDetailScreen extends ConsumerWidget {
             ],
 
             // Receipt Details
-            _buildDetailSection(
-              context,
-              'Receipt Information',
-              [
-                _buildDetailRow('Merchant', receipt.merchantName ?? 'Unknown'),
-                if (receipt.totalAmount != null)
-                  _buildDetailRow('Total Amount', '\$${receipt.totalAmount!.toStringAsFixed(2)}'),
-                if (receipt.transactionDate != null)
-                  _buildDetailRow('Date', _formatDate(receipt.transactionDate!)),
-                if (receipt.category != null)
-                  _buildDetailRow('Category', receipt.category!),
-                if (receipt.paymentMethod != null)
-                  _buildDetailRow('Payment Method', receipt.paymentMethod!),
-                _buildDetailRow('Status', receipt.status.displayName),
-                _buildDetailRow('Processing Status', receipt.processingStatus.displayName),
-              ],
-            ),
+            _buildDetailSection(context, 'Receipt Information', [
+              _buildDetailRow('Merchant', receipt.merchantName ?? 'Unknown'),
+              if (receipt.totalAmount != null)
+                _buildDetailRow(
+                  'Total Amount',
+                  '\$${receipt.totalAmount!.toStringAsFixed(2)}',
+                ),
+              if (receipt.transactionDate != null)
+                _buildDetailRow('Date', _formatDate(receipt.transactionDate!)),
+              if (receipt.category != null)
+                _buildDetailRow('Category', receipt.category!),
+              if (receipt.paymentMethod != null)
+                _buildDetailRow('Payment Method', receipt.paymentMethod!),
+              _buildDetailRow('Status', receipt.status.displayName),
+              _buildDetailRow(
+                'Processing Status',
+                receipt.processingStatus.displayName,
+              ),
+            ]),
 
             const SizedBox(height: AppConstants.largePadding),
 
             // Additional Details
-            if (receipt.description != null || 
+            if (receipt.description != null ||
                 receipt.notes != null ||
                 receipt.receiptNumber != null) ...[
-              _buildDetailSection(
-                context,
-                'Additional Information',
-                [
-                  if (receipt.receiptNumber != null)
-                    _buildDetailRow('Receipt Number', receipt.receiptNumber!),
-                  if (receipt.description != null)
-                    _buildDetailRow('Description', receipt.description!),
-                  if (receipt.notes != null)
-                    _buildDetailRow('Notes', receipt.notes!),
-                ],
-              ),
+              _buildDetailSection(context, 'Additional Information', [
+                if (receipt.receiptNumber != null)
+                  _buildDetailRow('Receipt Number', receipt.receiptNumber!),
+                if (receipt.description != null)
+                  _buildDetailRow('Description', receipt.description!),
+                if (receipt.notes != null)
+                  _buildDetailRow('Notes', receipt.notes!),
+              ]),
               const SizedBox(height: AppConstants.largePadding),
             ],
 
             // Metadata
-            _buildDetailSection(
-              context,
-              'Metadata',
-              [
-                _buildDetailRow('Created', timeago.format(receipt.createdAt)),
-                _buildDetailRow('Updated', timeago.format(receipt.updatedAt)),
-                if (receipt.originalFileName != null)
-                  _buildDetailRow('Original File', receipt.originalFileName!),
-                if (receipt.fileSize != null)
-                  _buildDetailRow('File Size', _formatFileSize(receipt.fileSize!)),
-                _buildDetailRow('Expense', receipt.isExpense ? 'Yes' : 'No'),
-                _buildDetailRow('Reimbursable', receipt.isReimbursable ? 'Yes' : 'No'),
-              ],
-            ),
+            _buildDetailSection(context, 'Metadata', [
+              _buildDetailRow('Created', timeago.format(receipt.createdAt)),
+              _buildDetailRow('Updated', timeago.format(receipt.updatedAt)),
+              if (receipt.originalFileName != null)
+                _buildDetailRow('Original File', receipt.originalFileName!),
+              if (receipt.fileSize != null)
+                _buildDetailRow(
+                  'File Size',
+                  _formatFileSize(receipt.fileSize!),
+                ),
+              _buildDetailRow('Expense', receipt.isExpense ? 'Yes' : 'No'),
+              _buildDetailRow(
+                'Reimbursable',
+                receipt.isReimbursable ? 'Yes' : 'No',
+              ),
+            ]),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDetailSection(BuildContext context, String title, List<Widget> children) {
+  Widget _buildDetailSection(
+    BuildContext context,
+    String title,
+    List<Widget> children,
+  ) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
@@ -241,9 +226,9 @@ class ReceiptDetailScreen extends ConsumerWidget {
           children: [
             Text(
               title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: AppConstants.defaultPadding),
             ...children,
@@ -290,12 +275,18 @@ class ReceiptDetailScreen extends ConsumerWidget {
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
-  void _showDeleteDialog(BuildContext context, WidgetRef ref, ReceiptModel receipt) {
+  void _showDeleteDialog(
+    BuildContext context,
+    WidgetRef ref,
+    ReceiptModel receipt,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Receipt'),
-        content: Text('Are you sure you want to delete the receipt from ${receipt.merchantName ?? 'Unknown Merchant'}?'),
+        content: Text(
+          'Are you sure you want to delete the receipt from ${receipt.merchantName ?? 'Unknown Merchant'}?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -304,7 +295,9 @@ class ReceiptDetailScreen extends ConsumerWidget {
           TextButton(
             onPressed: () async {
               Navigator.of(context).pop();
-              await ref.read(receiptsProvider.notifier).deleteReceipt(receipt.id);
+              await ref
+                  .read(receiptsProvider.notifier)
+                  .deleteReceipt(receipt.id);
               if (context.mounted) {
                 context.pop();
                 ScaffoldMessenger.of(context).showSnackBar(

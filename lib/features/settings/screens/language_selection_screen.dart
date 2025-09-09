@@ -33,15 +33,17 @@ class LanguageSelectionScreen extends ConsumerWidget {
               ),
             ),
           ),
-          
+
           // Language options
           Expanded(
             child: ListView.builder(
               itemCount: languageNotifier.supportedLanguages.length,
               itemBuilder: (context, index) {
                 final language = languageNotifier.supportedLanguages[index];
-                final isSelected = languageNotifier.isLanguageSelected(language);
-                
+                final isSelected = languageNotifier.isLanguageSelected(
+                  language,
+                );
+
                 return Card(
                   margin: const EdgeInsets.symmetric(
                     horizontal: AppConstants.defaultPadding,
@@ -58,7 +60,9 @@ class LanguageSelectionScreen extends ConsumerWidget {
                     title: Text(
                       language.name,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                       ),
                     ),
                     subtitle: Text(
@@ -73,12 +77,12 @@ class LanguageSelectionScreen extends ConsumerWidget {
                             color: Theme.of(context).colorScheme.primary,
                           )
                         : languageState.isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : null,
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : null,
                     onTap: languageState.isLoading
                         ? null
                         : () => _changeLanguage(context, ref, language),
@@ -87,7 +91,7 @@ class LanguageSelectionScreen extends ConsumerWidget {
               },
             ),
           ),
-          
+
           // Error message
           if (languageState.error != null)
             Container(
@@ -136,9 +140,9 @@ class LanguageSelectionScreen extends ConsumerWidget {
     SupportedLanguage language,
   ) async {
     final languageNotifier = ref.read(languageProvider.notifier);
-    
+
     final success = await languageNotifier.changeLanguage(context, language);
-    
+
     if (success && context.mounted) {
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
@@ -149,7 +153,7 @@ class LanguageSelectionScreen extends ConsumerWidget {
           duration: const Duration(seconds: 2),
         ),
       );
-      
+
       // Navigate back after a short delay to allow the language change to take effect
       Future.delayed(const Duration(milliseconds: 500), () {
         if (context.mounted) {

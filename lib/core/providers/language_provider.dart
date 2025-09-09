@@ -50,7 +50,8 @@ class LanguageState {
 
 /// Language provider class
 class LanguageNotifier extends StateNotifier<LanguageState> {
-  LanguageNotifier() : super(const LanguageState(currentLanguage: SupportedLanguage.english)) {
+  LanguageNotifier()
+    : super(const LanguageState(currentLanguage: SupportedLanguage.english)) {
     _loadSavedLanguage();
   }
 
@@ -58,16 +59,15 @@ class LanguageNotifier extends StateNotifier<LanguageState> {
   Future<void> _loadSavedLanguage() async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       final prefs = await SharedPreferences.getInstance();
-      final savedLanguageCode = prefs.getString(AppConstants.languageKey) ?? AppConstants.defaultLanguage;
-      
+      final savedLanguageCode =
+          prefs.getString(AppConstants.languageKey) ??
+          AppConstants.defaultLanguage;
+
       final savedLanguage = SupportedLanguage.fromCode(savedLanguageCode);
-      
-      state = state.copyWith(
-        currentLanguage: savedLanguage,
-        isLoading: false,
-      );
+
+      state = state.copyWith(currentLanguage: savedLanguage, isLoading: false);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -77,7 +77,10 @@ class LanguageNotifier extends StateNotifier<LanguageState> {
   }
 
   /// Change language and persist the choice
-  Future<bool> changeLanguage(BuildContext context, SupportedLanguage newLanguage) async {
+  Future<bool> changeLanguage(
+    BuildContext context,
+    SupportedLanguage newLanguage,
+  ) async {
     if (state.currentLanguage == newLanguage) return true;
 
     try {
@@ -90,10 +93,7 @@ class LanguageNotifier extends StateNotifier<LanguageState> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(AppConstants.languageKey, newLanguage.code);
 
-      state = state.copyWith(
-        currentLanguage: newLanguage,
-        isLoading: false,
-      );
+      state = state.copyWith(currentLanguage: newLanguage, isLoading: false);
 
       return true;
     } catch (e) {
@@ -131,9 +131,11 @@ class LanguageNotifier extends StateNotifier<LanguageState> {
 }
 
 /// Language provider
-final languageProvider = StateNotifierProvider<LanguageNotifier, LanguageState>((ref) {
-  return LanguageNotifier();
-});
+final languageProvider = StateNotifierProvider<LanguageNotifier, LanguageState>(
+  (ref) {
+    return LanguageNotifier();
+  },
+);
 
 /// Helper provider to get current language code
 final currentLanguageCodeProvider = Provider<String>((ref) {

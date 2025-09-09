@@ -11,15 +11,19 @@ class NotificationPreferencesService {
   final _supabase = Supabase.instance.client;
 
   /// Get user notification preferences
-  Future<NotificationPreferences> getUserNotificationPreferences([String? userId]) async {
+  Future<NotificationPreferences> getUserNotificationPreferences([
+    String? userId,
+  ]) async {
     try {
       final targetUserId = userId ?? _supabase.auth.currentUser?.id;
-      
+
       if (targetUserId == null) {
         throw Exception('User not authenticated');
       }
 
-      AppLogger.info('Fetching notification preferences for user: $targetUserId');
+      AppLogger.info(
+        'Fetching notification preferences for user: $targetUserId',
+      );
 
       final response = await _supabase.rpc(
         'get_user_notification_preferences',
@@ -33,27 +37,29 @@ class NotificationPreferencesService {
 
       final data = response.first as Map<String, dynamic>;
       final preferences = NotificationPreferences.fromJson(data);
-      
+
       AppLogger.info('Successfully fetched notification preferences');
       return preferences;
     } catch (e, stackTrace) {
       AppLogger.error('Error fetching notification preferences', e, stackTrace);
-      
+
       // Return defaults if user is authenticated but there's an error
       final userId = _supabase.auth.currentUser?.id;
       if (userId != null) {
         return NotificationPreferences.defaults(userId);
       }
-      
+
       rethrow;
     }
   }
 
   /// Update user notification preferences
-  Future<String> updateNotificationPreferences(NotificationPreferences preferences) async {
+  Future<String> updateNotificationPreferences(
+    NotificationPreferences preferences,
+  ) async {
     try {
       final userId = _supabase.auth.currentUser?.id;
-      
+
       if (userId == null) {
         throw Exception('User not authenticated');
       }
@@ -62,7 +68,7 @@ class NotificationPreferencesService {
 
       // Convert preferences to JSON for the RPC call
       final preferencesJson = preferences.toJson();
-      
+
       // Remove fields that shouldn't be updated via this method
       preferencesJson.remove('id');
       preferencesJson.remove('user_id');
@@ -71,10 +77,7 @@ class NotificationPreferencesService {
 
       final response = await _supabase.rpc(
         'upsert_notification_preferences',
-        params: {
-          '_user_id': userId,
-          '_preferences': preferencesJson,
-        },
+        params: {'_user_id': userId, '_preferences': preferencesJson},
       );
 
       AppLogger.info('Successfully updated notification preferences');
@@ -92,7 +95,7 @@ class NotificationPreferencesService {
   }) async {
     try {
       final userId = _supabase.auth.currentUser?.id;
-      
+
       if (userId == null) {
         throw Exception('User not authenticated');
       }
@@ -140,35 +143,30 @@ class NotificationPreferencesService {
   }) async {
     try {
       final userId = _supabase.auth.currentUser?.id;
-      
+
       if (userId == null) {
         throw Exception('User not authenticated');
       }
 
       AppLogger.info('Updating quiet hours settings');
 
-      final preferences = <String, dynamic>{
-        'quiet_hours_enabled': enabled,
-      };
+      final preferences = <String, dynamic>{'quiet_hours_enabled': enabled};
 
       if (startTime != null) {
         preferences['quiet_hours_start'] = startTime;
       }
-      
+
       if (endTime != null) {
         preferences['quiet_hours_end'] = endTime;
       }
-      
+
       if (timezone != null) {
         preferences['timezone'] = timezone;
       }
 
       final response = await _supabase.rpc(
         'upsert_notification_preferences',
-        params: {
-          '_user_id': userId,
-          '_preferences': preferences,
-        },
+        params: {'_user_id': userId, '_preferences': preferences},
       );
 
       AppLogger.info('Successfully updated quiet hours settings');
@@ -187,7 +185,7 @@ class NotificationPreferencesService {
   }) async {
     try {
       final userId = _supabase.auth.currentUser?.id;
-      
+
       if (userId == null) {
         throw Exception('User not authenticated');
       }
@@ -199,21 +197,18 @@ class NotificationPreferencesService {
       if (dailyEnabled != null) {
         preferences['daily_digest_enabled'] = dailyEnabled;
       }
-      
+
       if (weeklyEnabled != null) {
         preferences['weekly_digest_enabled'] = weeklyEnabled;
       }
-      
+
       if (digestTime != null) {
         preferences['digest_time'] = digestTime;
       }
 
       final response = await _supabase.rpc(
         'upsert_notification_preferences',
-        params: {
-          '_user_id': userId,
-          '_preferences': preferences,
-        },
+        params: {'_user_id': userId, '_preferences': preferences},
       );
 
       AppLogger.info('Successfully updated digest preferences');
@@ -231,7 +226,7 @@ class NotificationPreferencesService {
   }) async {
     try {
       final userId = _supabase.auth.currentUser?.id;
-      
+
       if (userId == null) {
         throw Exception('User not authenticated');
       }
@@ -243,21 +238,23 @@ class NotificationPreferencesService {
       };
 
       if (requestedAt != null) {
-        preferences['browser_permission_requested_at'] = requestedAt.toIso8601String();
+        preferences['browser_permission_requested_at'] = requestedAt
+            .toIso8601String();
       }
 
       final response = await _supabase.rpc(
         'upsert_notification_preferences',
-        params: {
-          '_user_id': userId,
-          '_preferences': preferences,
-        },
+        params: {'_user_id': userId, '_preferences': preferences},
       );
 
       AppLogger.info('Successfully updated browser permission status');
       return response as String;
     } catch (e, stackTrace) {
-      AppLogger.error('Error updating browser permission status', e, stackTrace);
+      AppLogger.error(
+        'Error updating browser permission status',
+        e,
+        stackTrace,
+      );
       rethrow;
     }
   }
@@ -284,7 +281,7 @@ class NotificationPreferencesService {
     try {
       final startParts = startTime.split(':');
       final endParts = endTime.split(':');
-      
+
       final startHour = int.parse(startParts[0]);
       final startMinute = int.parse(startParts[1]);
       final endHour = int.parse(endParts[0]);
@@ -296,9 +293,11 @@ class NotificationPreferencesService {
 
       // Handle overnight quiet hours (e.g., 22:00 to 06:00)
       if (startMinutes > endMinutes) {
-        return !(currentMinutes >= startMinutes || currentMinutes <= endMinutes);
+        return !(currentMinutes >= startMinutes ||
+            currentMinutes <= endMinutes);
       } else {
-        return !(currentMinutes >= startMinutes && currentMinutes <= endMinutes);
+        return !(currentMinutes >= startMinutes &&
+            currentMinutes <= endMinutes);
       }
     } catch (e) {
       AppLogger.error('Error parsing quiet hours', e);

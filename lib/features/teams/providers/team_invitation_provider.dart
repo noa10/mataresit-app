@@ -35,7 +35,9 @@ class TeamInvitationState {
 
   /// Get invitations by status
   List<TeamInvitationModel> getInvitationsByStatus(InvitationStatus status) {
-    return invitations.where((invitation) => invitation.status == status).toList();
+    return invitations
+        .where((invitation) => invitation.status == status)
+        .toList();
   }
 
   /// Get pending invitations (excluding expired)
@@ -66,7 +68,10 @@ class TeamInvitationNotifier extends StateNotifier<TeamInvitationState> {
   TeamInvitationNotifier(this.ref) : super(const TeamInvitationState());
 
   /// Load team invitations
-  Future<void> loadInvitations(String teamId, {bool includeExpired = true}) async {
+  Future<void> loadInvitations(
+    String teamId, {
+    bool includeExpired = true,
+  }) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
 
@@ -95,10 +100,7 @@ class TeamInvitationNotifier extends StateNotifier<TeamInvitationState> {
       AppLogger.debug('✅ Loaded ${invitations.length} invitations');
     } catch (error) {
       AppLogger.error('💥 Failed to load invitations', error);
-      state = state.copyWith(
-        isLoading: false,
-        error: error.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: error.toString());
     }
   }
 
@@ -209,20 +211,30 @@ class TeamInvitationNotifier extends StateNotifier<TeamInvitationState> {
 }
 
 /// Team invitation provider for a specific team
-final teamInvitationProvider = StateNotifierProvider.family<TeamInvitationNotifier, TeamInvitationState, String>((ref, teamId) {
-  final notifier = TeamInvitationNotifier(ref);
-  // Auto-load invitations when provider is created
-  Future.microtask(() => notifier.loadInvitations(teamId));
-  return notifier;
-});
+final teamInvitationProvider =
+    StateNotifierProvider.family<
+      TeamInvitationNotifier,
+      TeamInvitationState,
+      String
+    >((ref, teamId) {
+      final notifier = TeamInvitationNotifier(ref);
+      // Auto-load invitations when provider is created
+      Future.microtask(() => notifier.loadInvitations(teamId));
+      return notifier;
+    });
 
 /// Provider for invitation statistics
-final invitationStatsProvider = FutureProvider.family<Map<String, int>, String>((ref, teamId) async {
-  return await TeamInvitationService.getInvitationStats(teamId);
-});
+final invitationStatsProvider = FutureProvider.family<Map<String, int>, String>(
+  (ref, teamId) async {
+    return await TeamInvitationService.getInvitationStats(teamId);
+  },
+);
 
 /// Provider for pending invitations count
-final pendingInvitationsCountProvider = Provider.family<int, String>((ref, teamId) {
+final pendingInvitationsCountProvider = Provider.family<int, String>((
+  ref,
+  teamId,
+) {
   final invitationState = ref.watch(teamInvitationProvider(teamId));
   return invitationState.pendingInvitations.length;
 });

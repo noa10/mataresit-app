@@ -9,9 +9,7 @@ class BiometricService {
   static final Logger _logger = Logger();
   static final LocalAuthentication _localAuth = LocalAuthentication();
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage(
-    aOptions: AndroidOptions(
-      encryptedSharedPreferences: true,
-    ),
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),
@@ -22,8 +20,10 @@ class BiometricService {
     try {
       final isAvailable = await _localAuth.canCheckBiometrics;
       final isDeviceSupported = await _localAuth.isDeviceSupported();
-      
-      _logger.d('Biometric available: $isAvailable, Device supported: $isDeviceSupported');
+
+      _logger.d(
+        'Biometric available: $isAvailable, Device supported: $isDeviceSupported',
+      );
       return isAvailable && isDeviceSupported;
     } catch (e) {
       _logger.e('Failed to check biometric availability: $e');
@@ -104,7 +104,9 @@ class BiometricService {
   /// Check if biometric auth is enabled for user
   static Future<bool> isBiometricEnabled(String userId) async {
     try {
-      final enabled = await _secureStorage.read(key: 'biometric_enabled_$userId');
+      final enabled = await _secureStorage.read(
+        key: 'biometric_enabled_$userId',
+      );
       return enabled == 'true';
     } catch (e) {
       _logger.e('Failed to check biometric status: $e');
@@ -139,7 +141,9 @@ class BiometricService {
   }
 
   /// Retrieve encrypted credentials after biometric authentication
-  static Future<Map<String, String>?> getBiometricCredentials(String userId) async {
+  static Future<Map<String, String>?> getBiometricCredentials(
+    String userId,
+  ) async {
     try {
       final isAuthenticated = await authenticateWithBiometrics(
         reason: 'Authenticate to sign in with biometrics',
@@ -149,7 +153,9 @@ class BiometricService {
         return null;
       }
 
-      final credentialsJson = await _secureStorage.read(key: 'biometric_credentials_$userId');
+      final credentialsJson = await _secureStorage.read(
+        key: 'biometric_credentials_$userId',
+      );
       if (credentialsJson == null) {
         return null;
       }
@@ -166,7 +172,7 @@ class BiometricService {
   }
 
   /// Secure storage operations
-  
+
   /// Store sensitive data securely
   static Future<void> storeSecureData(String key, String value) async {
     try {
@@ -245,7 +251,7 @@ class BiometricService {
   }
 
   /// App lock functionality
-  
+
   /// Check if app lock is enabled
   static Future<bool> isAppLockEnabled() async {
     try {
@@ -312,12 +318,7 @@ class BiometricService {
 }
 
 /// Biometric authentication status
-enum BiometricAuthStatus {
-  available,
-  notAvailable,
-  notEnrolled,
-  error,
-}
+enum BiometricAuthStatus { available, notAvailable, notEnrolled, error }
 
 extension BiometricAuthStatusExtension on BiometricAuthStatus {
   String get displayName {

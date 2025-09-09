@@ -17,12 +17,14 @@ void main() {
     test('Check receipts and categories data', () async {
       try {
         print('🔍 Testing database connection...');
-        
+
         // Test 1: Check if we can fetch receipts at all
         print('\n📊 Fetching receipts...');
         final receiptsResponse = await supabase
             .from('receipts')
-            .select('id, merchant, custom_category_id, predicted_category, user_id')
+            .select(
+              'id, merchant, custom_category_id, predicted_category, user_id',
+            )
             .limit(5);
 
         print('Found ${receiptsResponse.length} receipts:');
@@ -85,7 +87,9 @@ void main() {
             .from('receipts')
             .select('id, custom_category_id');
 
-        final withCategories = allReceipts.where((r) => r['custom_category_id'] != null).length;
+        final withCategories = allReceipts
+            .where((r) => r['custom_category_id'] != null)
+            .length;
         final withoutCategories = allReceipts.length - withCategories;
 
         print('\n📈 Statistics:');
@@ -95,11 +99,12 @@ void main() {
 
         if (withCategories == 0) {
           print('\n⚠️  WARNING: No receipts have custom_category_id assigned!');
-          print('   This explains why all receipts show as "Uncategorized" in Flutter');
+          print(
+            '   This explains why all receipts show as "Uncategorized" in Flutter',
+          );
         } else {
           print('\n✅ Some receipts have categories assigned');
         }
-
       } catch (e, stackTrace) {
         print('❌ Error: $e');
         print('Stack trace: $stackTrace');

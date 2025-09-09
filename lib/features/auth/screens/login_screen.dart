@@ -29,7 +29,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    
+
     // Listen to auth state changes
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next.error != null) {
@@ -64,7 +64,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: AppConstants.largePadding * 2),
-                
+
                 // App Logo
                 Center(
                   child: Container(
@@ -72,7 +72,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     height: 80,
                     decoration: BoxDecoration(
                       color: Theme.of(context).primaryColor,
-                      borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.largeBorderRadius,
+                      ),
                     ),
                     child: const Icon(
                       Icons.receipt_long,
@@ -81,9 +83,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: AppConstants.largePadding),
-                
+
                 // Welcome Text
                 Text(
                   'Welcome Back',
@@ -92,19 +94,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 const SizedBox(height: AppConstants.smallPadding),
-                
+
                 Text(
                   'Sign in to your account',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 const SizedBox(height: AppConstants.largePadding * 2),
-                
+
                 // Email Field
                 TextFormField(
                   controller: _emailController,
@@ -119,15 +121,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
                     }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                    if (!RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    ).hasMatch(value)) {
                       return 'Please enter a valid email';
                     }
                     return null;
                   },
                 ),
-                
+
                 const SizedBox(height: AppConstants.defaultPadding),
-                
+
                 // Password Field
                 TextFormField(
                   controller: _passwordController,
@@ -139,7 +143,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                       onPressed: () {
                         setState(() {
@@ -159,9 +165,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   },
                   onFieldSubmitted: (_) => _handleLogin(),
                 ),
-                
+
                 const SizedBox(height: AppConstants.defaultPadding),
-                
+
                 // Forgot Password
                 Align(
                   alignment: Alignment.centerRight,
@@ -170,18 +176,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: const Text('Forgot Password?'),
                   ),
                 ),
-                
+
                 const SizedBox(height: AppConstants.largePadding),
-                
+
                 // Login Button
                 LoadingButton(
                   onPressed: _handleLogin,
                   text: 'Sign In',
                   isLoading: authState.isLoading,
                 ),
-                
+
                 const SizedBox(height: AppConstants.largePadding),
-                
+
                 // Sign Up Link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -206,10 +212,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
-      ref.read(authProvider.notifier).signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
+      ref
+          .read(authProvider.notifier)
+          .signInWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          );
     }
   }
 }

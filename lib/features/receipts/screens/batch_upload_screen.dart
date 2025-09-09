@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 
-
 import '../models/batch_upload_models.dart';
 import '../providers/batch_upload_provider.dart';
 import '../providers/receipts_provider.dart';
@@ -39,7 +38,7 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
 
     // If any receipts were processed successfully, refresh the receipts list
     final hasCompletedReceipts = batchState.items.any(
-      (item) => item.status == BatchUploadItemStatus.completed
+      (item) => item.status == BatchUploadItemStatus.completed,
     );
 
     if (hasCompletedReceipts) {
@@ -55,10 +54,9 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
     if (_previousStatus != null &&
         _previousStatus == BatchUploadStatus.processing &&
         currentState.status == BatchUploadStatus.completed) {
-
       // Batch processing just completed, check if any receipts were successfully processed
       final hasCompletedReceipts = currentState.items.any(
-        (item) => item.status == BatchUploadItemStatus.completed
+        (item) => item.status == BatchUploadItemStatus.completed,
       );
 
       if (hasCompletedReceipts) {
@@ -113,7 +111,9 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
             ),
         ],
       ),
-      body: _showReview ? _buildReviewScreen(batchState) : _buildUploadScreen(batchState),
+      body: _showReview
+          ? _buildReviewScreen(batchState)
+          : _buildUploadScreen(batchState),
       bottomNavigationBar: _buildBottomBar(batchState),
     );
   }
@@ -127,7 +127,7 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
       children: [
         // Progress indicator
         if (batchState.isProcessing) _buildProgressHeader(batchState),
-        
+
         // File list
         Expanded(
           child: ListView.builder(
@@ -136,12 +136,18 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
             itemBuilder: (context, index) {
               final item = batchState.items[index];
               return Padding(
-                padding: const EdgeInsets.only(bottom: AppConstants.smallPadding),
+                padding: const EdgeInsets.only(
+                  bottom: AppConstants.smallPadding,
+                ),
                 child: BatchUploadQueueItem(
                   item: item,
-                  onRemove: batchState.isProcessing ? null : (itemId) {
-                    ref.read(batchUploadProvider.notifier).removeFile(itemId);
-                  },
+                  onRemove: batchState.isProcessing
+                      ? null
+                      : (itemId) {
+                          ref
+                              .read(batchUploadProvider.notifier)
+                              .removeFile(itemId);
+                        },
                   onRetry: (itemId) {
                     ref.read(batchUploadProvider.notifier).retryUpload(itemId);
                   },
@@ -198,13 +204,17 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
             Icon(
               Icons.cloud_upload_outlined,
               size: 80,
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.5),
             ),
             const SizedBox(height: AppConstants.defaultPadding),
             Text(
               'Select Multiple Receipts',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: AppConstants.smallPadding),
@@ -212,7 +222,9 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
               'Choose multiple receipt images to upload and process them all at once.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: AppConstants.largePadding),
@@ -231,7 +243,9 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
             Text(
               'Supported formats: JPEG, PNG, PDF (max 5MB each)',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
           ],
@@ -242,12 +256,16 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
 
   Widget _buildProgressHeader(BatchUploadState batchState) {
     final stats = ref.read(batchUploadProvider.notifier).getBatchStatistics();
-    final eta = ref.read(batchUploadProvider.notifier).getEstimatedTimeRemaining();
-    
+    final eta = ref
+        .read(batchUploadProvider.notifier)
+        .getEstimatedTimeRemaining();
+
     return Container(
       padding: const EdgeInsets.all(AppConstants.defaultPadding),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+        color: Theme.of(
+          context,
+        ).colorScheme.primaryContainer.withValues(alpha: 0.3),
         border: Border(
           bottom: BorderSide(
             color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
@@ -276,7 +294,9 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
           const SizedBox(height: AppConstants.smallPadding),
           LinearProgressIndicator(
             value: batchState.totalProgress / 100,
-            backgroundColor: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.outline.withValues(alpha: 0.2),
           ),
           const SizedBox(height: AppConstants.smallPadding),
           Row(
@@ -321,7 +341,9 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
           color: Theme.of(context).colorScheme.surface,
           border: Border(
             top: BorderSide(
-              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+              color: Theme.of(
+                context,
+              ).colorScheme.outline.withValues(alpha: 0.2),
             ),
           ),
         ),
@@ -363,15 +385,15 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
           color: Theme.of(context).colorScheme.surface,
           border: Border(
             top: BorderSide(
-              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+              color: Theme.of(
+                context,
+              ).colorScheme.outline.withValues(alpha: 0.2),
             ),
           ),
         ),
         child: Row(
           children: [
-            const Expanded(
-              child: Text('Processing uploads...'),
-            ),
+            const Expanded(child: Text('Processing uploads...')),
             TextButton(
               onPressed: () {
                 ref.read(batchUploadProvider.notifier).pauseBatchProcessing();
@@ -412,11 +434,12 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
           ElevatedButton.icon(
             onPressed: () async {
               // Check batch upload limits before starting
-              final canUpload = await SubscriptionGuard.showBatchLimitDialogIfNeeded(
-                context,
-                ref,
-                batchState.items.length,
-              );
+              final canUpload =
+                  await SubscriptionGuard.showBatchLimitDialogIfNeeded(
+                    context,
+                    ref,
+                    batchState.items.length,
+                  );
 
               if (canUpload) {
                 ref.read(batchUploadProvider.notifier).startBatchProcessing();

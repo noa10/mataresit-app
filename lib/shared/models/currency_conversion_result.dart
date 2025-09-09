@@ -9,28 +9,28 @@ part 'currency_conversion_result.g.dart';
 class CurrencyConversionResult extends Equatable {
   @JsonKey(name: 'original_amount')
   final double originalAmount;
-  
+
   @JsonKey(name: 'original_currency')
   final String originalCurrency;
-  
+
   @JsonKey(name: 'converted_amount')
   final double convertedAmount;
-  
+
   @JsonKey(name: 'target_currency')
   final String targetCurrency;
-  
+
   @JsonKey(name: 'exchange_rate')
   final double exchangeRate;
-  
+
   @JsonKey(name: 'conversion_applied')
   final bool conversionApplied;
-  
+
   final String confidence; // 'high', 'medium', 'low'
   final String reasoning;
-  
+
   @JsonKey(name: 'rate_date')
   final DateTime? rateDate;
-  
+
   @JsonKey(name: 'rate_source')
   final String? rateSource;
 
@@ -112,7 +112,7 @@ class CurrencyConversionResult extends Equatable {
     if (!conversionApplied) {
       return reasoning;
     }
-    
+
     return 'Converted from $originalCurrency to $targetCurrency at rate $exchangeRate';
   }
 
@@ -162,20 +162,20 @@ class CurrencyConversionResult extends Equatable {
 
   @override
   List<Object?> get props => [
-        originalAmount,
-        originalCurrency,
-        convertedAmount,
-        targetCurrency,
-        exchangeRate,
-        conversionApplied,
-        confidence,
-        reasoning,
-        rateDate,
-        rateSource,
-      ];
+    originalAmount,
+    originalCurrency,
+    convertedAmount,
+    targetCurrency,
+    exchangeRate,
+    conversionApplied,
+    confidence,
+    reasoning,
+    rateDate,
+    rateSource,
+  ];
 
   @override
-  String toString() => 
+  String toString() =>
       'CurrencyConversionResult($originalAmount $originalCurrency -> $convertedAmount $targetCurrency)';
 }
 

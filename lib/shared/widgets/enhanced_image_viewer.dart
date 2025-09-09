@@ -41,7 +41,7 @@ class _EnhancedImageViewerState extends State<EnhancedImageViewer>
   late PhotoViewController _photoViewController;
   late AnimationController _controlsAnimationController;
   late Animation<double> _controlsAnimation;
-  
+
   double _currentScale = 1.0;
   double _currentRotation = 0.0;
   bool _controlsVisible = true;
@@ -51,20 +51,19 @@ class _EnhancedImageViewerState extends State<EnhancedImageViewer>
     super.initState();
     _photoViewController = PhotoViewController();
     _currentScale = widget.initialScale;
-    
+
     _controlsAnimationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    
-    _controlsAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controlsAnimationController,
-      curve: Curves.easeInOut,
-    ));
-    
+
+    _controlsAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controlsAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
     _controlsAnimationController.forward();
   }
 
@@ -79,7 +78,7 @@ class _EnhancedImageViewerState extends State<EnhancedImageViewer>
     setState(() {
       _controlsVisible = !_controlsVisible;
     });
-    
+
     if (_controlsVisible) {
       _controlsAnimationController.forward();
     } else {
@@ -88,7 +87,10 @@ class _EnhancedImageViewerState extends State<EnhancedImageViewer>
   }
 
   void _zoomIn() {
-    final newScale = (_currentScale * 1.5).clamp(widget.minScale, widget.maxScale);
+    final newScale = (_currentScale * 1.5).clamp(
+      widget.minScale,
+      widget.maxScale,
+    );
     _photoViewController.scale = newScale;
     setState(() {
       _currentScale = newScale;
@@ -96,7 +98,10 @@ class _EnhancedImageViewerState extends State<EnhancedImageViewer>
   }
 
   void _zoomOut() {
-    final newScale = (_currentScale / 1.5).clamp(widget.minScale, widget.maxScale);
+    final newScale = (_currentScale / 1.5).clamp(
+      widget.minScale,
+      widget.maxScale,
+    );
     _photoViewController.scale = newScale;
     setState(() {
       _currentScale = newScale;
@@ -113,9 +118,10 @@ class _EnhancedImageViewerState extends State<EnhancedImageViewer>
 
   void _rotateImage() {
     if (!widget.enableRotation) return;
-    
+
     final newRotation = (_currentRotation + 90) % 360;
-    _photoViewController.rotation = newRotation * (3.14159 / 180); // Convert to radians
+    _photoViewController.rotation =
+        newRotation * (3.14159 / 180); // Convert to radians
     setState(() {
       _currentRotation = newRotation;
     });
@@ -123,7 +129,7 @@ class _EnhancedImageViewerState extends State<EnhancedImageViewer>
 
   void _openFullscreen() {
     if (!widget.enableFullscreen) return;
-    
+
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => FullscreenImageViewer(
@@ -166,38 +172,36 @@ class _EnhancedImageViewerState extends State<EnhancedImageViewer>
                   _currentScale = controllerValue.scale ?? widget.initialScale;
                 });
               },
-                child: CachedNetworkImage(
-                  imageUrl: widget.imageUrl,
-                  fit: BoxFit.contain,
-                  placeholder: (context, url) => Container(
-                    color: colorScheme.surfaceContainerHighest,
-                    child: const Center(
-                      child: LoadingWidget(),
-                    ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    color: colorScheme.surfaceContainerHighest,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.image_not_supported_outlined,
-                          size: 48,
+              child: CachedNetworkImage(
+                imageUrl: widget.imageUrl,
+                fit: BoxFit.contain,
+                placeholder: (context, url) => Container(
+                  color: colorScheme.surfaceContainerHighest,
+                  child: const Center(child: LoadingWidget()),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: colorScheme.surfaceContainerHighest,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.image_not_supported_outlined,
+                        size: 48,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Image not available',
+                        style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Image not available',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
+          ),
 
           // Control buttons overlay
           if (widget.showControls)
@@ -220,85 +224,85 @@ class _EnhancedImageViewerState extends State<EnhancedImageViewer>
   Widget _buildControlsOverlay(ColorScheme colorScheme) {
     return Stack(
       children: [
-          // Top controls
-          Positioned(
-            top: 8,
-            left: 8,
-            right: 8,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Title
-                if (widget.title != null)
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
+        // Top controls
+        Positioned(
+          top: 8,
+          left: 8,
+          right: 8,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Title
+              if (widget.title != null)
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      widget.title!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        widget.title!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                
-                const SizedBox(width: 8),
-                
-                // Fullscreen button
-                if (widget.enableFullscreen)
-                  _buildControlButton(
-                    icon: Icons.fullscreen,
-                    onPressed: _openFullscreen,
-                    tooltip: 'Fullscreen',
-                  ),
-              ],
-            ),
-          ),
+                ),
 
-          // Bottom controls
-          Positioned(
-            bottom: 8,
-            left: 8,
-            right: 8,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
+              const SizedBox(width: 8),
+
+              // Fullscreen button
+              if (widget.enableFullscreen)
                 _buildControlButton(
-                  icon: Icons.zoom_out,
-                  onPressed: _currentScale > widget.minScale ? _zoomOut : null,
-                  tooltip: 'Zoom Out',
+                  icon: Icons.fullscreen,
+                  onPressed: _openFullscreen,
+                  tooltip: 'Fullscreen',
                 ),
-                _buildControlButton(
-                  icon: Icons.zoom_in,
-                  onPressed: _currentScale < widget.maxScale ? _zoomIn : null,
-                  tooltip: 'Zoom In',
-                ),
-                if (widget.enableRotation)
-                  _buildControlButton(
-                    icon: Icons.rotate_right,
-                    onPressed: _rotateImage,
-                    tooltip: 'Rotate',
-                  ),
-                _buildControlButton(
-                  icon: Icons.refresh,
-                  onPressed: _resetView,
-                  tooltip: 'Reset View',
-                ),
-              ],
-            ),
+            ],
           ),
-        ],
-      );
+        ),
+
+        // Bottom controls
+        Positioned(
+          bottom: 8,
+          left: 8,
+          right: 8,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildControlButton(
+                icon: Icons.zoom_out,
+                onPressed: _currentScale > widget.minScale ? _zoomOut : null,
+                tooltip: 'Zoom Out',
+              ),
+              _buildControlButton(
+                icon: Icons.zoom_in,
+                onPressed: _currentScale < widget.maxScale ? _zoomIn : null,
+                tooltip: 'Zoom In',
+              ),
+              if (widget.enableRotation)
+                _buildControlButton(
+                  icon: Icons.rotate_right,
+                  onPressed: _rotateImage,
+                  tooltip: 'Rotate',
+                ),
+              _buildControlButton(
+                icon: Icons.refresh,
+                onPressed: _resetView,
+                tooltip: 'Reset View',
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildControlButton({
@@ -316,10 +320,7 @@ class _EnhancedImageViewerState extends State<EnhancedImageViewer>
         onPressed: onPressed,
         tooltip: tooltip,
         padding: const EdgeInsets.all(8),
-        constraints: const BoxConstraints(
-          minWidth: 36,
-          minHeight: 36,
-        ),
+        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
       ),
     );
   }
@@ -362,13 +363,12 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer>
       vsync: this,
     );
 
-    _controlsAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controlsAnimationController,
-      curve: Curves.easeInOut,
-    ));
+    _controlsAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controlsAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
 
     _controlsAnimationController.forward();
   }
@@ -447,34 +447,30 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer>
                 _currentScale = controllerValue.scale ?? 1.0;
               });
             },
-              child: CachedNetworkImage(
-                imageUrl: widget.imageUrl,
-                fit: BoxFit.contain,
-                placeholder: (context, url) => const Center(
-                  child: LoadingWidget(),
-                ),
-                errorWidget: (context, url, error) => const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.image_not_supported_outlined,
-                        size: 64,
-                        color: Colors.white54,
-                      ),
-                      SizedBox(height: 16),
-                      Text(
-                        'Image not available',
-                        style: TextStyle(
-                          color: Colors.white54,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
+            child: CachedNetworkImage(
+              imageUrl: widget.imageUrl,
+              fit: BoxFit.contain,
+              placeholder: (context, url) =>
+                  const Center(child: LoadingWidget()),
+              errorWidget: (context, url, error) => const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.image_not_supported_outlined,
+                      size: 64,
+                      color: Colors.white54,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'Image not available',
+                      style: TextStyle(color: Colors.white54, fontSize: 16),
+                    ),
+                  ],
                 ),
               ),
             ),
+          ),
 
           // Controls overlay
           Positioned.fill(
@@ -623,7 +619,8 @@ class EnhancedLocalImageViewer extends StatefulWidget {
   });
 
   @override
-  State<EnhancedLocalImageViewer> createState() => _EnhancedLocalImageViewerState();
+  State<EnhancedLocalImageViewer> createState() =>
+      _EnhancedLocalImageViewerState();
 }
 
 class _EnhancedLocalImageViewerState extends State<EnhancedLocalImageViewer>
@@ -647,13 +644,12 @@ class _EnhancedLocalImageViewerState extends State<EnhancedLocalImageViewer>
       vsync: this,
     );
 
-    _controlsAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controlsAnimationController,
-      curve: Curves.easeInOut,
-    ));
+    _controlsAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controlsAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
 
     _controlsAnimationController.forward();
   }
@@ -678,7 +674,10 @@ class _EnhancedLocalImageViewerState extends State<EnhancedLocalImageViewer>
   }
 
   void _zoomIn() {
-    final newScale = (_currentScale * 1.5).clamp(widget.minScale, widget.maxScale);
+    final newScale = (_currentScale * 1.5).clamp(
+      widget.minScale,
+      widget.maxScale,
+    );
     _photoViewController.scale = newScale;
     setState(() {
       _currentScale = newScale;
@@ -686,7 +685,10 @@ class _EnhancedLocalImageViewerState extends State<EnhancedLocalImageViewer>
   }
 
   void _zoomOut() {
-    final newScale = (_currentScale / 1.5).clamp(widget.minScale, widget.maxScale);
+    final newScale = (_currentScale / 1.5).clamp(
+      widget.minScale,
+      widget.maxScale,
+    );
     _photoViewController.scale = newScale;
     setState(() {
       _currentScale = newScale;
@@ -705,7 +707,8 @@ class _EnhancedLocalImageViewerState extends State<EnhancedLocalImageViewer>
     if (!widget.enableRotation) return;
 
     final newRotation = (_currentRotation + 90) % 360;
-    _photoViewController.rotation = newRotation * (3.14159 / 180); // Convert to radians
+    _photoViewController.rotation =
+        newRotation * (3.14159 / 180); // Convert to radians
     setState(() {
       _currentRotation = newRotation;
     });
@@ -756,32 +759,32 @@ class _EnhancedLocalImageViewerState extends State<EnhancedLocalImageViewer>
                   _currentScale = controllerValue.scale ?? widget.initialScale;
                 });
               },
-                child: Image.file(
-                  widget.imageFile,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    color: colorScheme.surfaceContainerHighest,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.image_not_supported_outlined,
-                          size: 48,
+              child: Image.file(
+                widget.imageFile,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: colorScheme.surfaceContainerHighest,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.image_not_supported_outlined,
+                        size: 48,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Image not available',
+                        style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Image not available',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
+          ),
 
           // Controls overlay
           if (widget.showControls)
@@ -795,89 +798,93 @@ class _EnhancedLocalImageViewerState extends State<EnhancedLocalImageViewer>
                   );
                 },
                 child: Stack(
-                children: [
-                  // Top controls
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    right: 8,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        if (widget.title != null)
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black54,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                widget.title!,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
+                  children: [
+                    // Top controls
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      right: 8,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          if (widget.title != null)
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  widget.title!,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ),
-                          ),
-                        const SizedBox(width: 8),
-                        if (widget.enableFullscreen)
-                          _buildControlButton(
-                            icon: Icons.fullscreen,
-                            onPressed: _openFullscreen,
-                            tooltip: 'Fullscreen',
-                          ),
-                        if (widget.onClose != null)
-                          _buildControlButton(
-                            icon: Icons.close,
-                            onPressed: widget.onClose!,
-                            tooltip: 'Close',
-                          ),
-                      ],
+                          const SizedBox(width: 8),
+                          if (widget.enableFullscreen)
+                            _buildControlButton(
+                              icon: Icons.fullscreen,
+                              onPressed: _openFullscreen,
+                              tooltip: 'Fullscreen',
+                            ),
+                          if (widget.onClose != null)
+                            _buildControlButton(
+                              icon: Icons.close,
+                              onPressed: widget.onClose!,
+                              tooltip: 'Close',
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
 
-                  // Bottom controls
-                  Positioned(
-                    bottom: 8,
-                    left: 8,
-                    right: 8,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildControlButton(
-                          icon: Icons.zoom_out,
-                          onPressed: _currentScale > widget.minScale ? _zoomOut : null,
-                          tooltip: 'Zoom Out',
-                        ),
-                        _buildControlButton(
-                          icon: Icons.zoom_in,
-                          onPressed: _currentScale < widget.maxScale ? _zoomIn : null,
-                          tooltip: 'Zoom In',
-                        ),
-                        if (widget.enableRotation)
+                    // Bottom controls
+                    Positioned(
+                      bottom: 8,
+                      left: 8,
+                      right: 8,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
                           _buildControlButton(
-                            icon: Icons.rotate_right,
-                            onPressed: _rotateImage,
-                            tooltip: 'Rotate',
+                            icon: Icons.zoom_out,
+                            onPressed: _currentScale > widget.minScale
+                                ? _zoomOut
+                                : null,
+                            tooltip: 'Zoom Out',
                           ),
-                        _buildControlButton(
-                          icon: Icons.refresh,
-                          onPressed: _resetView,
-                          tooltip: 'Reset View',
-                        ),
-                      ],
+                          _buildControlButton(
+                            icon: Icons.zoom_in,
+                            onPressed: _currentScale < widget.maxScale
+                                ? _zoomIn
+                                : null,
+                            tooltip: 'Zoom In',
+                          ),
+                          if (widget.enableRotation)
+                            _buildControlButton(
+                              icon: Icons.rotate_right,
+                              onPressed: _rotateImage,
+                              tooltip: 'Rotate',
+                            ),
+                          _buildControlButton(
+                            icon: Icons.refresh,
+                            onPressed: _resetView,
+                            tooltip: 'Reset View',
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
             ),
         ],
       ),
@@ -896,11 +903,7 @@ class _EnhancedLocalImageViewerState extends State<EnhancedLocalImageViewer>
       ),
       child: IconButton(
         onPressed: onPressed,
-        icon: Icon(
-          icon,
-          color: Colors.white,
-          size: 20,
-        ),
+        icon: Icon(icon, color: Colors.white, size: 20),
         tooltip: tooltip,
         padding: const EdgeInsets.all(8),
       ),
@@ -922,7 +925,8 @@ class FullscreenLocalImageViewer extends StatefulWidget {
   });
 
   @override
-  State<FullscreenLocalImageViewer> createState() => _FullscreenLocalImageViewerState();
+  State<FullscreenLocalImageViewer> createState() =>
+      _FullscreenLocalImageViewerState();
 }
 
 class _FullscreenLocalImageViewerState extends State<FullscreenLocalImageViewer>
@@ -945,13 +949,12 @@ class _FullscreenLocalImageViewerState extends State<FullscreenLocalImageViewer>
       vsync: this,
     );
 
-    _controlsAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controlsAnimationController,
-      curve: Curves.easeInOut,
-    ));
+    _controlsAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controlsAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
 
     _controlsAnimationController.forward();
   }
@@ -1030,28 +1033,28 @@ class _FullscreenLocalImageViewerState extends State<FullscreenLocalImageViewer>
                 _currentScale = controllerValue.scale ?? 1.0;
               });
             },
-              child: Image.file(
-                widget.imageFile,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.image_not_supported_outlined,
-                        size: 48,
-                        color: Colors.white54,
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Image not available',
-                        style: TextStyle(color: Colors.white54),
-                      ),
-                    ],
-                  ),
+            child: Image.file(
+              widget.imageFile,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.image_not_supported_outlined,
+                      size: 48,
+                      color: Colors.white54,
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Image not available',
+                      style: TextStyle(color: Colors.white54),
+                    ),
+                  ],
                 ),
               ),
             ),
+          ),
 
           // Controls overlay
           Positioned.fill(
@@ -1064,82 +1067,82 @@ class _FullscreenLocalImageViewerState extends State<FullscreenLocalImageViewer>
                 );
               },
               child: Stack(
-              children: [
-                // Top controls
-                Positioned(
-                  top: MediaQuery.of(context).padding.top + 8,
-                  left: 8,
-                  right: 8,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      if (widget.title != null)
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black54,
-                              borderRadius: BorderRadius.circular(25),
-                            ),
-                            child: Text(
-                              widget.title!,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
+                children: [
+                  // Top controls
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top + 8,
+                    left: 8,
+                    right: 8,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        if (widget.title != null)
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              decoration: BoxDecoration(
+                                color: Colors.black54,
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                              child: Text(
+                                widget.title!,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ),
+                        const SizedBox(width: 8),
+                        _buildFullscreenControlButton(
+                          icon: Icons.close,
+                          onPressed: () => Navigator.of(context).pop(),
+                          tooltip: 'Close',
                         ),
-                      const SizedBox(width: 8),
-                      _buildFullscreenControlButton(
-                        icon: Icons.close,
-                        onPressed: () => Navigator.of(context).pop(),
-                        tooltip: 'Close',
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
 
-                // Bottom controls
-                Positioned(
-                  bottom: MediaQuery.of(context).padding.bottom + 16,
-                  left: 16,
-                  right: 16,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildFullscreenControlButton(
-                        icon: Icons.zoom_out,
-                        onPressed: _currentScale > 0.5 ? _zoomOut : null,
-                        tooltip: 'Zoom Out',
-                      ),
-                      _buildFullscreenControlButton(
-                        icon: Icons.zoom_in,
-                        onPressed: _currentScale < 4.0 ? _zoomIn : null,
-                        tooltip: 'Zoom In',
-                      ),
-                      _buildFullscreenControlButton(
-                        icon: Icons.rotate_right,
-                        onPressed: _rotateImage,
-                        tooltip: 'Rotate',
-                      ),
-                      _buildFullscreenControlButton(
-                        icon: Icons.refresh,
-                        onPressed: _resetView,
-                        tooltip: 'Reset View',
-                      ),
-                    ],
+                  // Bottom controls
+                  Positioned(
+                    bottom: MediaQuery.of(context).padding.bottom + 16,
+                    left: 16,
+                    right: 16,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildFullscreenControlButton(
+                          icon: Icons.zoom_out,
+                          onPressed: _currentScale > 0.5 ? _zoomOut : null,
+                          tooltip: 'Zoom Out',
+                        ),
+                        _buildFullscreenControlButton(
+                          icon: Icons.zoom_in,
+                          onPressed: _currentScale < 4.0 ? _zoomIn : null,
+                          tooltip: 'Zoom In',
+                        ),
+                        _buildFullscreenControlButton(
+                          icon: Icons.rotate_right,
+                          onPressed: _rotateImage,
+                          tooltip: 'Rotate',
+                        ),
+                        _buildFullscreenControlButton(
+                          icon: Icons.refresh,
+                          onPressed: _resetView,
+                          tooltip: 'Reset View',
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
           ),
         ],
       ),
@@ -1158,11 +1161,7 @@ class _FullscreenLocalImageViewerState extends State<FullscreenLocalImageViewer>
       ),
       child: IconButton(
         onPressed: onPressed,
-        icon: Icon(
-          icon,
-          color: Colors.white,
-          size: 24,
-        ),
+        icon: Icon(icon, color: Colors.white, size: 24),
         tooltip: tooltip,
         padding: const EdgeInsets.all(12),
       ),

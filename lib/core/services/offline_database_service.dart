@@ -7,7 +7,7 @@ import '../../shared/models/user_model.dart';
 /// Service for managing offline data storage using Hive
 class OfflineDatabaseService {
   static final Logger _logger = Logger();
-  
+
   // Box names
   static const String _receiptsBox = 'receipts';
   static const String _teamsBox = 'teams';
@@ -26,17 +26,17 @@ class OfflineDatabaseService {
   static Future<void> initialize() async {
     try {
       await Hive.initFlutter();
-      
+
       // Register adapters if needed (for custom types)
       // Hive.registerAdapter(ReceiptModelAdapter());
-      
+
       // Open boxes
       _receipts = await Hive.openBox<Map>(_receiptsBox);
       _teams = await Hive.openBox<Map>(_teamsBox);
       _users = await Hive.openBox<Map>(_usersBox);
       _syncQueue = await Hive.openBox<Map>(_syncQueueBox);
       _settings = await Hive.openBox(_settingsBox);
-      
+
       _logger.i('Offline Database Service initialized');
     } catch (e) {
       _logger.e('Failed to initialize Offline Database Service: $e');
@@ -87,7 +87,9 @@ class OfflineDatabaseService {
       for (final data in _receipts?.values ?? []) {
         try {
           if (data is Map) {
-            receipts.add(ReceiptModel.fromJson(Map<String, dynamic>.from(data)));
+            receipts.add(
+              ReceiptModel.fromJson(Map<String, dynamic>.from(data)),
+            );
           }
         } catch (e) {
           _logger.w('Failed to parse receipt from offline storage: $e');
@@ -204,7 +206,7 @@ class OfflineDatabaseService {
         'timestamp': DateTime.now().toIso8601String(),
         'retryCount': 0,
       };
-      
+
       await _syncQueue?.put(syncItem['id'], syncItem);
       _logger.d('Added to sync queue: $operation $entityType $entityId');
     } catch (e) {
@@ -241,7 +243,10 @@ class OfflineDatabaseService {
   }
 
   /// Update retry count for sync operation
-  static Future<void> updateSyncRetryCount(String syncId, int retryCount) async {
+  static Future<void> updateSyncRetryCount(
+    String syncId,
+    int retryCount,
+  ) async {
     try {
       final data = _syncQueue?.get(syncId);
       if (data != null) {
