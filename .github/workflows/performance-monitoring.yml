@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  FLUTTER_VERSION: '3.24.5'
+  FLUTTER_VERSION: '3.35.0'
 
 jobs:
   # Job 1: Collect Build Metrics

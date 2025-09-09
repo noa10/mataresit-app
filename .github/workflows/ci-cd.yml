@@ -24,7 +24,7 @@ on:
           - major
 
 env:
-  FLUTTER_VERSION: '3.24.5'
+  FLUTTER_VERSION: '3.35.0'
   JAVA_VERSION: '17'
   GRADLE_VERSION: '8.5'
 
