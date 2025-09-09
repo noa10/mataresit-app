@@ -13,6 +13,11 @@ val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+    println("Loaded keystore properties from: ${keystorePropertiesFile.absolutePath}")
+    println("Key alias: ${keystoreProperties["keyAlias"]}")
+    println("Store file: ${keystoreProperties["storeFile"]}")
+} else {
+    println("Keystore properties file not found at: ${keystorePropertiesFile.absolutePath}")
 }
 
 android {
@@ -33,10 +38,34 @@ android {
 
     signingConfigs {
         create("release") {
-            keyAlias = keystoreProperties["keyAlias"] as String?
-            keyPassword = keystoreProperties["keyPassword"] as String?
-            storeFile = if (keystoreProperties["storeFile"] != null) file(keystoreProperties["storeFile"] as String) else null
-            storePassword = keystoreProperties["storePassword"] as String?
+            val keyAliasValue = keystoreProperties["keyAlias"] as String?
+            val keyPasswordValue = keystoreProperties["keyPassword"] as String?
+            val storeFileValue = keystoreProperties["storeFile"] as String?
+            val storePasswordValue = keystoreProperties["storePassword"] as String?
+
+            if (keyAliasValue.isNullOrEmpty()) {
+                println("ERROR: keyAlias is null or empty - check ANDROID_KEY_ALIAS secret")
+            }
+            if (storeFileValue.isNullOrEmpty()) {
+                println("ERROR: storeFile is null or empty - check key.properties file")
+            }
+            if (keyPasswordValue.isNullOrEmpty()) {
+                println("ERROR: keyPassword is null or empty - check ANDROID_KEY_PASSWORD secret")
+            }
+            if (storePasswordValue.isNullOrEmpty()) {
+                println("ERROR: storePassword is null or empty - check ANDROID_KEYSTORE_PASSWORD secret")
+            }
+
+            keyAlias = keyAliasValue
+            keyPassword = keyPasswordValue
+            storeFile = if (!storeFileValue.isNullOrEmpty()) {
+                val keystoreFile = file(storeFileValue)
+                if (!keystoreFile.exists()) {
+                    println("ERROR: Keystore file does not exist at: ${keystoreFile.absolutePath}")
+                }
+                keystoreFile
+            } else null
+            storePassword = storePasswordValue
         }
     }
 
@@ -62,8 +91,25 @@ android {
         }
 
         getByName("release") {
-            // Use release signing config if available, otherwise fall back to debug
-            signingConfig = if (keystoreProperties["storeFile"] != null) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
+            // Use release signing config if all required properties are available
+            val storeFileValue = keystoreProperties["storeFile"] as String?
+            val keyAliasValue = keystoreProperties["keyAlias"] as String?
+            val storePasswordValue = keystoreProperties["storePassword"] as String?
+            val keyPasswordValue = keystoreProperties["keyPassword"] as String?
+
+            val hasValidSigningConfig = !storeFileValue.isNullOrEmpty() &&
+                                      !keyAliasValue.isNullOrEmpty() &&
+                                      !storePasswordValue.isNullOrEmpty() &&
+                                      !keyPasswordValue.isNullOrEmpty()
+
+            signingConfig = if (hasValidSigningConfig) {
+                println("Using release signing configuration")
+                signingConfigs.getByName("release")
+            } else {
+                println("Warning: Missing signing properties, falling back to debug signing")
+                signingConfigs.getByName("debug")
+            }
+
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
