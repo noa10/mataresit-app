@@ -88,7 +88,7 @@ class _BatchUploadQueueItemState extends State<BatchUploadQueueItem>
                     Text(
                       _getFormattedFileSize(widget.item.fileSize),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                   ],
@@ -131,7 +131,7 @@ class _BatchUploadQueueItemState extends State<BatchUploadQueueItem>
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: iconColor.withOpacity(0.1),
+        color: iconColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Icon(
@@ -256,7 +256,7 @@ class _BatchUploadQueueItemState extends State<BatchUploadQueueItem>
         const SizedBox(height: 8),
         LinearProgressIndicator(
           value: widget.item.progress / 100,
-          backgroundColor: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          backgroundColor: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
           color: _getProgressColor(),
         ),
         if (widget.item.error != null) ...[
@@ -264,7 +264,7 @@ class _BatchUploadQueueItemState extends State<BatchUploadQueueItem>
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.3),
+              color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Row(
@@ -295,10 +295,10 @@ class _BatchUploadQueueItemState extends State<BatchUploadQueueItem>
     return Container(
       margin: const EdgeInsets.only(top: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         border: Border(
           top: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
       ),

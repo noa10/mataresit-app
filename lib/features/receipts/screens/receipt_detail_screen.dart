@@ -20,7 +20,7 @@ class ReceiptDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final receipt = ref.watch(receiptProvider(receiptId));
+    final receiptAsync = ref.watch(receiptProvider(receiptId));
 
     // Load categories when the widget is first built with team context
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -36,33 +36,75 @@ class ReceiptDetailScreen extends ConsumerWidget {
       }
     });
 
-    if (receipt == null) {
-      return Scaffold(
+    return receiptAsync.when(
+      data: (receipt) {
+        if (receipt == null) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Receipt Details'),
+            ),
+            body: const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(height: AppConstants.defaultPadding),
+                  Text(
+                    'Receipt not found',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        return _buildReceiptDetails(context, ref, receipt);
+      },
+      loading: () => Scaffold(
         appBar: AppBar(
           title: const Text('Receipt Details'),
         ),
         body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
+      error: (error, stack) => Scaffold(
+        appBar: AppBar(
+          title: const Text('Receipt Details'),
+        ),
+        body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
+              const Icon(
                 Icons.error_outline,
                 size: 64,
-                color: Colors.grey,
+                color: Colors.red,
               ),
-              SizedBox(height: AppConstants.defaultPadding),
+              const SizedBox(height: AppConstants.defaultPadding),
               Text(
-                'Receipt not found',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
+                'Error loading receipt: $error',
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.red,
                 ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
+
+  Widget _buildReceiptDetails(BuildContext context, WidgetRef ref, ReceiptModel receipt) {
 
     return Scaffold(
       appBar: AppBar(

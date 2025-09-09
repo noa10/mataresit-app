@@ -9,6 +9,7 @@ import '../../../shared/models/line_item_model.dart';
 import '../providers/receipts_provider.dart';
 import '../widgets/basic_line_items_widget.dart';
 import '../services/receipt_service.dart';
+import '../services/embedding_service.dart';
 import '../../categories/providers/categories_provider.dart';
 import '../../teams/providers/teams_provider.dart';
 import '../../../shared/models/team_model.dart';
@@ -106,7 +107,8 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
   }
 
   void _saveChanges() async {
-    final receipt = ref.read(receiptProvider(widget.receiptId));
+    final receiptAsync = ref.read(receiptProvider(widget.receiptId));
+    final receipt = receiptAsync.value;
     if (receipt == null) return;
 
     try {
@@ -185,15 +187,65 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Receipt updated successfully'),
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white, size: 20),
+                SizedBox(width: 8),
+                Expanded(child: Text('Receipt updated successfully')),
+              ],
+            ),
             backgroundColor: Colors.green,
+            action: SnackBarAction(
+              label: 'Syncing search...',
+              textColor: Colors.white70,
+              onPressed: () {
+                // Show info about embedding sync
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Search index is being updated in the background'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
+            ),
           ),
         );
       }
 
-      // Refresh the receipt data
+      // Refresh the receipt data from database to show updated values
       ref.invalidate(receiptProvider(widget.receiptId));
+      ref.invalidate(refreshReceiptProvider(widget.receiptId));
+
+      // Force refresh to get the latest data
+      await ref.read(refreshReceiptProvider(widget.receiptId).future);
+
+      // Trigger embedding synchronization for search index
+      // This is handled automatically by ReceiptService, but we can provide user feedback
+      if (mounted && EmbeddingService.isEmbeddingSyncEnabled()) {
+        // Show a subtle notification that search index is being updated
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Row(
+                  children: [
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    ),
+                    SizedBox(width: 8),
+                    Text('Updating search index...'),
+                  ],
+                ),
+                duration: Duration(seconds: 3),
+                backgroundColor: Colors.blue,
+              ),
+            );
+          }
+        });
+      }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -212,14 +264,16 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
       _isEditing = false;
     });
     // Reset form fields to original values
-    final receipt = ref.read(receiptProvider(widget.receiptId));
+    final receiptAsync = ref.read(receiptProvider(widget.receiptId));
+    final receipt = receiptAsync.value;
     if (receipt != null) {
       _initializeFormFields(receipt);
     }
   }
 
   void _handleLineItemChanged(int index, LineItemModel lineItem) {
-    final receipt = ref.read(receiptProvider(widget.receiptId));
+    final receiptAsync = ref.read(receiptProvider(widget.receiptId));
+    final receipt = receiptAsync.value;
     if (receipt == null) return;
 
     // Update the line items list
@@ -239,7 +293,8 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
   }
 
   void _handleAddLineItem() {
-    final receipt = ref.read(receiptProvider(widget.receiptId));
+    final receiptAsync = ref.read(receiptProvider(widget.receiptId));
+    final receipt = receiptAsync.value;
     if (receipt == null) return;
 
     final newLineItem = ReceiptService.createNewLineItem(widget.receiptId);
@@ -250,7 +305,8 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
   }
 
   void _handleRemoveLineItem(int index) {
-    final receipt = ref.read(receiptProvider(widget.receiptId));
+    final receiptAsync = ref.read(receiptProvider(widget.receiptId));
+    final receipt = receiptAsync.value;
     if (receipt == null) return;
 
     final updatedLineItems = List<LineItemModel>.from(receipt.lineItems ?? []);
@@ -269,7 +325,7 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
 
   @override
   Widget build(BuildContext context) {
-    final receipt = ref.watch(receiptProvider(widget.receiptId));
+    final receiptAsync = ref.watch(receiptProvider(widget.receiptId));
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -281,8 +337,46 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
       }
     });
 
-    if (receipt == null) {
-      return Scaffold(
+    return receiptAsync.when(
+      data: (receipt) {
+        if (receipt == null) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Receipt Details'),
+            ),
+            body: const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(height: AppConstants.defaultPadding),
+                  Text(
+                    'Receipt not found',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // Initialize form fields when receipt is loaded
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!_isEditing) {
+            _initializeFormFields(receipt);
+          }
+        });
+
+        return _buildReceiptScaffold(context, theme, colorScheme, receipt);
+      },
+      loading: () => Scaffold(
         appBar: AppBar(
           title: const Text('Receipt Details'),
         ),
@@ -290,31 +384,37 @@ class _ModernReceiptDetailScreenState extends ConsumerState<ModernReceiptDetailS
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.grey,
-              ),
-              SizedBox(height: AppConstants.defaultPadding),
-              Text(
-                'Receipt not found',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Loading receipt...'),
+            ],
+          ),
+        ),
+      ),
+      error: (error, stack) => Scaffold(
+        appBar: AppBar(
+          title: const Text('Receipt Details'),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              Text('Error loading receipt: $error'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => ref.invalidate(receiptProvider(widget.receiptId)),
+                child: const Text('Retry'),
               ),
             ],
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    // Initialize form fields when receipt is loaded
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_isEditing) {
-        _initializeFormFields(receipt);
-      }
-    });
+  Widget _buildReceiptScaffold(BuildContext context, ThemeData theme, ColorScheme colorScheme, ReceiptModel receipt) {
 
     return Scaffold(
       body: FadeTransition(
