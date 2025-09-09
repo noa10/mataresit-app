@@ -31,21 +31,3 @@ Map<String, dynamic> _$ExchangeRateModelToJson(ExchangeRateModel instance) =>
       'created_at': instance.createdAt.toIso8601String(),
       'updated_at': instance.updatedAt.toIso8601String(),
     };
-
-ExchangeRateResponse _$ExchangeRateResponseFromJson(
-  Map<String, dynamic> json,
-) => ExchangeRateResponse(
-  date: DateTime.parse(json['date'] as String),
-  baseCurrency: json['baseCurrency'] as String,
-  rates: (json['rates'] as Map<String, dynamic>).map(
-    (k, e) => MapEntry(k, (e as num).toDouble()),
-  ),
-);
-
-Map<String, dynamic> _$ExchangeRateResponseToJson(
-  ExchangeRateResponse instance,
-) => <String, dynamic>{
-  'date': instance.date.toIso8601String(),
-  'baseCurrency': instance.baseCurrency,
-  'rates': instance.rates,
-};

@@ -110,7 +110,6 @@ class ExchangeRateModel extends Equatable {
 }
 
 /// Represents a collection of exchange rates from an API response
-@JsonSerializable()
 class ExchangeRateResponse extends Equatable {
   final DateTime date;
   final String baseCurrency;
@@ -148,7 +147,11 @@ class ExchangeRateResponse extends Equatable {
   }
 
   /// Convert to JSON
-  Map<String, dynamic> toJson() => _$ExchangeRateResponseToJson(this);
+  Map<String, dynamic> toJson() => {
+        'date': date.toIso8601String(),
+        'baseCurrency': baseCurrency,
+        'rates': rates,
+      };
 
   /// Get rate for specific currency
   double? getRateFor(String targetCurrency) {

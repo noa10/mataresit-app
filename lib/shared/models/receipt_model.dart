@@ -4,6 +4,50 @@ import 'line_item_model.dart';
 
 part 'receipt_model.g.dart';
 
+/// Custom JSON converter for ProcessingStatus to handle cross-platform compatibility
+class ProcessingStatusConverter implements JsonConverter<ProcessingStatus, String?> {
+  const ProcessingStatusConverter();
+
+  @override
+  ProcessingStatus fromJson(String? json) {
+    if (json == null) return ProcessingStatus.completed;
+
+    switch (json.toLowerCase()) {
+      case 'pending':
+        return ProcessingStatus.pending;
+      case 'processing':
+        return ProcessingStatus.processing;
+      case 'completed':
+        return ProcessingStatus.completed;
+      case 'complete': // Handle React app's 'complete' value
+        return ProcessingStatus.completed;
+      case 'failed':
+        return ProcessingStatus.failed;
+      case 'manual_review':
+        return ProcessingStatus.manualReview;
+      default:
+        // Default to completed for unknown values
+        return ProcessingStatus.completed;
+    }
+  }
+
+  @override
+  String toJson(ProcessingStatus status) {
+    switch (status) {
+      case ProcessingStatus.pending:
+        return 'pending';
+      case ProcessingStatus.processing:
+        return 'processing';
+      case ProcessingStatus.completed:
+        return 'completed';
+      case ProcessingStatus.failed:
+        return 'failed';
+      case ProcessingStatus.manualReview:
+        return 'manual_review';
+    }
+  }
+}
+
 @JsonSerializable()
 class ReceiptModel extends Equatable {
   final String id;
@@ -52,6 +96,7 @@ class ReceiptModel extends Equatable {
   final String? mimeType;
   final ReceiptStatus status;
   @JsonKey(name: 'processing_status')
+  @ProcessingStatusConverter()
   final ProcessingStatus processingStatus;
   @JsonKey(name: 'ocr_data')
   final Map<String, dynamic>? ocrData;
