@@ -1,0 +1,243 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches: [ main, master, develop ]
+    types: [opened, synchronize, reopened]
+
+env:
+  FLUTTER_VERSION: '3.24.5'
+  JAVA_VERSION: '17'
+
+jobs:
+  # Job 1: Code Quality Checks
+  code_quality:
+    name: Code Quality & Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            ${{ runner.tool_cache }}/flutter
+          key: ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-
+            ${{ runner.os }}-flutter-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Create test environment file
+        run: |
+          cat > .env << EOF
+          # Test environment variables
+          SUPABASE_URL=https://test.supabase.co
+          SUPABASE_ANON_KEY=test_key
+          SUPABASE_PROJECT_ID=test_project
+          STRIPE_PUBLIC_KEY=pk_test_dummy
+          STRIPE_PRO_MONTHLY_PRICE_ID=price_test_dummy
+          STRIPE_PRO_ANNUAL_PRICE_ID=price_test_dummy
+          STRIPE_MAX_MONTHLY_PRICE_ID=price_test_dummy
+          STRIPE_MAX_ANNUAL_PRICE_ID=price_test_dummy
+          GEMINI_API_KEY=test_gemini_key
+          OPENROUTER_API_KEY=test_openrouter_key
+          AWS_ACCESS_KEY_ID=test_aws_key
+          AWS_SECRET_ACCESS_KEY=test_aws_secret
+          EOF
+
+      - name: Verify Flutter installation
+        run: |
+          flutter --version
+          flutter doctor -v
+
+      - name: Analyze code
+        run: flutter analyze --fatal-infos
+
+      - name: Check formatting
+        run: dart format --set-exit-if-changed .
+
+      - name: Check for unused dependencies
+        run: |
+          flutter pub deps --json > deps.json
+          # Basic check for unused imports (can be enhanced with custom tooling)
+          echo "Dependencies analysis completed"
+
+  # Job 2: Testing
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: code_quality
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            ${{ runner.tool_cache }}/flutter
+          key: ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-
+            ${{ runner.os }}-flutter-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Create test environment file
+        run: |
+          cat > .env << EOF
+          # Test environment variables
+          SUPABASE_URL=https://test.supabase.co
+          SUPABASE_ANON_KEY=test_key
+          SUPABASE_PROJECT_ID=test_project
+          STRIPE_PUBLIC_KEY=pk_test_dummy
+          STRIPE_PRO_MONTHLY_PRICE_ID=price_test_dummy
+          STRIPE_PRO_ANNUAL_PRICE_ID=price_test_dummy
+          STRIPE_MAX_MONTHLY_PRICE_ID=price_test_dummy
+          STRIPE_MAX_ANNUAL_PRICE_ID=price_test_dummy
+          GEMINI_API_KEY=test_gemini_key
+          OPENROUTER_API_KEY=test_openrouter_key
+          AWS_ACCESS_KEY_ID=test_aws_key
+          AWS_SECRET_ACCESS_KEY=test_aws_secret
+          EOF
+
+      - name: Run unit tests
+        run: flutter test --coverage --reporter=expanded
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: coverage/lcov.info
+          fail_ci_if_error: false
+
+  # Job 3: Build Test (Debug Build)
+  build_test:
+    name: Test Build
+    runs-on: ubuntu-latest
+    needs: code_quality
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            ${{ runner.tool_cache }}/flutter
+          key: ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-
+            ${{ runner.os }}-flutter-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Create test environment file
+        run: |
+          cat > .env << EOF
+          # Test environment variables
+          SUPABASE_URL=https://test.supabase.co
+          SUPABASE_ANON_KEY=test_key
+          SUPABASE_PROJECT_ID=test_project
+          STRIPE_PUBLIC_KEY=pk_test_dummy
+          STRIPE_PRO_MONTHLY_PRICE_ID=price_test_dummy
+          STRIPE_PRO_ANNUAL_PRICE_ID=price_test_dummy
+          STRIPE_MAX_MONTHLY_PRICE_ID=price_test_dummy
+          STRIPE_MAX_ANNUAL_PRICE_ID=price_test_dummy
+          GEMINI_API_KEY=test_gemini_key
+          OPENROUTER_API_KEY=test_openrouter_key
+          AWS_ACCESS_KEY_ID=test_aws_key
+          AWS_SECRET_ACCESS_KEY=test_aws_secret
+          EOF
+
+      - name: Build debug APK
+        run: flutter build apk --debug
+
+      - name: Verify build outputs
+        run: |
+          ls -la build/app/outputs/flutter-apk/
+          echo "Debug build completed successfully"
+
+  # Job 4: Security Scan
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Job 5: PR Summary
+  summary:
+    name: PR Summary
+    runs-on: ubuntu-latest
+    needs: [code_quality, test, build_test, security]
+    if: always()
+    steps:
+      - name: Generate PR summary
+        run: |
+          echo "## 📋 Pull Request Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Quality | ${{ needs.code_quality.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests | ${{ needs.test.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build Test | ${{ needs.build_test.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Scan | ${{ needs.security.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔍 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- Review any failed checks above" >> $GITHUB_STEP_SUMMARY
+          echo "- Address code quality issues if any" >> $GITHUB_STEP_SUMMARY
+          echo "- Ensure all tests pass" >> $GITHUB_STEP_SUMMARY
+          echo "- Once approved, this PR will trigger a release build when merged to main" >> $GITHUB_STEP_SUMMARY

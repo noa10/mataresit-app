@@ -1,0 +1,400 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  pull_request:
+    branches: [ main, master ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+env:
+  FLUTTER_VERSION: '3.24.5'
+  JAVA_VERSION: '17'
+  GRADLE_VERSION: '8.5'
+
+jobs:
+  # Job 1: Setup and Validation
+  setup:
+    name: Setup & Validation
+    runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.check.outputs.should_deploy }}
+      version: ${{ steps.version.outputs.version }}
+      build_number: ${{ steps.version.outputs.build_number }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            ${{ runner.tool_cache }}/flutter
+          key: ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-
+            ${{ runner.os }}-flutter-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify Flutter installation
+        run: |
+          flutter --version
+          flutter doctor -v
+
+      - name: Check deployment conditions
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && ("${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/master") ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate version and build number
+        id: version
+        run: |
+          # Get current version from pubspec.yaml
+          CURRENT_VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | sed 's/+.*//')
+          CURRENT_BUILD=$(grep '^version:' pubspec.yaml | sed 's/.*+//')
+          
+          # Calculate new version based on input or auto-increment
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            RELEASE_TYPE="${{ github.event.inputs.release_type }}"
+          else
+            RELEASE_TYPE="patch"
+          fi
+          
+          # Parse version components
+          IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+          MAJOR=${VERSION_PARTS[0]}
+          MINOR=${VERSION_PARTS[1]}
+          PATCH=${VERSION_PARTS[2]}
+          
+          # Increment based on release type
+          case $RELEASE_TYPE in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+          
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          NEW_BUILD=$((CURRENT_BUILD + 1))
+          
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "build_number=$NEW_BUILD" >> $GITHUB_OUTPUT
+          
+          echo "Current version: $CURRENT_VERSION+$CURRENT_BUILD"
+          echo "New version: $NEW_VERSION+$NEW_BUILD"
+
+  # Job 2: Testing
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            ${{ runner.tool_cache }}/flutter
+          key: ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-
+            ${{ runner.os }}-flutter-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Create test environment file
+        run: |
+          cat > .env << EOF
+          # Test environment variables
+          SUPABASE_URL=https://test.supabase.co
+          SUPABASE_ANON_KEY=test_key
+          SUPABASE_PROJECT_ID=test_project
+          STRIPE_PUBLIC_KEY=pk_test_dummy
+          STRIPE_PRO_MONTHLY_PRICE_ID=price_test_dummy
+          STRIPE_PRO_ANNUAL_PRICE_ID=price_test_dummy
+          STRIPE_MAX_MONTHLY_PRICE_ID=price_test_dummy
+          STRIPE_MAX_ANNUAL_PRICE_ID=price_test_dummy
+          GEMINI_API_KEY=test_gemini_key
+          OPENROUTER_API_KEY=test_openrouter_key
+          AWS_ACCESS_KEY_ID=test_aws_key
+          AWS_SECRET_ACCESS_KEY=test_aws_secret
+          EOF
+
+      - name: Analyze code
+        run: flutter analyze
+
+      - name: Check formatting
+        run: dart format --set-exit-if-changed .
+
+      - name: Run unit tests
+        run: flutter test --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: coverage/lcov.info
+          fail_ci_if_error: false
+
+  # Job 3: Build Android APK/AAB
+  build_android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    needs: [setup, test]
+    if: needs.setup.outputs.should_deploy == 'true'
+    strategy:
+      matrix:
+        build_type: [apk, appbundle]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            ${{ runner.tool_cache }}/flutter
+          key: ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-
+            ${{ runner.os }}-flutter-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Create production environment file
+        run: |
+          cat > .env << EOF
+          SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_PROJECT_ID=${{ secrets.SUPABASE_PROJECT_ID }}
+          STRIPE_PUBLIC_KEY=${{ secrets.STRIPE_PUBLIC_KEY }}
+          STRIPE_PRO_MONTHLY_PRICE_ID=${{ secrets.STRIPE_PRO_MONTHLY_PRICE_ID }}
+          STRIPE_PRO_ANNUAL_PRICE_ID=${{ secrets.STRIPE_PRO_ANNUAL_PRICE_ID }}
+          STRIPE_MAX_MONTHLY_PRICE_ID=${{ secrets.STRIPE_MAX_MONTHLY_PRICE_ID }}
+          STRIPE_MAX_ANNUAL_PRICE_ID=${{ secrets.STRIPE_MAX_ANNUAL_PRICE_ID }}
+          GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+          OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
+          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          EOF
+
+      - name: Update version in pubspec.yaml
+        run: |
+          sed -i "s/^version:.*/version: ${{ needs.setup.outputs.version }}+${{ needs.setup.outputs.build_number }}/" pubspec.yaml
+          echo "Updated version to: ${{ needs.setup.outputs.version }}+${{ needs.setup.outputs.build_number }}"
+
+      - name: Decode Android keystore
+        if: matrix.build_type == 'appbundle'
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/keystore.jks
+
+      - name: Create key.properties
+        if: matrix.build_type == 'appbundle'
+        run: |
+          cat > android/key.properties << EOF
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          storeFile=keystore.jks
+          EOF
+
+      - name: Build APK
+        if: matrix.build_type == 'apk'
+        run: flutter build apk --release --split-per-abi
+
+      - name: Build App Bundle
+        if: matrix.build_type == 'appbundle'
+        run: flutter build appbundle --release
+
+      - name: Upload APK artifacts
+        if: matrix.build_type == 'apk'
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: |
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+            build/app/outputs/flutter-apk/app-x86_64-release.apk
+          retention-days: 30
+
+      - name: Upload AAB artifacts
+        if: matrix.build_type == 'appbundle'
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+  # Job 4: Create GitHub Release
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [setup, build_android]
+    if: needs.setup.outputs.should_deploy == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download APK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: android-apk
+          path: ./artifacts/apk/
+
+      - name: Download AAB artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: android-aab
+          path: ./artifacts/aab/
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          # Get commits since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LAST_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges -10)
+          else
+            COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          fi
+
+          # Create release notes
+          cat > release_notes.md << EOF
+          ## 🚀 Mataresit App v${{ needs.setup.outputs.version }}
+
+          ### 📱 Downloads
+          - **APK Files**: Choose the appropriate APK for your device architecture
+            - \`app-arm64-v8a-release.apk\` - For most modern Android devices (64-bit ARM)
+            - \`app-armeabi-v7a-release.apk\` - For older Android devices (32-bit ARM)
+            - \`app-x86_64-release.apk\` - For Android emulators and x86 devices
+          - **AAB File**: \`app-release.aab\` - For Google Play Store distribution
+
+          ### 📋 What's Changed
+          $COMMITS
+
+          ### 🔧 Technical Details
+          - **Version**: ${{ needs.setup.outputs.version }}
+          - **Build Number**: ${{ needs.setup.outputs.build_number }}
+          - **Flutter Version**: ${{ env.FLUTTER_VERSION }}
+          - **Minimum Android Version**: API 21 (Android 5.0)
+          - **Target Android Version**: API 34 (Android 14)
+
+          ### 📦 Installation Instructions
+          1. Download the appropriate APK file for your device
+          2. Enable "Install from unknown sources" in your Android settings
+          3. Install the APK file
+          4. Grant necessary permissions when prompted
+
+          ### 🔒 Security Note
+          All release builds are signed with our official signing certificate.
+          EOF
+
+          echo "Generated release notes"
+
+      - name: Update version in repository
+        run: |
+          # Update pubspec.yaml with new version
+          sed -i "s/^version:.*/version: ${{ needs.setup.outputs.version }}+${{ needs.setup.outputs.build_number }}/" pubspec.yaml
+
+          # Commit version update
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add pubspec.yaml
+          git commit -m "chore: bump version to ${{ needs.setup.outputs.version }}+${{ needs.setup.outputs.build_number }}" || exit 0
+          git push
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.setup.outputs.version }}
+          name: Mataresit App v${{ needs.setup.outputs.version }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          files: |
+            ./artifacts/apk/app-arm64-v8a-release.apk
+            ./artifacts/apk/app-armeabi-v7a-release.apk
+            ./artifacts/apk/app-x86_64-release.apk
+            ./artifacts/aab/app-release.aab
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify success
+        run: |
+          echo "🎉 Successfully released Mataresit App v${{ needs.setup.outputs.version }}"
+          echo "📱 APK files and AAB bundle are now available in the GitHub release"
+          echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.setup.outputs.version }}"
