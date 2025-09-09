@@ -31,7 +31,7 @@ class NotificationPreferencesService {
         return NotificationPreferences.defaults(targetUserId);
       }
 
-      final data = (response as List).first as Map<String, dynamic>;
+      final data = response.first as Map<String, dynamic>;
       final preferences = NotificationPreferences.fromJson(data);
       
       AppLogger.info('Successfully fetched notification preferences');

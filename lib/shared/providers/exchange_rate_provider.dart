@@ -116,9 +116,7 @@ class ExchangeRateNotifier extends StateNotifier<ExchangeRateState> {
       }
       
       // If API failed or we're offline, try cache
-      if (ratesData == null) {
-        ratesData = await CurrencyCacheService.getCachedExchangeRates(normalizedBase);
-      }
+      ratesData ??= await CurrencyCacheService.getCachedExchangeRates(normalizedBase);
       
       if (ratesData != null) {
         final updatedRates = Map<String, ExchangeRateResponse>.from(state.rates);
@@ -215,9 +213,7 @@ class ExchangeRateNotifier extends StateNotifier<ExchangeRateState> {
           }
           
           // Fallback to cache
-          if (ratesData == null) {
-            ratesData = await CurrencyCacheService.getCachedExchangeRates(currency);
-          }
+          ratesData ??= await CurrencyCacheService.getCachedExchangeRates(currency);
           
           return MapEntry(currency, ratesData);
         } catch (e) {
