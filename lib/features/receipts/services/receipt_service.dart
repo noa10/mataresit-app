@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:logger/logger.dart';
 import '../../../shared/models/receipt_model.dart';
 import '../../../shared/models/line_item_model.dart';
+import 'embedding_service.dart';
 
 class ReceiptService {
   static final _supabase = Supabase.instance.client;
@@ -103,6 +104,22 @@ class ReceiptService {
       }
     }
 
+    // Handle string processing_status values (cross-platform compatibility)
+    if (mappedData.containsKey('processing_status') && mappedData['processing_status'] is String) {
+      final processingStatusStr = mappedData['processing_status'] as String;
+      // Map React app's 'complete' to Flutter's 'completed'
+      if (processingStatusStr.toLowerCase() == 'complete') {
+        mappedData['processing_status'] = 'completed';
+        _logger.d('Mapped processing_status from "complete" to "completed" for database compatibility');
+      }
+      // Ensure only valid values are used
+      final validStatuses = ['pending', 'processing', 'completed', 'failed', 'manual_review'];
+      if (!validStatuses.contains(mappedData['processing_status'])) {
+        _logger.w('Invalid processing_status value: ${mappedData['processing_status']}, defaulting to completed');
+        mappedData['processing_status'] = 'completed';
+      }
+    }
+
     return mappedData;
   }
 
@@ -181,9 +198,25 @@ class ReceiptService {
       _logger.d('🔍 Fetching updated receipt with line items...');
       final result = await getReceiptWithLineItems(receiptId);
       _logger.i('✅ Receipt update completed successfully');
+
+      // Trigger embedding synchronization to update search index
+      _logger.d('🔄 Triggering embedding synchronization for updated receipt...');
+      EmbeddingService.syncEmbeddingsAfterReceiptUpdate(receiptId).catchError((error) {
+        _logger.w('⚠️ Embedding synchronization failed but receipt update succeeded: $error');
+      });
+
       return result;
     } catch (error) {
       _logger.e('❌ Error updating receipt: $error');
+
+      // Handle specific database constraint violations
+      final errorMessage = error.toString().toLowerCase();
+      if (errorMessage.contains('processing_status') && errorMessage.contains('not one of the supported values')) {
+        throw Exception('Invalid processing status value. Please try again or contact support if the issue persists.');
+      } else if (errorMessage.contains('constraint') || errorMessage.contains('check')) {
+        throw Exception('Data validation failed. Please check your input values and try again.');
+      }
+
       rethrow;
     }
   }
@@ -218,6 +251,15 @@ class ReceiptService {
       return receipt;
     } catch (error) {
       _logger.e('❌ Error fetching receipt with line items: $error');
+
+      // Handle specific database constraint violations
+      final errorMessage = error.toString().toLowerCase();
+      if (errorMessage.contains('processing_status') && errorMessage.contains('not one of the supported values')) {
+        throw Exception('Receipt data contains invalid processing status. This may be due to cross-platform compatibility issues.');
+      } else if (errorMessage.contains('invalid argument')) {
+        throw Exception('Invalid data format detected. Please try refreshing the receipt.');
+      }
+
       rethrow;
     }
   }

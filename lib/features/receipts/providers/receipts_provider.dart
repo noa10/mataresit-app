@@ -9,6 +9,7 @@ import '../../../shared/utils/currency_utils.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../teams/providers/teams_provider.dart';
 import '../../categories/providers/categories_provider.dart';
+import '../services/receipt_service.dart';
 
 /// Receipts state
 class ReceiptsState {
@@ -746,6 +747,32 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
       );
     }
   }
+
+  /// Update a specific receipt in the receipts list
+  void updateReceiptInList(ReceiptModel updatedReceipt) {
+    final currentReceipts = List<ReceiptModel>.from(state.receipts);
+    final index = currentReceipts.indexWhere((r) => r.id == updatedReceipt.id);
+
+    if (index != -1) {
+      // Update existing receipt
+      currentReceipts[index] = updatedReceipt;
+      AppLogger.info('✅ Updated receipt ${updatedReceipt.id} in receipts list');
+    } else {
+      // Add new receipt if not found
+      currentReceipts.insert(0, updatedReceipt);
+      AppLogger.info('✅ Added new receipt ${updatedReceipt.id} to receipts list');
+    }
+
+    // Recalculate grouped receipts if grouped view is enabled
+    final groupedReceipts = state.isGroupedView
+        ? ReceiptGrouper.groupReceiptsByDate(currentReceipts)
+        : state.groupedReceipts;
+
+    state = state.copyWith(
+      receipts: currentReceipts,
+      groupedReceipts: groupedReceipts,
+    );
+  }
 }
 
 /// Receipts provider
@@ -753,12 +780,38 @@ final receiptsProvider = StateNotifierProvider<ReceiptsNotifier, ReceiptsState>(
   return ReceiptsNotifier(ref);
 });
 
-/// Individual receipt provider
-final receiptProvider = Provider.family<ReceiptModel?, String>((ref, receiptId) {
+/// Individual receipt provider with database refresh capability
+final receiptProvider = FutureProvider.family<ReceiptModel?, String>((ref, receiptId) async {
+  // First try to get from the main receipts list
   final receipts = ref.watch(receiptsProvider).receipts;
   try {
-    return receipts.firstWhere((receipt) => receipt.id == receiptId);
+    final cachedReceipt = receipts.firstWhere((receipt) => receipt.id == receiptId);
+    return cachedReceipt;
   } catch (e) {
+    // If not found in cache, fetch directly from database
+    try {
+      final receipt = await ReceiptService.getReceiptWithLineItems(receiptId);
+      return receipt;
+    } catch (dbError) {
+      AppLogger.error('❌ Failed to fetch receipt $receiptId: $dbError');
+      return null;
+    }
+  }
+});
+
+/// Provider for refreshing a specific receipt from database
+final refreshReceiptProvider = FutureProvider.family<ReceiptModel?, String>((ref, receiptId) async {
+  try {
+    AppLogger.info('🔄 Refreshing receipt $receiptId from database');
+    final receipt = await ReceiptService.getReceiptWithLineItems(receiptId);
+
+    // Update the main receipts list with the refreshed data
+    final receiptsNotifier = ref.read(receiptsProvider.notifier);
+    receiptsNotifier.updateReceiptInList(receipt);
+
+    return receipt;
+  } catch (error) {
+    AppLogger.error('❌ Failed to refresh receipt $receiptId: $error');
     return null;
   }
 });
