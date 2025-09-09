@@ -28,6 +28,8 @@ import '../../features/subscription/screens/billing_screen.dart';
 import '../../features/settings/screens/language_selection_screen.dart';
 import '../../features/settings/screens/currency_settings_screen.dart';
 import '../../features/settings/screens/theme_settings_screen.dart';
+import '../../features/settings/screens/help_screen.dart';
+import '../../features/settings/screens/privacy_policy_screen.dart';
 import '../../shared/widgets/main_navigation_wrapper.dart';
 import '../../shared/widgets/splash_screen.dart';
 import '../../debug/database_debug_screen.dart';
@@ -56,6 +58,8 @@ class AppRoutes {
   static const String sessionManagement = '/settings/security/sessions';
   static const String privacyControls = '/settings/security/privacy';
   static const String accountDeletion = '/settings/security/delete-account';
+  static const String help = '/help';
+  static const String privacyPolicy = '/privacy-policy';
   static const String profile = '/profile';
   static const String analytics = '/analytics';
   
@@ -241,6 +245,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/billing',
         builder: (context, state) => const BillingScreen(),
+      ),
+
+      // Help and Privacy routes (outside shell for easier access)
+      GoRoute(
+        path: AppRoutes.help,
+        builder: (context, state) => const HelpScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.privacyPolicy,
+        builder: (context, state) => const PrivacyPolicyScreen(),
       ),
 
       // Debug routes (outside shell for easier access)
