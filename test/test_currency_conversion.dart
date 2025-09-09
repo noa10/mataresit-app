@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'lib/shared/widgets/currency_display_widget.dart';
+import 'package:mataresit_app/shared/widgets/currency_display_widget.dart';
 
 /// Simple test app to verify currency conversion is working
 class CurrencyConversionTestApp extends StatelessWidget {
@@ -15,11 +15,11 @@ class CurrencyConversionTestApp extends StatelessWidget {
           appBar: AppBar(
             title: const Text('Currency Conversion Test'),
           ),
-          body: const Padding(
-            padding: EdgeInsets.all(16.0),
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              children: const <Widget>[
                 Text(
                   'Testing Currency Conversion:',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
