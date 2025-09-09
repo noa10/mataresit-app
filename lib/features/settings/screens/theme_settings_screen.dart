@@ -49,12 +49,12 @@ class ThemeSettingsScreen extends ConsumerWidget {
                     children: [
                       Chip(
                         label: Text(themeState.config.mode.displayName),
-                        backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                        backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                       ),
                       const SizedBox(width: AppConstants.smallPadding),
                       Chip(
                         label: Text(themeState.config.variant.displayName),
-                        backgroundColor: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                        backgroundColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
                       ),
                     ],
                   ),
@@ -235,7 +235,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
                       ),
                       borderRadius: BorderRadius.circular(AppConstants.borderRadius),
                       color: isSelected 
-                        ? Theme.of(context).primaryColor.withOpacity(0.05)
+                        ? Theme.of(context).primaryColor.withValues(alpha: 0.05)
                         : null,
                     ),
                     child: Padding(
@@ -305,7 +305,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 2,
             offset: const Offset(0, 1),
           ),

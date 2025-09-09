@@ -49,7 +49,7 @@ class SubscriptionLimitsWidget extends ConsumerWidget {
         color: Theme.of(context).colorScheme.errorContainer,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context).colorScheme.error.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -112,15 +112,15 @@ class SubscriptionLimitsWidget extends ConsumerWidget {
         color: isAtLimit
             ? Theme.of(context).colorScheme.errorContainer
             : isNearLimit
-                ? Colors.orange.withOpacity(0.1)
+                ? Colors.orange.withValues(alpha: 0.1)
                 : Theme.of(context).colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isAtLimit
-              ? Theme.of(context).colorScheme.error.withOpacity(0.3)
+              ? Theme.of(context).colorScheme.error.withValues(alpha: 0.3)
               : isNearLimit
-                  ? Colors.orange.withOpacity(0.3)
-                  : Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  ? Colors.orange.withValues(alpha: 0.3)
+                  : Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -261,15 +261,15 @@ class UpgradePromptWidget extends ConsumerWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Theme.of(context).colorScheme.primary.withOpacity(0.1),
-            Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+            Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+            Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
         ),
       ),
       child: compact ? _buildCompactLayout(context) : _buildFullLayout(context),

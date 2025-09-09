@@ -53,7 +53,7 @@ class _ProfilePreferencesState extends ConsumerState<ProfilePreferences> {
                 const SizedBox(height: AppConstants.defaultPadding),
                 
                 DropdownButtonFormField<String>(
-                  value: _selectedLanguage,
+                  initialValue: _selectedLanguage,
                   decoration: const InputDecoration(
                     labelText: 'Preferred Language',
                     border: OutlineInputBorder(),
@@ -226,7 +226,7 @@ class _ProfilePreferencesState extends ConsumerState<ProfilePreferences> {
               width: double.infinity,
               padding: const EdgeInsets.all(AppConstants.smallPadding),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.error.withOpacity(0.1),
+                color: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.error,

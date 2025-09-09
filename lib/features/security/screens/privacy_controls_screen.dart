@@ -234,39 +234,86 @@ class PrivacyControlsScreen extends ConsumerWidget {
   }
 
   void _showRetentionDialog(BuildContext context) {
+    String selectedRetention = 'forever';
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Data Retention Period'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<String>(
-              title: const Text('Keep forever'),
-              value: 'forever',
-              groupValue: 'forever',
-              onChanged: (value) {},
-            ),
-            RadioListTile<String>(
-              title: const Text('1 year'),
-              value: '1year',
-              groupValue: 'forever',
-              onChanged: (value) {},
-            ),
-            RadioListTile<String>(
-              title: const Text('6 months'),
-              value: '6months',
-              groupValue: 'forever',
-              onChanged: (value) {},
-            ),
-            RadioListTile<String>(
-              title: const Text('3 months'),
-              value: '3months',
-              groupValue: 'forever',
-              onChanged: (value) {},
-            ),
-          ],
-        ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Data Retention Period'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Radio<String>(
+                  value: 'forever',
+                  groupValue: selectedRetention,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedRetention = value!;
+                    });
+                  },
+                ),
+                title: const Text('Keep forever'),
+                onTap: () {
+                  setState(() {
+                    selectedRetention = 'forever';
+                  });
+                },
+              ),
+              ListTile(
+                leading: Radio<String>(
+                  value: '1year',
+                  groupValue: selectedRetention,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedRetention = value!;
+                    });
+                  },
+                ),
+                title: const Text('1 year'),
+                onTap: () {
+                  setState(() {
+                    selectedRetention = '1year';
+                  });
+                },
+              ),
+              ListTile(
+                leading: Radio<String>(
+                  value: '6months',
+                  groupValue: selectedRetention,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedRetention = value!;
+                    });
+                  },
+                ),
+                title: const Text('6 months'),
+                onTap: () {
+                  setState(() {
+                    selectedRetention = '6months';
+                  });
+                },
+              ),
+              ListTile(
+                leading: Radio<String>(
+                  value: '3months',
+                  groupValue: selectedRetention,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedRetention = value!;
+                    });
+                  },
+                ),
+                title: const Text('3 months'),
+                onTap: () {
+                  setState(() {
+                    selectedRetention = '3months';
+                  });
+                },
+              ),
+            ],
+          ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -284,6 +331,7 @@ class PrivacyControlsScreen extends ConsumerWidget {
             child: const Text('Save'),
           ),
         ],
+      ),
       ),
     );
   }

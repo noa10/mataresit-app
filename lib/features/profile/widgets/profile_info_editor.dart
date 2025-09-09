@@ -165,7 +165,7 @@ class _ProfileInfoEditorState extends ConsumerState<ProfileInfoEditor> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(AppConstants.smallPadding),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.error.withOpacity(0.1),
+                        color: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: Theme.of(context).colorScheme.error,

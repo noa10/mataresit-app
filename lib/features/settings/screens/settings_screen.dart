@@ -195,7 +195,7 @@ class SettingsScreen extends ConsumerWidget {
                 'navigation.help'.tr(),
                 Icons.help_outline,
                 () {
-                  // TODO: Navigate to help
+                  context.push('/help');
                 },
               ),
               _buildSettingsTile(
@@ -211,7 +211,7 @@ class SettingsScreen extends ConsumerWidget {
                 'Privacy Policy',
                 Icons.privacy_tip_outlined,
                 () {
-                  // TODO: Navigate to privacy
+                  context.push('/privacy-policy');
                 },
               ),
             ],
