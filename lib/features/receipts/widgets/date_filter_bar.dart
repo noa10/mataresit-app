@@ -63,9 +63,7 @@ class DateFilterBar extends ConsumerWidget {
                   ..._buildQuickFilterButtons(context, ref, currentFilter),
                   const SizedBox(width: 8),
                   // Compact category filter
-                  CompactCategoryFilterWidget(
-                    onFilterChanged: onFilterChanged,
-                  ),
+                  CompactCategoryFilterWidget(onFilterChanged: onFilterChanged),
                   const SizedBox(width: 8),
                   // Compact reviewed status filter
                   CompactReviewedStatusFilterWidget(
@@ -228,16 +226,12 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
           ],
 
           // Category filters
-          CategoryFilterWidget(
-            onFilterChanged: widget.onFilterChanged,
-          ),
+          CategoryFilterWidget(onFilterChanged: widget.onFilterChanged),
 
           const SizedBox(height: 20),
 
           // Reviewed status filters
-          ReviewedStatusFilterWidget(
-            onFilterChanged: widget.onFilterChanged,
-          ),
+          ReviewedStatusFilterWidget(onFilterChanged: widget.onFilterChanged),
 
           const SizedBox(height: 20),
 

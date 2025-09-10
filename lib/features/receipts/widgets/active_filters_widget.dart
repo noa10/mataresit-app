@@ -10,16 +10,13 @@ import '../../categories/providers/categories_provider.dart';
 class ActiveFiltersWidget extends ConsumerWidget {
   final VoidCallback? onFilterChanged;
 
-  const ActiveFiltersWidget({
-    super.key,
-    this.onFilterChanged,
-  });
+  const ActiveFiltersWidget({super.key, this.onFilterChanged});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final receiptsState = ref.watch(receiptsProvider);
     final categoriesState = ref.watch(categoriesProvider);
-    
+
     if (!receiptsState.hasActiveFilters) {
       return const SizedBox.shrink();
     }
@@ -31,12 +28,14 @@ class ActiveFiltersWidget extends ConsumerWidget {
       activeFilters.add(
         _buildFilterChip(
           context,
-          label: AppDateUtils.getFilterOptionDisplayName(receiptsState.dateFilter.option),
+          label: AppDateUtils.getFilterOptionDisplayName(
+            receiptsState.dateFilter.option,
+          ),
           icon: Icons.date_range,
           onRemove: () {
-            ref.read(receiptsProvider.notifier).setDateFilter(
-              const DateRange(option: DateFilterOption.all),
-            );
+            ref
+                .read(receiptsProvider.notifier)
+                .setDateFilter(const DateRange(option: DateFilterOption.all));
             onFilterChanged?.call();
           },
         ),
@@ -78,7 +77,7 @@ class ActiveFiltersWidget extends ConsumerWidget {
       final category = categoriesState.categories
           .where((c) => c.id == categoryId)
           .firstOrNull;
-      
+
       if (category != null) {
         activeFilters.add(
           _buildFilterChip(
@@ -87,7 +86,9 @@ class ActiveFiltersWidget extends ConsumerWidget {
             icon: Icons.category,
             color: _parseColor(category.color, context),
             onRemove: () {
-              ref.read(receiptsProvider.notifier).removeCategoryFilter(categoryId);
+              ref
+                  .read(receiptsProvider.notifier)
+                  .removeCategoryFilter(categoryId);
               onFilterChanged?.call();
             },
           ),
@@ -101,16 +102,20 @@ class ActiveFiltersWidget extends ConsumerWidget {
         _buildFilterChip(
           context,
           label: receiptsState.reviewedStatusFilter.displayName,
-          icon: receiptsState.reviewedStatusFilter == ReviewedStatusFilter.reviewed
+          icon:
+              receiptsState.reviewedStatusFilter ==
+                  ReviewedStatusFilter.reviewed
               ? Icons.check_circle_outline
               : Icons.pending_outlined,
-          color: receiptsState.reviewedStatusFilter == ReviewedStatusFilter.reviewed
+          color:
+              receiptsState.reviewedStatusFilter ==
+                  ReviewedStatusFilter.reviewed
               ? Colors.green
               : Colors.orange,
           onRemove: () {
-            ref.read(receiptsProvider.notifier).setReviewedStatusFilter(
-              ReviewedStatusFilter.all,
-            );
+            ref
+                .read(receiptsProvider.notifier)
+                .setReviewedStatusFilter(ReviewedStatusFilter.all);
             onFilterChanged?.call();
           },
         ),
@@ -140,7 +145,10 @@ class ActiveFiltersWidget extends ConsumerWidget {
                 icon: const Icon(Icons.clear_all, size: 16),
                 label: const Text('Clear All'),
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
@@ -148,11 +156,7 @@ class ActiveFiltersWidget extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: activeFilters,
-          ),
+          Wrap(spacing: 8, runSpacing: 4, children: activeFilters),
         ],
       ),
     );
@@ -171,10 +175,7 @@ class ActiveFiltersWidget extends ConsumerWidget {
         size: 16,
         color: color ?? Theme.of(context).colorScheme.primary,
       ),
-      label: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall,
-      ),
+      label: Text(label, style: Theme.of(context).textTheme.labelSmall),
       deleteIcon: const Icon(Icons.close, size: 16),
       onDeleted: onRemove,
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -202,26 +203,25 @@ class ActiveFiltersWidget extends ConsumerWidget {
 class ActiveFiltersCountWidget extends ConsumerWidget {
   final VoidCallback? onTap;
 
-  const ActiveFiltersCountWidget({
-    super.key,
-    this.onTap,
-  });
+  const ActiveFiltersCountWidget({super.key, this.onTap});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final receiptsState = ref.watch(receiptsProvider);
-    
+
     if (!receiptsState.hasActiveFilters) {
       return const SizedBox.shrink();
     }
 
     int filterCount = 0;
-    
+
     if (receiptsState.dateFilter.option != DateFilterOption.all) filterCount++;
     if (receiptsState.searchQuery.isNotEmpty) filterCount++;
     if (receiptsState.statusFilter != null) filterCount++;
-    if (receiptsState.categoryFilters.isNotEmpty) filterCount += receiptsState.categoryFilters.length;
-    if (receiptsState.reviewedStatusFilter != ReviewedStatusFilter.all) filterCount++;
+    if (receiptsState.categoryFilters.isNotEmpty)
+      filterCount += receiptsState.categoryFilters.length;
+    if (receiptsState.reviewedStatusFilter != ReviewedStatusFilter.all)
+      filterCount++;
 
     return GestureDetector(
       onTap: onTap,

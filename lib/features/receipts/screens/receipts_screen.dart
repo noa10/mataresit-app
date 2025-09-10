@@ -188,7 +188,8 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
           Consumer(
             builder: (context, ref, child) {
               final receiptsState = ref.watch(receiptsProvider);
-              if (receiptsState.isSelectionMode || !receiptsState.hasActiveFilters) {
+              if (receiptsState.isSelectionMode ||
+                  !receiptsState.hasActiveFilters) {
                 return const SizedBox.shrink();
               }
               return ActiveFiltersWidget(

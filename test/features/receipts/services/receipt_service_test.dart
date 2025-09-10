@@ -26,7 +26,7 @@ void main() {
           if (testReceiptData['status'] == 'unreviewed') {
             testReceiptData['status'] = 'draft';
           }
-          
+
           // This should now work without throwing
           final receipt = ReceiptModel.fromJson(testReceiptData);
           expect(receipt.status, equals(ReceiptStatus.unreviewed));
@@ -89,7 +89,7 @@ void main() {
         // Test that empty list doesn't cause issues
         final emptyList = <String>[];
         expect(emptyList.isEmpty, isTrue);
-        
+
         // This simulates what happens in the receipt browser modal
         expect(() {
           if (emptyList.isEmpty) {
@@ -103,7 +103,7 @@ void main() {
         final receiptIds = ['receipt-1', 'receipt-2', 'receipt-3'];
         expect(receiptIds.isNotEmpty, isTrue);
         expect(receiptIds.length, equals(3));
-        
+
         // This simulates the filtering that happens in batch upload
         final filteredIds = receiptIds.where((id) => id.isNotEmpty).toList();
         expect(filteredIds.length, equals(3));

@@ -245,10 +245,14 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                     child: ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer,
                         child: Icon(
                           Icons.receipt,
-                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onPrimaryContainer,
                         ),
                       ),
                       title: Text(receipt.merchantName ?? 'Unknown Merchant'),

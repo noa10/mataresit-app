@@ -322,11 +322,7 @@ enum ProcessingStatus {
 }
 
 /// Filter enum for reviewed status filtering
-enum ReviewedStatusFilter {
-  all,
-  reviewed,
-  unreviewed,
-}
+enum ReviewedStatusFilter { all, reviewed, unreviewed }
 
 extension ReceiptStatusExtension on ReceiptStatus {
   String get displayName {

@@ -616,7 +616,9 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
 
   /// Remove a category from the filter list
   Future<void> removeCategoryFilter(String categoryId) async {
-    final newFilters = state.categoryFilters.where((id) => id != categoryId).toList();
+    final newFilters = state.categoryFilters
+        .where((id) => id != categoryId)
+        .toList();
     await setCategoryFilters(newFilters);
   }
 

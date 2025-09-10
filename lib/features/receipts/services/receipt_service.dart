@@ -254,7 +254,9 @@ class ReceiptService {
       // Handle invalid status values by normalizing them
       if (response['status'] == 'unreviewed') {
         response['status'] = 'draft'; // Convert unreviewed to draft
-        _logger.w('⚠️ Converted invalid status "unreviewed" to "draft" for receipt $receiptId');
+        _logger.w(
+          '⚠️ Converted invalid status "unreviewed" to "draft" for receipt $receiptId',
+        );
       }
 
       final receipt = ReceiptModel.fromJson(response);
@@ -295,7 +297,9 @@ class ReceiptService {
   }
 
   /// Get multiple receipts by their IDs with line items
-  static Future<List<ReceiptModel>> getReceiptsByIds(List<String> receiptIds) async {
+  static Future<List<ReceiptModel>> getReceiptsByIds(
+    List<String> receiptIds,
+  ) async {
     if (receiptIds.isEmpty) {
       return [];
     }
@@ -317,7 +321,9 @@ class ReceiptService {
           // Handle invalid status values by normalizing them
           if (receiptData['status'] == 'unreviewed') {
             receiptData['status'] = 'draft'; // Convert unreviewed to draft
-            _logger.w('⚠️ Converted invalid status "unreviewed" to "draft" for receipt ${receiptData['id']}');
+            _logger.w(
+              '⚠️ Converted invalid status "unreviewed" to "draft" for receipt ${receiptData['id']}',
+            );
           }
 
           final receipt = ReceiptModel.fromJson(receiptData);

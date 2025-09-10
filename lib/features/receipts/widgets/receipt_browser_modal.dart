@@ -55,7 +55,7 @@ class _ReceiptBrowserModalState extends ConsumerState<ReceiptBrowserModal> {
       });
 
       final receipts = await ReceiptService.getReceiptsByIds(widget.receiptIds);
-      
+
       setState(() {
         _receipts = receipts;
         _isLoading = false;
@@ -155,18 +155,11 @@ class _ReceiptBrowserModalState extends ConsumerState<ReceiptBrowserModal> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.receipt_long_outlined,
-              size: 64,
-              color: Colors.grey,
-            ),
+            Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey),
             SizedBox(height: 16),
             Text(
               'No receipts found',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 18, color: Colors.grey),
             ),
           ],
         ),
@@ -182,18 +175,13 @@ class _ReceiptBrowserModalState extends ConsumerState<ReceiptBrowserModal> {
         return Row(
           children: [
             // Left sidebar - Receipt list
-            SizedBox(
-              width: sidebarWidth,
-              child: _buildReceiptList(),
-            ),
+            SizedBox(width: sidebarWidth, child: _buildReceiptList()),
 
             // Divider
             const VerticalDivider(width: 1),
 
             // Right side - Receipt details
-            Expanded(
-              child: _buildReceiptDetails(),
-            ),
+            Expanded(child: _buildReceiptDetails()),
           ],
         );
       },
@@ -209,12 +197,12 @@ class _ReceiptBrowserModalState extends ConsumerState<ReceiptBrowserModal> {
           padding: const EdgeInsets.all(AppConstants.defaultPadding),
           child: Text(
             '${_receipts!.length} Receipt${_receipts!.length != 1 ? 's' : ''}',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
         ),
-        
+
         // Receipt list
         Expanded(
           child: ListView.builder(
@@ -225,12 +213,12 @@ class _ReceiptBrowserModalState extends ConsumerState<ReceiptBrowserModal> {
             itemBuilder: (context, index) {
               final receipt = _receipts![index];
               final isSelected = receipt.id == _selectedReceiptId;
-              
+
               return Card(
                 margin: const EdgeInsets.only(
                   bottom: AppConstants.smallPadding,
                 ),
-                color: isSelected 
+                color: isSelected
                     ? Theme.of(context).colorScheme.primaryContainer
                     : null,
                 child: InkWell(
@@ -249,9 +237,12 @@ class _ReceiptBrowserModalState extends ConsumerState<ReceiptBrowserModal> {
                           children: [
                             Expanded(
                               child: Text(
-                                receipt.merchantName ?? 'Receipt (${receipt.id.substring(0, 6)}...)',
+                                receipt.merchantName ??
+                                    'Receipt (${receipt.id.substring(0, 6)}...)',
                                 style: TextStyle(
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
                                   fontSize: 14,
                                 ),
                                 maxLines: 1,
@@ -268,22 +259,33 @@ class _ReceiptBrowserModalState extends ConsumerState<ReceiptBrowserModal> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          AppDateUtils.formatDate(receipt.transactionDate ?? receipt.createdAt),
+                          AppDateUtils.formatDate(
+                            receipt.transactionDate ?? receipt.createdAt,
+                          ),
                           style: TextStyle(
                             fontSize: 11,
                             color: isSelected
-                                ? Theme.of(context).colorScheme.onPrimaryContainer
-                                : Theme.of(context).colorScheme.onSurfaceVariant,
+                                ? Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimaryContainer
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          CurrencyUtils.formatCurrency(receipt.totalAmount ?? 0, receipt.currency ?? 'MYR'),
+                          CurrencyUtils.formatCurrency(
+                            receipt.totalAmount ?? 0,
+                            receipt.currency ?? 'MYR',
+                          ),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: isSelected
-                                ? Theme.of(context).colorScheme.onPrimaryContainer
+                                ? Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimaryContainer
                                 : Theme.of(context).colorScheme.primary,
                           ),
                         ),
@@ -304,10 +306,7 @@ class _ReceiptBrowserModalState extends ConsumerState<ReceiptBrowserModal> {
       return const Center(
         child: Text(
           'Select a receipt from the list to view details',
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.grey,
-          ),
+          style: TextStyle(fontSize: 16, color: Colors.grey),
         ),
       );
     }
@@ -319,9 +318,7 @@ class _ReceiptBrowserModalState extends ConsumerState<ReceiptBrowserModal> {
           padding: const EdgeInsets.all(AppConstants.defaultPadding),
           decoration: BoxDecoration(
             border: Border(
-              bottom: BorderSide(
-                color: Theme.of(context).dividerColor,
-              ),
+              bottom: BorderSide(color: Theme.of(context).dividerColor),
             ),
           ),
           child: Column(
@@ -335,18 +332,23 @@ class _ReceiptBrowserModalState extends ConsumerState<ReceiptBrowserModal> {
                       children: [
                         Text(
                           _selectedReceipt!.merchantName ?? 'Unknown Merchant',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          AppDateUtils.formatDate(_selectedReceipt!.transactionDate ?? _selectedReceipt!.createdAt),
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          AppDateUtils.formatDate(
+                            _selectedReceipt!.transactionDate ??
+                                _selectedReceipt!.createdAt,
                           ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
                         ),
                       ],
                     ),
@@ -360,7 +362,10 @@ class _ReceiptBrowserModalState extends ConsumerState<ReceiptBrowserModal> {
                     icon: const Icon(Icons.open_in_new, size: 16),
                     label: const Text('Details'),
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                     ),
                   ),
                 ],
@@ -368,7 +373,7 @@ class _ReceiptBrowserModalState extends ConsumerState<ReceiptBrowserModal> {
             ],
           ),
         ),
-        
+
         // Receipt summary
         Expanded(
           child: SingleChildScrollView(
@@ -382,7 +387,7 @@ class _ReceiptBrowserModalState extends ConsumerState<ReceiptBrowserModal> {
 
   Widget _buildReceiptSummary() {
     final receipt = _selectedReceipt!;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -418,74 +423,76 @@ class _ReceiptBrowserModalState extends ConsumerState<ReceiptBrowserModal> {
             ),
           ),
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // Receipt details
         if (receipt.receiptNumber != null) ...[
           _buildDetailRow('Receipt Number', receipt.receiptNumber!),
           const SizedBox(height: 8),
         ],
-        
+
         if (receipt.paymentMethod != null) ...[
           _buildDetailRow('Payment Method', receipt.paymentMethod!),
           const SizedBox(height: 8),
         ],
-        
+
         if (receipt.category != null) ...[
           _buildDetailRow('Category', receipt.category!),
           const SizedBox(height: 8),
         ],
-        
+
         if (receipt.description != null && receipt.description!.isNotEmpty) ...[
           _buildDetailRow('Description', receipt.description!),
           const SizedBox(height: 8),
         ],
-        
+
         if (receipt.notes != null && receipt.notes!.isNotEmpty) ...[
           _buildDetailRow('Notes', receipt.notes!),
           const SizedBox(height: 8),
         ],
-        
+
         // Line items
         if (receipt.lineItems != null && receipt.lineItems!.isNotEmpty) ...[
           const SizedBox(height: 16),
           Text(
             'Line Items',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          ...receipt.lineItems!.map((item) => Card(
-            margin: const EdgeInsets.only(bottom: 8),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      item.description,
-                      style: const TextStyle(fontSize: 14),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+          ...receipt.lineItems!.map(
+            (item) => Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.description,
+                        style: const TextStyle(fontSize: 14),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    CurrencyUtils.formatCurrency(
-                      item.amount,
-                      receipt.currency ?? 'MYR',
+                    const SizedBox(width: 8),
+                    Text(
+                      CurrencyUtils.formatCurrency(
+                        item.amount,
+                        receipt.currency ?? 'MYR',
+                      ),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          )),
+          ),
         ],
       ],
     );
@@ -495,7 +502,9 @@ class _ReceiptBrowserModalState extends ConsumerState<ReceiptBrowserModal> {
     return LayoutBuilder(
       builder: (context, constraints) {
         // Use responsive label width based on available space
-        final labelWidth = constraints.maxWidth > 300 ? 120.0 : constraints.maxWidth * 0.35;
+        final labelWidth = constraints.maxWidth > 300
+            ? 120.0
+            : constraints.maxWidth * 0.35;
 
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,

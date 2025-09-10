@@ -7,10 +7,7 @@ import '../providers/receipts_provider.dart';
 class ReviewedStatusFilterWidget extends ConsumerWidget {
   final VoidCallback? onFilterChanged;
 
-  const ReviewedStatusFilterWidget({
-    super.key,
-    this.onFilterChanged,
-  });
+  const ReviewedStatusFilterWidget({super.key, this.onFilterChanged});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -22,9 +19,9 @@ class ReviewedStatusFilterWidget extends ConsumerWidget {
       children: [
         Text(
           'Review Status',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -55,10 +52,7 @@ class ReviewedStatusFilterWidget extends ConsumerWidget {
 class CompactReviewedStatusFilterWidget extends ConsumerWidget {
   final VoidCallback? onFilterChanged;
 
-  const CompactReviewedStatusFilterWidget({
-    super.key,
-    this.onFilterChanged,
-  });
+  const CompactReviewedStatusFilterWidget({super.key, this.onFilterChanged});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -71,12 +65,12 @@ class CompactReviewedStatusFilterWidget extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           border: Border.all(
-            color: hasFilter 
+            color: hasFilter
                 ? Theme.of(context).colorScheme.primary
                 : Theme.of(context).colorScheme.outline,
           ),
           borderRadius: BorderRadius.circular(20),
-          color: hasFilter 
+          color: hasFilter
               ? Theme.of(context).colorScheme.primaryContainer
               : null,
         ),
@@ -86,7 +80,7 @@ class CompactReviewedStatusFilterWidget extends ConsumerWidget {
             Icon(
               _getStatusIcon(currentFilter),
               size: 16,
-              color: hasFilter 
+              color: hasFilter
                   ? Theme.of(context).colorScheme.primary
                   : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -94,7 +88,7 @@ class CompactReviewedStatusFilterWidget extends ConsumerWidget {
             Text(
               currentFilter.displayName,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: hasFilter 
+                color: hasFilter
                     ? Theme.of(context).colorScheme.primary
                     : Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -109,8 +103,8 @@ class CompactReviewedStatusFilterWidget extends ConsumerWidget {
           child: Row(
             children: [
               Icon(
-                isSelected 
-                    ? Icons.radio_button_checked 
+                isSelected
+                    ? Icons.radio_button_checked
                     : Icons.radio_button_unchecked,
                 size: 20,
                 color: Theme.of(context).colorScheme.primary,
@@ -161,10 +155,7 @@ class CompactReviewedStatusFilterWidget extends ConsumerWidget {
 class ReviewedStatusTabsWidget extends ConsumerWidget {
   final VoidCallback? onFilterChanged;
 
-  const ReviewedStatusTabsWidget({
-    super.key,
-    this.onFilterChanged,
-  });
+  const ReviewedStatusTabsWidget({super.key, this.onFilterChanged});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -185,7 +176,7 @@ class ReviewedStatusTabsWidget extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: isSelected 
+                color: isSelected
                     ? Theme.of(context).colorScheme.primary
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(6),
@@ -196,7 +187,7 @@ class ReviewedStatusTabsWidget extends ConsumerWidget {
                   Icon(
                     _getStatusIcon(filter),
                     size: 16,
-                    color: isSelected 
+                    color: isSelected
                         ? Theme.of(context).colorScheme.onPrimary
                         : Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -204,10 +195,12 @@ class ReviewedStatusTabsWidget extends ConsumerWidget {
                   Text(
                     filter.displayName,
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: isSelected 
+                      color: isSelected
                           ? Theme.of(context).colorScheme.onPrimary
                           : Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                     ),
                   ),
                 ],

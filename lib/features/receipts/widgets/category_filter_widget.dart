@@ -9,13 +9,11 @@ import '../providers/receipts_provider.dart';
 class CategoryFilterWidget extends ConsumerStatefulWidget {
   final VoidCallback? onFilterChanged;
 
-  const CategoryFilterWidget({
-    super.key,
-    this.onFilterChanged,
-  });
+  const CategoryFilterWidget({super.key, this.onFilterChanged});
 
   @override
-  ConsumerState<CategoryFilterWidget> createState() => _CategoryFilterWidgetState();
+  ConsumerState<CategoryFilterWidget> createState() =>
+      _CategoryFilterWidgetState();
 }
 
 class _CategoryFilterWidgetState extends ConsumerState<CategoryFilterWidget> {
@@ -34,9 +32,9 @@ class _CategoryFilterWidgetState extends ConsumerState<CategoryFilterWidget> {
       children: [
         Text(
           'Categories',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -87,9 +85,9 @@ class _CategoryFilterWidgetState extends ConsumerState<CategoryFilterWidget> {
               ),
               child: Text(
                 '${category.receiptCount}',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  fontSize: 10,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(fontSize: 10),
               ),
             ),
           ],
@@ -121,12 +119,12 @@ class _CategoryFilterWidgetState extends ConsumerState<CategoryFilterWidget> {
     try {
       // Remove # if present
       String hexColor = colorString.replaceAll('#', '');
-      
+
       // Add alpha if not present
       if (hexColor.length == 6) {
         hexColor = 'FF$hexColor';
       }
-      
+
       return Color(int.parse(hexColor, radix: 16));
     } catch (e) {
       // Fallback to a default color if parsing fails
@@ -139,10 +137,7 @@ class _CategoryFilterWidgetState extends ConsumerState<CategoryFilterWidget> {
 class CompactCategoryFilterWidget extends ConsumerWidget {
   final VoidCallback? onFilterChanged;
 
-  const CompactCategoryFilterWidget({
-    super.key,
-    this.onFilterChanged,
-  });
+  const CompactCategoryFilterWidget({super.key, this.onFilterChanged});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -162,12 +157,12 @@ class CompactCategoryFilterWidget extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           border: Border.all(
-            color: hasSelection 
+            color: hasSelection
                 ? Theme.of(context).colorScheme.primary
                 : Theme.of(context).colorScheme.outline,
           ),
           borderRadius: BorderRadius.circular(20),
-          color: hasSelection 
+          color: hasSelection
               ? Theme.of(context).colorScheme.primaryContainer
               : null,
         ),
@@ -177,7 +172,7 @@ class CompactCategoryFilterWidget extends ConsumerWidget {
             Icon(
               Icons.category_outlined,
               size: 16,
-              color: hasSelection 
+              color: hasSelection
                   ? Theme.of(context).colorScheme.primary
                   : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -185,7 +180,7 @@ class CompactCategoryFilterWidget extends ConsumerWidget {
             Text(
               hasSelection ? 'Categories ($selectedCount)' : 'Categories',
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: hasSelection 
+                color: hasSelection
                     ? Theme.of(context).colorScheme.primary
                     : Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -200,8 +195,8 @@ class CompactCategoryFilterWidget extends ConsumerWidget {
           child: Row(
             children: [
               Icon(
-                receiptsState.categoryFilters.isEmpty 
-                    ? Icons.radio_button_checked 
+                receiptsState.categoryFilters.isEmpty
+                    ? Icons.radio_button_checked
                     : Icons.radio_button_unchecked,
                 size: 20,
                 color: Theme.of(context).colorScheme.primary,
@@ -213,38 +208,40 @@ class CompactCategoryFilterWidget extends ConsumerWidget {
         ),
         const PopupMenuDivider(),
         // Individual categories
-        ...categories.map((category) => PopupMenuItem<String>(
-          value: category.id,
-          child: Row(
-            children: [
-              Icon(
-                receiptsState.categoryFilters.contains(category.id)
-                    ? Icons.check_box
-                    : Icons.check_box_outline_blank,
-                size: 20,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(width: 12),
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: _parseColor(category.color, context),
-                  shape: BoxShape.circle,
+        ...categories.map(
+          (category) => PopupMenuItem<String>(
+            value: category.id,
+            child: Row(
+              children: [
+                Icon(
+                  receiptsState.categoryFilters.contains(category.id)
+                      ? Icons.check_box
+                      : Icons.check_box_outline_blank,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(child: Text(category.name)),
-              if (category.receiptCount != null && category.receiptCount! > 0)
-                Text(
-                  '${category.receiptCount}',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                const SizedBox(width: 12),
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: _parseColor(category.color, context),
+                    shape: BoxShape.circle,
                   ),
                 ),
-            ],
+                const SizedBox(width: 8),
+                Expanded(child: Text(category.name)),
+                if (category.receiptCount != null && category.receiptCount! > 0)
+                  Text(
+                    '${category.receiptCount}',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
           ),
-        )),
+        ),
       ],
       onSelected: (value) {
         if (value == 'all') {
