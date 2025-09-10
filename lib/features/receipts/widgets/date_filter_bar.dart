@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/utils/date_utils.dart';
 import '../../../core/constants/app_constants.dart';
 import '../providers/receipts_provider.dart';
+import 'category_filter_widget.dart';
+import 'reviewed_status_filter_widget.dart';
 
 /// Compact horizontal date filter bar for quick access
 class DateFilterBar extends ConsumerWidget {
@@ -52,12 +54,24 @@ class DateFilterBar extends ConsumerWidget {
 
           const SizedBox(width: 12),
 
-          // Quick filter buttons
+          // Quick filter buttons and compact filters
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: _buildQuickFilterButtons(context, ref, currentFilter),
+                children: [
+                  ..._buildQuickFilterButtons(context, ref, currentFilter),
+                  const SizedBox(width: 8),
+                  // Compact category filter
+                  CompactCategoryFilterWidget(
+                    onFilterChanged: onFilterChanged,
+                  ),
+                  const SizedBox(width: 8),
+                  // Compact reviewed status filter
+                  CompactReviewedStatusFilterWidget(
+                    onFilterChanged: onFilterChanged,
+                  ),
+                ],
               ),
             ),
           ),
@@ -212,6 +226,20 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
             _buildCustomDateRange(currentFilter),
             const SizedBox(height: 20),
           ],
+
+          // Category filters
+          CategoryFilterWidget(
+            onFilterChanged: widget.onFilterChanged,
+          ),
+
+          const SizedBox(height: 20),
+
+          // Reviewed status filters
+          ReviewedStatusFilterWidget(
+            onFilterChanged: widget.onFilterChanged,
+          ),
+
+          const SizedBox(height: 20),
 
           // Action buttons
           Row(
