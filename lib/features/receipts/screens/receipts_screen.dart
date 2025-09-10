@@ -15,6 +15,7 @@ import '../../../shared/utils/confidence_utils.dart';
 import '../../../shared/widgets/category_display.dart';
 import '../../../shared/widgets/confidence_indicator.dart';
 import '../widgets/date_filter_bar.dart';
+import '../widgets/active_filters_widget.dart';
 import '../widgets/grouped_receipts_list.dart';
 import '../widgets/pagination_widget.dart';
 import '../widgets/selection_mode_bar.dart';
@@ -176,6 +177,21 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
                 return const SizedBox.shrink();
               }
               return DateFilterBar(
+                onFilterChanged: () {
+                  // Optional: Add any additional logic when filters change
+                },
+              );
+            },
+          ),
+
+          // Active filters indicator
+          Consumer(
+            builder: (context, ref, child) {
+              final receiptsState = ref.watch(receiptsProvider);
+              if (receiptsState.isSelectionMode || !receiptsState.hasActiveFilters) {
+                return const SizedBox.shrink();
+              }
+              return ActiveFiltersWidget(
                 onFilterChanged: () {
                   // Optional: Add any additional logic when filters change
                 },

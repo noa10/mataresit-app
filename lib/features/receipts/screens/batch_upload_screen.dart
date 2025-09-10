@@ -8,6 +8,7 @@ import '../providers/batch_upload_provider.dart';
 import '../providers/receipts_provider.dart';
 import '../widgets/batch_upload_queue_item.dart';
 import '../widgets/batch_upload_review_widget.dart';
+import '../widgets/receipt_browser_modal.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/guards/subscription_guard.dart';
 import '../../subscription/widgets/subscription_limits_widget.dart';
@@ -183,6 +184,25 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
           _showReview = false;
         });
       },
+      onViewAllReceipts: () {
+        // Get all completed receipt IDs
+        final receiptIds = batchState.completedItems
+            .where((item) => item.receiptId != null)
+            .map((item) => item.receiptId!)
+            .toList();
+
+        if (receiptIds.isNotEmpty) {
+          // Show receipt browser modal
+          showDialog(
+            context: context,
+            builder: (context) => ReceiptBrowserModal(
+              receiptIds: receiptIds,
+              title: 'Uploaded Receipts (${receiptIds.length})',
+              onClose: () => Navigator.of(context).pop(),
+            ),
+          );
+        }
+      },
     );
   }
 
@@ -335,6 +355,15 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
     if (batchState.items.isEmpty) return const SizedBox.shrink();
 
     if (batchState.isCompleted) {
+      // Auto-transition to review screen
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_showReview) {
+          setState(() {
+            _showReview = true;
+          });
+        }
+      });
+
       return Container(
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
         decoration: BoxDecoration(
@@ -355,7 +384,7 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Upload Complete',
+                    'Upload Complete - Showing Results',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   Text(
@@ -365,14 +394,7 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
                 ],
               ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _showReview = true;
-                });
-              },
-              child: const Text('View Results'),
-            ),
+            // Removed duplicate "View Results" button - review screen shows automatically
           ],
         ),
       );

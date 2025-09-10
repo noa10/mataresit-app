@@ -814,25 +814,15 @@ class _ModernReceiptDetailScreenState
     String label;
 
     switch (status) {
-      case ReceiptStatus.active:
+      case ReceiptStatus.reviewed:
         backgroundColor = Colors.green.withValues(alpha: 0.1);
         textColor = Colors.green.shade700;
-        label = 'Active';
+        label = 'Reviewed';
         break;
-      case ReceiptStatus.draft:
+      case ReceiptStatus.unreviewed:
         backgroundColor = Colors.orange.withValues(alpha: 0.1);
         textColor = Colors.orange.shade700;
-        label = 'Draft';
-        break;
-      case ReceiptStatus.archived:
-        backgroundColor = Colors.grey.withValues(alpha: 0.1);
-        textColor = Colors.grey.shade700;
-        label = 'Archived';
-        break;
-      case ReceiptStatus.deleted:
-        backgroundColor = Colors.red.withValues(alpha: 0.1);
-        textColor = Colors.red.shade700;
-        label = 'Deleted';
+        label = 'Unreviewed';
         break;
     }
 

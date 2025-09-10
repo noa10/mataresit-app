@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../models/batch_upload_models.dart';
 import '../../../core/constants/app_constants.dart';
+import 'receipt_browser_modal.dart';
 
 class BatchUploadReviewWidget extends StatefulWidget {
   final BatchUploadState batchState;
@@ -379,11 +380,34 @@ class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
           if (widget.batchState.completedItems.isNotEmpty)
             ElevatedButton.icon(
               onPressed: () {
-                // Navigate to receipts list
-                context.push('/receipts');
+                // Use callback if provided, otherwise show modal directly
+                if (widget.onViewAllReceipts != null) {
+                  widget.onViewAllReceipts!();
+                } else {
+                  // Get all completed receipt IDs
+                  final receiptIds = widget.batchState.completedItems
+                      .where((item) => item.receiptId != null)
+                      .map((item) => item.receiptId!)
+                      .toList();
+
+                  if (receiptIds.isNotEmpty) {
+                    // Show receipt browser modal
+                    showDialog(
+                      context: context,
+                      builder: (context) => ReceiptBrowserModal(
+                        receiptIds: receiptIds,
+                        title: 'Uploaded Receipts (${receiptIds.length})',
+                        onClose: () => Navigator.of(context).pop(),
+                      ),
+                    );
+                  } else {
+                    // Fallback to receipts list if no receipt IDs found
+                    context.push('/receipts');
+                  }
+                }
               },
               icon: const Icon(Icons.receipt_long),
-              label: const Text('View Receipts'),
+              label: const Text('View Results'),
             ),
 
           const SizedBox(width: AppConstants.smallPadding),

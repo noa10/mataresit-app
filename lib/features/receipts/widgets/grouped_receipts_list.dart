@@ -359,21 +359,13 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
     IconData icon;
 
     switch (status) {
-      case ReceiptStatus.active:
+      case ReceiptStatus.reviewed:
         color = Colors.green;
         icon = Icons.check_circle;
         break;
-      case ReceiptStatus.draft:
+      case ReceiptStatus.unreviewed:
         color = Colors.orange;
         icon = Icons.edit;
-        break;
-      case ReceiptStatus.archived:
-        color = Colors.grey;
-        icon = Icons.archive;
-        break;
-      case ReceiptStatus.deleted:
-        color = Colors.red;
-        icon = Icons.delete;
         break;
     }
 
@@ -402,25 +394,15 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
     Color textColor;
 
     switch (status) {
-      case ReceiptStatus.active: // This maps to "reviewed"
+      case ReceiptStatus.reviewed:
         text = 'Reviewed';
         backgroundColor = Colors.blue.withValues(alpha: 0.1);
         textColor = Colors.blue.shade700;
         break;
-      case ReceiptStatus.draft: // This maps to "unreviewed"
+      case ReceiptStatus.unreviewed:
         text = 'Unreviewed';
         backgroundColor = Colors.orange.withValues(alpha: 0.1);
         textColor = Colors.orange.shade700;
-        break;
-      case ReceiptStatus.archived:
-        text = 'Archived';
-        backgroundColor = Colors.grey.withValues(alpha: 0.1);
-        textColor = Colors.grey.shade700;
-        break;
-      case ReceiptStatus.deleted:
-        text = 'Deleted';
-        backgroundColor = Colors.red.withValues(alpha: 0.1);
-        textColor = Colors.red.shade700;
         break;
     }
 
