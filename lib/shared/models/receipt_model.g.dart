@@ -102,8 +102,6 @@ Map<String, dynamic> _$ReceiptModelToJson(ReceiptModel instance) =>
     };
 
 const _$ReceiptStatusEnumMap = {
-  ReceiptStatus.draft: 'draft',
-  ReceiptStatus.active: 'active',
-  ReceiptStatus.archived: 'archived',
-  ReceiptStatus.deleted: 'deleted',
+  ReceiptStatus.unreviewed: 'unreviewed',
+  ReceiptStatus.reviewed: 'reviewed',
 };

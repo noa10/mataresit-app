@@ -301,14 +301,10 @@ class ReceiptModel extends Equatable {
 
 @JsonEnum()
 enum ReceiptStatus {
-  @JsonValue('draft')
-  draft,
-  @JsonValue('active')
-  active,
-  @JsonValue('archived')
-  archived,
-  @JsonValue('deleted')
-  deleted,
+  @JsonValue('unreviewed')
+  unreviewed,
+  @JsonValue('reviewed')
+  reviewed,
 }
 
 @JsonEnum()
@@ -325,24 +321,49 @@ enum ProcessingStatus {
   manualReview,
 }
 
+/// Filter enum for reviewed status filtering
+enum ReviewedStatusFilter {
+  all,
+  reviewed,
+  unreviewed,
+}
+
 extension ReceiptStatusExtension on ReceiptStatus {
   String get displayName {
     switch (this) {
-      case ReceiptStatus.draft:
-        return 'Draft';
-      case ReceiptStatus.active:
-        return 'Active';
-      case ReceiptStatus.archived:
-        return 'Archived';
-      case ReceiptStatus.deleted:
-        return 'Deleted';
+      case ReceiptStatus.unreviewed:
+        return 'Unreviewed';
+      case ReceiptStatus.reviewed:
+        return 'Reviewed';
     }
   }
 
-  bool get isActive => this == ReceiptStatus.active;
-  bool get isDraft => this == ReceiptStatus.draft;
-  bool get isArchived => this == ReceiptStatus.archived;
-  bool get isDeleted => this == ReceiptStatus.deleted;
+  bool get isReviewed => this == ReceiptStatus.reviewed;
+  bool get isUnreviewed => this == ReceiptStatus.unreviewed;
+}
+
+extension ReviewedStatusFilterExtension on ReviewedStatusFilter {
+  String get displayName {
+    switch (this) {
+      case ReviewedStatusFilter.all:
+        return 'All';
+      case ReviewedStatusFilter.reviewed:
+        return 'Reviewed';
+      case ReviewedStatusFilter.unreviewed:
+        return 'Unreviewed';
+    }
+  }
+
+  ReceiptStatus? get receiptStatus {
+    switch (this) {
+      case ReviewedStatusFilter.all:
+        return null;
+      case ReviewedStatusFilter.reviewed:
+        return ReceiptStatus.reviewed;
+      case ReviewedStatusFilter.unreviewed:
+        return ReceiptStatus.unreviewed;
+    }
+  }
 }
 
 extension ProcessingStatusExtension on ProcessingStatus {
