@@ -70,17 +70,11 @@ class ReceiptService {
         mappedData['status'] is ReceiptStatus) {
       final status = mappedData['status'] as ReceiptStatus;
       switch (status) {
-        case ReceiptStatus.draft:
-          mappedData['status'] = 'draft';
+        case ReceiptStatus.unreviewed:
+          mappedData['status'] = 'unreviewed';
           break;
-        case ReceiptStatus.active:
-          mappedData['status'] = 'active';
-          break;
-        case ReceiptStatus.archived:
-          mappedData['status'] = 'archived';
-          break;
-        case ReceiptStatus.deleted:
-          mappedData['status'] = 'deleted';
+        case ReceiptStatus.reviewed:
+          mappedData['status'] = 'reviewed';
           break;
       }
     }
@@ -257,6 +251,12 @@ class ReceiptService {
           .eq('id', receiptId)
           .single();
 
+      // Handle invalid status values by normalizing them
+      if (response['status'] == 'unreviewed') {
+        response['status'] = 'draft'; // Convert unreviewed to draft
+        _logger.w('⚠️ Converted invalid status "unreviewed" to "draft" for receipt $receiptId');
+      }
+
       final receipt = ReceiptModel.fromJson(response);
 
       // Parse line items if they exist
@@ -290,6 +290,60 @@ class ReceiptService {
         );
       }
 
+      rethrow;
+    }
+  }
+
+  /// Get multiple receipts by their IDs with line items
+  static Future<List<ReceiptModel>> getReceiptsByIds(List<String> receiptIds) async {
+    if (receiptIds.isEmpty) {
+      return [];
+    }
+
+    try {
+      _logger.d('🔍 Fetching ${receiptIds.length} receipts with line items...');
+      final response = await _supabase
+          .from('receipts')
+          .select('''
+            *,
+            line_items (*)
+          ''')
+          .inFilter('id', receiptIds);
+
+      final receipts = <ReceiptModel>[];
+
+      for (final receiptData in response) {
+        try {
+          // Handle invalid status values by normalizing them
+          if (receiptData['status'] == 'unreviewed') {
+            receiptData['status'] = 'draft'; // Convert unreviewed to draft
+            _logger.w('⚠️ Converted invalid status "unreviewed" to "draft" for receipt ${receiptData['id']}');
+          }
+
+          final receipt = ReceiptModel.fromJson(receiptData);
+
+          // Parse line items if they exist
+          if (receiptData['line_items'] != null) {
+            final lineItemsData = receiptData['line_items'] as List;
+            final lineItems = lineItemsData
+                .map((item) => LineItemModel.fromJson(item))
+                .toList();
+
+            receipts.add(receipt.copyWith(lineItems: lineItems));
+          } else {
+            receipts.add(receipt);
+          }
+        } catch (error) {
+          _logger.e('❌ Error parsing receipt ${receiptData['id']}: $error');
+          // Skip this receipt and continue with others
+          continue;
+        }
+      }
+
+      _logger.i('✅ Fetched ${receipts.length} receipts successfully');
+      return receipts;
+    } catch (error) {
+      _logger.e('❌ Error fetching receipts by IDs: $error');
       rethrow;
     }
   }
