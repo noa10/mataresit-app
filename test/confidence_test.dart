@@ -9,7 +9,7 @@ void main() {
       final receipt1 = ReceiptModel(
         id: 'test1',
         userId: 'user1',
-        status: ReceiptStatus.active,
+        status: ReceiptStatus.reviewed,
         processingStatus: ProcessingStatus.completed,
         isExpense: true,
         isReimbursable: false,
@@ -29,7 +29,7 @@ void main() {
       final receipt2 = ReceiptModel(
         id: 'test2',
         userId: 'user2',
-        status: ReceiptStatus.active,
+        status: ReceiptStatus.unreviewed,
         processingStatus: ProcessingStatus.completed,
         isExpense: true,
         isReimbursable: false,
@@ -52,7 +52,7 @@ void main() {
         final receipt = ReceiptModel(
           id: 'test3',
           userId: 'user3',
-          status: ReceiptStatus.active,
+          status: ReceiptStatus.reviewed,
           processingStatus: ProcessingStatus.completed,
           isExpense: true,
           isReimbursable: false,
@@ -79,7 +79,7 @@ void main() {
       final receipt = ReceiptModel(
         id: 'test4',
         userId: 'user4',
-        status: ReceiptStatus.active,
+        status: ReceiptStatus.unreviewed,
         processingStatus: ProcessingStatus.completed,
         isExpense: true,
         isReimbursable: false,
