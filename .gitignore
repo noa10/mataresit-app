@@ -11,6 +11,9 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
+/docs/
+.qoder/
+.augment/
 
 # IntelliJ related
 *.iml
