@@ -22,6 +22,8 @@ class ReceiptsState {
   final DateRange dateFilter;
   final String searchQuery;
   final ReceiptStatus? statusFilter;
+  final List<String> categoryFilters;
+  final ReviewedStatusFilter reviewedStatusFilter;
   final bool isGroupedView;
 
   // Selection mode properties
@@ -39,6 +41,8 @@ class ReceiptsState {
     DateRange? dateFilter,
     this.searchQuery = '',
     this.statusFilter,
+    this.categoryFilters = const [],
+    this.reviewedStatusFilter = ReviewedStatusFilter.all,
     this.isGroupedView = true,
     this.isSelectionMode = false,
     this.selectedReceiptIds = const {},
@@ -56,6 +60,8 @@ class ReceiptsState {
     DateRange? dateFilter,
     String? searchQuery,
     ReceiptStatus? statusFilter,
+    List<String>? categoryFilters,
+    ReviewedStatusFilter? reviewedStatusFilter,
     bool? isGroupedView,
     bool? isSelectionMode,
     Set<String>? selectedReceiptIds,
@@ -75,6 +81,8 @@ class ReceiptsState {
       statusFilter: clearStatusFilter
           ? null
           : (statusFilter ?? this.statusFilter),
+      categoryFilters: categoryFilters ?? this.categoryFilters,
+      reviewedStatusFilter: reviewedStatusFilter ?? this.reviewedStatusFilter,
       isGroupedView: isGroupedView ?? this.isGroupedView,
       isSelectionMode: isSelectionMode ?? this.isSelectionMode,
       selectedReceiptIds: selectedReceiptIds ?? this.selectedReceiptIds,
@@ -96,7 +104,9 @@ class ReceiptsState {
   bool get hasActiveFilters =>
       dateFilter.option != DateFilterOption.all ||
       searchQuery.isNotEmpty ||
-      statusFilter != null;
+      statusFilter != null ||
+      categoryFilters.isNotEmpty ||
+      reviewedStatusFilter != ReviewedStatusFilter.all;
 }
 
 /// Receipts notifier
@@ -230,6 +240,20 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
         // Apply status filtering
         if (state.statusFilter != null) {
           query = query.eq('status', state.statusFilter!.name);
+        }
+
+        // Apply reviewed status filtering
+        if (state.reviewedStatusFilter != ReviewedStatusFilter.all) {
+          final statusValue = state.reviewedStatusFilter.receiptStatus?.name;
+          if (statusValue != null) {
+            query = query.eq('status', statusValue);
+          }
+        }
+
+        // Apply category filtering
+        if (state.categoryFilters.isNotEmpty) {
+          // Use 'in' filter for multiple categories
+          query = query.inFilter('custom_category_id', state.categoryFilters);
         }
 
         // Apply search filtering (server-side text search)
@@ -387,17 +411,11 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
   ReceiptStatus _parseReceiptStatus(String? status) {
     switch (status?.toLowerCase()) {
       case 'unreviewed':
-        return ReceiptStatus.draft;
+        return ReceiptStatus.unreviewed;
       case 'reviewed':
-        return ReceiptStatus.active;
-      case 'approved':
-        return ReceiptStatus.active;
-      case 'archived':
-        return ReceiptStatus.archived;
-      case 'deleted':
-        return ReceiptStatus.deleted;
+        return ReceiptStatus.reviewed;
       default:
-        return ReceiptStatus.draft;
+        return ReceiptStatus.unreviewed;
     }
   }
 
@@ -428,7 +446,7 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
         currency: 'USD',
         transactionDate: now.subtract(const Duration(days: 1)),
         category: 'Food & Beverage',
-        status: ReceiptStatus.active,
+        status: ReceiptStatus.reviewed,
         processingStatus: ProcessingStatus.completed,
         isExpense: true,
         isReimbursable: true,
@@ -477,7 +495,7 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
         currency: 'USD',
         transactionDate: now.subtract(const Duration(days: 3)),
         category: 'Transportation',
-        status: ReceiptStatus.active,
+        status: ReceiptStatus.unreviewed,
         processingStatus: ProcessingStatus.completed,
         isExpense: true,
         isReimbursable: false,
@@ -510,7 +528,7 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
         currency: 'USD',
         transactionDate: now.subtract(const Duration(days: 5)),
         category: 'Office Supplies',
-        status: ReceiptStatus.active,
+        status: ReceiptStatus.reviewed,
         processingStatus: ProcessingStatus.pending,
         isExpense: true,
         isReimbursable: true,
@@ -582,6 +600,52 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
     await loadReceipts(refresh: true);
   }
 
+  /// Set category filters and reload receipts
+  Future<void> setCategoryFilters(List<String> categoryIds) async {
+    state = state.copyWith(categoryFilters: categoryIds);
+    await loadReceipts(refresh: true);
+  }
+
+  /// Add a category to the filter list
+  Future<void> addCategoryFilter(String categoryId) async {
+    if (!state.categoryFilters.contains(categoryId)) {
+      final newFilters = [...state.categoryFilters, categoryId];
+      await setCategoryFilters(newFilters);
+    }
+  }
+
+  /// Remove a category from the filter list
+  Future<void> removeCategoryFilter(String categoryId) async {
+    final newFilters = state.categoryFilters.where((id) => id != categoryId).toList();
+    await setCategoryFilters(newFilters);
+  }
+
+  /// Set reviewed status filter and reload receipts
+  Future<void> setReviewedStatusFilter(ReviewedStatusFilter filter) async {
+    state = state.copyWith(reviewedStatusFilter: filter);
+    await loadReceipts(refresh: true);
+  }
+
+  /// Apply multiple filters at once to avoid multiple API calls
+  Future<void> applyFilters({
+    DateRange? dateFilter,
+    String? searchQuery,
+    ReceiptStatus? statusFilter,
+    List<String>? categoryFilters,
+    ReviewedStatusFilter? reviewedStatusFilter,
+    bool clearStatusFilter = false,
+  }) async {
+    state = state.copyWith(
+      dateFilter: dateFilter,
+      searchQuery: searchQuery,
+      statusFilter: statusFilter,
+      categoryFilters: categoryFilters,
+      reviewedStatusFilter: reviewedStatusFilter,
+      clearStatusFilter: clearStatusFilter,
+    );
+    await loadReceipts(refresh: true);
+  }
+
   /// Toggle between grouped and flat view
   void toggleGroupedView() {
     final newGroupedView = !state.isGroupedView;
@@ -601,6 +665,8 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
       dateFilter: const DateRange(option: DateFilterOption.all),
       searchQuery: '',
       clearStatusFilter: true,
+      categoryFilters: const [],
+      reviewedStatusFilter: ReviewedStatusFilter.all,
     );
     await loadReceipts(refresh: true);
   }
