@@ -10,7 +10,6 @@ import '../../subscription/widgets/subscription_status_card.dart';
 import '../../subscription/widgets/subscription_limits_widget.dart';
 import '../../../shared/providers/currency_provider.dart';
 import '../../../shared/utils/currency_utils.dart';
-import '../../receipts/providers/receipts_provider.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -20,7 +19,6 @@ class DashboardScreen extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
     final stats = ref.watch(dashboardStatsProvider);
     final userPreferredCurrency = ref.watch(userPreferredCurrencyProvider);
-    final receiptsState = ref.watch(receiptsProvider);
 
     return Scaffold(
       appBar: AppBar(
