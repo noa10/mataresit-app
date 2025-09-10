@@ -218,10 +218,12 @@ class ActiveFiltersCountWidget extends ConsumerWidget {
     if (receiptsState.dateFilter.option != DateFilterOption.all) filterCount++;
     if (receiptsState.searchQuery.isNotEmpty) filterCount++;
     if (receiptsState.statusFilter != null) filterCount++;
-    if (receiptsState.categoryFilters.isNotEmpty)
+    if (receiptsState.categoryFilters.isNotEmpty) {
       filterCount += receiptsState.categoryFilters.length;
-    if (receiptsState.reviewedStatusFilter != ReviewedStatusFilter.all)
+    }
+    if (receiptsState.reviewedStatusFilter != ReviewedStatusFilter.all) {
       filterCount++;
+    }
 
     return GestureDetector(
       onTap: onTap,
