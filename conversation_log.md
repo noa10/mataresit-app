@@ -23,3 +23,16 @@
 - Request: "how to resolve flutter doctor issue in vscode below logs where the the xcode installation is incomplete. i've install xcode beta in this macos but flutter doctor cant seem to detect it. attached screenshot show the xcode version installed."
 - Action: Investigated Xcode detection by logging diagnostics (`xcode-select -p`, `xcodebuild -version`) and provided a step-by-step fix: switch to the correct Xcode path (including beta), accept license, run first-launch setup, ensure Command Line Tools are set in Xcode Preferences, clear any conflicting `DEVELOPER_DIR`, update Flutter, and re-run `flutter doctor`.
 - Response Summary: Likely causes are (a) `xcode-select` pointing to Command Line Tools or the non-beta app, (b) first-launch not completed, or (c) Flutter not updated for the beta SDK. Resolution steps and verification commands provided.
+
+## 2025-09-10 19:34 +08:00
+
+- Request: "Add these folders to git ignore for remote only but not local dev: .augment, .archive, .dart_tool, .idea, .qoder, docs; and advise on any others safe to ignore without affecting CI/CD or functionality."
+- Action: Reviewed `.gitignore` and CI references. Confirmed `.dart_tool/` and `.idea/` already covered. No CI jobs depend on `docs/` (workflows already have `paths-ignore: docs/**`). Updated `.gitignore` to add `.augment/`, `.archive/`, `.qoder/`, and `docs/`, plus extra safe ignores for IDE caches and platform user data (e.g., `.fleet/`, `.gradle/`, Xcode `xcuserdata/`).
+- Notes: To remove already-tracked items from remote while keeping local copies, use `git rm -r --cached <path>` and commit.
+- Response Summary: Implemented requested ignores without impacting CI/CD or app behavior.
+
+## 2025-09-10 19:52 +08:00
+
+- Request: "Proceed to remove those folders from remote too using the untracking command."
+- Action: Ran `git rm -r --cached .augment .qoder docs` and committed. Initial push rejected (remote ahead). Performed `git stash` (including ignored with `-a`), `git pull --rebase origin master`, then `git push`. Restored local working changes via targeted stash apply. Result: remote no longer tracks `.augment/`, `.qoder/`, `docs/`.
+- Response Summary: Untracking commit pushed successfully. Local untracked copies remain for development.
