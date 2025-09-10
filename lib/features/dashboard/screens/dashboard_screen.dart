@@ -8,6 +8,8 @@ import '../providers/dashboard_provider.dart';
 import '../../../app/router/app_router.dart';
 import '../../subscription/widgets/subscription_status_card.dart';
 import '../../subscription/widgets/subscription_limits_widget.dart';
+import '../../../shared/providers/currency_provider.dart';
+import '../../../shared/utils/currency_utils.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -16,6 +18,7 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
     final stats = ref.watch(dashboardStatsProvider);
+    final userPreferredCurrency = ref.watch(userPreferredCurrencyProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -138,7 +141,10 @@ class DashboardScreen extends ConsumerWidget {
                     child: _buildStatCard(
                       context,
                       'Total Amount',
-                      '\$${stats.totalAmount.toStringAsFixed(2)}',
+                      CurrencyUtils.formatCurrencySafe(
+                        stats.totalAmount,
+                        userPreferredCurrency,
+                      ),
                       Icons.attach_money,
                       Colors.orange,
                     ),
@@ -239,19 +245,20 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                     child: ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: Theme.of(
-                          context,
-                        ).primaryColor.withValues(alpha: 0.1),
+                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                         child: Icon(
                           Icons.receipt,
-                          color: Theme.of(context).primaryColor,
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
                         ),
                       ),
                       title: Text(receipt.merchantName ?? 'Unknown Merchant'),
                       subtitle: Text(timeago.format(receipt.createdAt)),
                       trailing: receipt.totalAmount != null
                           ? Text(
-                              '\$${receipt.totalAmount!.toStringAsFixed(2)}',
+                              CurrencyUtils.formatCurrencySafe(
+                                receipt.totalAmount,
+                                receipt.currency ?? userPreferredCurrency,
+                              ),
                               style: Theme.of(context).textTheme.titleSmall
                                   ?.copyWith(fontWeight: FontWeight.bold),
                             )

@@ -627,7 +627,7 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
         originalFileName: path.basename(imageFile.path),
         fileSize: imageBytes.length,
         mimeType: _getContentType(path.extension(imageFile.path)),
-        status: ReceiptStatus.active,
+        status: ReceiptStatus.unreviewed,
         processingStatus: _mapProcessingStatusFromString(
           receiptData['processing_status']?.toString() ?? 'completed',
         ),
@@ -718,7 +718,7 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
       originalFileName: path.basename(imageFile.path),
       fileSize: imageBytes.length,
       mimeType: _getContentType(path.extension(imageFile.path)),
-      status: ReceiptStatus.active,
+      status: ReceiptStatus.unreviewed,
       processingStatus: ProcessingStatus.failed,
       ocrData: {},
       isExpense: true,
