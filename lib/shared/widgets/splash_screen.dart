@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/services/app_logger.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import 'loading_widget.dart';
 
@@ -54,9 +55,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
+    AppLogger.debug('🔍 SPLASH_SCREEN: SplashScreen.build() called');
 
-    return Scaffold(
+    try {
+      AppLogger.debug('🔍 SPLASH_SCREEN: About to watch authProvider...');
+      final authState = ref.watch(authProvider);
+      AppLogger.debug('🔍 SPLASH_SCREEN: authProvider watched - isLoading=${authState.isLoading}, isAuthenticated=${authState.isAuthenticated}');
+
+      AppLogger.debug('🔍 SPLASH_SCREEN: About to create Scaffold...');
+      final scaffold = Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
       body: AnimatedBuilder(
         animation: _animationController,
@@ -191,6 +198,41 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           );
         },
       ),
-    );
+      );
+
+      AppLogger.debug('🔍 SPLASH_SCREEN: Scaffold created successfully');
+      return scaffold;
+
+    } catch (e, stackTrace) {
+      AppLogger.error('🚨 SPLASH_SCREEN: Error in SplashScreen.build(): $e');
+      AppLogger.error('🚨 SPLASH_SCREEN: Stack trace: $stackTrace');
+
+      // Return minimal error screen
+      return Scaffold(
+        backgroundColor: Colors.red.shade50,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              const Text(
+                'Splash Screen Error',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'Error: $e',
+                  style: const TextStyle(fontSize: 14, color: Colors.red),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
   }
 }

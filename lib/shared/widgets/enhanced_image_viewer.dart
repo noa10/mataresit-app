@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -146,6 +147,9 @@ class _EnhancedImageViewerState extends State<EnhancedImageViewer>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    // Debug image URL
+    debugPrint('🖼️ IMAGE DEBUG: Loading image URL: ${widget.imageUrl}');
+
     return Container(
       decoration: BoxDecoration(
         color: colorScheme.surface,
@@ -172,33 +176,11 @@ class _EnhancedImageViewerState extends State<EnhancedImageViewer>
                   _currentScale = controllerValue.scale ?? widget.initialScale;
                 });
               },
-              child: CachedNetworkImage(
+              child: _SmartNetworkImage(
                 imageUrl: widget.imageUrl,
                 fit: BoxFit.contain,
-                placeholder: (context, url) => Container(
-                  color: colorScheme.surfaceContainerHighest,
-                  child: const Center(child: LoadingWidget()),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  color: colorScheme.surfaceContainerHighest,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.image_not_supported_outlined,
-                        size: 48,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Image not available',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                colorScheme: colorScheme,
+                theme: theme,
               ),
             ),
           ),
@@ -447,28 +429,9 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer>
                 _currentScale = controllerValue.scale ?? 1.0;
               });
             },
-            child: CachedNetworkImage(
+            child: _SmartNetworkImageFullscreen(
               imageUrl: widget.imageUrl,
               fit: BoxFit.contain,
-              placeholder: (context, url) =>
-                  const Center(child: LoadingWidget()),
-              errorWidget: (context, url, error) => const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.image_not_supported_outlined,
-                      size: 64,
-                      color: Colors.white54,
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'Image not available',
-                      style: TextStyle(color: Colors.white54, fontSize: 16),
-                    ),
-                  ],
-                ),
-              ),
             ),
           ),
 
@@ -1164,6 +1127,399 @@ class _FullscreenLocalImageViewerState extends State<FullscreenLocalImageViewer>
         icon: Icon(icon, color: Colors.white, size: 24),
         tooltip: tooltip,
         padding: const EdgeInsets.all(12),
+      ),
+    );
+  }
+}
+
+/// Smart network image widget that tries CachedNetworkImage first and falls back to Image.network
+/// This handles iOS 18.x beta compatibility issues with path_provider
+class _SmartNetworkImage extends StatefulWidget {
+  final String imageUrl;
+  final BoxFit fit;
+  final ColorScheme colorScheme;
+  final ThemeData theme;
+
+  const _SmartNetworkImage({
+    required this.imageUrl,
+    required this.fit,
+    required this.colorScheme,
+    required this.theme,
+  });
+
+  @override
+  State<_SmartNetworkImage> createState() => _SmartNetworkImageState();
+}
+
+class _SmartNetworkImageState extends State<_SmartNetworkImage> {
+  bool _useFallback = false;
+  String? _error;
+  Timer? _fallbackTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    debugPrint('🖼️ SMART IMAGE: Attempting to load ${widget.imageUrl}');
+
+    // Start a timer to automatically fallback if CachedNetworkImage takes too long
+    // This handles cases where CachedNetworkImage fails silently due to path_provider issues
+    _fallbackTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted && !_useFallback && _error == null) {
+        debugPrint('🖼️ SMART IMAGE: Timeout reached, falling back to Image.network');
+        setState(() {
+          _useFallback = true;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _fallbackTimer?.cancel();
+    super.dispose();
+  }
+
+  void _handleCachedImageError(Object error) {
+    debugPrint('🖼️ SMART IMAGE: CachedNetworkImage failed with error: $error');
+    debugPrint('🖼️ SMART IMAGE: Falling back to Image.network');
+    _fallbackTimer?.cancel();
+
+    if (mounted) {
+      setState(() {
+        _useFallback = true;
+        _error = null;
+      });
+    }
+  }
+
+  void _handleFallbackError(Object error, StackTrace? stackTrace) {
+    debugPrint('🖼️ SMART IMAGE: Image.network also failed with error: $error');
+    _fallbackTimer?.cancel();
+
+    if (mounted) {
+      setState(() {
+        _error = error.toString();
+      });
+    }
+  }
+
+  void _handleImageLoaded() {
+    debugPrint('🖼️ SMART IMAGE: Image loaded successfully');
+    _fallbackTimer?.cancel();
+
+    if (mounted) {
+      setState(() {
+        _error = null;
+      });
+    }
+  }
+
+  void _retry() {
+    debugPrint('🖼️ SMART IMAGE: Retrying image load');
+    _fallbackTimer?.cancel();
+
+    if (mounted) {
+      setState(() {
+        _useFallback = false;
+        _error = null;
+      });
+
+      // Clear cache if using cached image
+      if (!_useFallback) {
+        CachedNetworkImage.evictFromCache(widget.imageUrl);
+      }
+
+      // Restart the fallback timer
+      _fallbackTimer = Timer(const Duration(seconds: 5), () {
+        if (mounted && !_useFallback && _error == null) {
+          debugPrint('🖼️ SMART IMAGE: Timeout reached on retry, falling back to Image.network');
+          setState(() {
+            _useFallback = true;
+          });
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_error != null) {
+      return _buildErrorWidget();
+    }
+
+    if (_useFallback) {
+      return _buildFallbackImage();
+    }
+
+    return _buildCachedImage();
+  }
+
+  Widget _buildCachedImage() {
+    return CachedNetworkImage(
+      imageUrl: widget.imageUrl,
+      fit: widget.fit,
+      httpHeaders: const {
+        'Cache-Control': 'max-age=3600',
+        'User-Agent': 'Mataresit-Flutter-App/1.0',
+      },
+      fadeInDuration: const Duration(milliseconds: 300),
+      fadeOutDuration: const Duration(milliseconds: 100),
+      placeholder: (context, url) => Container(
+        color: widget.colorScheme.surfaceContainerHighest,
+        child: const Center(child: LoadingWidget()),
+      ),
+      errorWidget: (context, url, error) {
+        // Trigger fallback on error
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _handleCachedImageError(error);
+        });
+
+        return Container(
+          color: widget.colorScheme.surfaceContainerHighest,
+          child: const Center(child: LoadingWidget()),
+        );
+      },
+      imageBuilder: (context, imageProvider) {
+        // Image loaded successfully
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _handleImageLoaded();
+        });
+
+        return Image(
+          image: imageProvider,
+          fit: widget.fit,
+        );
+      },
+    );
+  }
+
+  Widget _buildFallbackImage() {
+    return Image.network(
+      widget.imageUrl,
+      fit: widget.fit,
+      headers: const {
+        'Cache-Control': 'max-age=3600',
+        'User-Agent': 'Mataresit-Flutter-App/1.0',
+      },
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) {
+          // Image loaded successfully
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _handleImageLoaded();
+          });
+          return child;
+        }
+
+        return Container(
+          color: widget.colorScheme.surfaceContainerHighest,
+          child: const Center(child: LoadingWidget()),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _handleFallbackError(error, stackTrace);
+        });
+
+        return Container(
+          color: widget.colorScheme.surfaceContainerHighest,
+          child: const Center(child: LoadingWidget()),
+        );
+      },
+    );
+  }
+
+  Widget _buildErrorWidget() {
+    return Container(
+      color: widget.colorScheme.surfaceContainerHighest,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.image_not_supported_outlined,
+            size: 48,
+            color: widget.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Image not available',
+            style: widget.theme.textTheme.bodyMedium?.copyWith(
+              color: widget.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _useFallback ? 'Network error' : 'Cache error',
+            style: widget.theme.textTheme.bodySmall?.copyWith(
+              color: widget.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextButton.icon(
+            onPressed: _retry,
+            icon: const Icon(Icons.refresh, size: 16),
+            label: const Text('Retry'),
+            style: TextButton.styleFrom(
+              foregroundColor: widget.colorScheme.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Smart network image widget for fullscreen view with fallback support
+class _SmartNetworkImageFullscreen extends StatefulWidget {
+  final String imageUrl;
+  final BoxFit fit;
+
+  const _SmartNetworkImageFullscreen({
+    required this.imageUrl,
+    required this.fit,
+  });
+
+  @override
+  State<_SmartNetworkImageFullscreen> createState() => _SmartNetworkImageFullscreenState();
+}
+
+class _SmartNetworkImageFullscreenState extends State<_SmartNetworkImageFullscreen> {
+  bool _useFallback = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    debugPrint('🖼️ SMART IMAGE (Fullscreen): Attempting to load ${widget.imageUrl}');
+  }
+
+  void _handleCachedImageError(Object error) {
+    debugPrint('🖼️ SMART IMAGE (Fullscreen): CachedNetworkImage failed with error: $error');
+    debugPrint('🖼️ SMART IMAGE (Fullscreen): Falling back to Image.network');
+
+    if (mounted) {
+      setState(() {
+        _useFallback = true;
+        _error = null;
+      });
+    }
+  }
+
+  void _handleFallbackError(Object error, StackTrace? stackTrace) {
+    debugPrint('🖼️ SMART IMAGE (Fullscreen): Image.network also failed with error: $error');
+
+    if (mounted) {
+      setState(() {
+        _error = error.toString();
+      });
+    }
+  }
+
+  void _retry() {
+    debugPrint('🖼️ SMART IMAGE (Fullscreen): Retrying image load');
+
+    if (mounted) {
+      setState(() {
+        _useFallback = false;
+        _error = null;
+      });
+
+      // Clear cache if using cached image
+      if (!_useFallback) {
+        CachedNetworkImage.evictFromCache(widget.imageUrl);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_error != null) {
+      return _buildErrorWidget();
+    }
+
+    if (_useFallback) {
+      return _buildFallbackImage();
+    }
+
+    return _buildCachedImage();
+  }
+
+  Widget _buildCachedImage() {
+    return CachedNetworkImage(
+      imageUrl: widget.imageUrl,
+      fit: widget.fit,
+      httpHeaders: const {
+        'Cache-Control': 'max-age=3600',
+        'User-Agent': 'Mataresit-Flutter-App/1.0',
+      },
+      fadeInDuration: const Duration(milliseconds: 300),
+      fadeOutDuration: const Duration(milliseconds: 100),
+      placeholder: (context, url) => const Center(child: LoadingWidget()),
+      errorWidget: (context, url, error) {
+        // Trigger fallback on error
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _handleCachedImageError(error);
+        });
+
+        return const Center(child: LoadingWidget());
+      },
+    );
+  }
+
+  Widget _buildFallbackImage() {
+    return Image.network(
+      widget.imageUrl,
+      fit: widget.fit,
+      headers: const {
+        'Cache-Control': 'max-age=3600',
+        'User-Agent': 'Mataresit-Flutter-App/1.0',
+      },
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) {
+          return child;
+        }
+
+        return const Center(child: LoadingWidget());
+      },
+      errorBuilder: (context, error, stackTrace) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _handleFallbackError(error, stackTrace);
+        });
+
+        return const Center(child: LoadingWidget());
+      },
+    );
+  }
+
+  Widget _buildErrorWidget() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.image_not_supported_outlined,
+            size: 64,
+            color: Colors.white54,
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Image not available',
+            style: TextStyle(color: Colors.white54, fontSize: 16),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _useFallback ? 'Network error' : 'Cache error',
+            style: const TextStyle(color: Colors.white38, fontSize: 14),
+          ),
+          const SizedBox(height: 16),
+          TextButton.icon(
+            onPressed: _retry,
+            icon: const Icon(Icons.refresh, size: 16, color: Colors.white54),
+            label: const Text('Retry', style: TextStyle(color: Colors.white54)),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white54,
+            ),
+          ),
+        ],
       ),
     );
   }

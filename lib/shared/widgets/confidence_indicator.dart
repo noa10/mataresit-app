@@ -48,15 +48,19 @@ class ConfidenceIndicator extends StatelessWidget {
         ),
         if (showLabel) ...[
           const SizedBox(width: 4.0),
-          Text(
-            '${normalizedScore.round()}%',
-            style:
-                textStyle ??
-                Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontSize: 12.0,
-                  fontWeight: FontWeight.w600,
-                  color: Color(confidenceColor.primaryColor),
-                ),
+          Flexible(
+            child: Text(
+              '${normalizedScore.round()}%',
+              style:
+                  textStyle ??
+                  Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontSize: 12.0,
+                    fontWeight: FontWeight.w600,
+                    color: Color(confidenceColor.primaryColor),
+                  ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
           ),
         ],
       ],
@@ -91,14 +95,18 @@ class ConfidenceIndicator extends StatelessWidget {
         ),
         if (showLabel) ...[
           const SizedBox(width: 4.0),
-          Text(
-            'Processing...',
-            style:
-                textStyle ??
-                Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontSize: 12.0,
-                  color: Colors.grey.shade600,
-                ),
+          Flexible(
+            child: Text(
+              'Processing...',
+              style:
+                  textStyle ??
+                  Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontSize: 12.0,
+                    color: Colors.grey.shade600,
+                  ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
           ),
         ],
       ],
@@ -187,11 +195,15 @@ class ConfidenceBadge extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 4.0),
-            Text(
-              'Processing',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontSize: 10.0,
-                color: Colors.grey.shade600,
+            Flexible(
+              child: Text(
+                'Processing',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontSize: 10.0,
+                  color: Colors.grey.shade600,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ),
           ],
@@ -225,12 +237,16 @@ class ConfidenceBadge extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 4.0),
-          Text(
-            '${normalizedScore.round()}%',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontSize: 10.0,
-              fontWeight: FontWeight.w600,
-              color: Color(confidenceColor.primaryColor),
+          Flexible(
+            child: Text(
+              '${normalizedScore.round()}%',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontSize: 10.0,
+                fontWeight: FontWeight.w600,
+                color: Color(confidenceColor.primaryColor),
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
         ],
