@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/services/app_logger.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
@@ -30,7 +31,7 @@ import '../../features/settings/screens/currency_settings_screen.dart';
 import '../../features/settings/screens/theme_settings_screen.dart';
 import '../../features/settings/screens/help_screen.dart';
 import '../../features/settings/screens/privacy_policy_screen.dart';
-import '../../shared/widgets/main_navigation_wrapper.dart';
+import '../../shared/widgets/adaptive_navigation_wrapper.dart';
 import '../../shared/widgets/splash_screen.dart';
 import '../../debug/database_debug_screen.dart';
 
@@ -86,8 +87,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isLoading = authState.isLoading;
       final location = state.uri.path;
 
+      AppLogger.debug('🔍 ROUTER DEBUG: location=$location, isLoading=$isLoading, isAuthenticated=$isAuthenticated');
+
       // Show splash screen while loading
       if (isLoading) {
+        AppLogger.debug('🔍 ROUTER: Showing splash screen (loading)');
         return location == AppRoutes.splash ? null : AppRoutes.splash;
       }
 
@@ -95,20 +99,25 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (!isLoading) {
         // If on splash screen and not loading, redirect based on auth status
         if (location == AppRoutes.splash) {
-          return isAuthenticated ? AppRoutes.dashboard : AppRoutes.login;
+          final redirectTo = isAuthenticated ? AppRoutes.dashboard : AppRoutes.login;
+          AppLogger.debug('🔍 ROUTER: Redirecting from splash to $redirectTo');
+          return redirectTo;
         }
 
         // Redirect to login if not authenticated and trying to access protected routes
         if (!isAuthenticated && !_isPublicRoute(location)) {
+          AppLogger.debug('🔍 ROUTER: Redirecting to login (not authenticated)');
           return AppRoutes.login;
         }
 
         // Redirect to dashboard if authenticated and trying to access auth routes
         if (isAuthenticated && _isAuthRoute(location)) {
+          AppLogger.debug('🔍 ROUTER: Redirecting to dashboard (authenticated)');
           return AppRoutes.dashboard;
         }
       }
 
+      AppLogger.debug('🔍 ROUTER: No redirect needed');
       return null;
     },
     routes: [
@@ -134,7 +143,10 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Main app routes with bottom navigation
       ShellRoute(
-        builder: (context, state, child) => MainNavigationWrapper(child: child),
+        builder: (context, state, child) => AdaptiveNavigationWrapper(
+          key: const ValueKey('main_navigation_wrapper'),
+          child: child,
+        ),
         routes: [
           GoRoute(
             path: AppRoutes.dashboard,
