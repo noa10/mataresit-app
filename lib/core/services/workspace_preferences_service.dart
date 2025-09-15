@@ -1,5 +1,5 @@
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:logger/logger.dart';
+import 'shared_preferences_compatibility_service.dart';
 
 /// Service for managing workspace-related preferences
 class WorkspacePreferencesService {
@@ -19,12 +19,11 @@ class WorkspacePreferencesService {
   /// Initialize the service and perform any necessary migrations
   static Future<void> initialize() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final currentVersion = prefs.getInt(_workspacePreferencesVersionKey) ?? 0;
+      final currentVersion = SharedPreferencesCompatibilityService.getInt(_workspacePreferencesVersionKey) ?? 0;
 
       if (currentVersion < _currentVersion) {
-        await _migratePreferences(prefs, currentVersion);
-        await prefs.setInt(_workspacePreferencesVersionKey, _currentVersion);
+        await _migratePreferences(currentVersion);
+        await SharedPreferencesCompatibilityService.setInt(_workspacePreferencesVersionKey, _currentVersion);
       }
 
       _logger.d(
@@ -39,8 +38,7 @@ class WorkspacePreferencesService {
   /// Returns null for personal workspace, team ID for team workspace
   static Future<String?> getCurrentWorkspaceId() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final workspaceId = prefs.getString(_currentWorkspaceKey);
+      final workspaceId = SharedPreferencesCompatibilityService.getString(_currentWorkspaceKey);
       _logger.d('Retrieved current workspace ID: $workspaceId');
       return workspaceId;
     } catch (e) {
@@ -53,13 +51,11 @@ class WorkspacePreferencesService {
   /// Pass null for personal workspace, team ID for team workspace
   static Future<bool> setCurrentWorkspaceId(String? workspaceId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-
       if (workspaceId == null) {
-        await prefs.remove(_currentWorkspaceKey);
+        await SharedPreferencesCompatibilityService.remove(_currentWorkspaceKey);
         _logger.d('Cleared current workspace (switched to personal)');
       } else {
-        await prefs.setString(_currentWorkspaceKey, workspaceId);
+        await SharedPreferencesCompatibilityService.setString(_currentWorkspaceKey, workspaceId);
         _logger.d('Set current workspace ID: $workspaceId');
 
         // Update workspace history
@@ -76,8 +72,7 @@ class WorkspacePreferencesService {
   /// Get the last selected team ID (for quick switching)
   static Future<String?> getLastSelectedTeamId() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(_lastSelectedTeamKey);
+      return SharedPreferencesCompatibilityService.getString(_lastSelectedTeamKey);
     } catch (e) {
       _logger.e('Failed to get last selected team ID: $e');
       return null;
@@ -87,12 +82,10 @@ class WorkspacePreferencesService {
   /// Set the last selected team ID
   static Future<bool> setLastSelectedTeamId(String? teamId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-
       if (teamId == null) {
-        await prefs.remove(_lastSelectedTeamKey);
+        await SharedPreferencesCompatibilityService.remove(_lastSelectedTeamKey);
       } else {
-        await prefs.setString(_lastSelectedTeamKey, teamId);
+        await SharedPreferencesCompatibilityService.setString(_lastSelectedTeamKey, teamId);
       }
 
       return true;
@@ -105,8 +98,7 @@ class WorkspacePreferencesService {
   /// Get workspace history (recently accessed workspaces)
   static Future<List<String>> getWorkspaceHistory() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final history = prefs.getStringList(_workspaceHistoryKey) ?? [];
+      final history = SharedPreferencesCompatibilityService.getStringList(_workspaceHistoryKey) ?? [];
       return history;
     } catch (e) {
       _logger.e('Failed to get workspace history: $e');
@@ -117,8 +109,7 @@ class WorkspacePreferencesService {
   /// Add a workspace to history
   static Future<void> _addToWorkspaceHistory(String workspaceId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final history = prefs.getStringList(_workspaceHistoryKey) ?? [];
+      final history = SharedPreferencesCompatibilityService.getStringList(_workspaceHistoryKey) ?? [];
 
       // Remove if already exists
       history.remove(workspaceId);
@@ -131,7 +122,7 @@ class WorkspacePreferencesService {
         history.removeRange(10, history.length);
       }
 
-      await prefs.setStringList(_workspaceHistoryKey, history);
+      await SharedPreferencesCompatibilityService.setStringList(_workspaceHistoryKey, history);
     } catch (e) {
       _logger.e('Failed to add to workspace history: $e');
     }
@@ -140,8 +131,7 @@ class WorkspacePreferencesService {
   /// Clear workspace history
   static Future<bool> clearWorkspaceHistory() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_workspaceHistoryKey);
+      await SharedPreferencesCompatibilityService.remove(_workspaceHistoryKey);
       return true;
     } catch (e) {
       _logger.e('Failed to clear workspace history: $e');
@@ -152,8 +142,7 @@ class WorkspacePreferencesService {
   /// Get auto-switch preference
   static Future<bool> getAutoSwitchEnabled() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getBool(_autoSwitchEnabledKey) ?? true; // Default to enabled
+      return SharedPreferencesCompatibilityService.getBool(_autoSwitchEnabledKey) ?? true; // Default to enabled
     } catch (e) {
       _logger.e('Failed to get auto-switch preference: $e');
       return true;
@@ -163,8 +152,7 @@ class WorkspacePreferencesService {
   /// Set auto-switch preference
   static Future<bool> setAutoSwitchEnabled(bool enabled) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_autoSwitchEnabledKey, enabled);
+      await SharedPreferencesCompatibilityService.setBool(_autoSwitchEnabledKey, enabled);
       return true;
     } catch (e) {
       _logger.e('Failed to set auto-switch preference: $e');
@@ -175,11 +163,10 @@ class WorkspacePreferencesService {
   /// Clear all workspace preferences
   static Future<bool> clearAllPreferences() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_currentWorkspaceKey);
-      await prefs.remove(_lastSelectedTeamKey);
-      await prefs.remove(_workspaceHistoryKey);
-      await prefs.remove(_autoSwitchEnabledKey);
+      await SharedPreferencesCompatibilityService.remove(_currentWorkspaceKey);
+      await SharedPreferencesCompatibilityService.remove(_lastSelectedTeamKey);
+      await SharedPreferencesCompatibilityService.remove(_workspaceHistoryKey);
+      await SharedPreferencesCompatibilityService.remove(_autoSwitchEnabledKey);
 
       _logger.d('Cleared all workspace preferences');
       return true;
@@ -192,13 +179,12 @@ class WorkspacePreferencesService {
   /// Get all workspace preferences as a map (for debugging/export)
   static Future<Map<String, dynamic>> getAllPreferences() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
       return {
-        'current_workspace_id': prefs.getString(_currentWorkspaceKey),
-        'last_selected_team_id': prefs.getString(_lastSelectedTeamKey),
-        'workspace_history': prefs.getStringList(_workspaceHistoryKey),
-        'auto_switch_enabled': prefs.getBool(_autoSwitchEnabledKey),
-        'version': prefs.getInt(_workspacePreferencesVersionKey),
+        'current_workspace_id': SharedPreferencesCompatibilityService.getString(_currentWorkspaceKey),
+        'last_selected_team_id': SharedPreferencesCompatibilityService.getString(_lastSelectedTeamKey),
+        'workspace_history': SharedPreferencesCompatibilityService.getStringList(_workspaceHistoryKey),
+        'auto_switch_enabled': SharedPreferencesCompatibilityService.getBool(_autoSwitchEnabledKey),
+        'version': SharedPreferencesCompatibilityService.getInt(_workspacePreferencesVersionKey),
       };
     } catch (e) {
       _logger.e('Failed to get all workspace preferences: $e');
@@ -207,10 +193,7 @@ class WorkspacePreferencesService {
   }
 
   /// Migrate preferences from older versions
-  static Future<void> _migratePreferences(
-    SharedPreferences prefs,
-    int fromVersion,
-  ) async {
+  static Future<void> _migratePreferences(int fromVersion) async {
     _logger.d(
       'Migrating workspace preferences from version $fromVersion to $_currentVersion',
     );
@@ -232,31 +215,29 @@ class WorkspacePreferencesService {
     Map<String, dynamic> preferences,
   ) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-
       if (preferences['current_workspace_id'] != null) {
-        await prefs.setString(
+        await SharedPreferencesCompatibilityService.setString(
           _currentWorkspaceKey,
           preferences['current_workspace_id'],
         );
       }
 
       if (preferences['last_selected_team_id'] != null) {
-        await prefs.setString(
+        await SharedPreferencesCompatibilityService.setString(
           _lastSelectedTeamKey,
           preferences['last_selected_team_id'],
         );
       }
 
       if (preferences['workspace_history'] != null) {
-        await prefs.setStringList(
+        await SharedPreferencesCompatibilityService.setStringList(
           _workspaceHistoryKey,
           List<String>.from(preferences['workspace_history']),
         );
       }
 
       if (preferences['auto_switch_enabled'] != null) {
-        await prefs.setBool(
+        await SharedPreferencesCompatibilityService.setBool(
           _autoSwitchEnabledKey,
           preferences['auto_switch_enabled'],
         );

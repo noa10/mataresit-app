@@ -1,33 +1,142 @@
 import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:logger/logger.dart';
 import '../constants/app_constants.dart';
 
 /// Supabase client configuration and initialization
 class SupabaseService {
+  static final Logger _logger = Logger();
   static SupabaseClient? _client;
+  static bool _isInitializing = false;
+  static bool _initializationCompleted = false;
 
-  /// Initialize Supabase
+  /// Initialize Supabase with retry logic and better error handling
   static Future<void> initialize() async {
-    await Supabase.initialize(
-      url: AppConstants.supabaseUrl,
-      anonKey: AppConstants.supabaseAnonKey,
-      debug: true,
-      realtimeClientOptions: const RealtimeClientOptions(
-        // heartbeatIntervalMs: AppConstants.realtimeHeartbeatInterval,
-        // reconnectDelay: Duration(seconds: 2),
-        // timeoutMs: 20000,
-      ),
-    );
-    _client = Supabase.instance.client;
+    if (_isInitializing) {
+      _logger.w('Supabase initialization already in progress, waiting...');
+      // Wait for ongoing initialization to complete
+      while (_isInitializing && !_initializationCompleted) {
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+      return;
+    }
+
+    if (_initializationCompleted && _client != null) {
+      _logger.i('Supabase already initialized');
+      return;
+    }
+
+    _isInitializing = true;
+
+    try {
+      _logger.i('Starting Supabase initialization...');
+
+      // Check if Supabase is already initialized to prevent duplicate initialization
+      try {
+        final existingClient = Supabase.instance.client;
+        _logger.i('Supabase already initialized, using existing instance');
+        _client = existingClient;
+        _initializationCompleted = true;
+        _logger.i('✅ Supabase initialization completed (existing instance)');
+        return;
+      } catch (e) {
+        _logger.d('Supabase not yet initialized, proceeding with initialization: $e');
+      }
+
+      // Try to initialize Supabase with retry logic for iOS 18.x beta compatibility
+      int initRetryCount = 0;
+      const maxInitRetries = 3;
+      Exception? lastException;
+
+      while (initRetryCount < maxInitRetries) {
+        try {
+          await Supabase.initialize(
+            url: AppConstants.supabaseUrl,
+            anonKey: AppConstants.supabaseAnonKey,
+            debug: true,
+            realtimeClientOptions: const RealtimeClientOptions(
+              // heartbeatIntervalMs: AppConstants.realtimeHeartbeatInterval,
+              // reconnectDelay: Duration(seconds: 2),
+              // timeoutMs: 20000,
+            ),
+          );
+          _logger.i('Supabase.initialize() completed successfully');
+          break; // Success, exit retry loop
+        } catch (e) {
+          lastException = e is Exception ? e : Exception(e.toString());
+          initRetryCount++;
+
+          // Check if this is a SharedPreferences channel error
+          if (e.toString().contains('channel-error') &&
+              e.toString().contains('LegacyUserDefaultsApi')) {
+            _logger.w('Supabase initialization failed due to iOS 18.x beta SharedPreferences issue (attempt $initRetryCount/$maxInitRetries): $e');
+
+            if (initRetryCount < maxInitRetries) {
+              final retryDelay = Duration(milliseconds: 500 * initRetryCount);
+              _logger.i('Retrying Supabase initialization in ${retryDelay.inMilliseconds}ms...');
+              await Future.delayed(retryDelay);
+            }
+          } else {
+            _logger.e('Supabase initialization failed with non-SharedPreferences error: $e');
+            rethrow; // Re-throw non-SharedPreferences errors immediately
+          }
+        }
+      }
+
+      // If all retries failed, throw the last exception
+      if (initRetryCount >= maxInitRetries && lastException != null) {
+        _logger.e('Supabase initialization failed after $maxInitRetries attempts');
+        throw lastException;
+      }
+
+      // Ensure client is available with retry logic
+      int retryCount = 0;
+      const maxRetries = 5;
+      const retryDelay = Duration(milliseconds: 200);
+
+      while (retryCount < maxRetries) {
+        try {
+          _client = Supabase.instance.client;
+          if (_client != null) {
+            _logger.i('Supabase client successfully obtained');
+            break;
+          }
+        } catch (e) {
+          _logger.w('Attempt ${retryCount + 1} to get Supabase client failed: $e');
+        }
+
+        retryCount++;
+        if (retryCount < maxRetries) {
+          _logger.i('Retrying to get Supabase client in ${retryDelay.inMilliseconds}ms...');
+          await Future.delayed(retryDelay);
+        }
+      }
+
+      if (_client == null) {
+        throw Exception('Failed to obtain Supabase client after $maxRetries attempts');
+      }
+
+      _initializationCompleted = true;
+      _logger.i('✅ Supabase initialization completed successfully');
+
+    } catch (e) {
+      _logger.e('❌ Supabase initialization failed: $e');
+      _initializationCompleted = false;
+      _client = null;
+      rethrow;
+    } finally {
+      _isInitializing = false;
+    }
   }
 
   /// Check if Supabase is initialized
-  static bool get isInitialized => _client != null;
+  static bool get isInitialized => _initializationCompleted && _client != null;
 
   /// Get Supabase client instance
   static SupabaseClient get client {
-    if (_client == null) {
+    if (!isInitialized || _client == null) {
+      _logger.e('Supabase client requested but not initialized. isInitialized: $isInitialized, _client: ${_client != null}');
       throw Exception(
         'Supabase not initialized. Call SupabaseService.initialize() first.',
       );
@@ -166,15 +275,69 @@ class SupabaseService {
     required Uint8List bytes,
     String? contentType,
   }) async {
-    await client.storage
-        .from(bucket)
-        .uploadBinary(
-          path,
-          bytes,
-          fileOptions: FileOptions(contentType: contentType, upsert: true),
-        );
+    final logger = Logger();
 
-    return client.storage.from(bucket).getPublicUrl(path);
+    try {
+      logger.i('Starting storage upload:');
+      logger.i('  Bucket: $bucket');
+      logger.i('  Path: $path');
+      logger.i('  Size: ${bytes.length} bytes (${(bytes.length / 1024 / 1024).toStringAsFixed(2)} MB)');
+      logger.i('  Content-Type: $contentType');
+
+      // Use upsert: false to match React app behavior and avoid conflicts
+      await client.storage
+          .from(bucket)
+          .uploadBinary(
+            path,
+            bytes,
+            fileOptions: FileOptions(
+              contentType: contentType,
+              upsert: false, // Match React app behavior
+              cacheControl: '3600', // Match React app cache control
+            ),
+          );
+
+      final publicUrl = client.storage.from(bucket).getPublicUrl(path);
+      logger.i('Storage upload successful: $publicUrl');
+      return publicUrl;
+    } catch (e) {
+      // Enhanced error handling for storage uploads
+      if (e.toString().contains('Duplicate') || e.toString().contains('already exists')) {
+        // If file already exists, try with upsert: true as fallback
+        try {
+          await client.storage
+              .from(bucket)
+              .uploadBinary(
+                path,
+                bytes,
+                fileOptions: FileOptions(
+                  contentType: contentType,
+                  upsert: true,
+                  cacheControl: '3600',
+                ),
+              );
+          return client.storage.from(bucket).getPublicUrl(path);
+        } catch (upsertError) {
+          throw Exception('Storage upload failed even with upsert: ${upsertError.toString()}');
+        }
+      }
+
+      // Provide more specific error messages
+      String errorMessage = 'Storage upload failed';
+      if (e.toString().contains('bucket not found')) {
+        errorMessage = 'Storage bucket not found. Please contact support.';
+      } else if (e.toString().contains('row-level security') || e.toString().contains('policy')) {
+        errorMessage = 'Permission denied. Please log in again.';
+      } else if (e.toString().contains('413') || e.toString().contains('too large')) {
+        errorMessage = 'File too large. Please use a smaller image.';
+      } else if (e.toString().contains('400')) {
+        errorMessage = 'Invalid file or request. Please try again with a different image.';
+      } else {
+        errorMessage = 'Storage upload failed: ${e.toString()}';
+      }
+
+      throw Exception(errorMessage);
+    }
   }
 
   /// Delete file from storage

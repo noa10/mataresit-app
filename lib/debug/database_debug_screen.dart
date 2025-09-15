@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../features/teams/providers/teams_provider.dart';
 import '../core/services/ai_vision_service_manager.dart';
+import '../core/services/processing_logs_service.dart';
 import '../core/constants/app_constants.dart';
 
 class DatabaseDebugScreen extends ConsumerStatefulWidget {
@@ -182,6 +183,70 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
     });
   }
 
+  Future<void> _testProcessingLogsAuth() async {
+    setState(() {
+      _isLoading = true;
+      _debugOutput = '';
+    });
+
+    try {
+      _addOutput('Testing Processing Logs Authentication...');
+
+      // Test authentication state
+      final logsService = ProcessingLogsService();
+      final authResult = await logsService.testAuthAndRLS();
+
+      _addOutput('\n=== Authentication State ===');
+      _addOutput('Has User: ${authResult['hasUser']}');
+      _addOutput('User ID: ${authResult['userId'] ?? 'null'}');
+      _addOutput('User Email: ${authResult['userEmail'] ?? 'null'}');
+      _addOutput('Has Session: ${authResult['hasSession']}');
+      _addOutput('Session Valid: ${authResult['sessionValid']}');
+      _addOutput('Session Expiry: ${authResult['sessionExpiry'] ?? 'null'}');
+
+      if (authResult['canQueryReceipts'] == true) {
+        _addOutput('✅ Can query receipts (${authResult['receiptsCount']} found)');
+      } else {
+        _addOutput('❌ Cannot query receipts: ${authResult['receiptsError']}');
+      }
+
+      // Test processing logs insertion
+      if (authResult['hasUser'] == true && authResult['sessionValid'] == true) {
+        _addOutput('\n=== Testing Processing Logs Insert ===');
+        try {
+          // Create a test receipt ID (this should fail if receipt doesn't exist)
+          final testReceiptId = 'test-receipt-${DateTime.now().millisecondsSinceEpoch}';
+          await logsService.saveProcessingLog(
+            testReceiptId,
+            'TEST',
+            'Testing processing logs authentication',
+          );
+          _addOutput('✅ Processing log insert succeeded (unexpected - receipt should not exist)');
+        } catch (e) {
+          if (e.toString().contains('violates foreign key constraint') ||
+              e.toString().contains('receipt_id')) {
+            _addOutput('✅ Processing log insert failed as expected (receipt doesn\'t exist)');
+            _addOutput('   This means authentication is working, but receipt validation is also working');
+          } else if (e.toString().contains('row-level security policy')) {
+            _addOutput('❌ RLS policy still blocking insert: $e');
+          } else {
+            _addOutput('❓ Unexpected error: $e');
+          }
+        }
+      } else {
+        _addOutput('\n❌ Cannot test processing logs - user not authenticated');
+        _addOutput('   Please sign in to test processing logs functionality');
+      }
+
+    } catch (e) {
+      _addOutput('Processing logs test failed: $e');
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -219,6 +284,17 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Text('Test Database Connection'),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: _isLoading ? null : _testProcessingLogsAuth,
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Test Processing Logs Auth'),
             ),
             const SizedBox(height: 16),
             Expanded(

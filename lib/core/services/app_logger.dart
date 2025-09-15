@@ -13,6 +13,20 @@ class AppLogger {
     ),
   );
 
+  /// Get a logger instance with a tag
+  static Logger getLogger(String tag) {
+    return Logger(
+      printer: PrettyPrinter(
+        methodCount: 2,
+        errorMethodCount: 8,
+        lineLength: 120,
+        colors: true,
+        printEmojis: true,
+        dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
+      ),
+    );
+  }
+
   /// Log debug information
   static void debug(String message, [dynamic error, StackTrace? stackTrace]) {
     _logger.d(message, error: error, stackTrace: stackTrace);
