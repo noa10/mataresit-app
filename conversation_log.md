@@ -36,3 +36,15 @@
 - Request: "Proceed to remove those folders from remote too using the untracking command."
 - Action: Ran `git rm -r --cached .augment .qoder docs` and committed. Initial push rejected (remote ahead). Performed `git stash` (including ignored with `-a`), `git pull --rebase origin master`, then `git push`. Restored local working changes via targeted stash apply. Result: remote no longer tracks `.augment/`, `.qoder/`, `docs/`.
 - Response Summary: Untracking commit pushed successfully. Local untracked copies remain for development.
+
+## 2025-09-11 03:24 +08:00
+
+- Request: "help create a comprehensive prompt on this project for designing agent to create the best ui/ux for mobile app."
+- Action: Drafted a reusable, fill-in-the-blank prompt template for a UI/UX design agent covering role, objectives, audience, platforms, branding, accessibility, IA, key flows, patterns, design system tokens, deliverables, workflow, checklists, and output format.
+- Response Summary: Provided a comprehensive prompt template and guidance to tailor it to the project, ensuring consistent, accessible, and high-quality mobile app UI/UX outcomes.
+
+## 2025-09-13 16:08 +08:00
+
+- Request: "how do we resolve this issue for these logs in this flutter project: [CocoaPods did not set the base configuration ... include the Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig in your build configuration (Flutter/Release.xcconfig)]."
+- Action: Verified `ios/Flutter/Debug.xcconfig` and `ios/Flutter/Release.xcconfig` already include the corresponding Pods configs via `#include?`. Created missing `ios/Flutter/Profile.xcconfig` with `#include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"` and `#include "Generated.xcconfig"`. Provided steps to ensure Xcode target `Runner` base configurations point to the Flutter xcconfigs (Debug/Release/Profile) and to re-run `pod install` / clean build if needed.
+- Response Summary: The warning appears because Profile config was missing and/or Xcode base configs weren’t set. Adding `Profile.xcconfig` and ensuring the Runner target uses Flutter xcconfigs resolves CocoaPods integration.
