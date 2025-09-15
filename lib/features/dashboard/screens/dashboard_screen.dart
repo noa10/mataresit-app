@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,6 +20,10 @@ class DashboardScreen extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
     final stats = ref.watch(dashboardStatsProvider);
     final userPreferredCurrency = ref.watch(userPreferredCurrencyProvider);
+
+    debugPrint('🔍 DASHBOARD SCREEN DEBUG: build() called, user=${user?.id}');
+    debugPrint('🔍 DASHBOARD SCREEN DEBUG: stats totalReceipts=${stats.totalReceipts}, totalAmount=${stats.totalAmount}');
+    debugPrint('🔍 DASHBOARD SCREEN DEBUG: Platform.isIOS = ${Platform.isIOS}');
 
     return Scaffold(
       appBar: AppBar(
@@ -54,8 +59,8 @@ class DashboardScreen extends ConsumerWidget {
                         backgroundColor: Theme.of(context).primaryColor,
                         child: Text(
                           user?.fullName?.substring(0, 1).toUpperCase() ?? 'U',
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                           ),
@@ -69,7 +74,9 @@ class DashboardScreen extends ConsumerWidget {
                             Text(
                               'Welcome back,',
                               style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(color: Colors.grey[600]),
+                                  ?.copyWith(
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
                             ),
                             Text(
                               user?.fullName ?? 'User',
@@ -216,10 +223,10 @@ class DashboardScreen extends ConsumerWidget {
                     padding: const EdgeInsets.all(AppConstants.defaultPadding),
                     child: Column(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.inbox_outlined,
                           size: 48,
-                          color: Colors.grey,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(height: AppConstants.defaultPadding),
                         Text(
@@ -229,8 +236,9 @@ class DashboardScreen extends ConsumerWidget {
                         const SizedBox(height: AppConstants.smallPadding),
                         Text(
                           'Start by capturing your first receipt!',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: Colors.grey[600]),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -334,7 +342,9 @@ class DashboardScreen extends ConsumerWidget {
                     title,
                     style: Theme.of(
                       context,
-                    ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                    ).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ],

@@ -44,31 +44,47 @@ class AuthNotifier extends StateNotifier<AuthState> {
   void _initializeAuth() async {
     try {
       AppLogger.info('🔧 Initializing authentication state...');
+      AppLogger.debug('🔍 Initial auth state: isLoading=${state.isLoading}, isAuthenticated=${state.isAuthenticated}');
 
-      // Check if Supabase is initialized
+      // Check if Supabase is initialized with retry logic
       if (!SupabaseService.isInitialized) {
         AppLogger.warning('⚠️ Supabase not yet initialized, waiting...');
-        // Wait a bit and try again
-        await Future.delayed(const Duration(milliseconds: 500));
+
+        // Wait with exponential backoff
+        const maxRetries = 10;
+        int retryCount = 0;
+
+        while (!SupabaseService.isInitialized && retryCount < maxRetries) {
+          final waitTime = Duration(milliseconds: 100 * (1 << retryCount)); // Exponential backoff
+          AppLogger.debug('🔄 Waiting ${waitTime.inMilliseconds}ms for Supabase initialization (attempt ${retryCount + 1}/$maxRetries)');
+          await Future.delayed(waitTime);
+          retryCount++;
+        }
+
         if (!SupabaseService.isInitialized) {
-          AppLogger.error('❌ Supabase still not initialized after waiting');
+          AppLogger.error('❌ Supabase still not initialized after $maxRetries attempts');
           state = state.copyWith(
             isLoading: false,
-            error: 'Supabase initialization failed',
+            error: 'Supabase initialization failed after multiple attempts',
             isAuthenticated: false,
           );
+          AppLogger.debug('🔍 Auth state after Supabase failure: isLoading=${state.isLoading}, isAuthenticated=${state.isAuthenticated}');
           return;
+        } else {
+          AppLogger.info('✅ Supabase initialization completed after $retryCount retries');
         }
       }
 
       final currentUser = SupabaseService.currentUser;
       if (currentUser != null) {
         AppLogger.info('✅ Found existing user session: ${currentUser.email}');
+        AppLogger.debug('🔍 About to load user profile for: ${currentUser.id}');
         await _loadUserProfile(currentUser.id);
       } else {
         AppLogger.info('ℹ️ No existing user session found');
         // No user is logged in, set loading to false
         state = state.copyWith(isLoading: false, isAuthenticated: false);
+        AppLogger.debug('🔍 Auth state after no session: isLoading=${state.isLoading}, isAuthenticated=${state.isAuthenticated}');
       }
     } catch (e) {
       AppLogger.error('❌ Authentication initialization failed', e);
@@ -77,6 +93,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         error: 'Initialization failed: ${e.toString()}',
         isAuthenticated: false,
       );
+      AppLogger.debug('🔍 Auth state after error: isLoading=${state.isLoading}, isAuthenticated=${state.isAuthenticated}');
     }
 
     // Listen to auth state changes (only if Supabase is initialized)
@@ -108,12 +125,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Load user profile from database
   Future<void> _loadUserProfile(String userId) async {
     try {
+      AppLogger.debug('🔍 _loadUserProfile called for userId: $userId');
       state = state.copyWith(isLoading: true, error: null);
+      AppLogger.debug('🔍 Auth state set to loading: isLoading=${state.isLoading}, isAuthenticated=${state.isAuthenticated}');
 
       // Try to get user profile from database
       Map<String, dynamic>? profileData;
       try {
+        AppLogger.debug('🔍 Attempting to fetch user profile from database...');
         profileData = await SupabaseService.getUserProfile(userId);
+        AppLogger.debug('🔍 Profile data fetched: ${profileData != null ? 'SUCCESS' : 'NULL'}');
       } catch (e) {
         AppLogger.warning('Database error loading profile', e);
       }
@@ -130,6 +151,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
             isLoading: false,
             isAuthenticated: true,
           );
+          AppLogger.debug('🔍 Auth state after successful profile load: isLoading=${state.isLoading}, isAuthenticated=${state.isAuthenticated}');
           return;
         } catch (e, stackTrace) {
           AppLogger.error('Error parsing profile data for user $userId', e);

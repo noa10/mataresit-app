@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/services/app_logger.dart';
 import '../../../shared/widgets/loading_widget.dart';
 import '../providers/auth_provider.dart';
 import '../../../app/router/app_router.dart';
@@ -28,7 +29,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    AppLogger.debug('🔍 LOGIN_SCREEN: LoginScreen.build() called');
+    AppLogger.debug('🔍 LOGIN_SCREEN: Context: $context');
+
     final authState = ref.watch(authProvider);
+    AppLogger.debug('🔍 LOGIN_SCREEN: authState - isLoading=${authState.isLoading}, isAuthenticated=${authState.isAuthenticated}');
 
     // Listen to auth state changes
     ref.listen<AuthState>(authProvider, (previous, next) {
@@ -54,32 +59,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     });
 
+    AppLogger.debug('🔍 LOGIN_SCREEN: About to return Scaffold');
+
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppConstants.largePadding),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+            padding: const EdgeInsets.all(AppConstants.largePadding),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
                 const SizedBox(height: AppConstants.largePadding * 2),
 
-                // App Logo
+                // Logo/Icon
                 Center(
                   child: Container(
-                    width: 80,
-                    height: 80,
+                    width: 100,
+                    height: 100,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor,
-                      borderRadius: BorderRadius.circular(
-                        AppConstants.largeBorderRadius,
-                      ),
+                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.receipt_long,
-                      size: 40,
-                      color: Colors.white,
+                      size: 50,
+                      color: Theme.of(context).primaryColor,
                     ),
                   ),
                 ),
@@ -89,19 +95,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 // Welcome Text
                 Text(
                   'Welcome Back',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                   textAlign: TextAlign.center,
                 ),
 
-                const SizedBox(height: AppConstants.smallPadding),
+                const SizedBox(height: AppConstants.defaultPadding),
 
                 Text(
                   'Sign in to your account',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
                   textAlign: TextAlign.center,
                 ),
 
@@ -121,9 +127,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
                     }
-                    if (!RegExp(
-                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                    ).hasMatch(value)) {
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
                       return 'Please enter a valid email';
                     }
                     return null;
@@ -143,9 +147,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility
-                            : Icons.visibility_off,
+                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
                       ),
                       onPressed: () {
                         setState(() {
@@ -158,17 +160,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your password';
                     }
-                    if (value.length < AppConstants.minPasswordLength) {
-                      return 'Password must be at least ${AppConstants.minPasswordLength} characters';
+                    if (value.length < 6) {
+                      return 'Password must be at least 6 characters';
                     }
                     return null;
                   },
-                  onFieldSubmitted: (_) => _handleLogin(),
+                  onFieldSubmitted: (_) => _handleSignIn(),
                 ),
 
                 const SizedBox(height: AppConstants.defaultPadding),
 
-                // Forgot Password
+                // Forgot Password Link
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
@@ -179,9 +181,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 const SizedBox(height: AppConstants.largePadding),
 
-                // Login Button
+                // Sign In Button
                 LoadingButton(
-                  onPressed: _handleLogin,
+                  onPressed: _handleSignIn,
                   text: 'Sign In',
                   isLoading: authState.isLoading,
                 ),
@@ -193,7 +195,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Don't have an account? ",
+                      'Don\'t have an account? ',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     TextButton(
@@ -210,14 +212,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  void _handleLogin() {
+  void _handleSignIn() {
     if (_formKey.currentState!.validate()) {
-      ref
-          .read(authProvider.notifier)
-          .signInWithEmailAndPassword(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-          );
+      ref.read(authProvider.notifier).signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
     }
   }
 }
