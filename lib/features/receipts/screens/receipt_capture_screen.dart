@@ -13,6 +13,7 @@ import '../widgets/processing_logs_widget.dart';
 import '../providers/receipt_capture_provider.dart';
 import '../providers/receipts_provider.dart';
 import '../../../core/guards/subscription_guard.dart';
+import '../../../core/services/ios_image_capture_service.dart';
 import '../../subscription/widgets/subscription_limits_widget.dart';
 
 class ReceiptCaptureScreen extends ConsumerStatefulWidget {
@@ -302,7 +303,7 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
               Container(
                 padding: const EdgeInsets.all(AppConstants.defaultPadding),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                  color: Theme.of(context).colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(
                     AppConstants.borderRadius,
                   ),
@@ -310,7 +311,7 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
                 child: Icon(
                   icon,
                   size: 32,
-                  color: Theme.of(context).primaryColor,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
                 ),
               ),
               const SizedBox(height: AppConstants.defaultPadding),
@@ -345,31 +346,59 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
 
   Future<void> _pickImage(ImageSource source) async {
     try {
-      // Check permissions
-      if (source == ImageSource.camera) {
-        final cameraStatus = await Permission.camera.request();
-        if (!cameraStatus.isGranted) {
-          _showPermissionDialog('Camera');
-          return;
+      File? imageFile;
+
+      // Use iOS-specific service for better error handling and permission management
+      if (Platform.isIOS) {
+        if (source == ImageSource.camera) {
+          imageFile = await IOSImageCaptureService.captureFromCamera(context);
+        } else {
+          imageFile = await IOSImageCaptureService.selectFromGallery(context);
+        }
+      } else {
+        // Android handling with permission checks
+        if (source == ImageSource.camera) {
+          final cameraStatus = await Permission.camera.request();
+          if (!cameraStatus.isGranted) {
+            _showPermissionDialog('Camera');
+            return;
+          }
+        }
+
+        final XFile? image = await _picker.pickImage(
+          source: source,
+          maxWidth: 1500,
+          maxHeight: 1500,
+          imageQuality: 80,
+        );
+
+        if (image != null) {
+          imageFile = File(image.path);
         }
       }
 
-      // Processing state is managed by the provider
-
-      final XFile? image = await _picker.pickImage(
-        source: source,
-        maxWidth: 1500, // Match React app optimization
-        maxHeight: 1500, // Match React app optimization
-        imageQuality: 80, // Match React app quality (80%)
-      );
-
-      if (image != null) {
+      if (imageFile != null) {
         setState(() {
-          _selectedImage = File(image.path);
+          _selectedImage = imageFile;
         });
+        _logger.i('Image selected successfully: ${imageFile.path}');
+      } else {
+        _logger.w('Image selection cancelled or failed');
       }
     } catch (e) {
-      _showErrorSnackBar('Failed to pick image: ${e.toString()}');
+      _logger.e('Image picker failed: $e');
+
+      // Provide more specific error messages
+      String errorMessage = 'Failed to pick image';
+      if (e.toString().contains('MissingPluginException')) {
+        errorMessage = 'Camera/Gallery not available. Please restart the app and try again.';
+      } else if (e.toString().contains('permission')) {
+        errorMessage = 'Permission denied. Please grant camera/gallery access in settings.';
+      } else {
+        errorMessage = 'Failed to pick image: ${e.toString()}';
+      }
+
+      _showErrorSnackBar(errorMessage);
     } finally {
       // Processing state is managed by the provider
     }
@@ -427,6 +456,9 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
     }
 
     try {
+      // Check if widget is still mounted before starting upload
+      if (!mounted) return;
+
       await ref
           .read(receiptCaptureProvider.notifier)
           .uploadReceipt(_selectedImage!);
@@ -443,6 +475,9 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
         _logger.i('⏳ Waiting for database consistency before refresh...');
         await Future.delayed(const Duration(milliseconds: 1500));
 
+        // Check if widget is still mounted before refreshing
+        if (!mounted) return;
+
         // Refresh the receipts list to show the newly uploaded receipt
         try {
           _logger.i('🔄 Starting receipts list refresh after upload...');
@@ -451,6 +486,10 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
 
           // Double-check by loading more to ensure the new receipt appears
           await Future.delayed(const Duration(milliseconds: 500));
+
+          // Check mounted again after delay
+          if (!mounted) return;
+
           await ref.read(receiptsProvider.notifier).loadReceipts(refresh: true);
           _logger.i('✅ Secondary refresh completed');
         } catch (refreshError) {
@@ -474,7 +513,29 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
         }
       }
     } catch (e) {
-      _showErrorSnackBar('Failed to upload receipt: ${e.toString()}');
+      _logger.e('Receipt upload failed: $e');
+
+      // Provide more specific error messages based on error type
+      String errorMessage = 'Failed to upload receipt';
+      if (e.toString().contains('StorageException')) {
+        if (e.toString().contains('400')) {
+          errorMessage = 'Upload failed: Invalid file or storage configuration. Please try again.';
+        } else if (e.toString().contains('401') || e.toString().contains('403')) {
+          errorMessage = 'Upload failed: Authentication error. Please log in again.';
+        } else if (e.toString().contains('413')) {
+          errorMessage = 'Upload failed: File too large. Please use a smaller image.';
+        } else {
+          errorMessage = 'Upload failed: Storage error. Please check your connection and try again.';
+        }
+      } else if (e.toString().contains('network') || e.toString().contains('connection')) {
+        errorMessage = 'Upload failed: Network error. Please check your connection and try again.';
+      } else if (e.toString().contains('timeout')) {
+        errorMessage = 'Upload failed: Request timed out. Please try again.';
+      } else {
+        errorMessage = 'Upload failed: ${e.toString()}';
+      }
+
+      _showErrorSnackBar(errorMessage);
     }
   }
 

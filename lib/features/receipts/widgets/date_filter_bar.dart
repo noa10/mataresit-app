@@ -162,96 +162,124 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
     final currentFilter = receiptsState.dateFilter;
 
     return Container(
-      padding: EdgeInsets.only(
-        left: AppConstants.defaultPadding,
-        right: AppConstants.defaultPadding,
-        top: AppConstants.defaultPadding,
-        bottom:
-            MediaQuery.of(context).viewInsets.bottom +
-            AppConstants.defaultPadding,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Handle bar
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                borderRadius: BorderRadius.circular(2),
+          // Fixed header with handle bar and title
+          Container(
+            padding: EdgeInsets.only(
+              left: AppConstants.defaultPadding,
+              right: AppConstants.defaultPadding,
+              top: AppConstants.defaultPadding,
+            ),
+            child: Column(
+              children: [
+                // Handle bar
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Title
+                Text(
+                  'Filter Receipts',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
+
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+
+          // Scrollable content
+          Flexible(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: AppConstants.defaultPadding,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // All filter options
+                  Text(
+                    'Date Range',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _buildAllFilterOptions(currentFilter),
+
+                  const SizedBox(height: 20),
+
+                  // Custom date range
+                  if (currentFilter.option == DateFilterOption.custom) ...[
+                    Text(
+                      'Custom Range',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildCustomDateRange(currentFilter),
+                    const SizedBox(height: 20),
+                  ],
+
+                  // Category filters
+                  CategoryFilterWidget(onFilterChanged: widget.onFilterChanged),
+
+                  const SizedBox(height: 20),
+
+                  // Reviewed status filters
+                  ReviewedStatusFilterWidget(onFilterChanged: widget.onFilterChanged),
+
+                  const SizedBox(height: 20),
+                ],
               ),
             ),
           ),
 
-          const SizedBox(height: 20),
-
-          // Title
-          Text(
-            'Filter Receipts',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-          ),
-
-          const SizedBox(height: 20),
-
-          // All filter options
-          Text(
-            'Date Range',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-
-          const SizedBox(height: 12),
-
-          _buildAllFilterOptions(currentFilter),
-
-          const SizedBox(height: 20),
-
-          // Custom date range
-          if (currentFilter.option == DateFilterOption.custom) ...[
-            Text(
-              'Custom Range',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          // Fixed footer with action buttons
+          Container(
+            padding: EdgeInsets.only(
+              left: AppConstants.defaultPadding,
+              right: AppConstants.defaultPadding,
+              top: AppConstants.defaultPadding,
+              bottom: MediaQuery.of(context).viewInsets.bottom +
+                  AppConstants.defaultPadding,
             ),
-            const SizedBox(height: 12),
-            _buildCustomDateRange(currentFilter),
-            const SizedBox(height: 20),
-          ],
-
-          // Category filters
-          CategoryFilterWidget(onFilterChanged: widget.onFilterChanged),
-
-          const SizedBox(height: 20),
-
-          // Reviewed status filters
-          ReviewedStatusFilterWidget(onFilterChanged: widget.onFilterChanged),
-
-          const SizedBox(height: 20),
-
-          // Action buttons
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _clearFilters,
-                  child: const Text('Clear All'),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _clearFilters,
+                    child: const Text('Clear All'),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Done'),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Done'),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),

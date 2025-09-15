@@ -91,15 +91,30 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
   Timer? _progressTimer;
   final ProcessingLogsService _logsService = ProcessingLogsService();
   StreamSubscription? _logsSubscription;
+  bool _disposed = false;
+  Timer? _processingTimeoutTimer;
+  final Map<String, StreamSubscription> _realtimeSubscriptions = {};
 
   ReceiptCaptureNotifier(this.ref) : super(const ReceiptCaptureState());
 
   @override
   void dispose() {
+    _disposed = true;
     _progressTimer?.cancel();
     _logsSubscription?.cancel();
+    _processingTimeoutTimer?.cancel();
+
+    // Cancel all realtime subscriptions
+    for (final subscription in _realtimeSubscriptions.values) {
+      subscription.cancel();
+    }
+    _realtimeSubscriptions.clear();
+
     super.dispose();
   }
+
+  /// Check if the provider is disposed before using ref
+  bool get isDisposed => _disposed;
 
   /// Add a processing log entry
   void _addLog(
@@ -132,18 +147,47 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
 
     // Save to real-time service if receipt ID is available
     if (receiptId != null && receiptId != 'pending') {
+      // Check authentication before attempting database operations
+      final user = ref.read(currentUserProvider);
+      final currentUser = SupabaseService.currentUser;
+      final session = SupabaseService.client.auth.currentSession;
+
+      AppLogger.info('Processing log auth check', {
+        'stepName': stepName,
+        'receiptId': receiptId,
+        'hasProviderUser': user != null,
+        'hasSupabaseUser': currentUser != null,
+        'hasSession': session != null,
+        'userIdMatch': user?.id == currentUser?.id,
+      });
+
       _logsService.addLocalLog(
         receiptId,
         stepName,
         message,
         progress: progress,
       );
-      _logsService.saveProcessingLog(
-        receiptId,
-        stepName,
-        message,
-        progress: progress,
-      );
+
+      // Only attempt database save if properly authenticated and not an early step
+      if (user != null && currentUser != null && session != null) {
+        // Skip database saves for early steps that happen before receipt creation
+        final shouldSkip = ['START', 'FETCH', 'SAVE'].contains(stepName);
+        _logsService.saveProcessingLog(
+          receiptId,
+          stepName,
+          message,
+          progress: progress,
+          forceSkip: shouldSkip,
+        );
+      } else {
+        AppLogger.warning('Skipping database save for processing log - authentication issue', {
+          'stepName': stepName,
+          'receiptId': receiptId,
+          'hasProviderUser': user != null,
+          'hasSupabaseUser': currentUser != null,
+          'hasSession': session != null,
+        });
+      }
     }
 
     // Auto-stop progress updating after a delay
@@ -208,7 +252,11 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
       final uuid = const Uuid();
       final receiptId = uuid.v4();
       final fileExtension = path.extension(imageFile.path);
-      final fileName = 'receipt_$receiptId$fileExtension';
+
+      // Use timestamp-based filename to match React app behavior and avoid conflicts
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final fileId = receiptId.substring(0, 8); // Use first 8 chars of UUID as fileId
+      final fileName = '${timestamp}_$fileId$fileExtension';
       final filePath = '${user.id}/$fileName';
 
       // Optimize image before upload (match React app behavior)
@@ -242,7 +290,7 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
       // Get current team for team_id
       final currentTeamState = ref.read(currentTeamProvider);
 
-      // Create initial receipt record with minimal data
+      // Create initial receipt record with required fields
       final initialReceiptData = {
         'id': receiptId,
         'user_id': user.id,
@@ -250,6 +298,10 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
         'image_url': imageUrl,
         'status': 'unreviewed',
         'processing_status': 'processing',
+        // Required fields with temporary values (will be updated by AI processing)
+        'merchant': 'Processing...',
+        'date': DateTime.now().toIso8601String().split('T')[0], // Today's date as default
+        'total': 0.0, // Will be updated by AI processing
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
       };
@@ -475,14 +527,16 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
           .subscribe();
 
       // Set a timeout for processing completion (5 minutes max)
-      Timer(const Duration(minutes: 5), () {
-        _addLog(
-          'WARNING',
-          'Processing timeout reached, checking final status...',
-          receiptId: receiptId,
-        );
-        _finalizeProcessing(receiptId, imageFile, imageBytes, imageUrl);
-        SupabaseService.client.removeChannel(channel);
+      _processingTimeoutTimer = Timer(const Duration(minutes: 5), () {
+        if (!_disposed) {
+          _addLog(
+            'WARNING',
+            'Processing timeout reached, checking final status...',
+            receiptId: receiptId,
+          );
+          _finalizeProcessing(receiptId, imageFile, imageBytes, imageUrl);
+          SupabaseService.client.removeChannel(channel);
+        }
       });
     } catch (e) {
       _addLog(
@@ -588,6 +642,12 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
     String imageUrl,
   ) async {
     try {
+      // Check if disposed before proceeding
+      if (_disposed) {
+        _addLog('WARNING', 'Provider disposed, skipping finalization');
+        return;
+      }
+
       _updateProgress(98, message: 'Fetching processed receipt...');
       _addLog(
         'FETCH',
@@ -602,6 +662,13 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
           .single();
 
       final receiptData = response;
+
+      // Check if disposed before using ref
+      if (_disposed) {
+        _addLog('WARNING', 'Provider disposed during finalization');
+        return;
+      }
+
       final user = ref.read(currentUserProvider);
 
       // Create receipt model from the processed data
@@ -664,7 +731,7 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
 
       // Auto-reset state after showing completion for 3 seconds
       Future.delayed(const Duration(seconds: 3), () {
-        if (state.currentStage == 'COMPLETE') {
+        if (!_disposed && state.currentStage == 'COMPLETE') {
           reset();
         }
       });
@@ -704,6 +771,12 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
     Uint8List imageBytes,
     String imageUrl,
   ) {
+    // Check if disposed before using ref
+    if (_disposed) {
+      _addLog('WARNING', 'Provider disposed, skipping error handling');
+      return;
+    }
+
     final user = ref.read(currentUserProvider);
 
     // Create a minimal receipt object for UI purposes

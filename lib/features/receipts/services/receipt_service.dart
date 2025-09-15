@@ -251,13 +251,7 @@ class ReceiptService {
           .eq('id', receiptId)
           .single();
 
-      // Handle invalid status values by normalizing them
-      if (response['status'] == 'unreviewed') {
-        response['status'] = 'draft'; // Convert unreviewed to draft
-        _logger.w(
-          '⚠️ Converted invalid status "unreviewed" to "draft" for receipt $receiptId',
-        );
-      }
+      // Note: 'unreviewed' is a valid status in ReceiptStatus enum, no conversion needed
 
       final receipt = ReceiptModel.fromJson(response);
 
@@ -318,14 +312,7 @@ class ReceiptService {
 
       for (final receiptData in response) {
         try {
-          // Handle invalid status values by normalizing them
-          if (receiptData['status'] == 'unreviewed') {
-            receiptData['status'] = 'draft'; // Convert unreviewed to draft
-            _logger.w(
-              '⚠️ Converted invalid status "unreviewed" to "draft" for receipt ${receiptData['id']}',
-            );
-          }
-
+          // Note: 'unreviewed' is a valid status in ReceiptStatus enum, no conversion needed
           final receipt = ReceiptModel.fromJson(receiptData);
 
           // Parse line items if they exist

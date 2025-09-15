@@ -431,41 +431,44 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
                 // Details row
                 Row(
                   children: [
-                    // Category - Use real category data with fallback
-                    Consumer(
-                      builder: (context, ref, child) {
-                        // Watch the categories state to ensure they're loaded
-                        final categoriesState = ref.watch(categoriesProvider);
+                    // Category - Use real category data with fallback - wrapped in Flexible
+                    Flexible(
+                      flex: 2,
+                      child: Consumer(
+                        builder: (context, ref, child) {
+                          // Watch the categories state to ensure they're loaded
+                          final categoriesState = ref.watch(categoriesProvider);
 
-                        // Find the category from display categories (includes both team and personal)
-                        CategoryModel? category;
-                        if (receipt.customCategoryId != null) {
-                          category = categoriesState.displayCategories
-                              .where(
-                                (cat) => cat.id == receipt.customCategoryId,
-                              )
-                              .firstOrNull;
-
-                          // Debug logging for category lookup removed
-
-                          // If category not found, try to create a fallback based on category field
-                          if (category == null && receipt.category != null) {
-                            // Look for a category with matching name (case-insensitive)
+                          // Find the category from display categories (includes both team and personal)
+                          CategoryModel? category;
+                          if (receipt.customCategoryId != null) {
                             category = categoriesState.displayCategories
                                 .where(
-                                  (cat) =>
-                                      cat.name.toLowerCase() ==
-                                      receipt.category!.toLowerCase(),
+                                  (cat) => cat.id == receipt.customCategoryId,
                                 )
                                 .firstOrNull;
-                          }
-                        }
 
-                        return CategoryDisplay(
-                          category: category,
-                          size: CategoryDisplaySize.small,
-                        );
-                      },
+                            // Debug logging for category lookup removed
+
+                            // If category not found, try to create a fallback based on category field
+                            if (category == null && receipt.category != null) {
+                              // Look for a category with matching name (case-insensitive)
+                              category = categoriesState.displayCategories
+                                  .where(
+                                    (cat) =>
+                                        cat.name.toLowerCase() ==
+                                        receipt.category!.toLowerCase(),
+                                  )
+                                  .firstOrNull;
+                            }
+                          }
+
+                          return CategoryDisplay(
+                            category: category,
+                            size: CategoryDisplaySize.small,
+                          );
+                        },
+                      ),
                     ),
                     const SizedBox(width: AppConstants.smallPadding),
 
@@ -474,12 +477,16 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
 
                     const Spacer(),
 
-                    // Date
-                    Text(
-                      timeago.format(receipt.createdAt),
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                    // Date - wrapped in Flexible to prevent overflow
+                    Flexible(
+                      child: Text(
+                        timeago.format(receipt.createdAt),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ),
                   ],
                 ),

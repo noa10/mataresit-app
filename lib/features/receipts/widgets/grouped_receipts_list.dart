@@ -115,6 +115,10 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant,
+          width: 0.5,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -309,34 +313,32 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
                     const Spacer(),
 
                     // Confidence score indicator (match React web aggregate + ai_suggestions fallback)
-                    Builder(
-                      builder: (context) {
-                        final hasConfidence =
-                            (receipt.aiSuggestions != null &&
-                                receipt.aiSuggestions!.containsKey(
-                                  'confidence',
-                                )) ||
-                            (receipt.confidenceScores != null &&
-                                receipt.confidenceScores!.isNotEmpty);
-                        return Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            CompactConfidenceIndicator(
-                              score: hasConfidence
-                                  ? ConfidenceUtils.calculateAggregateConfidence(
-                                      receipt,
-                                    )
-                                  : null,
-                              loading:
-                                  !hasConfidence &&
-                                  receipt.processingStatus ==
-                                      ProcessingStatus.processing,
-                            ),
-                            const SizedBox(width: 8),
-                          ],
-                        );
-                      },
+                    Flexible(
+                      child: Builder(
+                        builder: (context) {
+                          final hasConfidence =
+                              (receipt.aiSuggestions != null &&
+                                  receipt.aiSuggestions!.containsKey(
+                                    'confidence',
+                                  )) ||
+                              (receipt.confidenceScores != null &&
+                                  receipt.confidenceScores!.isNotEmpty);
+                          return CompactConfidenceIndicator(
+                            score: hasConfidence
+                                ? ConfidenceUtils.calculateAggregateConfidence(
+                                    receipt,
+                                  )
+                                : null,
+                            loading:
+                                !hasConfidence &&
+                                receipt.processingStatus ==
+                                    ProcessingStatus.processing,
+                          );
+                        },
+                      ),
                     ),
+
+                    const SizedBox(width: 2), // Further reduced spacing from 4 to 2
 
                     // Status indicator
                     _buildStatusIndicator(receipt.status),

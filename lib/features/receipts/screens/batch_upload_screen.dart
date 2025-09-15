@@ -477,21 +477,17 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
 
   Future<void> _selectFiles() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
-        allowMultiple: true,
-      );
+      List<File> files;
 
-      if (result != null && result.files.isNotEmpty) {
-        final files = result.files
-            .where((file) => file.path != null)
-            .map((file) => File(file.path!))
-            .toList();
+      // Use improved file picker for iOS photo library access
+      if (Platform.isIOS) {
+        files = await _selectFilesIOS();
+      } else {
+        files = await _selectFilesGeneric();
+      }
 
-        if (files.isNotEmpty) {
-          await ref.read(batchUploadProvider.notifier).addFiles(files);
-        }
+      if (files.isNotEmpty) {
+        await ref.read(batchUploadProvider.notifier).addFiles(files);
       }
     } catch (e) {
       if (mounted) {
@@ -502,6 +498,63 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
           ),
         );
       }
+    }
+  }
+
+  Future<List<File>> _selectFilesIOS() async {
+    try {
+      // For iOS, use FileType.image which provides better photo library access
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: true,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        return result.files
+            .where((file) => file.path != null)
+            .map((file) => File(file.path!))
+            .toList();
+      }
+
+      return [];
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error selecting files on iOS: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+      return [];
+    }
+  }
+
+  Future<List<File>> _selectFilesGeneric() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image, // Use image type for better photo access
+        allowMultiple: true,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        return result.files
+            .where((file) => file.path != null)
+            .map((file) => File(file.path!))
+            .toList();
+      }
+
+      return [];
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error selecting files: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+      return [];
     }
   }
 

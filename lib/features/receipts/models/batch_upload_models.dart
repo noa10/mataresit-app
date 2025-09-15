@@ -51,6 +51,8 @@ enum BatchProcessingStage {
   creatingRecord,
   @JsonValue('ai_processing')
   aiProcessing,
+  @JsonValue('retrying')
+  retrying,
   @JsonValue('finalizing')
   finalizing,
   @JsonValue('completed')
@@ -77,6 +79,7 @@ class BatchUploadItem extends Equatable {
   final DateTime? completedAt;
   final List<String> processingLogs;
   final Map<String, dynamic>? metadata;
+  final int retryCount; // Track number of retry attempts
 
   const BatchUploadItem({
     required this.id,
@@ -94,6 +97,7 @@ class BatchUploadItem extends Equatable {
     this.completedAt,
     this.processingLogs = const [],
     this.metadata,
+    this.retryCount = 0,
   });
 
   BatchUploadItem copyWith({
@@ -112,6 +116,7 @@ class BatchUploadItem extends Equatable {
     DateTime? completedAt,
     List<String>? processingLogs,
     Map<String, dynamic>? metadata,
+    int? retryCount,
   }) {
     return BatchUploadItem(
       id: id ?? this.id,
@@ -129,6 +134,7 @@ class BatchUploadItem extends Equatable {
       completedAt: completedAt ?? this.completedAt,
       processingLogs: processingLogs ?? this.processingLogs,
       metadata: metadata ?? this.metadata,
+      retryCount: retryCount ?? this.retryCount,
     );
   }
 
@@ -182,6 +188,8 @@ class BatchUploadItem extends Equatable {
         return 'Creating receipt record...';
       case BatchProcessingStage.aiProcessing:
         return 'Processing with AI Vision...';
+      case BatchProcessingStage.retrying:
+        return 'Retrying processing...';
       case BatchProcessingStage.finalizing:
         return 'Finalizing receipt data...';
       case BatchProcessingStage.completed:
@@ -208,6 +216,7 @@ class BatchUploadItem extends Equatable {
     completedAt,
     processingLogs,
     metadata,
+    retryCount,
   ];
 }
 

@@ -13,6 +13,16 @@ import '../../../core/constants/app_constants.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../teams/providers/teams_provider.dart';
 
+/// Timeout configurations for batch upload processing
+class BatchUploadTimeouts {
+  static const Duration functionCallTimeout = Duration(minutes: 3); // AI processing function call timeout
+  static const Duration totalItemTimeout = Duration(minutes: 10); // Total timeout per item
+  static const Duration waitForCompletionTimeout = Duration(minutes: 8); // Wait for completion timeout
+  static const Duration progressStuckTimeout = Duration(seconds: 45); // Progress stuck timeout
+  static const Duration maxProcessingTimeout = Duration(minutes: 8); // Max processing time for subscriptions
+  static const int maxAutoRetries = 3; // Maximum automatic retries for timeout errors
+}
+
 /// Simple semaphore implementation for concurrency control
 class Semaphore {
   final int maxCount;
@@ -53,6 +63,7 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
   final Ref _ref;
   final Logger _logger = Logger();
   Timer? _progressTimer;
+  bool _disposed = false;
 
   // Track active subscriptions and timers for cleanup
   final Map<String, StreamSubscription> _subscriptions = {};
@@ -62,10 +73,21 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
 
   @override
   void dispose() {
+    _disposed = true;
     _cancelAllTimers();
     _progressTimer?.cancel();
+
+    // Cancel all subscriptions
+    for (final subscription in _subscriptions.values) {
+      subscription.cancel();
+    }
+    _subscriptions.clear();
+
     super.dispose();
   }
+
+  /// Check if the provider is disposed before using ref
+  bool get isDisposed => _disposed;
 
   /// Add files to the batch upload queue
   Future<void> addFiles(List<File> files) async {
@@ -249,7 +271,7 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
     final item = state.items[itemIndex];
     if (item.status != BatchUploadItemStatus.failed) return;
 
-    // Reset the item to queued status
+    // Reset the item to queued status and reset retry count for manual retry
     final updatedItem = item.copyWith(
       status: BatchUploadItemStatus.queued,
       progress: 0,
@@ -257,6 +279,7 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
       startedAt: null,
       completedAt: null,
       processingLogs: [],
+      retryCount: 0, // Reset retry count for manual retry
     );
 
     final updatedItems = [...state.items];
@@ -292,28 +315,71 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
     }
   }
 
-  /// Process a single item with comprehensive timeout handling
+  /// Process a single item with comprehensive timeout handling and retry logic
   Future<void> _processSingleItemWithTimeout(BatchUploadItem item) async {
-    const totalTimeout = Duration(minutes: 10); // Total timeout per item
+    const totalTimeout = BatchUploadTimeouts.totalItemTimeout;
+    const maxRetries = BatchUploadTimeouts.maxAutoRetries;
 
-    try {
-      await _processSingleItemAndWaitForCompletion(item).timeout(totalTimeout);
-    } on TimeoutException {
-      _logger.w(
-        'Item ${item.fileName} timed out after ${totalTimeout.inMinutes} minutes',
-      );
-      _updateItemStatus(
-        item.id,
-        BatchUploadItemStatus.failed,
-        error: 'Processing timeout - please try again',
-      );
-    } catch (e) {
-      _logger.e('Error processing item ${item.fileName}: $e');
-      _updateItemStatus(
-        item.id,
-        BatchUploadItemStatus.failed,
-        error: 'Processing failed: $e',
-      );
+    // Get current retry count from the item
+    int currentRetryCount = item.retryCount;
+
+    while (currentRetryCount <= maxRetries) {
+      try {
+        await _processSingleItemAndWaitForCompletion(item).timeout(totalTimeout);
+        return; // Success, exit retry loop
+      } on TimeoutException {
+        currentRetryCount++;
+
+        if (currentRetryCount <= maxRetries) {
+          // Calculate exponential backoff delay (30s, 60s, 120s)
+          final delaySeconds = 30 * (1 << (currentRetryCount - 1));
+          final delay = Duration(seconds: delaySeconds);
+
+          _logger.w(
+            '🔄 Item ${item.fileName} timed out (attempt $currentRetryCount/$maxRetries). Retrying in ${delay.inSeconds} seconds...',
+          );
+
+          // Add log entry for retry attempt
+          final logEntry = 'Retry attempt $currentRetryCount/$maxRetries after timeout. Waiting ${delay.inSeconds}s before retry.';
+          _addProcessingLog(item.id, logEntry);
+
+          // Update item with new retry count and status
+          _updateItemWithRetryCount(item.id, currentRetryCount);
+          _updateItemStatus(
+            item.id,
+            BatchUploadItemStatus.processing,
+            error: null,
+            stage: BatchProcessingStage.retrying,
+          );
+
+          _updateItemProgress(
+            item.id,
+            10, // Reset to initial progress
+            'Retrying... (attempt $currentRetryCount/$maxRetries)',
+          );
+
+          // Wait before retrying
+          await Future.delayed(delay);
+        } else {
+          // Max retries exceeded
+          _logger.e(
+            'Item ${item.fileName} failed after $maxRetries retry attempts',
+          );
+          _updateItemStatus(
+            item.id,
+            BatchUploadItemStatus.failed,
+            error: 'AI processing timed out after $maxRetries automatic retries. The receipt may be complex or the server is busy. Please try again later or use manual retry.',
+          );
+        }
+      } catch (e) {
+        _logger.e('Error processing item ${item.fileName}: $e');
+        _updateItemStatus(
+          item.id,
+          BatchUploadItemStatus.failed,
+          error: 'Processing failed: $e',
+        );
+        return; // Don't retry for non-timeout errors
+      }
     }
   }
 
@@ -336,10 +402,8 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
     const checkInterval = Duration(
       milliseconds: 300,
     ); // More responsive checking
-    const maxWaitTime = Duration(minutes: 8);
-    const progressStuckTimeout = Duration(
-      seconds: 45,
-    ); // Reduced from 2 minutes to 45 seconds
+    const maxWaitTime = BatchUploadTimeouts.waitForCompletionTimeout;
+    const progressStuckTimeout = BatchUploadTimeouts.progressStuckTimeout;
     final startTime = DateTime.now();
     int checkCount = 0;
     DateTime? progressStuckStartTime;
@@ -443,6 +507,12 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
         stage: BatchProcessingStage.initializing,
       );
 
+      // Check if disposed before using ref
+      if (_disposed) {
+        _logger.w('Provider disposed, skipping item processing: ${item.fileName}');
+        return;
+      }
+
       final user = _ref.read(currentUserProvider);
       if (user == null) {
         throw Exception('User not authenticated');
@@ -459,7 +529,11 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
       final uuid = const Uuid();
       final receiptId = uuid.v4();
       final fileExtension = path.extension(item.file.path);
-      final fileName = 'receipt_$receiptId$fileExtension';
+
+      // Use timestamp-based filename to match React app behavior and avoid conflicts
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final fileId = receiptId.substring(0, 8); // Use first 8 chars of UUID as fileId
+      final fileName = '${timestamp}_$fileId$fileExtension';
       final filePath = '${user.id}/$fileName';
 
       // Optimize image before upload (match React app behavior)
@@ -498,6 +572,12 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
         'Creating receipt record...',
         stage: BatchProcessingStage.creatingRecord,
       );
+
+      // Check if disposed before using ref
+      if (_disposed) {
+        _logger.w('Provider disposed during receipt record creation');
+        return;
+      }
 
       final currentTeamState = _ref.read(currentTeamModelProvider);
       final today = DateTime.now().toIso8601String().split(
@@ -559,8 +639,8 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
         final response = await SupabaseService.client.functions
             .invoke('process-receipt', body: requestPayload)
             .timeout(
-              const Duration(seconds: 30),
-            ); // Timeout for the function call
+              BatchUploadTimeouts.functionCallTimeout,
+            ); // Increased timeout for batch uploads to handle AI processing delays
 
         _logger.d(
           'AI processing response for $receiptId: status=${response.status}, data=${response.data}',
@@ -629,7 +709,7 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
   /// Subscribe to processing logs for real-time updates with timeout handling
   void _subscribeToProcessingLogs(String itemId, String receiptId) {
     final startTime = DateTime.now();
-    const maxProcessingTime = Duration(minutes: 8); // 8 minute timeout
+    const maxProcessingTime = BatchUploadTimeouts.maxProcessingTimeout;
 
     _logger.i('🔔 SETTING UP SUBSCRIPTION for receipt $receiptId');
     _logger.i('🔔 Item ID: $itemId');
@@ -1103,6 +1183,33 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
           ? DateTime.now()
           : null,
     );
+
+    final updatedItems = [...state.items];
+    updatedItems[itemIndex] = updatedItem;
+    state = state.copyWith(items: updatedItems);
+  }
+
+  /// Update item retry count
+  void _updateItemWithRetryCount(String itemId, int retryCount) {
+    final itemIndex = state.items.indexWhere((item) => item.id == itemId);
+    if (itemIndex == -1) return;
+
+    final item = state.items[itemIndex];
+    final updatedItem = item.copyWith(retryCount: retryCount);
+
+    final updatedItems = [...state.items];
+    updatedItems[itemIndex] = updatedItem;
+    state = state.copyWith(items: updatedItems);
+  }
+
+  /// Add processing log entry to item
+  void _addProcessingLog(String itemId, String logEntry) {
+    final itemIndex = state.items.indexWhere((item) => item.id == itemId);
+    if (itemIndex == -1) return;
+
+    final item = state.items[itemIndex];
+    final updatedLogs = [...item.processingLogs, logEntry];
+    final updatedItem = item.copyWith(processingLogs: updatedLogs);
 
     final updatedItems = [...state.items];
     updatedItems[itemIndex] = updatedItem;

@@ -363,62 +363,160 @@ class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
           ),
         ),
       ),
-      child: Row(
-        children: [
-          // Retry failed button
-          if (widget.batchState.failedItems.isNotEmpty &&
-              widget.onRetryFailed != null)
-            TextButton.icon(
-              onPressed: widget.onRetryFailed,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry Failed'),
-            ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Check if we have enough space for all buttons in a row
+          final hasRetryButton = widget.batchState.failedItems.isNotEmpty &&
+              widget.onRetryFailed != null;
+          final hasViewButton = widget.batchState.completedItems.isNotEmpty;
 
-          const Spacer(),
+          // Estimate button widths (approximate)
+          const retryButtonWidth = 130.0; // "Retry Failed" button
+          const viewButtonWidth = 140.0;  // "View Results" button
+          const newBatchButtonWidth = 120.0; // "New Batch" button
+          const paddingWidth = AppConstants.smallPadding;
 
-          // View all receipts button
-          if (widget.batchState.completedItems.isNotEmpty)
-            ElevatedButton.icon(
-              onPressed: () {
-                // Use callback if provided, otherwise show modal directly
-                if (widget.onViewAllReceipts != null) {
-                  widget.onViewAllReceipts!();
-                } else {
-                  // Get all completed receipt IDs
-                  final receiptIds = widget.batchState.completedItems
-                      .where((item) => item.receiptId != null)
-                      .map((item) => item.receiptId!)
-                      .toList();
+          double requiredWidth = newBatchButtonWidth; // Always present
+          if (hasRetryButton) requiredWidth += retryButtonWidth;
+          if (hasViewButton) requiredWidth += viewButtonWidth + paddingWidth;
+          if (hasRetryButton && hasViewButton) requiredWidth += paddingWidth;
 
-                  if (receiptIds.isNotEmpty) {
-                    // Show receipt browser modal
-                    showDialog(
-                      context: context,
-                      builder: (context) => ReceiptBrowserModal(
-                        receiptIds: receiptIds,
-                        title: 'Uploaded Receipts (${receiptIds.length})',
-                        onClose: () => Navigator.of(context).pop(),
-                      ),
-                    );
-                  } else {
-                    // Fallback to receipts list if no receipt IDs found
-                    context.push('/receipts');
-                  }
-                }
-              },
-              icon: const Icon(Icons.receipt_long),
-              label: const Text('View Results'),
-            ),
+          // If we don't have enough space, use a column layout
+          if (constraints.maxWidth < requiredWidth) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // First row: Retry button (if present) and View Results button (if present)
+                if (hasRetryButton || hasViewButton)
+                  Row(
+                    children: [
+                      // Retry failed button
+                      if (hasRetryButton)
+                        Expanded(
+                          child: TextButton.icon(
+                            onPressed: widget.onRetryFailed,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Retry Failed'),
+                          ),
+                        ),
 
-          const SizedBox(width: AppConstants.smallPadding),
+                      if (hasRetryButton && hasViewButton)
+                        const SizedBox(width: AppConstants.smallPadding),
 
-          // Start new batch button
-          ElevatedButton.icon(
-            onPressed: widget.onReset,
-            icon: const Icon(Icons.add),
-            label: const Text('New Batch'),
-          ),
-        ],
+                      // View all receipts button
+                      if (hasViewButton)
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              // Use callback if provided, otherwise show modal directly
+                              if (widget.onViewAllReceipts != null) {
+                                widget.onViewAllReceipts!();
+                              } else {
+                                // Get all completed receipt IDs
+                                final receiptIds = widget.batchState.completedItems
+                                    .where((item) => item.receiptId != null)
+                                    .map((item) => item.receiptId!)
+                                    .toList();
+
+                                if (receiptIds.isNotEmpty) {
+                                  // Show receipt browser modal
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => ReceiptBrowserModal(
+                                      receiptIds: receiptIds,
+                                      title: 'Uploaded Receipts (${receiptIds.length})',
+                                      onClose: () => Navigator.of(context).pop(),
+                                    ),
+                                  );
+                                } else {
+                                  // Fallback to receipts list if no receipt IDs found
+                                  context.push('/receipts');
+                                }
+                              }
+                            },
+                            icon: const Icon(Icons.receipt_long),
+                            label: const Text('View Results'),
+                          ),
+                        ),
+                    ],
+                  ),
+
+                // Add spacing between rows if both rows are present
+                if ((hasRetryButton || hasViewButton))
+                  const SizedBox(height: AppConstants.smallPadding),
+
+                // Second row: New Batch button (always present)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: widget.onReset,
+                    icon: const Icon(Icons.add),
+                    label: const Text('New Batch'),
+                  ),
+                ),
+              ],
+            );
+          }
+
+          // If we have enough space, use the original row layout
+          return Row(
+            children: [
+              // Retry failed button
+              if (hasRetryButton)
+                TextButton.icon(
+                  onPressed: widget.onRetryFailed,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Retry Failed'),
+                ),
+
+              const Spacer(),
+
+              // View all receipts button
+              if (hasViewButton)
+                ElevatedButton.icon(
+                  onPressed: () {
+                    // Use callback if provided, otherwise show modal directly
+                    if (widget.onViewAllReceipts != null) {
+                      widget.onViewAllReceipts!();
+                    } else {
+                      // Get all completed receipt IDs
+                      final receiptIds = widget.batchState.completedItems
+                          .where((item) => item.receiptId != null)
+                          .map((item) => item.receiptId!)
+                          .toList();
+
+                      if (receiptIds.isNotEmpty) {
+                        // Show receipt browser modal
+                        showDialog(
+                          context: context,
+                          builder: (context) => ReceiptBrowserModal(
+                            receiptIds: receiptIds,
+                            title: 'Uploaded Receipts (${receiptIds.length})',
+                            onClose: () => Navigator.of(context).pop(),
+                          ),
+                        );
+                      } else {
+                        // Fallback to receipts list if no receipt IDs found
+                        context.push('/receipts');
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.receipt_long),
+                  label: const Text('View Results'),
+                ),
+
+              const SizedBox(width: AppConstants.smallPadding),
+
+              // Start new batch button
+              ElevatedButton.icon(
+                onPressed: widget.onReset,
+                icon: const Icon(Icons.add),
+                label: const Text('New Batch'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
