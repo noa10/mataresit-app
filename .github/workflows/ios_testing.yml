@@ -1,0 +1,278 @@
+name: iOS Testing Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'lib/**'
+      - 'test/**'
+      - 'ios/**'
+      - 'pubspec.yaml'
+      - '.github/workflows/ios_testing.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'lib/**'
+      - 'test/**'
+      - 'ios/**'
+      - 'pubspec.yaml'
+      - '.github/workflows/ios_testing.yml'
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Specific test suite to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - simulator
+          - performance
+          - feature-parity
+          - edge-cases
+          - accessibility
+
+env:
+  FLUTTER_VERSION: '3.35.3'
+  XCODE_VERSION: '15.0'
+
+jobs:
+  ios-testing:
+    name: iOS Testing Suite
+    runs-on: macos-14
+    timeout-minutes: 60
+    
+    strategy:
+      matrix:
+        ios-version: ['17.0', '16.0', '15.0']
+      fail-fast: false
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ env.XCODE_VERSION }}
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+      
+      - name: Flutter Doctor
+        run: flutter doctor -v
+      
+      - name: Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+            ios/Pods
+          key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.lock') }}-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-
+      
+      - name: Install Dependencies
+        run: |
+          flutter pub get
+          cd ios && pod install --repo-update
+      
+      - name: Setup iOS Simulator
+        run: |
+          # List available simulators
+          xcrun simctl list devices available
+          
+          # Create iOS simulator if needed
+          SIMULATOR_NAME="iPhone 15 Pro"
+          DEVICE_TYPE="com.apple.CoreSimulator.SimDeviceType.iPhone-15-Pro"
+          RUNTIME="com.apple.CoreSimulator.SimRuntime.iOS-${{ matrix.ios-version }}"
+          
+          # Check if simulator exists
+          if ! xcrun simctl list devices | grep -q "$SIMULATOR_NAME"; then
+            echo "Creating iOS ${{ matrix.ios-version }} simulator..."
+            xcrun simctl create "$SIMULATOR_NAME" "$DEVICE_TYPE" "$RUNTIME"
+          fi
+          
+          # Boot simulator
+          SIMULATOR_UDID=$(xcrun simctl list devices | grep "$SIMULATOR_NAME" | grep -o '[A-F0-9-]\{36\}' | head -1)
+          echo "Booting simulator: $SIMULATOR_UDID"
+          xcrun simctl boot "$SIMULATOR_UDID"
+          
+          # Wait for simulator to boot
+          echo "Waiting for simulator to boot..."
+          sleep 30
+          
+          # Verify simulator is booted
+          xcrun simctl list devices | grep "$SIMULATOR_UDID"
+      
+      - name: Build iOS App
+        run: |
+          flutter build ios --debug --no-codesign --simulator
+      
+      - name: Run iOS Tests
+        id: ios-tests
+        run: |
+          # Determine which test suite to run
+          TEST_SUITE="${{ github.event.inputs.test_suite || 'all' }}"
+          
+          if [ "$TEST_SUITE" = "all" ]; then
+            echo "Running comprehensive iOS test suite..."
+            ./scripts/ios_testing/run_ios_tests.sh
+          else
+            echo "Running specific test suite: $TEST_SUITE"
+            ./scripts/ios_testing/run_ios_tests.sh --suite "$TEST_SUITE"
+          fi
+        continue-on-error: true
+      
+      - name: Upload Test Reports
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ios-test-reports-${{ matrix.ios-version }}
+          path: |
+            test_reports/
+            test_logs/
+          retention-days: 30
+      
+      - name: Upload Test Results to GitHub
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: iOS Tests (iOS ${{ matrix.ios-version }})
+          path: 'test_reports/ios_test_report.json'
+          reporter: 'flutter-json'
+          fail-on-error: false
+      
+      - name: Comment Test Results on PR
+        uses: actions/github-script@v6
+        if: github.event_name == 'pull_request' && always()
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            // Read test summary if available
+            const summaryPath = 'test_reports/test_summary.txt';
+            let testSummary = 'Test summary not available';
+            
+            try {
+              if (fs.existsSync(summaryPath)) {
+                testSummary = fs.readFileSync(summaryPath, 'utf8');
+              }
+            } catch (error) {
+              console.log('Could not read test summary:', error.message);
+            }
+            
+            // Create comment body
+            const commentBody = `
+            ## iOS Testing Results (iOS ${{ matrix.ios-version }})
+            
+            **Status:** ${{ steps.ios-tests.outcome == 'success' && '✅ Passed' || '❌ Failed' }}
+            **Workflow:** [${context.workflow}](${context.payload.repository.html_url}/actions/runs/${context.runId})
+            
+            ### Test Summary
+            \`\`\`
+            ${testSummary}
+            \`\`\`
+            
+            ### Artifacts
+            - Test reports and logs are available in the workflow artifacts
+            - HTML report provides detailed test results and device information
+            
+            <details>
+            <summary>View Test Configuration</summary>
+            
+            - **Flutter Version:** ${{ env.FLUTTER_VERSION }}
+            - **Xcode Version:** ${{ env.XCODE_VERSION }}
+            - **iOS Version:** ${{ matrix.ios-version }}
+            - **Test Suite:** ${{ github.event.inputs.test_suite || 'all' }}
+            - **Runner:** ${{ runner.os }}
+            
+            </details>
+            `;
+            
+            // Post comment
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: commentBody
+            });
+      
+      - name: Fail Job on Test Failure
+        if: steps.ios-tests.outcome == 'failure'
+        run: |
+          echo "iOS tests failed!"
+          exit 1
+
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: ios-testing
+    if: always()
+    
+    steps:
+      - name: Download All Test Reports
+        uses: actions/download-artifact@v3
+        with:
+          path: all-test-reports
+      
+      - name: Generate Combined Test Report
+        run: |
+          echo "# iOS Testing Summary" > test-summary.md
+          echo "" >> test-summary.md
+          echo "**Date:** $(date)" >> test-summary.md
+          echo "**Workflow:** ${{ github.workflow }}" >> test-summary.md
+          echo "**Run ID:** ${{ github.run_id }}" >> test-summary.md
+          echo "" >> test-summary.md
+          
+          echo "## Test Results by iOS Version" >> test-summary.md
+          echo "" >> test-summary.md
+          
+          # Process each iOS version
+          for version_dir in all-test-reports/ios-test-reports-*/; do
+            if [ -d "$version_dir" ]; then
+              version=$(basename "$version_dir" | sed 's/ios-test-reports-//')
+              echo "### iOS $version" >> test-summary.md
+              
+              if [ -f "$version_dir/test_reports/test_summary.txt" ]; then
+                echo "\`\`\`" >> test-summary.md
+                cat "$version_dir/test_reports/test_summary.txt" >> test-summary.md
+                echo "\`\`\`" >> test-summary.md
+              else
+                echo "Test summary not available for iOS $version" >> test-summary.md
+              fi
+              
+              echo "" >> test-summary.md
+            fi
+          done
+          
+          echo "## Artifacts" >> test-summary.md
+          echo "" >> test-summary.md
+          echo "Test reports and logs are available as workflow artifacts:" >> test-summary.md
+          echo "" >> test-summary.md
+          
+          for version_dir in all-test-reports/ios-test-reports-*/; do
+            if [ -d "$version_dir" ]; then
+              version=$(basename "$version_dir" | sed 's/ios-test-reports-//')
+              echo "- iOS $version: \`ios-test-reports-$version\`" >> test-summary.md
+            fi
+          done
+      
+      - name: Upload Combined Summary
+        uses: actions/upload-artifact@v3
+        with:
+          name: combined-test-summary
+          path: test-summary.md
+          retention-days: 30
+      
+      - name: Display Summary
+        run: |
+          echo "=== iOS Testing Pipeline Summary ==="
+          cat test-summary.md

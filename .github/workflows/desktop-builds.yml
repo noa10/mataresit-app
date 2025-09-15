@@ -1,0 +1,195 @@
+name: Desktop Builds
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      build_platforms:
+        description: 'Platforms to build'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - macos
+          - windows
+          - linux
+
+env:
+  FLUTTER_VERSION: '3.35.3'
+
+jobs:
+  # Desktop builds using matrix strategy
+  desktop-build:
+    name: Build Desktop (${{ matrix.platform }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos
+            runner: macos-latest
+            build_command: flutter build macos --release
+            artifact_path: build/macos/Build/Products/Release/
+            artifact_name: mataresit-macos
+            executable_extension: .app
+          - platform: windows
+            runner: windows-latest
+            build_command: flutter build windows --release
+            artifact_path: build/windows/x64/runner/Release/
+            artifact_name: mataresit-windows
+            executable_extension: .exe
+          - platform: linux
+            runner: ubuntu-latest
+            build_command: flutter build linux --release
+            artifact_path: build/linux/x64/release/bundle/
+            artifact_name: mataresit-linux
+            executable_extension: ""
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      # Platform-specific setup
+      - name: Setup Linux dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ninja-build libgtk-3-dev libblkid-dev liblzma-dev
+
+      - name: Setup Windows dependencies
+        if: matrix.platform == 'windows'
+        run: |
+          # Ensure Visual Studio Build Tools are available
+          echo "Windows runner should have VS Build Tools pre-installed"
+
+      - name: Setup macOS dependencies
+        if: matrix.platform == 'macos'
+        run: |
+          # Install any additional macOS dependencies if needed
+          echo "macOS runner setup complete"
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            ${{ runner.tool_cache }}/flutter
+          key: ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-
+            ${{ runner.os }}-flutter-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify Flutter installation
+        run: |
+          flutter --version
+          flutter doctor -v
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build ${{ matrix.platform }} app
+        run: ${{ matrix.build_command }}
+
+      - name: Create archive (macOS)
+        if: matrix.platform == 'macos'
+        run: |
+          cd build/macos/Build/Products/Release/
+          zip -r mataresit-macos.zip mataresit_app.app
+
+      - name: Create archive (Windows)
+        if: matrix.platform == 'windows'
+        run: |
+          cd build/windows/x64/runner/Release/
+          7z a mataresit-windows.zip *
+
+      - name: Create archive (Linux)
+        if: matrix.platform == 'linux'
+        run: |
+          cd build/linux/x64/release/bundle/
+          tar -czf mataresit-linux.tar.gz *
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            ${{ matrix.platform == 'macos' && 'build/macos/Build/Products/Release/mataresit-macos.zip' || '' }}
+            ${{ matrix.platform == 'windows' && 'build/windows/x64/runner/Release/mataresit-windows.zip' || '' }}
+            ${{ matrix.platform == 'linux' && 'build/linux/x64/release/bundle/mataresit-linux.tar.gz' || '' }}
+          retention-days: 30
+
+  # Release job (only on main branch)
+  desktop-release:
+    name: Create Desktop Release
+    runs-on: ubuntu-latest
+    needs: desktop-build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Display structure of downloaded files
+        run: ls -la ./artifacts/
+
+      - name: Get version from pubspec.yaml
+        id: version
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: desktop-v${{ steps.version.outputs.version }}
+          name: Mataresit Desktop v${{ steps.version.outputs.version }}
+          body: |
+            ## Desktop Release v${{ steps.version.outputs.version }}
+            
+            ### Downloads
+            - **macOS**: Download `mataresit-macos.zip`
+            - **Windows**: Download `mataresit-windows.zip` 
+            - **Linux**: Download `mataresit-linux.tar.gz`
+            
+            ### Installation
+            - **macOS**: Extract and move to Applications folder
+            - **Windows**: Extract and run the executable
+            - **Linux**: Extract and run the executable
+            
+            ### Notes
+            - macOS: You may need to allow the app in System Preferences > Security & Privacy
+            - Windows: You may see a SmartScreen warning - click "More info" then "Run anyway"
+          draft: false
+          prerelease: false
+          files: |
+            ./artifacts/mataresit-macos/mataresit-macos.zip
+            ./artifacts/mataresit-windows/mataresit-windows.zip
+            ./artifacts/mataresit-linux/mataresit-linux.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
