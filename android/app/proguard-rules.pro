@@ -22,6 +22,18 @@
 -keep class com.yalantis.ucrop.** { *; }
 -dontwarn com.yalantis.ucrop.**
 
+# Keep permission handler classes
+-keep class com.baseflow.permissionhandler.** { *; }
+-dontwarn com.baseflow.permissionhandler.**
+
+# Keep image picker classes
+-keep class io.flutter.plugins.imagepicker.** { *; }
+-dontwarn io.flutter.plugins.imagepicker.**
+
+# Keep image cropper classes
+-keep class com.example.image_cropper.** { *; }
+-dontwarn com.example.image_cropper.**
+
 # Keep local auth classes
 -keep class androidx.biometric.** { *; }
 -dontwarn androidx.biometric.**
