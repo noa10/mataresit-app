@@ -4,12 +4,12 @@ import 'package:mataresit_app/shared/models/receipt_model.dart';
 void main() {
   group('ReceiptService', () {
     group('Status Handling', () {
-      test('should handle invalid status values gracefully', () {
-        // Test data with invalid status
+      test('should handle valid unreviewed status correctly', () {
+        // Test data with valid unreviewed status
         final testReceiptData = {
           'id': 'test-receipt-1',
           'user_id': 'test-user',
-          'status': 'unreviewed', // Invalid status
+          'status': 'unreviewed', // Valid status - no conversion needed
           'processing_status': 'completed',
           'merchant_name': 'Test Merchant',
           'total_amount': 25.50,
@@ -20,24 +20,18 @@ void main() {
           'updated_at': DateTime.now().toIso8601String(),
         };
 
-        // This should not throw an exception when the status is normalized
+        // This should work without any status conversion
         expect(() {
-          // Simulate the status normalization that happens in the service
-          if (testReceiptData['status'] == 'unreviewed') {
-            testReceiptData['status'] = 'draft';
-          }
-
-          // This should now work without throwing
           final receipt = ReceiptModel.fromJson(testReceiptData);
           expect(receipt.status, equals(ReceiptStatus.unreviewed));
         }, returnsNormally);
       });
 
-      test('should preserve valid status values', () {
+      test('should handle valid reviewed status correctly', () {
         final testReceiptData = {
           'id': 'test-receipt-2',
           'user_id': 'test-user',
-          'status': 'active', // Valid status
+          'status': 'reviewed', // Valid status
           'processing_status': 'completed',
           'merchant_name': 'Test Merchant',
           'total_amount': 25.50,
