@@ -2,7 +2,7 @@ name: Flutter Desktop Builds
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths-ignore:
       - '**.md'
       - 'docs/**'
@@ -11,7 +11,7 @@ on:
       - '.github/workflows/performance-monitoring.yml'
       - '.github/workflows/pr-check.yml'
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
     paths-ignore:
       - '**.md'
       - 'docs/**'
