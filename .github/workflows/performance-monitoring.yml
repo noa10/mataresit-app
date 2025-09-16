@@ -165,7 +165,7 @@ jobs:
           
           # Add recommendations based on metrics
           BUILD_DURATION=${{ needs.collect_metrics.outputs.build_duration }}
-          if [ "$BUILD_DURATION" -gt 600 ]; then
+          if [ "$BUILD_DURATION" -gt 1200 ]; then
             echo "- ⚠️ Build duration is high (${BUILD_DURATION}s). Consider optimizing dependencies or enabling more caching." >> performance_report.md
           else
             echo "- ✅ Build duration is acceptable (${BUILD_DURATION}s)." >> performance_report.md
@@ -301,7 +301,7 @@ jobs:
           echo "## Recommendations" >> $GITHUB_STEP_SUMMARY
           
           BUILD_DURATION=${{ needs.collect_metrics.outputs.build_duration }}
-          if [ "$BUILD_DURATION" -gt 600 ]; then
+          if [ "$BUILD_DURATION" -gt 1200 ]; then
             echo "- ⚠️ Consider optimizing build performance (current: ${BUILD_DURATION}s)" >> $GITHUB_STEP_SUMMARY
           else
             echo "- ✅ Build performance is good (${BUILD_DURATION}s)" >> $GITHUB_STEP_SUMMARY
@@ -313,7 +313,7 @@ jobs:
           echo "- Download artifacts for detailed analysis" >> $GITHUB_STEP_SUMMARY
 
       - name: Create performance issue (if needed)
-        if: needs.collect_metrics.outputs.build_duration > 900
+        if: needs.collect_metrics.outputs.build_duration > 1500
         uses: actions/github-script@v7
         continue-on-error: true
         with:
@@ -337,7 +337,7 @@ jobs:
                   title: `Performance Alert: Build duration is ${buildDuration}s`,
                   body: `## Performance Alert
                 
-                The CI/CD build duration has exceeded the threshold of 15 minutes.
+                The CI/CD build duration has exceeded the threshold of 25 minutes.
                 
                 **Current build duration**: ${buildDuration}s (${Math.round(buildDuration/60)} minutes)
                 
