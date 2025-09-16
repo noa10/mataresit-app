@@ -144,7 +144,7 @@ jobs:
             artifact_path: build/windows/x64/runner/Release/
             artifact_name: mataresit-windows
             executable_extension: .exe
-            archive_command: 7z a mataresit-windows-${{ needs.setup.outputs.version }}.zip *
+            archive_command: powershell -Command "Compress-Archive -Path * -DestinationPath mataresit-windows-${{ needs.setup.outputs.version }}.zip -Force"
             archive_name: mataresit-windows-${{ needs.setup.outputs.version }}.zip
           - platform: linux
             runner: ubuntu-latest
@@ -251,28 +251,63 @@ jobs:
         env:
           FLUTTER_BUILD_MODE: release
 
-      - name: Verify build output
+      - name: Verify build output (macOS/Linux)
+        if: matrix.platform != 'windows'
         run: |
           echo "Verifying build output for ${{ matrix.platform }}..."
           if [ "${{ matrix.platform }}" = "macos" ]; then
             ls -la build/macos/Build/Products/Release/
             file build/macos/Build/Products/Release/mataresit_app.app/Contents/MacOS/mataresit_app
-          elif [ "${{ matrix.platform }}" = "windows" ]; then
-            ls -la build/windows/x64/runner/Release/
-            file build/windows/x64/runner/Release/mataresit_app.exe || true
           elif [ "${{ matrix.platform }}" = "linux" ]; then
             ls -la build/linux/x64/release/bundle/
             file build/linux/x64/release/bundle/mataresit_app
           fi
 
-      - name: Create versioned archive
+      - name: Verify build output (Windows)
+        if: matrix.platform == 'windows'
+        shell: powershell
+        run: |
+          Write-Host "Verifying build output for Windows..."
+          Get-ChildItem -Path "build/windows/x64/runner/Release/" -Recurse
+          if (Test-Path "build/windows/x64/runner/Release/mataresit_app.exe") {
+            Write-Host "✅ mataresit_app.exe found"
+            $fileInfo = Get-Item "build/windows/x64/runner/Release/mataresit_app.exe"
+            Write-Host "File size: $($fileInfo.Length) bytes"
+          } else {
+            Write-Host "❌ mataresit_app.exe not found"
+            exit 1
+          }
+
+      - name: Create versioned archive (macOS/Linux)
+        if: matrix.platform != 'windows'
         run: |
           cd ${{ matrix.artifact_path }}
           ${{ matrix.archive_command }}
           ls -la *.zip *.tar.gz 2>/dev/null || true
 
-      - name: Calculate file sizes and checksums
-        id: file_info
+      - name: Create versioned archive (Windows)
+        if: matrix.platform == 'windows'
+        shell: powershell
+        run: |
+          Set-Location "${{ matrix.artifact_path }}"
+          $archiveName = "${{ matrix.archive_name }}"
+          Write-Host "Creating archive: $archiveName"
+
+          # Use PowerShell Compress-Archive instead of 7z
+          Compress-Archive -Path "*" -DestinationPath $archiveName -Force
+
+          if (Test-Path $archiveName) {
+            Write-Host "✅ Archive created successfully: $archiveName"
+            $fileInfo = Get-Item $archiveName
+            Write-Host "Archive size: $($fileInfo.Length) bytes"
+          } else {
+            Write-Host "❌ Failed to create archive"
+            exit 1
+          }
+
+      - name: Calculate file sizes and checksums (macOS/Linux)
+        if: matrix.platform != 'windows'
+        id: file_info_unix
         run: |
           cd ${{ matrix.artifact_path }}
           ARCHIVE_FILE="${{ matrix.archive_name }}"
@@ -285,6 +320,34 @@ jobs:
             echo "Size: $SIZE"
             echo "SHA256: $CHECKSUM"
           fi
+
+      - name: Calculate file sizes and checksums (Windows)
+        if: matrix.platform == 'windows'
+        id: file_info_windows
+        shell: powershell
+        run: |
+          Set-Location "${{ matrix.artifact_path }}"
+          $archiveFile = "${{ matrix.archive_name }}"
+          if (Test-Path $archiveFile) {
+            $fileInfo = Get-Item $archiveFile
+            $sizeKB = [math]::Round($fileInfo.Length / 1KB, 1)
+            $sizeMB = [math]::Round($fileInfo.Length / 1MB, 1)
+
+            if ($sizeMB -gt 1) {
+              $size = "${sizeMB}M"
+            } else {
+              $size = "${sizeKB}K"
+            }
+
+            $checksum = (Get-FileHash -Path $archiveFile -Algorithm SHA256).Hash.ToLower()
+
+            Add-Content -Path $env:GITHUB_OUTPUT -Value "size=$size"
+            Add-Content -Path $env:GITHUB_OUTPUT -Value "checksum=$checksum"
+
+            Write-Host "Archive: $archiveFile"
+            Write-Host "Size: $size"
+            Write-Host "SHA256: $checksum"
+          }
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
