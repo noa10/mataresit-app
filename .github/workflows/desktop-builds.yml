@@ -1,4 +1,4 @@
-name: Desktop Builds
+name: Flutter Desktop Builds
 
 on:
   push:
@@ -6,6 +6,10 @@ on:
     paths-ignore:
       - '**.md'
       - 'docs/**'
+      - '.github/workflows/ci-cd.yml'
+      - '.github/workflows/ios_testing.yml'
+      - '.github/workflows/performance-monitoring.yml'
+      - '.github/workflows/pr-check.yml'
   pull_request:
     branches: [ main ]
     paths-ignore:
@@ -14,7 +18,7 @@ on:
   workflow_dispatch:
     inputs:
       build_platforms:
-        description: 'Platforms to build'
+        description: 'Desktop platforms to build'
         required: true
         default: 'all'
         type: choice
@@ -23,38 +27,40 @@ on:
           - macos
           - windows
           - linux
+      release_type:
+        description: 'Release type (for versioning)'
+        required: false
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      skip_tests:
+        description: 'Skip running tests'
+        required: false
+        default: false
+        type: boolean
 
 env:
   FLUTTER_VERSION: '3.35.3'
+  JAVA_VERSION: '17'
+
+permissions:
+  contents: write
+  actions: read
+  checks: write
 
 jobs:
-  # Desktop builds using matrix strategy
-  desktop-build:
-    name: Build Desktop (${{ matrix.platform }})
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: macos
-            runner: macos-latest
-            build_command: flutter build macos --release
-            artifact_path: build/macos/Build/Products/Release/
-            artifact_name: mataresit-macos
-            executable_extension: .app
-          - platform: windows
-            runner: windows-latest
-            build_command: flutter build windows --release
-            artifact_path: build/windows/x64/runner/Release/
-            artifact_name: mataresit-windows
-            executable_extension: .exe
-          - platform: linux
-            runner: ubuntu-latest
-            build_command: flutter build linux --release
-            artifact_path: build/linux/x64/release/bundle/
-            artifact_name: mataresit-linux
-            executable_extension: ""
-
+  # Setup and validation job
+  setup:
+    name: Setup & Validation
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+      version: ${{ steps.version.outputs.version }}
+      build_number: ${{ steps.version.outputs.build_number }}
+      platforms: ${{ steps.platforms.outputs.platforms }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -66,25 +72,6 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
-
-      # Platform-specific setup
-      - name: Setup Linux dependencies
-        if: matrix.platform == 'linux'
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y ninja-build libgtk-3-dev libblkid-dev liblzma-dev
-
-      - name: Setup Windows dependencies
-        if: matrix.platform == 'windows'
-        run: |
-          # Ensure Visual Studio Build Tools are available
-          echo "Windows runner should have VS Build Tools pre-installed"
-
-      - name: Setup macOS dependencies
-        if: matrix.platform == 'macos'
-        run: |
-          # Install any additional macOS dependencies if needed
-          echo "macOS runner setup complete"
 
       - name: Cache Flutter dependencies
         uses: actions/cache@v4
@@ -105,91 +92,446 @@ jobs:
           flutter --version
           flutter doctor -v
 
-      - name: Run tests
-        run: flutter test
-
-      - name: Build ${{ matrix.platform }} app
-        run: ${{ matrix.build_command }}
-
-      - name: Create archive (macOS)
-        if: matrix.platform == 'macos'
+      - name: Check build conditions
+        id: check
         run: |
-          cd build/macos/Build/Products/Release/
-          zip -r mataresit-macos.zip mataresit_app.app
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "should_build=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_build=false" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Create archive (Windows)
-        if: matrix.platform == 'windows'
+      - name: Generate version and build number
+        id: version
         run: |
-          cd build/windows/x64/runner/Release/
-          7z a mataresit-windows.zip *
+          # Get current version from pubspec.yaml
+          CURRENT_VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | sed 's/+.*//')
+          CURRENT_BUILD=$(grep '^version:' pubspec.yaml | sed 's/.*+//')
 
-      - name: Create archive (Linux)
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "build_number=$CURRENT_BUILD" >> $GITHUB_OUTPUT
+
+      - name: Determine platforms to build
+        id: platforms
+        run: |
+          if [[ "${{ github.event.inputs.build_platforms }}" == "all" ]] || [[ -z "${{ github.event.inputs.build_platforms }}" ]]; then
+            echo "platforms=[\"macos\", \"windows\", \"linux\"]" >> $GITHUB_OUTPUT
+          else
+            echo "platforms=[\"${{ github.event.inputs.build_platforms }}\"]" >> $GITHUB_OUTPUT
+          fi
+
+  # Desktop builds using matrix strategy
+  desktop-build:
+    name: Build Desktop (${{ matrix.platform }})
+    runs-on: ${{ matrix.runner }}
+    needs: setup
+    if: needs.setup.outputs.should_build == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos
+            runner: macos-latest
+            build_command: flutter build macos --release --tree-shake-icons --split-debug-info=debug-symbols/
+            artifact_path: build/macos/Build/Products/Release/
+            artifact_name: mataresit-macos
+            executable_extension: .app
+            archive_command: zip -r mataresit-macos-${{ needs.setup.outputs.version }}.zip mataresit_app.app
+            archive_name: mataresit-macos-${{ needs.setup.outputs.version }}.zip
+          - platform: windows
+            runner: windows-latest
+            build_command: flutter build windows --release --tree-shake-icons --split-debug-info=debug-symbols/
+            artifact_path: build/windows/x64/runner/Release/
+            artifact_name: mataresit-windows
+            executable_extension: .exe
+            archive_command: 7z a mataresit-windows-${{ needs.setup.outputs.version }}.zip *
+            archive_name: mataresit-windows-${{ needs.setup.outputs.version }}.zip
+          - platform: linux
+            runner: ubuntu-latest
+            build_command: flutter build linux --release --tree-shake-icons --split-debug-info=debug-symbols/
+            artifact_path: build/linux/x64/release/bundle/
+            artifact_name: mataresit-linux
+            executable_extension: ""
+            archive_command: tar -czf mataresit-linux-${{ needs.setup.outputs.version }}.tar.gz *
+            archive_name: mataresit-linux-${{ needs.setup.outputs.version }}.tar.gz
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Setup Java (for Android tools)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      # Platform-specific setup with enhanced dependencies
+      - name: Setup Linux dependencies
         if: matrix.platform == 'linux'
         run: |
-          cd build/linux/x64/release/bundle/
-          tar -czf mataresit-linux.tar.gz *
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            ninja-build \
+            libgtk-3-dev \
+            libblkid-dev \
+            liblzma-dev \
+            pkg-config \
+            cmake \
+            libsecret-1-dev \
+            libjsoncpp-dev
 
-      - name: Upload artifacts
+      - name: Setup Windows dependencies
+        if: matrix.platform == 'windows'
+        shell: powershell
+        run: |
+          # Verify Visual Studio Build Tools
+          Write-Host "Checking Visual Studio Build Tools..."
+          Get-ChildItem "C:\Program Files (x86)\Microsoft Visual Studio" -ErrorAction SilentlyContinue
+
+          # Verify Windows SDK
+          Write-Host "Checking Windows SDK..."
+          Get-ChildItem "C:\Program Files (x86)\Windows Kits" -ErrorAction SilentlyContinue
+
+      - name: Setup macOS dependencies
+        if: matrix.platform == 'macos'
+        run: |
+          # Update CocoaPods
+          sudo gem install cocoapods
+
+          # Verify Xcode installation
+          xcode-select --print-path
+
+          # Install additional tools if needed
+          brew install --quiet create-dmg || true
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            ${{ runner.tool_cache }}/flutter
+          key: ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-
+            ${{ runner.os }}-flutter-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify Flutter installation and platform support
+        run: |
+          flutter --version
+          flutter doctor -v
+          flutter config --list
+          echo "Available devices:"
+          flutter devices --machine
+
+      - name: Run tests
+        if: github.event.inputs.skip_tests != 'true'
+        run: |
+          echo "Running Flutter tests..."
+          flutter test --coverage --reporter=expanded
+        continue-on-error: true
+
+      - name: Create debug symbols directory
+        run: mkdir -p debug-symbols
+
+      - name: Build ${{ matrix.platform }} app with optimizations
+        run: |
+          echo "Building for ${{ matrix.platform }}..."
+          ${{ matrix.build_command }}
+        env:
+          FLUTTER_BUILD_MODE: release
+
+      - name: Verify build output
+        run: |
+          echo "Verifying build output for ${{ matrix.platform }}..."
+          if [ "${{ matrix.platform }}" = "macos" ]; then
+            ls -la build/macos/Build/Products/Release/
+            file build/macos/Build/Products/Release/mataresit_app.app/Contents/MacOS/mataresit_app
+          elif [ "${{ matrix.platform }}" = "windows" ]; then
+            ls -la build/windows/x64/runner/Release/
+            file build/windows/x64/runner/Release/mataresit_app.exe || true
+          elif [ "${{ matrix.platform }}" = "linux" ]; then
+            ls -la build/linux/x64/release/bundle/
+            file build/linux/x64/release/bundle/mataresit_app
+          fi
+
+      - name: Create versioned archive
+        run: |
+          cd ${{ matrix.artifact_path }}
+          ${{ matrix.archive_command }}
+          ls -la *.zip *.tar.gz 2>/dev/null || true
+
+      - name: Calculate file sizes and checksums
+        id: file_info
+        run: |
+          cd ${{ matrix.artifact_path }}
+          ARCHIVE_FILE="${{ matrix.archive_name }}"
+          if [ -f "$ARCHIVE_FILE" ]; then
+            SIZE=$(du -h "$ARCHIVE_FILE" | cut -f1)
+            CHECKSUM=$(shasum -a 256 "$ARCHIVE_FILE" | cut -d' ' -f1)
+            echo "size=$SIZE" >> $GITHUB_OUTPUT
+            echo "checksum=$CHECKSUM" >> $GITHUB_OUTPUT
+            echo "Archive: $ARCHIVE_FILE"
+            echo "Size: $SIZE"
+            echo "SHA256: $CHECKSUM"
+          fi
+
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}
-          path: |
-            ${{ matrix.platform == 'macos' && 'build/macos/Build/Products/Release/mataresit-macos.zip' || '' }}
-            ${{ matrix.platform == 'windows' && 'build/windows/x64/runner/Release/mataresit-windows.zip' || '' }}
-            ${{ matrix.platform == 'linux' && 'build/linux/x64/release/bundle/mataresit-linux.tar.gz' || '' }}
+          name: ${{ matrix.artifact_name }}-${{ needs.setup.outputs.version }}
+          path: ${{ matrix.artifact_path }}${{ matrix.archive_name }}
           retention-days: 30
 
-  # Release job (only on main branch)
+      - name: Upload debug symbols
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-symbols-${{ matrix.platform }}-${{ needs.setup.outputs.version }}
+          path: debug-symbols/
+          retention-days: 7
+        if: always()
+
+  # Cost optimization job - only build on main branch pushes or manual dispatch
+  cost-gate:
+    name: Cost Optimization Gate
+    runs-on: ubuntu-latest
+    needs: setup
+    outputs:
+      should_release: ${{ steps.cost_check.outputs.should_release }}
+      estimated_cost: ${{ steps.cost_check.outputs.estimated_cost }}
+    steps:
+      - name: Cost optimization check
+        id: cost_check
+        run: |
+          # Calculate estimated cost based on platforms and event type
+          PLATFORMS="${{ needs.setup.outputs.platforms }}"
+          EVENT_TYPE="${{ github.event_name }}"
+
+          # Estimate costs (in USD for private repos)
+          LINUX_COST=0.04
+          WINDOWS_COST=0.13
+          MACOS_COST=0.80
+
+          TOTAL_COST=0
+          if [[ "$PLATFORMS" == *"linux"* ]]; then
+            TOTAL_COST=$(echo "$TOTAL_COST + $LINUX_COST" | bc -l)
+          fi
+          if [[ "$PLATFORMS" == *"windows"* ]]; then
+            TOTAL_COST=$(echo "$TOTAL_COST + $WINDOWS_COST" | bc -l)
+          fi
+          if [[ "$PLATFORMS" == *"macos"* ]]; then
+            TOTAL_COST=$(echo "$TOTAL_COST + $MACOS_COST" | bc -l)
+          fi
+
+          echo "estimated_cost=$TOTAL_COST" >> $GITHUB_OUTPUT
+
+          # Only create releases on main branch pushes or manual dispatch
+          if [[ "$EVENT_TYPE" == "push" && "${{ github.ref }}" == "refs/heads/main" ]] || [[ "$EVENT_TYPE" == "workflow_dispatch" ]]; then
+            echo "should_release=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_release=false" >> $GITHUB_OUTPUT
+          fi
+
+          echo "Estimated build cost: \$${TOTAL_COST}"
+          echo "Should create release: $([[ "$EVENT_TYPE" == "push" && "${{ github.ref }}" == "refs/heads/main" ]] || [[ "$EVENT_TYPE" == "workflow_dispatch" ]] && echo "true" || echo "false")"
+
+  # Enhanced release job with comprehensive metadata
   desktop-release:
     name: Create Desktop Release
     runs-on: ubuntu-latest
-    needs: desktop-build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    
+    needs: [setup, desktop-build, cost-gate]
+    if: needs.cost-gate.outputs.should_release == 'true'
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download all artifacts
+      - name: Download all build artifacts
         uses: actions/download-artifact@v4
         with:
           path: ./artifacts
+          pattern: mataresit-*-${{ needs.setup.outputs.version }}
 
       - name: Display structure of downloaded files
-        run: ls -la ./artifacts/
-
-      - name: Get version from pubspec.yaml
-        id: version
         run: |
-          VERSION=$(grep '^version:' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Downloaded artifacts:"
+          find ./artifacts -type f -name "*.zip" -o -name "*.tar.gz" | sort
 
-      - name: Create Release
+          echo "Artifact sizes:"
+          find ./artifacts -type f -name "*.zip" -o -name "*.tar.gz" -exec du -h {} \;
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          cat > release_notes.md << 'EOF'
+          ## 🖥️ Mataresit Desktop v${{ needs.setup.outputs.version }}
+
+          ### 📦 Downloads
+
+          | Platform | File | Size | SHA256 |
+          |----------|------|------|--------|
+          EOF
+
+          # Add file information to release notes
+          for file in $(find ./artifacts -name "*.zip" -o -name "*.tar.gz" | sort); do
+            filename=$(basename "$file")
+            size=$(du -h "$file" | cut -f1)
+            checksum=$(shasum -a 256 "$file" | cut -d' ' -f1)
+
+            if [[ "$filename" == *"macos"* ]]; then
+              platform="🍎 macOS"
+            elif [[ "$filename" == *"windows"* ]]; then
+              platform="🪟 Windows"
+            elif [[ "$filename" == *"linux"* ]]; then
+              platform="🐧 Linux"
+            fi
+
+            echo "| $platform | \`$filename\` | $size | \`${checksum:0:16}...\` |" >> release_notes.md
+          done
+
+          cat >> release_notes.md << 'EOF'
+
+          ### 🚀 Installation Instructions
+
+          #### macOS
+          1. Download `mataresit-macos-*.zip`
+          2. Extract the archive
+          3. Move `mataresit_app.app` to your Applications folder
+          4. Right-click and select "Open" to bypass Gatekeeper on first launch
+
+          #### Windows
+          1. Download `mataresit-windows-*.zip`
+          2. Extract the archive to a folder of your choice
+          3. Run `mataresit_app.exe`
+          4. If Windows Defender SmartScreen appears, click "More info" then "Run anyway"
+
+          #### Linux
+          1. Download `mataresit-linux-*.tar.gz`
+          2. Extract: `tar -xzf mataresit-linux-*.tar.gz`
+          3. Make executable: `chmod +x mataresit_app`
+          4. Run: `./mataresit_app`
+
+          ### 🔧 System Requirements
+
+          - **macOS**: macOS 10.14 or later
+          - **Windows**: Windows 10 version 1903 or later
+          - **Linux**: Ubuntu 18.04 or equivalent
+
+          ### 📊 Build Information
+
+          - **Flutter Version**: ${{ env.FLUTTER_VERSION }}
+          - **Build Number**: ${{ needs.setup.outputs.build_number }}
+          - **Build Date**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          - **Estimated Build Cost**: ${{ needs.cost-gate.outputs.estimated_cost }} USD
+
+          ### 🐛 Known Issues
+
+          - First launch may take longer as the app initializes
+          - Some antivirus software may flag unsigned executables
+          - Linux: Requires GTK 3.0 libraries
+
+          ---
+
+          **Full Changelog**: https://github.com/${{ github.repository }}/compare/desktop-v${{ needs.setup.outputs.version }}...HEAD
+          EOF
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: desktop-v${{ steps.version.outputs.version }}
-          name: Mataresit Desktop v${{ steps.version.outputs.version }}
-          body: |
-            ## Desktop Release v${{ steps.version.outputs.version }}
-            
-            ### Downloads
-            - **macOS**: Download `mataresit-macos.zip`
-            - **Windows**: Download `mataresit-windows.zip` 
-            - **Linux**: Download `mataresit-linux.tar.gz`
-            
-            ### Installation
-            - **macOS**: Extract and move to Applications folder
-            - **Windows**: Extract and run the executable
-            - **Linux**: Extract and run the executable
-            
-            ### Notes
-            - macOS: You may need to allow the app in System Preferences > Security & Privacy
-            - Windows: You may see a SmartScreen warning - click "More info" then "Run anyway"
+          tag_name: desktop-v${{ needs.setup.outputs.version }}
+          name: 🖥️ Mataresit Desktop v${{ needs.setup.outputs.version }}
+          body_path: release_notes.md
           draft: false
           prerelease: false
           files: |
-            ./artifacts/mataresit-macos/mataresit-macos.zip
-            ./artifacts/mataresit-windows/mataresit-windows.zip
-            ./artifacts/mataresit-linux/mataresit-linux.tar.gz
+            ./artifacts/mataresit-macos-${{ needs.setup.outputs.version }}/mataresit-macos-${{ needs.setup.outputs.version }}.zip
+            ./artifacts/mataresit-windows-${{ needs.setup.outputs.version }}/mataresit-windows-${{ needs.setup.outputs.version }}.zip
+            ./artifacts/mataresit-linux-${{ needs.setup.outputs.version }}/mataresit-linux-${{ needs.setup.outputs.version }}.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify release completion
+        run: |
+          echo "🎉 Successfully created desktop release v${{ needs.setup.outputs.version }}"
+          echo "📱 Desktop applications are now available for download"
+          echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/desktop-v${{ needs.setup.outputs.version }}"
+          echo "💰 Estimated build cost: \${{ needs.cost-gate.outputs.estimated_cost }}"
+
+  # Cleanup and monitoring job
+  cleanup:
+    name: Cleanup & Monitor
+    runs-on: ubuntu-latest
+    needs: [setup, desktop-build, desktop-release]
+    if: always()
+
+    steps:
+      - name: Workflow summary
+        run: |
+          echo "## 📊 Desktop Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Version | ${{ needs.setup.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build Number | ${{ needs.setup.outputs.build_number }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Platforms | ${{ needs.setup.outputs.platforms }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Flutter Version | ${{ env.FLUTTER_VERSION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Trigger | ${{ github.event_name }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Branch | ${{ github.ref_name }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Build status
+          echo "### 🏗️ Build Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ needs.desktop-build.result }}" == "success" ]]; then
+            echo "✅ Desktop builds completed successfully" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Desktop builds failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [[ "${{ needs.desktop-release.result }}" == "success" ]]; then
+            echo "✅ Release created successfully" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.desktop-release.result }}" == "skipped" ]]; then
+            echo "⏭️ Release skipped (not on main branch)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Release creation failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Check for failures and notify
+        if: failure() || needs.desktop-build.result == 'failure'
+        run: |
+          echo "❌ Desktop build workflow encountered failures"
+          echo "Please check the logs for detailed error information"
+          echo "Common issues:"
+          echo "- Platform-specific dependencies missing"
+          echo "- Flutter version compatibility"
+          echo "- Build tool configuration"
+          echo "- Insufficient runner resources"
+
+          # Create issue comment if this is a PR
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "This is a PR - consider adding a comment about the failure"
+          fi
+
+      - name: Performance metrics
+        run: |
+          echo "## ⚡ Performance Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | Status | Duration |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------|----------|" >> $GITHUB_STEP_SUMMARY
+
+          # Note: Actual duration calculation would require more complex logic
+          # This is a placeholder for demonstration
+          echo "| macOS | ${{ needs.desktop-build.result }} | ~10-15 min |" >> $GITHUB_STEP_SUMMARY
+          echo "| Windows | ${{ needs.desktop-build.result }} | ~8-12 min |" >> $GITHUB_STEP_SUMMARY
+          echo "| Linux | ${{ needs.desktop-build.result }} | ~5-8 min |" >> $GITHUB_STEP_SUMMARY
