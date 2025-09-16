@@ -9,8 +9,10 @@ class MacOSTheme {
     theme_model.ThemeVariant variant,
     Brightness brightness,
   ) {
-    final definition = theme_model.ThemeVariantDefinition.getDefinition(variant);
-    
+    final definition = theme_model.ThemeVariantDefinition.getDefinition(
+      variant,
+    );
+
     // Base Material theme for compatibility
     final baseTheme = ThemeData(
       useMaterial3: true,
@@ -25,29 +27,33 @@ class MacOSTheme {
     return baseTheme.copyWith(
       // macOS-style app bar
       appBarTheme: _buildMacOSAppBarTheme(baseTheme.colorScheme),
-      
+
       // macOS-style navigation
-      bottomNavigationBarTheme: _buildMacOSBottomNavTheme(baseTheme.colorScheme),
-      
+      bottomNavigationBarTheme: _buildMacOSBottomNavTheme(
+        baseTheme.colorScheme,
+      ),
+
       // macOS-style buttons
-      elevatedButtonTheme: _buildMacOSElevatedButtonTheme(baseTheme.colorScheme),
+      elevatedButtonTheme: _buildMacOSElevatedButtonTheme(
+        baseTheme.colorScheme,
+      ),
       textButtonTheme: _buildMacOSTextButtonTheme(baseTheme.colorScheme),
-      
+
       // macOS-style cards and surfaces
       cardTheme: _buildMacOSCardTheme(baseTheme.colorScheme),
-      
+
       // macOS-style input fields
       inputDecorationTheme: _buildMacOSInputTheme(baseTheme.colorScheme),
-      
+
       // macOS-style dialogs
       dialogTheme: _buildMacOSDialogTheme(baseTheme.colorScheme),
-      
+
       // macOS-style list tiles
       listTileTheme: _buildMacOSListTileTheme(baseTheme.colorScheme),
-      
+
       // macOS-style typography
       textTheme: _buildMacOSTextTheme(baseTheme.textTheme, brightness),
-      
+
       // macOS-style scrollbar
       scrollbarTheme: _buildMacOSScrollbarTheme(baseTheme.colorScheme),
     );
@@ -71,7 +77,9 @@ class MacOSTheme {
   }
 
   /// Build macOS-style bottom navigation theme
-  static BottomNavigationBarThemeData _buildMacOSBottomNavTheme(ColorScheme colorScheme) {
+  static BottomNavigationBarThemeData _buildMacOSBottomNavTheme(
+    ColorScheme colorScheme,
+  ) {
     return BottomNavigationBarThemeData(
       backgroundColor: colorScheme.surface.withValues(alpha: 0.9),
       selectedItemColor: colorScheme.primary,
@@ -90,7 +98,9 @@ class MacOSTheme {
   }
 
   /// Build macOS-style elevated button theme
-  static ElevatedButtonThemeData _buildMacOSElevatedButtonTheme(ColorScheme colorScheme) {
+  static ElevatedButtonThemeData _buildMacOSElevatedButtonTheme(
+    ColorScheme colorScheme,
+  ) {
     return ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         elevation: 0,
@@ -98,29 +108,25 @@ class MacOSTheme {
         foregroundColor: colorScheme.onPrimary,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8), // macOS standard corner radius
+          borderRadius: BorderRadius.circular(
+            8,
+          ), // macOS standard corner radius
         ),
-        textStyle: const TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-        ),
+        textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
       ),
     );
   }
 
   /// Build macOS-style text button theme
-  static TextButtonThemeData _buildMacOSTextButtonTheme(ColorScheme colorScheme) {
+  static TextButtonThemeData _buildMacOSTextButtonTheme(
+    ColorScheme colorScheme,
+  ) {
     return TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: colorScheme.primary,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(6),
-        ),
-        textStyle: const TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
       ),
     );
   }
@@ -160,10 +166,7 @@ class MacOSTheme {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(
-          color: colorScheme.primary,
-          width: 2,
-        ),
+        borderSide: BorderSide(color: colorScheme.primary, width: 2),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       labelStyle: TextStyle(
@@ -182,18 +185,13 @@ class MacOSTheme {
     return DialogThemeData(
       backgroundColor: colorScheme.surface,
       elevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       titleTextStyle: TextStyle(
         fontSize: 17,
         fontWeight: FontWeight.w600,
         color: colorScheme.onSurface,
       ),
-      contentTextStyle: TextStyle(
-        fontSize: 15,
-        color: colorScheme.onSurface,
-      ),
+      contentTextStyle: TextStyle(fontSize: 15, color: colorScheme.onSurface),
     );
   }
 
@@ -210,18 +208,19 @@ class MacOSTheme {
         fontSize: 13,
         color: colorScheme.onSurface.withValues(alpha: 0.7),
       ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     );
   }
 
   /// Build macOS-style text theme
-  static TextTheme _buildMacOSTextTheme(TextTheme baseTheme, Brightness brightness) {
+  static TextTheme _buildMacOSTextTheme(
+    TextTheme baseTheme,
+    Brightness brightness,
+  ) {
     final color = brightness == Brightness.light
         ? Colors.black87
         : Colors.white;
-    
+
     return baseTheme.copyWith(
       // macOS system font sizes and weights
       displayLarge: baseTheme.displayLarge?.copyWith(

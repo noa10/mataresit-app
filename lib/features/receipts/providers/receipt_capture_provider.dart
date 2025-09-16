@@ -180,13 +180,16 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
           forceSkip: shouldSkip,
         );
       } else {
-        AppLogger.warning('Skipping database save for processing log - authentication issue', {
-          'stepName': stepName,
-          'receiptId': receiptId,
-          'hasProviderUser': user != null,
-          'hasSupabaseUser': currentUser != null,
-          'hasSession': session != null,
-        });
+        AppLogger.warning(
+          'Skipping database save for processing log - authentication issue',
+          {
+            'stepName': stepName,
+            'receiptId': receiptId,
+            'hasProviderUser': user != null,
+            'hasSupabaseUser': currentUser != null,
+            'hasSession': session != null,
+          },
+        );
       }
     }
 
@@ -255,7 +258,10 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
 
       // Use timestamp-based filename to match React app behavior and avoid conflicts
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final fileId = receiptId.substring(0, 8); // Use first 8 chars of UUID as fileId
+      final fileId = receiptId.substring(
+        0,
+        8,
+      ); // Use first 8 chars of UUID as fileId
       final fileName = '${timestamp}_$fileId$fileExtension';
       final filePath = '${user.id}/$fileName';
 
@@ -300,7 +306,9 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
         'processing_status': 'processing',
         // Required fields with temporary values (will be updated by AI processing)
         'merchant': 'Processing...',
-        'date': DateTime.now().toIso8601String().split('T')[0], // Today's date as default
+        'date': DateTime.now().toIso8601String().split(
+          'T',
+        )[0], // Today's date as default
         'total': 0.0, // Will be updated by AI processing
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),

@@ -75,7 +75,8 @@ class IOSReceiptCaptureButton extends ConsumerWidget {
 }
 
 /// iOS-style navigation bar with receipt capture button
-class IOSNavigationBarWithCapture extends StatelessWidget implements PreferredSizeWidget {
+class IOSNavigationBarWithCapture extends StatelessWidget
+    implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
   final Widget? leading;
@@ -128,10 +129,10 @@ class IOSNavigationBarWithCapture extends StatelessWidget implements PreferredSi
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: trailingWidgets
-          .map((widget) => Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: widget,
-              ))
+          .map(
+            (widget) =>
+                Padding(padding: const EdgeInsets.only(left: 8), child: widget),
+          )
           .toList(),
     );
   }
@@ -151,7 +152,7 @@ class IOSNavigationBarWithCapture extends StatelessWidget implements PreferredSi
   }
 
   @override
-  Size get preferredSize => Platform.isIOS 
+  Size get preferredSize => Platform.isIOS
       ? const Size.fromHeight(44) // iOS navigation bar height
       : const Size.fromHeight(56); // Material app bar height
 }
@@ -174,7 +175,8 @@ class IOSSectionHeader extends StatelessWidget {
     if (!Platform.isIOS) {
       // Material design fallback
       return Container(
-        padding: padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding:
+            padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -241,7 +243,8 @@ class IOSListTile extends StatelessWidget {
         leading: leading,
         title: title,
         subtitle: subtitle,
-        trailing: trailing ?? (showChevron ? const Icon(Icons.chevron_right) : null),
+        trailing:
+            trailing ?? (showChevron ? const Icon(Icons.chevron_right) : null),
         onTap: onTap,
         contentPadding: contentPadding,
       );
@@ -251,9 +254,13 @@ class IOSListTile extends StatelessWidget {
       leading: leading,
       title: title,
       subtitle: subtitle,
-      trailing: trailing ?? (showChevron ? const Icon(CupertinoIcons.chevron_right) : null),
+      trailing:
+          trailing ??
+          (showChevron ? const Icon(CupertinoIcons.chevron_right) : null),
       onTap: onTap,
-      padding: contentPadding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding:
+          contentPadding ??
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     );
   }
 }

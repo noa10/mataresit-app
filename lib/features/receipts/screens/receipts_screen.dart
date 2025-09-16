@@ -481,9 +481,9 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
                     Flexible(
                       child: Text(
                         timeago.format(receipt.createdAt),
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey[600],
+                        ),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                       ),

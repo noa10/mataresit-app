@@ -338,8 +338,9 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
                       ),
                     ),
 
-                    const SizedBox(width: 2), // Further reduced spacing from 4 to 2
-
+                    const SizedBox(
+                      width: 2,
+                    ), // Further reduced spacing from 4 to 2
                     // Status indicator
                     _buildStatusIndicator(receipt.status),
                   ],

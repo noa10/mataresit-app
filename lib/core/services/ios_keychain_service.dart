@@ -105,7 +105,7 @@ class IOSKeychainService {
         key: 'user_credentials',
         value: jsonEncode(credentials),
       );
-      
+
       _logger.i('User credentials stored with biometric protection');
     } catch (e) {
       _logger.e('Failed to store user credentials: $e');
@@ -116,12 +116,14 @@ class IOSKeychainService {
   /// Retrieve user credentials (requires biometric authentication)
   static Future<Map<String, String>?> getUserCredentials() async {
     try {
-      final credentialsJson = await _biometricStorage.read(key: 'user_credentials');
+      final credentialsJson = await _biometricStorage.read(
+        key: 'user_credentials',
+      );
       if (credentialsJson == null) return null;
 
       final credentials = jsonDecode(credentialsJson) as Map<String, dynamic>;
       _logger.i('User credentials retrieved successfully');
-      
+
       return {
         'email': credentials['email'] as String,
         'password': credentials['password'] as String,
@@ -261,11 +263,11 @@ class IOSKeychainService {
       // Test write and read
       const testKey = 'keychain_test';
       const testValue = 'test_value';
-      
+
       await _storage.write(key: testKey, value: testValue);
       final retrievedValue = await _storage.read(key: testKey);
       await _storage.delete(key: testKey);
-      
+
       final isAvailable = retrievedValue == testValue;
       _logger.i('Keychain availability check: $isAvailable');
       return isAvailable;
@@ -291,10 +293,10 @@ class IOSKeychainService {
   static Future<void> migrateKeychainData() async {
     try {
       _logger.i('Starting keychain data migration');
-      
+
       // Get all existing data
       final existingData = await getAllKeys();
-      
+
       // Re-store critical data with new configuration if needed
       for (final entry in existingData.entries) {
         if (entry.key.startsWith('auth_') || entry.key.startsWith('api_key_')) {
@@ -302,7 +304,7 @@ class IOSKeychainService {
           await _storage.write(key: entry.key, value: entry.value);
         }
       }
-      
+
       _logger.i('Keychain data migration completed');
     } catch (e) {
       _logger.e('Keychain data migration failed: $e');
@@ -311,7 +313,9 @@ class IOSKeychainService {
   }
 
   /// Check iOS-specific keychain accessibility
-  static Future<bool> isAccessibilitySupported(KeychainAccessibility accessibility) async {
+  static Future<bool> isAccessibilitySupported(
+    KeychainAccessibility accessibility,
+  ) async {
     if (!Platform.isIOS) return false;
 
     try {
@@ -360,7 +364,10 @@ class IOSKeychainService {
   }
 
   /// Store biometric protected data
-  static Future<void> storeBiometricProtectedData(String key, String value) async {
+  static Future<void> storeBiometricProtectedData(
+    String key,
+    String value,
+  ) async {
     try {
       await _biometricStorage.write(key: key, value: value);
       _logger.i('Biometric protected data stored: $key');

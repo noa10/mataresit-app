@@ -11,8 +11,10 @@ class IOSTheme {
     theme_model.ThemeVariant variant,
     Brightness brightness,
   ) {
-    final definition = theme_model.ThemeVariantDefinition.getDefinition(variant);
-    
+    final definition = theme_model.ThemeVariantDefinition.getDefinition(
+      variant,
+    );
+
     // Base Material theme for compatibility
     final baseTheme = ThemeData(
       useMaterial3: true,
@@ -27,26 +29,26 @@ class IOSTheme {
     return baseTheme.copyWith(
       // iOS-style app bar
       appBarTheme: _buildIOSAppBarTheme(baseTheme.colorScheme),
-      
+
       // iOS-style navigation
       bottomNavigationBarTheme: _buildIOSBottomNavTheme(baseTheme.colorScheme),
-      
+
       // iOS-style buttons
       elevatedButtonTheme: _buildIOSElevatedButtonTheme(baseTheme.colorScheme),
       textButtonTheme: _buildIOSTextButtonTheme(baseTheme.colorScheme),
-      
+
       // iOS-style cards and surfaces
       cardTheme: _buildIOSCardTheme(baseTheme.colorScheme),
-      
+
       // iOS-style input fields
       inputDecorationTheme: _buildIOSInputTheme(baseTheme.colorScheme),
-      
+
       // iOS-style dialogs
       dialogTheme: _buildIOSDialogTheme(baseTheme.colorScheme),
-      
+
       // iOS-style list tiles
       listTileTheme: _buildIOSListTileTheme(baseTheme.colorScheme),
-      
+
       // iOS-style typography
       textTheme: _buildIOSTextTheme(baseTheme.textTheme, brightness),
     );
@@ -57,13 +59,15 @@ class IOSTheme {
     theme_model.ThemeVariant variant,
     Brightness brightness,
   ) {
-    final definition = theme_model.ThemeVariantDefinition.getDefinition(variant);
-    
+    final definition = theme_model.ThemeVariantDefinition.getDefinition(
+      variant,
+    );
+
     return CupertinoThemeData(
       brightness: brightness,
       primaryColor: definition.seedColor,
-      primaryContrastingColor: brightness == Brightness.light 
-          ? CupertinoColors.white 
+      primaryContrastingColor: brightness == Brightness.light
+          ? CupertinoColors.white
           : CupertinoColors.black,
       scaffoldBackgroundColor: brightness == Brightness.light
           ? CupertinoColors.systemGroupedBackground
@@ -91,7 +95,9 @@ class IOSTheme {
     );
   }
 
-  static BottomNavigationBarThemeData _buildIOSBottomNavTheme(ColorScheme colorScheme) {
+  static BottomNavigationBarThemeData _buildIOSBottomNavTheme(
+    ColorScheme colorScheme,
+  ) {
     return BottomNavigationBarThemeData(
       elevation: 0,
       backgroundColor: colorScheme.surface.withValues(alpha: 0.95),
@@ -111,7 +117,9 @@ class IOSTheme {
     );
   }
 
-  static ElevatedButtonThemeData _buildIOSElevatedButtonTheme(ColorScheme colorScheme) {
+  static ElevatedButtonThemeData _buildIOSElevatedButtonTheme(
+    ColorScheme colorScheme,
+  ) {
     return ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         elevation: 0,
@@ -122,10 +130,7 @@ class IOSTheme {
           borderRadius: BorderRadius.circular(8), // iOS-style rounded corners
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        textStyle: const TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w600,
-        ),
+        textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -134,10 +139,7 @@ class IOSTheme {
     return TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: colorScheme.primary,
-        textStyle: const TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w400,
-        ),
+        textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w400),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
     );
@@ -169,7 +171,9 @@ class IOSTheme {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: colorScheme.outline.withValues(alpha: 0.5)),
+        borderSide: BorderSide(
+          color: colorScheme.outline.withValues(alpha: 0.5),
+        ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
@@ -220,11 +224,12 @@ class IOSTheme {
     );
   }
 
-  static TextTheme _buildIOSTextTheme(TextTheme baseTheme, Brightness brightness) {
-    final color = brightness == Brightness.light 
-        ? Colors.black 
-        : Colors.white;
-    
+  static TextTheme _buildIOSTextTheme(
+    TextTheme baseTheme,
+    Brightness brightness,
+  ) {
+    final color = brightness == Brightness.light ? Colors.black : Colors.white;
+
     return baseTheme.copyWith(
       // iOS system font sizes and weights
       displayLarge: baseTheme.displayLarge?.copyWith(
@@ -290,7 +295,9 @@ class IOSTheme {
     );
   }
 
-  static CupertinoTextThemeData _buildCupertinoTextTheme(Brightness brightness) {
+  static CupertinoTextThemeData _buildCupertinoTextTheme(
+    Brightness brightness,
+  ) {
     return CupertinoTextThemeData(
       primaryColor: brightness == Brightness.light
           ? CupertinoColors.label
@@ -323,7 +330,9 @@ class IOSTheme {
     }
 
     // Return standard Material theme for Android and other platforms
-    final definition = theme_model.ThemeVariantDefinition.getDefinition(variant);
+    final definition = theme_model.ThemeVariantDefinition.getDefinition(
+      variant,
+    );
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(

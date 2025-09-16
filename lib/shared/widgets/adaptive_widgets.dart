@@ -48,7 +48,7 @@ class AdaptiveButton extends StatelessWidget {
               ),
       );
     }
-    
+
     return CupertinoButton(
       onPressed: isLoading ? null : onPressed,
       child: isLoading
@@ -80,7 +80,7 @@ class AdaptiveButton extends StatelessWidget {
         label: Text(text),
       );
     }
-    
+
     return TextButton.icon(
       onPressed: isLoading ? null : onPressed,
       icon: isLoading
@@ -144,11 +144,7 @@ class AdaptiveLoadingIndicator extends StatelessWidget {
   final double? size;
   final Color? color;
 
-  const AdaptiveLoadingIndicator({
-    super.key,
-    this.size,
-    this.color,
-  });
+  const AdaptiveLoadingIndicator({super.key, this.size, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -166,10 +162,7 @@ class AdaptiveLoadingIndicator extends StatelessWidget {
       );
     }
 
-    return CircularProgressIndicator(
-      strokeWidth: 2,
-      color: color,
-    );
+    return CircularProgressIndicator(strokeWidth: 2, color: color);
   }
 }
 
@@ -192,7 +185,9 @@ class AdaptiveAlertDialog extends StatelessWidget {
       return CupertinoAlertDialog(
         title: Text(title),
         content: Text(content),
-        actions: actions.map((action) => action._buildCupertinoAction()).toList(),
+        actions: actions
+            .map((action) => action._buildCupertinoAction())
+            .toList(),
       );
     }
 
@@ -200,10 +195,10 @@ class AdaptiveAlertDialog extends StatelessWidget {
       return AlertDialog(
         title: Text(title),
         content: Text(content),
-        actions: actions.map((action) => action._buildMaterialAction()).toList(),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        actions: actions
+            .map((action) => action._buildMaterialAction())
+            .toList(),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       );
     }
 
@@ -222,11 +217,8 @@ class AdaptiveAlertDialog extends StatelessWidget {
   }) {
     return showDialog<T>(
       context: context,
-      builder: (context) => AdaptiveAlertDialog(
-        title: title,
-        content: content,
-        actions: actions,
-      ),
+      builder: (context) =>
+          AdaptiveAlertDialog(title: title, content: content, actions: actions),
     );
   }
 }
@@ -258,17 +250,12 @@ class AdaptiveDialogAction {
     if (isDestructive) {
       return TextButton(
         onPressed: onPressed,
-        style: TextButton.styleFrom(
-          foregroundColor: Colors.red,
-        ),
+        style: TextButton.styleFrom(foregroundColor: Colors.red),
         child: Text(text),
       );
     }
-    
-    return TextButton(
-      onPressed: onPressed,
-      child: Text(text),
-    );
+
+    return TextButton(onPressed: onPressed, child: Text(text));
   }
 }
 
@@ -291,10 +278,11 @@ class AdaptiveSwitch extends StatelessWidget {
       return CupertinoSwitch(
         value: value,
         onChanged: onChanged,
-        activeTrackColor: activeColor ?? CupertinoTheme.of(context).primaryColor,
+        activeTrackColor:
+            activeColor ?? CupertinoTheme.of(context).primaryColor,
       );
     }
-    
+
     return Switch(
       value: value,
       onChanged: onChanged,
@@ -334,7 +322,7 @@ class AdaptiveSlider extends StatelessWidget {
         activeColor: activeColor ?? CupertinoTheme.of(context).primaryColor,
       );
     }
-    
+
     return Slider(
       value: value,
       onChanged: onChanged,
@@ -396,7 +384,7 @@ class AdaptiveTextField extends StatelessWidget {
         ),
       );
     }
-    
+
     return TextField(
       controller: controller,
       obscureText: obscureText,
@@ -438,17 +426,14 @@ class AdaptiveAppBar extends StatelessWidget implements PreferredSizeWidget {
       return CupertinoNavigationBar(
         middle: Text(title),
         trailing: actions != null && actions!.isNotEmpty
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: actions!,
-              )
+            ? Row(mainAxisSize: MainAxisSize.min, children: actions!)
             : null,
         leading: leading,
         automaticallyImplyLeading: automaticallyImplyLeading,
         backgroundColor: backgroundColor,
       );
     }
-    
+
     return AppBar(
       title: Text(title),
       actions: actions,
@@ -459,7 +444,7 @@ class AdaptiveAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => Platform.isIOS 
+  Size get preferredSize => Platform.isIOS
       ? const Size.fromHeight(44) // iOS navigation bar height
       : const Size.fromHeight(56); // Material app bar height
 }

@@ -41,7 +41,9 @@ class SupabaseService {
         _logger.i('✅ Supabase initialization completed (existing instance)');
         return;
       } catch (e) {
-        _logger.d('Supabase not yet initialized, proceeding with initialization: $e');
+        _logger.d(
+          'Supabase not yet initialized, proceeding with initialization: $e',
+        );
       }
 
       // Try to initialize Supabase with retry logic for iOS 18.x beta compatibility
@@ -70,15 +72,21 @@ class SupabaseService {
           // Check if this is a SharedPreferences channel error
           if (e.toString().contains('channel-error') &&
               e.toString().contains('LegacyUserDefaultsApi')) {
-            _logger.w('Supabase initialization failed due to iOS 18.x beta SharedPreferences issue (attempt $initRetryCount/$maxInitRetries): $e');
+            _logger.w(
+              'Supabase initialization failed due to iOS 18.x beta SharedPreferences issue (attempt $initRetryCount/$maxInitRetries): $e',
+            );
 
             if (initRetryCount < maxInitRetries) {
               final retryDelay = Duration(milliseconds: 500 * initRetryCount);
-              _logger.i('Retrying Supabase initialization in ${retryDelay.inMilliseconds}ms...');
+              _logger.i(
+                'Retrying Supabase initialization in ${retryDelay.inMilliseconds}ms...',
+              );
               await Future.delayed(retryDelay);
             }
           } else {
-            _logger.e('Supabase initialization failed with non-SharedPreferences error: $e');
+            _logger.e(
+              'Supabase initialization failed with non-SharedPreferences error: $e',
+            );
             rethrow; // Re-throw non-SharedPreferences errors immediately
           }
         }
@@ -86,7 +94,9 @@ class SupabaseService {
 
       // If all retries failed, throw the last exception
       if (initRetryCount >= maxInitRetries && lastException != null) {
-        _logger.e('Supabase initialization failed after $maxInitRetries attempts');
+        _logger.e(
+          'Supabase initialization failed after $maxInitRetries attempts',
+        );
         throw lastException;
       }
 
@@ -103,23 +113,28 @@ class SupabaseService {
             break;
           }
         } catch (e) {
-          _logger.w('Attempt ${retryCount + 1} to get Supabase client failed: $e');
+          _logger.w(
+            'Attempt ${retryCount + 1} to get Supabase client failed: $e',
+          );
         }
 
         retryCount++;
         if (retryCount < maxRetries) {
-          _logger.i('Retrying to get Supabase client in ${retryDelay.inMilliseconds}ms...');
+          _logger.i(
+            'Retrying to get Supabase client in ${retryDelay.inMilliseconds}ms...',
+          );
           await Future.delayed(retryDelay);
         }
       }
 
       if (_client == null) {
-        throw Exception('Failed to obtain Supabase client after $maxRetries attempts');
+        throw Exception(
+          'Failed to obtain Supabase client after $maxRetries attempts',
+        );
       }
 
       _initializationCompleted = true;
       _logger.i('✅ Supabase initialization completed successfully');
-
     } catch (e) {
       _logger.e('❌ Supabase initialization failed: $e');
       _initializationCompleted = false;
@@ -136,7 +151,9 @@ class SupabaseService {
   /// Get Supabase client instance
   static SupabaseClient get client {
     if (!isInitialized || _client == null) {
-      _logger.e('Supabase client requested but not initialized. isInitialized: $isInitialized, _client: ${_client != null}');
+      _logger.e(
+        'Supabase client requested but not initialized. isInitialized: $isInitialized, _client: ${_client != null}',
+      );
       throw Exception(
         'Supabase not initialized. Call SupabaseService.initialize() first.',
       );
@@ -281,7 +298,9 @@ class SupabaseService {
       logger.i('Starting storage upload:');
       logger.i('  Bucket: $bucket');
       logger.i('  Path: $path');
-      logger.i('  Size: ${bytes.length} bytes (${(bytes.length / 1024 / 1024).toStringAsFixed(2)} MB)');
+      logger.i(
+        '  Size: ${bytes.length} bytes (${(bytes.length / 1024 / 1024).toStringAsFixed(2)} MB)',
+      );
       logger.i('  Content-Type: $contentType');
 
       // Use upsert: false to match React app behavior and avoid conflicts
@@ -302,7 +321,8 @@ class SupabaseService {
       return publicUrl;
     } catch (e) {
       // Enhanced error handling for storage uploads
-      if (e.toString().contains('Duplicate') || e.toString().contains('already exists')) {
+      if (e.toString().contains('Duplicate') ||
+          e.toString().contains('already exists')) {
         // If file already exists, try with upsert: true as fallback
         try {
           await client.storage
@@ -318,7 +338,9 @@ class SupabaseService {
               );
           return client.storage.from(bucket).getPublicUrl(path);
         } catch (upsertError) {
-          throw Exception('Storage upload failed even with upsert: ${upsertError.toString()}');
+          throw Exception(
+            'Storage upload failed even with upsert: ${upsertError.toString()}',
+          );
         }
       }
 
@@ -326,12 +348,15 @@ class SupabaseService {
       String errorMessage = 'Storage upload failed';
       if (e.toString().contains('bucket not found')) {
         errorMessage = 'Storage bucket not found. Please contact support.';
-      } else if (e.toString().contains('row-level security') || e.toString().contains('policy')) {
+      } else if (e.toString().contains('row-level security') ||
+          e.toString().contains('policy')) {
         errorMessage = 'Permission denied. Please log in again.';
-      } else if (e.toString().contains('413') || e.toString().contains('too large')) {
+      } else if (e.toString().contains('413') ||
+          e.toString().contains('too large')) {
         errorMessage = 'File too large. Please use a smaller image.';
       } else if (e.toString().contains('400')) {
-        errorMessage = 'Invalid file or request. Please try again with a different image.';
+        errorMessage =
+            'Invalid file or request. Please try again with a different image.';
       } else {
         errorMessage = 'Storage upload failed: ${e.toString()}';
       }

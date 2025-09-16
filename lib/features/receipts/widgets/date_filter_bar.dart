@@ -194,9 +194,9 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
                 // Title
                 Text(
                   'Filter Receipts',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
 
                 const SizedBox(height: 20),
@@ -216,9 +216,9 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
                   // All filter options
                   Text(
                     'Date Range',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
 
                   const SizedBox(height: 12),
@@ -231,9 +231,9 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
                   if (currentFilter.option == DateFilterOption.custom) ...[
                     Text(
                       'Custom Range',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     _buildCustomDateRange(currentFilter),
@@ -246,7 +246,9 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
                   const SizedBox(height: 20),
 
                   // Reviewed status filters
-                  ReviewedStatusFilterWidget(onFilterChanged: widget.onFilterChanged),
+                  ReviewedStatusFilterWidget(
+                    onFilterChanged: widget.onFilterChanged,
+                  ),
 
                   const SizedBox(height: 20),
                 ],
@@ -260,7 +262,8 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
               left: AppConstants.defaultPadding,
               right: AppConstants.defaultPadding,
               top: AppConstants.defaultPadding,
-              bottom: MediaQuery.of(context).viewInsets.bottom +
+              bottom:
+                  MediaQuery.of(context).viewInsets.bottom +
                   AppConstants.defaultPadding,
             ),
             child: Row(

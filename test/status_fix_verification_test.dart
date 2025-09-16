@@ -72,10 +72,7 @@ void main() {
 
     test('should verify both valid status values work', () {
       final validStatuses = ['unreviewed', 'reviewed'];
-      final expectedEnums = [
-        ReceiptStatus.unreviewed,
-        ReceiptStatus.reviewed,
-      ];
+      final expectedEnums = [ReceiptStatus.unreviewed, ReceiptStatus.reviewed];
 
       for (int i = 0; i < validStatuses.length; i++) {
         final testReceiptData = {

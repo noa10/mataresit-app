@@ -11,9 +11,7 @@ class MinimalTestApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Minimal iOS Test',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue),
       home: const MinimalHomePage(),
     );
   }
@@ -44,19 +42,15 @@ class MinimalHomePage extends StatelessWidget {
               style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 20),
-            Icon(
-              Icons.check_circle,
-              color: Colors.green,
-              size: 48,
-            ),
+            Icon(Icons.check_circle, color: Colors.green, size: 48),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Button pressed!')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Button pressed!')));
         },
         tooltip: 'Test Button',
         child: const Icon(Icons.add),

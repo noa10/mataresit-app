@@ -391,9 +391,11 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
       // Provide more specific error messages
       String errorMessage = 'Failed to pick image';
       if (e.toString().contains('MissingPluginException')) {
-        errorMessage = 'Camera/Gallery not available. Please restart the app and try again.';
+        errorMessage =
+            'Camera/Gallery not available. Please restart the app and try again.';
       } else if (e.toString().contains('permission')) {
-        errorMessage = 'Permission denied. Please grant camera/gallery access in settings.';
+        errorMessage =
+            'Permission denied. Please grant camera/gallery access in settings.';
       } else {
         errorMessage = 'Failed to pick image: ${e.toString()}';
       }
@@ -519,16 +521,23 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
       String errorMessage = 'Failed to upload receipt';
       if (e.toString().contains('StorageException')) {
         if (e.toString().contains('400')) {
-          errorMessage = 'Upload failed: Invalid file or storage configuration. Please try again.';
-        } else if (e.toString().contains('401') || e.toString().contains('403')) {
-          errorMessage = 'Upload failed: Authentication error. Please log in again.';
+          errorMessage =
+              'Upload failed: Invalid file or storage configuration. Please try again.';
+        } else if (e.toString().contains('401') ||
+            e.toString().contains('403')) {
+          errorMessage =
+              'Upload failed: Authentication error. Please log in again.';
         } else if (e.toString().contains('413')) {
-          errorMessage = 'Upload failed: File too large. Please use a smaller image.';
+          errorMessage =
+              'Upload failed: File too large. Please use a smaller image.';
         } else {
-          errorMessage = 'Upload failed: Storage error. Please check your connection and try again.';
+          errorMessage =
+              'Upload failed: Storage error. Please check your connection and try again.';
         }
-      } else if (e.toString().contains('network') || e.toString().contains('connection')) {
-        errorMessage = 'Upload failed: Network error. Please check your connection and try again.';
+      } else if (e.toString().contains('network') ||
+          e.toString().contains('connection')) {
+        errorMessage =
+            'Upload failed: Network error. Please check your connection and try again.';
       } else if (e.toString().contains('timeout')) {
         errorMessage = 'Upload failed: Request timed out. Please try again.';
       } else {

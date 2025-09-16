@@ -20,22 +20,22 @@ class TestLogger {
   /// Initialize test logging with optional file output
   static Future<void> initialize({bool enableFileLogging = true}) async {
     _enableFileLogging = enableFileLogging;
-    
+
     if (_enableFileLogging) {
       try {
         final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
         _logFilePath = 'test_logs/ios_test_$timestamp.log';
-        
+
         // Create logs directory if it doesn't exist
         final logDir = Directory('test_logs');
         if (!await logDir.exists()) {
           await logDir.create(recursive: true);
         }
-        
+
         // Create log file
         final logFile = File(_logFilePath!);
         await logFile.writeAsString('iOS Test Log - ${DateTime.now()}\n');
-        
+
         info('TestLogger', 'Test logging initialized: $_logFilePath');
       } catch (e) {
         debugPrint('Failed to initialize file logging: $e');
@@ -103,8 +103,9 @@ class TestLogger {
     _logs.add(entry);
 
     // Console output
-    final formattedMessage = '[${_formatTimestamp(timestamp)}] ${level.prefix} $tag: $message';
-    
+    final formattedMessage =
+        '[${_formatTimestamp(timestamp)}] ${level.prefix} $tag: $message';
+
     switch (level) {
       case LogLevel.error:
         debugPrint('\x1B[31m$formattedMessage\x1B[0m'); // Red
@@ -142,9 +143,9 @@ class TestLogger {
   /// Format timestamp for logging
   static String _formatTimestamp(DateTime timestamp) {
     return '${timestamp.hour.toString().padLeft(2, '0')}:'
-           '${timestamp.minute.toString().padLeft(2, '0')}:'
-           '${timestamp.second.toString().padLeft(2, '0')}.'
-           '${timestamp.millisecond.toString().padLeft(3, '0')}';
+        '${timestamp.minute.toString().padLeft(2, '0')}:'
+        '${timestamp.second.toString().padLeft(2, '0')}.'
+        '${timestamp.millisecond.toString().padLeft(3, '0')}';
   }
 
   /// Get all log entries
@@ -243,9 +244,15 @@ void main() {
       // These should not throw exceptions
       expect(() => TestLogger.info('Tag', 'Info message'), returnsNormally);
       expect(() => TestLogger.debug('Tag', 'Debug message'), returnsNormally);
-      expect(() => TestLogger.warning('Tag', 'Warning message'), returnsNormally);
+      expect(
+        () => TestLogger.warning('Tag', 'Warning message'),
+        returnsNormally,
+      );
       expect(() => TestLogger.error('Tag', 'Error message'), returnsNormally);
-      expect(() => TestLogger.verbose('Tag', 'Verbose message'), returnsNormally);
+      expect(
+        () => TestLogger.verbose('Tag', 'Verbose message'),
+        returnsNormally,
+      );
     });
   });
 }

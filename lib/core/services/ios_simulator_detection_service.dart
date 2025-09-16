@@ -12,7 +12,7 @@ class IOSSimulatorDetectionService {
   /// Check if the current platform is iOS Simulator
   static bool get isIOSSimulator {
     if (_isSimulator != null) return _isSimulator!;
-    
+
     if (!Platform.isIOS) {
       _isSimulator = false;
       return false;
@@ -24,22 +24,22 @@ class IOSSimulatorDetectionService {
       // 1. x86_64 or arm64 architecture (but arm64 is also on physical devices now)
       // 2. Specific environment variables
       // 3. Different system properties
-      
+
       try {
         // Check for simulator-specific environment
         final result = Process.runSync('uname', ['-m']);
         final architecture = result.stdout.toString().trim();
-        
+
         // Additional simulator detection methods
         final isSimulatorArch = architecture.contains('x86_64');
-        
+
         // For now, we'll use a simple heuristic
         // In production, you might want more sophisticated detection
         _isSimulator = isSimulatorArch;
-        
+
         print('🔍 SIMULATOR_DETECTION: Architecture: $architecture');
         print('🔍 SIMULATOR_DETECTION: Is simulator: $_isSimulator');
-        
+
         return _isSimulator!;
       } catch (e) {
         print('⚠️ SIMULATOR_DETECTION: Failed to detect simulator: $e');
@@ -48,7 +48,7 @@ class IOSSimulatorDetectionService {
         return false;
       }
     }
-    
+
     // In release mode, assume physical device for safety
     _isSimulator = false;
     return false;
@@ -57,7 +57,7 @@ class IOSSimulatorDetectionService {
   /// Check if the current platform is a physical iOS device
   static bool get isPhysicalIOSDevice {
     if (_isPhysicalDevice != null) return _isPhysicalDevice!;
-    
+
     _isPhysicalDevice = Platform.isIOS && !isIOSSimulator;
     return _isPhysicalDevice!;
   }

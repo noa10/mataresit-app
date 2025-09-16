@@ -43,11 +43,14 @@ class IOSPerformanceService {
     try {
       // Enable automatic memory management for images
       PaintingBinding.instance.imageCache.maximumSize = 100;
-      PaintingBinding.instance.imageCache.maximumSizeBytes = 50 * 1024 * 1024; // 50MB
+      PaintingBinding.instance.imageCache.maximumSizeBytes =
+          50 * 1024 * 1024; // 50MB
 
       // Configure garbage collection hints
       if (kDebugMode) {
-        _logger.i('Memory management configured - Image cache: 100 images, 50MB');
+        _logger.i(
+          'Memory management configured - Image cache: 100 images, 50MB',
+        );
       }
     } catch (e) {
       _logger.e('Failed to configure memory management: $e');
@@ -94,10 +97,10 @@ class IOSPerformanceService {
     try {
       // Clear old cached images
       PaintingBinding.instance.imageCache.clear();
-      
+
       // Force garbage collection
       await _forceGarbageCollection();
-      
+
       _logger.i('Image cache optimized');
     } catch (e) {
       _logger.e('Failed to optimize image cache: $e');
@@ -122,7 +125,7 @@ class IOSPerformanceService {
     try {
       // Get current memory usage statistics
       final imageCache = PaintingBinding.instance.imageCache;
-      
+
       return {
         'image_cache_size': imageCache.currentSize,
         'image_cache_size_bytes': imageCache.currentSizeBytes,
@@ -240,7 +243,9 @@ class IOSPerformanceService {
         await _enableNormalPowerMode();
       }
 
-      _logger.i('Optimized for battery level: ${(batteryLevel * 100).toInt()}%');
+      _logger.i(
+        'Optimized for battery level: ${(batteryLevel * 100).toInt()}%',
+      );
     } catch (e) {
       _logger.e('Failed to optimize for battery level: $e');
     }
@@ -284,7 +289,7 @@ class IOSPerformanceService {
 
     try {
       final memoryUsage = await getMemoryUsage();
-      
+
       return {
         'memory_usage': memoryUsage,
         'is_background_processing_enabled': _backgroundIsolate != null,

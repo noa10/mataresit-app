@@ -18,13 +18,16 @@ class IOSFilePickerService {
 
     // iOS Simulator compatibility: Use generic file picker
     if (IOSSimulatorDetectionService.isIOSSimulator) {
-      debugPrint('🔍 iOS_FILE_PICKER: Using generic file picker for iOS Simulator');
+      debugPrint(
+        '🔍 iOS_FILE_PICKER: Using generic file picker for iOS Simulator',
+      );
       return _pickMultipleImagesGeneric();
     }
 
     try {
       // Request photo library permission (skip in simulator)
-      final hasPermission = await IOSPermissionsService.requestPhotoLibraryPermission(context);
+      final hasPermission =
+          await IOSPermissionsService.requestPhotoLibraryPermission(context);
       if (!hasPermission) {
         return [];
       }
@@ -49,14 +52,18 @@ class IOSFilePickerService {
     try {
       // iOS Simulator compatibility: Camera might not work properly
       if (IOSSimulatorDetectionService.isIOSSimulator) {
-        debugPrint('🔍 iOS_FILE_PICKER: Camera access in iOS Simulator - using fallback');
+        debugPrint(
+          '🔍 iOS_FILE_PICKER: Camera access in iOS Simulator - using fallback',
+        );
         // In simulator, we can still try the camera but with better error handling
       }
 
       // Request camera permission
       bool hasPermission;
       if (Platform.isIOS && !IOSSimulatorDetectionService.isIOSSimulator) {
-        hasPermission = await IOSPermissionsService.requestCameraPermission(context);
+        hasPermission = await IOSPermissionsService.requestCameraPermission(
+          context,
+        );
       } else {
         hasPermission = true; // Skip permission request in simulator
       }
@@ -84,12 +91,15 @@ class IOSFilePickerService {
     try {
       // Request photo library permission for iOS (skip in simulator)
       if (Platform.isIOS && !IOSSimulatorDetectionService.isIOSSimulator) {
-        final hasPermission = await IOSPermissionsService.requestPhotoLibraryPermission(context);
+        final hasPermission =
+            await IOSPermissionsService.requestPhotoLibraryPermission(context);
         if (!hasPermission) {
           return null;
         }
       } else if (IOSSimulatorDetectionService.isIOSSimulator) {
-        debugPrint('🔍 iOS_FILE_PICKER: Skipping permission request in iOS Simulator');
+        debugPrint(
+          '🔍 iOS_FILE_PICKER: Skipping permission request in iOS Simulator',
+        );
       }
 
       final XFile? image = await _imagePicker.pickImage(
@@ -134,7 +144,9 @@ class IOSFilePickerService {
   }
 
   /// Show iOS-specific file selection options
-  static Future<List<File>> showFileSelectionOptions(BuildContext context) async {
+  static Future<List<File>> showFileSelectionOptions(
+    BuildContext context,
+  ) async {
     if (!Platform.isIOS) {
       return _pickMultipleImagesGeneric();
     }
@@ -150,16 +162,15 @@ class IOSFilePickerService {
                 padding: EdgeInsets.all(16.0),
                 child: Text(
                   'Select Receipt Images',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library),
                 title: const Text('Photo Library'),
-                subtitle: const Text('Select multiple images from your photo library'),
+                subtitle: const Text(
+                  'Select multiple images from your photo library',
+                ),
                 onTap: () async {
                   final files = await pickMultipleImages(context);
                   if (context.mounted) {

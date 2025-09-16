@@ -56,8 +56,6 @@ void main() async {
 
   final logger = Logger();
 
-
-
   try {
     // Load environment variables from .env file
     logger.i('🔧 Loading environment variables...');
@@ -76,8 +74,11 @@ void main() async {
     logger.i('🔧 Initializing SharedPreferences compatibility service...');
     try {
       await SharedPreferencesCompatibilityService.initialize();
-      final prefsInfo = SharedPreferencesCompatibilityService.getDiagnosticInfo();
-      logger.i('✅ SharedPreferences compatibility service initialized: $prefsInfo');
+      final prefsInfo =
+          SharedPreferencesCompatibilityService.getDiagnosticInfo();
+      logger.i(
+        '✅ SharedPreferences compatibility service initialized: $prefsInfo',
+      );
     } catch (e) {
       logger.w('⚠️ SharedPreferences compatibility service failed: $e');
       logger.i('ℹ️ Will use fallback storage for this session');
@@ -177,7 +178,9 @@ void main() async {
 
     // Initialize EasyLocalization - it can work without SharedPreferences
     try {
-      logger.i('🌍 Initializing EasyLocalization (independent of SharedPreferences)');
+      logger.i(
+        '🌍 Initializing EasyLocalization (independent of SharedPreferences)',
+      );
       await EasyLocalization.ensureInitialized();
       logger.i('✅ EasyLocalization initialized successfully');
     } catch (e) {
@@ -196,24 +199,42 @@ void main() async {
   logger.i('🌍 Testing direct asset loading...');
   bool assetsLoadable = false;
   try {
-    final String enContent = await rootBundle.loadString('assets/translations/en.json');
-    final String msContent = await rootBundle.loadString('assets/translations/ms.json');
-    logger.i('🌍 Direct asset loading successful - EN: ${enContent.length} chars, MS: ${msContent.length} chars');
+    final String enContent = await rootBundle.loadString(
+      'assets/translations/en.json',
+    );
+    final String msContent = await rootBundle.loadString(
+      'assets/translations/ms.json',
+    );
+    logger.i(
+      '🌍 Direct asset loading successful - EN: ${enContent.length} chars, MS: ${msContent.length} chars',
+    );
 
     // Try to parse JSON to verify format
     final enJson = json.decode(enContent);
     final msJson = json.decode(msContent);
-    logger.i('🌍 JSON parsing successful - EN keys: ${enJson.keys.length}, MS keys: ${msJson.keys.length}');
+    logger.i(
+      '🌍 JSON parsing successful - EN keys: ${enJson.keys.length}, MS keys: ${msJson.keys.length}',
+    );
 
     // Test specific keys that are failing
     logger.i('🌍 Testing specific keys:');
-    logger.i('🌍   - settings.title: ${_getNestedValue(enJson, 'settings.title')}');
-    logger.i('🌍   - settings.tabs.billing: ${_getNestedValue(enJson, 'settings.tabs.billing')}');
-    logger.i('🌍   - common.labels.subscription: ${_getNestedValue(enJson, 'common.labels.subscription')}');
+    logger.i(
+      '🌍   - settings.title: ${_getNestedValue(enJson, 'settings.title')}',
+    );
+    logger.i(
+      '🌍   - settings.tabs.billing: ${_getNestedValue(enJson, 'settings.tabs.billing')}',
+    );
+    logger.i(
+      '🌍   - common.labels.subscription: ${_getNestedValue(enJson, 'common.labels.subscription')}',
+    );
 
     assetsLoadable = true;
   } catch (e, stackTrace) {
-    logger.e('🌍 ❌ Direct asset loading failed', error: e, stackTrace: stackTrace);
+    logger.e(
+      '🌍 ❌ Direct asset loading failed',
+      error: e,
+      stackTrace: stackTrace,
+    );
     assetsLoadable = false;
   }
 
@@ -231,19 +252,25 @@ void main() async {
 
   // Final window size check before running app
   final finalView = WidgetsBinding.instance.platformDispatcher.views.first;
-  AppLogger.debug('🔍 FINAL_CHECK: Window size before runApp: ${finalView.physicalSize}');
+  AppLogger.debug(
+    '🔍 FINAL_CHECK: Window size before runApp: ${finalView.physicalSize}',
+  );
   if (finalView.physicalSize.width == 0 || finalView.physicalSize.height == 0) {
-    AppLogger.warning('🚨 FINAL_CHECK: Window still has zero size, this may cause black screen');
+    AppLogger.warning(
+      '🚨 FINAL_CHECK: Window still has zero size, this may cause black screen',
+    );
   } else {
-    AppLogger.info('✅ FINAL_CHECK: Window size is valid, proceeding with app launch');
+    AppLogger.info(
+      '✅ FINAL_CHECK: Window size is valid, proceeding with app launch',
+    );
   }
-
-
 
   // Disable Flutter visual debugging for production iOS app
   debugPaintSizeEnabled = false; // Disable widget boundaries for production
   debugRepaintRainbowEnabled = false; // Disable repaint rainbow for production
-  AppLogger.debug('🔍 VISUAL_DEBUG: Disabled visual debugging for production iOS app');
+  AppLogger.debug(
+    '🔍 VISUAL_DEBUG: Disabled visual debugging for production iOS app',
+  );
 
   try {
     runApp(
@@ -256,7 +283,9 @@ void main() async {
         assetLoader: const RootBundleAssetLoader(),
         // Key fix: Add errorWidget to handle initialization issues gracefully
         errorWidget: (message) {
-          AppLogger.error('🚨 MAIN: EasyLocalization error widget triggered: $message');
+          AppLogger.error(
+            '🚨 MAIN: EasyLocalization error widget triggered: $message',
+          );
           return MaterialApp(
             home: Scaffold(
               backgroundColor: Colors.white,
@@ -281,14 +310,20 @@ void main() async {
     // Schedule post-frame diagnostics to verify that a real frame was rendered
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final view = WidgetsBinding.instance.platformDispatcher.views.first;
-      AppLogger.debug('🔎 POST_FRAME: Window physicalSize: ${view.physicalSize}, DPR: ${view.devicePixelRatio}');
-      AppLogger.debug('🔎 POST_FRAME: View insets: ${view.viewInsets}, padding: ${view.padding}, viewPadding: ${view.viewPadding}');
+      AppLogger.debug(
+        '🔎 POST_FRAME: Window physicalSize: ${view.physicalSize}, DPR: ${view.devicePixelRatio}',
+      );
+      AppLogger.debug(
+        '🔎 POST_FRAME: View insets: ${view.viewInsets}, padding: ${view.padding}, viewPadding: ${view.viewPadding}',
+      );
     });
 
     // Also log again after a slight delay to catch late size updates on iOS Simulator
     Future.delayed(const Duration(milliseconds: 200), () {
       final view = WidgetsBinding.instance.platformDispatcher.views.first;
-      AppLogger.debug('🔎 DELAYED_200MS: Window physicalSize: ${view.physicalSize}, DPR: ${view.devicePixelRatio}');
+      AppLogger.debug(
+        '🔎 DELAYED_200MS: Window physicalSize: ${view.physicalSize}, DPR: ${view.devicePixelRatio}',
+      );
     });
 
     AppLogger.info('🚀 MAIN: runApp() called successfully');
@@ -297,7 +332,9 @@ void main() async {
     AppLogger.error('🚨 MAIN: Stack trace: $stackTrace');
 
     // Fallback: run minimal app without EasyLocalization
-    AppLogger.info('🚀 MAIN: Attempting fallback app without EasyLocalization...');
+    AppLogger.info(
+      '🚀 MAIN: Attempting fallback app without EasyLocalization...',
+    );
     runApp(const ProviderScope(child: MataresitApp()));
   }
 }
@@ -315,6 +352,3 @@ dynamic _getNestedValue(Map<String, dynamic> json, String key) {
   }
   return current;
 }
-
-
-

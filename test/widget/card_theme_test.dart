@@ -15,7 +15,10 @@ void main() {
       expect(lightTheme.cardTheme.elevation, equals(0));
       expect(lightTheme.cardTheme.shadowColor, equals(Colors.transparent));
       expect(lightTheme.cardTheme.surfaceTintColor, equals(Colors.transparent));
-      expect(lightTheme.cardTheme.color, equals(lightTheme.colorScheme.surface));
+      expect(
+        lightTheme.cardTheme.color,
+        equals(lightTheme.colorScheme.surface),
+      );
 
       // Check that the shape has a border
       expect(lightTheme.cardTheme.shape, isA<RoundedRectangleBorder>());
@@ -56,13 +59,19 @@ void main() {
         expect(lightTheme.cardTheme.shape, isA<RoundedRectangleBorder>());
         final lightShape = lightTheme.cardTheme.shape as RoundedRectangleBorder;
         expect(lightShape.side.width, equals(0.5));
-        expect(lightShape.side.color, equals(lightTheme.colorScheme.outlineVariant));
+        expect(
+          lightShape.side.color,
+          equals(lightTheme.colorScheme.outlineVariant),
+        );
 
         // Test dark theme configuration
         expect(darkTheme.cardTheme.shape, isA<RoundedRectangleBorder>());
         final darkShape = darkTheme.cardTheme.shape as RoundedRectangleBorder;
         expect(darkShape.side.width, equals(0.5));
-        expect(darkShape.side.color, equals(darkTheme.colorScheme.outlineVariant));
+        expect(
+          darkShape.side.color,
+          equals(darkTheme.colorScheme.outlineVariant),
+        );
       }
     });
 
@@ -73,7 +82,10 @@ void main() {
       );
 
       // Check iOS-style properties
-      expect(theme.cardTheme.elevation, equals(0)); // iOS style has no elevation
+      expect(
+        theme.cardTheme.elevation,
+        equals(0),
+      ); // iOS style has no elevation
       expect(theme.cardTheme.shadowColor, equals(Colors.transparent));
       expect(theme.cardTheme.surfaceTintColor, equals(Colors.transparent));
       expect(theme.cardTheme.color, equals(theme.colorScheme.surface));

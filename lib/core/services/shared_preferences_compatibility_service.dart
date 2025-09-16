@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:logger/logger.dart';
 
 /// Compatibility service for SharedPreferences with iOS 18.x fallback support
-/// 
+///
 /// This service provides a fallback mechanism when SharedPreferences fails
 /// to initialize on iOS 18.x beta with Xcode 26.0 beta due to platform
 /// channel communication issues.
@@ -27,9 +27,13 @@ class SharedPreferencesCompatibilityService {
       // Check if this is the known iOS 18.x beta channel issue
       if (e.toString().contains('channel-error') &&
           e.toString().contains('LegacyUserDefaultsApi')) {
-        _logger.i('📱 Detected iOS 18.x beta compatibility issue - using fallback storage');
+        _logger.i(
+          '📱 Detected iOS 18.x beta compatibility issue - using fallback storage',
+        );
       } else {
-        _logger.w('📱 Unknown SharedPreferences error - using fallback storage');
+        _logger.w(
+          '📱 Unknown SharedPreferences error - using fallback storage',
+        );
       }
 
       _logger.i('💾 Using in-memory fallback storage for this session');
@@ -77,7 +81,7 @@ class SharedPreferencesCompatibilityService {
   /// Set string value with fallback
   static Future<bool> setString(String key, String value) async {
     bool success = false;
-    
+
     if (_isAvailable && _instance != null) {
       try {
         success = await _instance!.setString(key, value);
@@ -85,7 +89,7 @@ class SharedPreferencesCompatibilityService {
         _logger.w('⚠️ Failed to set string in SharedPreferences: $e');
       }
     }
-    
+
     // Always update fallback storage
     _fallbackStorage[key] = value;
     return success || !_isAvailable; // Return true if using fallback
@@ -106,7 +110,7 @@ class SharedPreferencesCompatibilityService {
   /// Set bool value with fallback
   static Future<bool> setBool(String key, bool value) async {
     bool success = false;
-    
+
     if (_isAvailable && _instance != null) {
       try {
         success = await _instance!.setBool(key, value);
@@ -114,7 +118,7 @@ class SharedPreferencesCompatibilityService {
         _logger.w('⚠️ Failed to set bool in SharedPreferences: $e');
       }
     }
-    
+
     // Always update fallback storage
     _fallbackStorage[key] = value;
     return success || !_isAvailable; // Return true if using fallback
@@ -135,7 +139,7 @@ class SharedPreferencesCompatibilityService {
   /// Set int value with fallback
   static Future<bool> setInt(String key, int value) async {
     bool success = false;
-    
+
     if (_isAvailable && _instance != null) {
       try {
         success = await _instance!.setInt(key, value);
@@ -143,7 +147,7 @@ class SharedPreferencesCompatibilityService {
         _logger.w('⚠️ Failed to set int in SharedPreferences: $e');
       }
     }
-    
+
     // Always update fallback storage
     _fallbackStorage[key] = value;
     return success || !_isAvailable; // Return true if using fallback
@@ -164,7 +168,7 @@ class SharedPreferencesCompatibilityService {
   /// Set string list with fallback
   static Future<bool> setStringList(String key, List<String> value) async {
     bool success = false;
-    
+
     if (_isAvailable && _instance != null) {
       try {
         success = await _instance!.setStringList(key, value);
@@ -172,7 +176,7 @@ class SharedPreferencesCompatibilityService {
         _logger.w('⚠️ Failed to set string list in SharedPreferences: $e');
       }
     }
-    
+
     // Always update fallback storage
     _fallbackStorage[key] = value;
     return success || !_isAvailable; // Return true if using fallback
@@ -181,7 +185,7 @@ class SharedPreferencesCompatibilityService {
   /// Remove key with fallback
   static Future<bool> remove(String key) async {
     bool success = false;
-    
+
     if (_isAvailable && _instance != null) {
       try {
         success = await _instance!.remove(key);
@@ -189,7 +193,7 @@ class SharedPreferencesCompatibilityService {
         _logger.w('⚠️ Failed to remove key from SharedPreferences: $e');
       }
     }
-    
+
     // Always remove from fallback storage
     _fallbackStorage.remove(key);
     return success || !_isAvailable; // Return true if using fallback
@@ -222,7 +226,7 @@ class SharedPreferencesCompatibilityService {
   /// Clear all data with fallback
   static Future<bool> clear() async {
     bool success = false;
-    
+
     if (_isAvailable && _instance != null) {
       try {
         success = await _instance!.clear();
@@ -230,7 +234,7 @@ class SharedPreferencesCompatibilityService {
         _logger.w('⚠️ Failed to clear SharedPreferences: $e');
       }
     }
-    
+
     // Always clear fallback storage
     _fallbackStorage.clear();
     return success || !_isAvailable; // Return true if using fallback

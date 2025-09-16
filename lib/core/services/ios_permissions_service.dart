@@ -6,7 +6,6 @@ import '../../shared/widgets/adaptive_widgets.dart';
 
 /// iOS-specific permission handling service
 class IOSPermissionsService {
-
   /// Request camera permission with iOS-specific UI
   static Future<bool> requestCameraPermission(BuildContext context) async {
     if (!Platform.isIOS) {
@@ -16,11 +15,11 @@ class IOSPermissionsService {
     }
 
     final status = await Permission.camera.status;
-    
+
     switch (status) {
       case PermissionStatus.granted:
         return true;
-        
+
       case PermissionStatus.denied:
         if (!context.mounted) return false;
         return await _requestPermissionWithDialog(
@@ -30,7 +29,7 @@ class IOSPermissionsService {
           'Mataresit needs camera access to capture receipt photos for expense tracking and AI-powered data extraction.',
           'Allow Camera Access',
         );
-        
+
       case PermissionStatus.permanentlyDenied:
         if (!context.mounted) return false;
         return await _showSettingsDialog(
@@ -38,7 +37,7 @@ class IOSPermissionsService {
           'Camera Access Denied',
           'Camera access has been permanently denied. Please enable it in Settings to capture receipt photos.',
         );
-        
+
       case PermissionStatus.restricted:
         if (context.mounted) {
           await _showRestrictedDialog(
@@ -48,7 +47,7 @@ class IOSPermissionsService {
           );
         }
         return false;
-        
+
       default:
         return await _requestPermissionWithDialog(
           context,
@@ -61,18 +60,20 @@ class IOSPermissionsService {
   }
 
   /// Request photo library permission with iOS-specific UI
-  static Future<bool> requestPhotoLibraryPermission(BuildContext context) async {
+  static Future<bool> requestPhotoLibraryPermission(
+    BuildContext context,
+  ) async {
     if (!Platform.isIOS) {
       final status = await Permission.photos.request();
       return status.isGranted;
     }
 
     final status = await Permission.photos.status;
-    
+
     switch (status) {
       case PermissionStatus.granted:
         return true;
-        
+
       case PermissionStatus.denied:
         if (!context.mounted) return false;
         return await _requestPermissionWithDialog(
@@ -82,7 +83,7 @@ class IOSPermissionsService {
           'Mataresit needs photo library access to select receipt images for processing and expense management.',
           'Allow Photo Access',
         );
-        
+
       case PermissionStatus.permanentlyDenied:
         if (!context.mounted) return false;
         return await _showSettingsDialog(
@@ -90,7 +91,7 @@ class IOSPermissionsService {
           'Photo Library Access Denied',
           'Photo library access has been permanently denied. Please enable it in Settings to select receipt photos.',
         );
-        
+
       case PermissionStatus.restricted:
         if (context.mounted) {
           await _showRestrictedDialog(
@@ -100,7 +101,7 @@ class IOSPermissionsService {
           );
         }
         return false;
-        
+
       default:
         return await _requestPermissionWithDialog(
           context,
@@ -139,18 +140,20 @@ class IOSPermissionsService {
   }
 
   /// Request notification permission with iOS-specific UI
-  static Future<bool> requestNotificationPermission(BuildContext context) async {
+  static Future<bool> requestNotificationPermission(
+    BuildContext context,
+  ) async {
     if (!Platform.isIOS) {
       final status = await Permission.notification.request();
       return status.isGranted;
     }
 
     final status = await Permission.notification.status;
-    
+
     switch (status) {
       case PermissionStatus.granted:
         return true;
-        
+
       case PermissionStatus.denied:
         if (!context.mounted) return false;
         return await _requestPermissionWithDialog(
@@ -160,7 +163,7 @@ class IOSPermissionsService {
           'Enable notifications to receive updates about receipt processing, team activities, and important reminders.',
           'Allow Notifications',
         );
-        
+
       case PermissionStatus.permanentlyDenied:
         if (!context.mounted) return false;
         return await _showSettingsDialog(
@@ -168,7 +171,7 @@ class IOSPermissionsService {
           'Notifications Disabled',
           'Notifications have been disabled. Please enable them in Settings to receive important updates.',
         );
-        
+
       default:
         return await _requestPermissionWithDialog(
           context,
@@ -274,11 +277,14 @@ class IOSPermissionsService {
   }
 
   /// Show biometric unavailable dialog
-  static Future<void> _showBiometricUnavailableDialog(BuildContext context) async {
+  static Future<void> _showBiometricUnavailableDialog(
+    BuildContext context,
+  ) async {
     await AdaptiveAlertDialog.show(
       context: context,
       title: 'Biometric Authentication Unavailable',
-      content: 'Face ID or Touch ID is not available on this device or has not been set up.',
+      content:
+          'Face ID or Touch ID is not available on this device or has not been set up.',
       actions: [
         AdaptiveDialogAction(
           text: 'OK',
@@ -289,13 +295,18 @@ class IOSPermissionsService {
   }
 
   /// Show biometric permission dialog
-  static Future<bool> _showBiometricPermissionDialog(BuildContext context) async {
-    final biometricType = Platform.isIOS ? 'Face ID or Touch ID' : 'Biometric Authentication';
-    
+  static Future<bool> _showBiometricPermissionDialog(
+    BuildContext context,
+  ) async {
+    final biometricType = Platform.isIOS
+        ? 'Face ID or Touch ID'
+        : 'Biometric Authentication';
+
     final result = await AdaptiveAlertDialog.show<bool>(
       context: context,
       title: 'Enable $biometricType',
-      content: 'Use $biometricType to secure your financial data and provide quick, secure access to the app.',
+      content:
+          'Use $biometricType to secure your financial data and provide quick, secure access to the app.',
       actions: [
         AdaptiveDialogAction(
           text: 'Not Now',
@@ -322,7 +333,9 @@ class IOSPermissionsService {
   }
 
   /// Request all required permissions at once
-  static Future<Map<String, bool>> requestAllPermissions(BuildContext context) async {
+  static Future<Map<String, bool>> requestAllPermissions(
+    BuildContext context,
+  ) async {
     final results = <String, bool>{};
 
     results['camera'] = await requestCameraPermission(context);

@@ -23,7 +23,9 @@ class MataresitApp extends ConsumerWidget {
     try {
       AppLogger.debug('🔍 MATARESIT_APP: About to watch authProvider...');
       final authState = ref.watch(authProvider);
-      AppLogger.debug('🔍 MATARESIT_APP: authProvider watched - isLoading=${authState.isLoading}, isAuthenticated=${authState.isAuthenticated}, error=${authState.error}');
+      AppLogger.debug(
+        '🔍 MATARESIT_APP: authProvider watched - isLoading=${authState.isLoading}, isAuthenticated=${authState.isAuthenticated}, error=${authState.error}',
+      );
 
       AppLogger.debug('🔍 MATARESIT_APP: About to watch routerProvider...');
       final router = ref.watch(routerProvider);
@@ -33,11 +35,17 @@ class MataresitApp extends ConsumerWidget {
       final themeState = ref.watch(themeProvider);
       AppLogger.debug('🔍 MATARESIT_APP: themeProvider watched successfully');
 
-      AppLogger.debug('🔍 MATARESIT_APP: About to watch currentThemeModeProvider...');
+      AppLogger.debug(
+        '🔍 MATARESIT_APP: About to watch currentThemeModeProvider...',
+      );
       final currentThemeMode = ref.watch(currentThemeModeProvider);
-      AppLogger.debug('🔍 MATARESIT_APP: currentThemeModeProvider watched - mode=$currentThemeMode');
+      AppLogger.debug(
+        '🔍 MATARESIT_APP: currentThemeModeProvider watched - mode=$currentThemeMode',
+      );
 
-      AppLogger.debug('🔍 MATARESIT_APP: About to create MaterialApp.router...');
+      AppLogger.debug(
+        '🔍 MATARESIT_APP: About to create MaterialApp.router...',
+      );
       final app = MaterialApp.router(
         title: AppConstants.appName,
         debugShowCheckedModeBanner: false,
@@ -48,8 +56,14 @@ class MataresitApp extends ConsumerWidget {
         locale: _getLocale(context),
 
         // Theme - Use adaptive theme for iOS compatibility
-        theme: IOSTheme.getAdaptiveTheme(themeState.config.variant, Brightness.light),
-        darkTheme: IOSTheme.getAdaptiveTheme(themeState.config.variant, Brightness.dark),
+        theme: IOSTheme.getAdaptiveTheme(
+          themeState.config.variant,
+          Brightness.light,
+        ),
+        darkTheme: IOSTheme.getAdaptiveTheme(
+          themeState.config.variant,
+          Brightness.dark,
+        ),
         themeMode: currentThemeMode,
 
         // Router
@@ -57,7 +71,9 @@ class MataresitApp extends ConsumerWidget {
 
         // Builder for global loading state with improved error handling
         builder: (context, child) {
-          AppLogger.debug('🔍 MATARESIT_APP: MaterialApp.router builder called - child is ${child != null ? 'NOT NULL' : 'NULL'}');
+          AppLogger.debug(
+            '🔍 MATARESIT_APP: MaterialApp.router builder called - child is ${child != null ? 'NOT NULL' : 'NULL'}',
+          );
 
           // Handle authentication loading state
           if (authState.isLoading) {
@@ -82,7 +98,9 @@ class MataresitApp extends ConsumerWidget {
 
           // Ensure child is not null and provide fallback
           if (child == null) {
-            AppLogger.debug('🔍 MATARESIT_APP: Child is null, showing error screen');
+            AppLogger.debug(
+              '🔍 MATARESIT_APP: Child is null, showing error screen',
+            );
             return const Scaffold(
               backgroundColor: Colors.white,
               body: Center(
@@ -93,7 +111,10 @@ class MataresitApp extends ConsumerWidget {
                     SizedBox(height: 16),
                     Text(
                       'App content not available',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     SizedBox(height: 8),
                     Text(
@@ -112,9 +133,10 @@ class MataresitApp extends ConsumerWidget {
         },
       );
 
-      AppLogger.debug('🔍 MATARESIT_APP: MaterialApp.router created successfully');
+      AppLogger.debug(
+        '🔍 MATARESIT_APP: MaterialApp.router created successfully',
+      );
       return app;
-
     } catch (e, stackTrace) {
       AppLogger.error('🚨 MATARESIT_APP: Error in MataresitApp.build(): $e');
       AppLogger.error('🚨 MATARESIT_APP: Stack trace: $stackTrace');
@@ -151,7 +173,9 @@ class MataresitApp extends ConsumerWidget {
   }
 
   /// Get localization delegates with fallback for when EasyLocalization is not available
-  List<LocalizationsDelegate<dynamic>> _getLocalizationDelegates(BuildContext context) {
+  List<LocalizationsDelegate<dynamic>> _getLocalizationDelegates(
+    BuildContext context,
+  ) {
     try {
       // Try to get EasyLocalization delegates
       return context.localizationDelegates;

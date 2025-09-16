@@ -43,7 +43,9 @@ class AppleSignInService {
         webAuthenticationOptions: kIsWeb
             ? WebAuthenticationOptions(
                 clientId: 'your-client-id', // Replace with your client ID
-                redirectUri: Uri.parse('your-redirect-uri'), // Replace with your redirect URI
+                redirectUri: Uri.parse(
+                  'your-redirect-uri',
+                ), // Replace with your redirect URI
               )
             : null,
       );
@@ -66,10 +68,10 @@ class AppleSignInService {
 
       if (response.user != null) {
         _logger.i('Successfully signed in with Apple: ${response.user!.email}');
-        
+
         // Update user profile with Apple information if available
         await _updateUserProfileFromApple(credential, response.user!);
-        
+
         return response;
       } else {
         _logger.e('Supabase authentication failed');
@@ -88,14 +90,14 @@ class AppleSignInService {
   ) async {
     try {
       final updates = <String, dynamic>{};
-      
+
       // Update display name if available
       if (credential.givenName != null || credential.familyName != null) {
         final fullName = [
           credential.givenName,
           credential.familyName,
         ].where((name) => name != null && name.isNotEmpty).join(' ');
-        
+
         if (fullName.isNotEmpty) {
           updates['full_name'] = fullName;
           updates['display_name'] = fullName;
@@ -110,16 +112,14 @@ class AppleSignInService {
       // Add Apple-specific metadata
       updates['auth_provider'] = 'apple';
       updates['apple_user_id'] = credential.userIdentifier;
-      
+
       if (updates.isNotEmpty) {
-        await Supabase.instance.client
-            .from('profiles')
-            .upsert({
-              'id': user.id,
-              'updated_at': DateTime.now().toIso8601String(),
-              ...updates,
-            });
-        
+        await Supabase.instance.client.from('profiles').upsert({
+          'id': user.id,
+          'updated_at': DateTime.now().toIso8601String(),
+          ...updates,
+        });
+
         _logger.i('Updated user profile with Apple information');
       }
     } catch (e) {
@@ -139,27 +139,29 @@ class AppleSignInService {
       // Check if user signed in with Apple
       final userMetadata = currentUser.userMetadata;
       final appleUserId = userMetadata?['apple_user_id'] as String?;
-      
+
       if (appleUserId == null) return;
 
       // Check Apple credential state
-      final credentialState = await SignInWithApple.getCredentialState(appleUserId);
-      
+      final credentialState = await SignInWithApple.getCredentialState(
+        appleUserId,
+      );
+
       switch (credentialState) {
         case CredentialState.authorized:
           _logger.i('Apple credentials are still valid');
           break;
-          
+
         case CredentialState.revoked:
           _logger.w('Apple credentials have been revoked');
           await _handleRevokedCredentials();
           break;
-          
+
         case CredentialState.notFound:
           _logger.w('Apple credentials not found');
           await _handleRevokedCredentials();
           break;
-          
+
         // Note: CredentialState.transferred is not available in current version
         // Removed this case as it's not supported
       }
@@ -179,21 +181,15 @@ class AppleSignInService {
   }
 
   /// Get Apple Sign-In button configuration
-  static SignInWithAppleButtonStyle getButtonStyle({
-    required bool isDarkMode,
-  }) {
-    return isDarkMode 
+  static SignInWithAppleButtonStyle getButtonStyle({required bool isDarkMode}) {
+    return isDarkMode
         ? SignInWithAppleButtonStyle.white
         : SignInWithAppleButtonStyle.black;
   }
 
   /// Get Apple Sign-In button text
-  static String getButtonText({
-    bool isSignUp = false,
-  }) {
-    return isSignUp
-        ? 'Sign up with Apple'
-        : 'Sign in with Apple';
+  static String getButtonText({bool isSignUp = false}) {
+    return isSignUp ? 'Sign up with Apple' : 'Sign in with Apple';
   }
 
   /// Initialize Apple Sign-In monitoring
@@ -203,7 +199,7 @@ class AppleSignInService {
     try {
       // Check credential state on app launch
       await handleCredentialStateChange();
-      
+
       _logger.i('Apple Sign-In service initialized');
     } catch (e) {
       _logger.e('Failed to initialize Apple Sign-In service: $e');
@@ -222,11 +218,11 @@ class AppleSignInService {
       // In a production app, you would validate the token with Apple's servers
       // This is a simplified validation
       if (idToken.isEmpty) return false;
-      
+
       // Basic JWT structure check
       final parts = idToken.split('.');
       if (parts.length != 3) return false;
-      
+
       _logger.i('Apple ID token validation passed');
       return true;
     } catch (e) {
@@ -242,12 +238,16 @@ class AppleSignInService {
       // This is a simplified implementation
       final parts = idToken.split('.');
       if (parts.length != 3) return null;
-      
+
       // For now, return basic structure
       return {
         'iss': 'https://appleid.apple.com',
         'aud': 'your-client-id',
-        'exp': DateTime.now().add(const Duration(hours: 1)).millisecondsSinceEpoch ~/ 1000,
+        'exp':
+            DateTime.now()
+                .add(const Duration(hours: 1))
+                .millisecondsSinceEpoch ~/
+            1000,
         'iat': DateTime.now().millisecondsSinceEpoch ~/ 1000,
       };
     } catch (e) {

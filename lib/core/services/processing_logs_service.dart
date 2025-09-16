@@ -111,8 +111,10 @@ class ProcessingLogsService {
         'userId': currentUser?.id,
         'hasSession': session != null,
         'sessionExpiry': session?.expiresAt,
-        'sessionValid': session != null &&
-            (session.expiresAt ?? 0) > DateTime.now().millisecondsSinceEpoch / 1000,
+        'sessionValid':
+            session != null &&
+            (session.expiresAt ?? 0) >
+                DateTime.now().millisecondsSinceEpoch / 1000,
       });
 
       if (currentUser == null || session == null) {
@@ -128,10 +130,10 @@ class ProcessingLogsService {
       // Verify receipt exists before saving processing log
       final receiptExists = await _verifyReceiptExists(receiptId);
       if (!receiptExists) {
-        AppLogger.warning('Cannot save processing log - receipt does not exist yet', {
-          'receiptId': receiptId,
-          'stepName': stepName,
-        });
+        AppLogger.warning(
+          'Cannot save processing log - receipt does not exist yet',
+          {'receiptId': receiptId, 'stepName': stepName},
+        );
         return;
       }
 
@@ -224,8 +226,10 @@ class ProcessingLogsService {
         'userEmail': currentUser?.email,
         'hasSession': session != null,
         'sessionExpiry': session?.expiresAt,
-        'sessionValid': session != null &&
-            (session.expiresAt ?? 0) > DateTime.now().millisecondsSinceEpoch / 1000,
+        'sessionValid':
+            session != null &&
+            (session.expiresAt ?? 0) >
+                DateTime.now().millisecondsSinceEpoch / 1000,
       };
 
       AppLogger.info('Auth and RLS test results', result);
@@ -247,11 +251,7 @@ class ProcessingLogsService {
       return result;
     } catch (e) {
       AppLogger.error('Auth and RLS test failed', e);
-      return {
-        'error': e.toString(),
-        'hasUser': false,
-        'hasSession': false,
-      };
+      return {'error': e.toString(), 'hasUser': false, 'hasSession': false};
     }
   }
 

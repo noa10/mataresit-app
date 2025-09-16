@@ -15,12 +15,23 @@ import '../../teams/providers/teams_provider.dart';
 
 /// Timeout configurations for batch upload processing
 class BatchUploadTimeouts {
-  static const Duration functionCallTimeout = Duration(minutes: 3); // AI processing function call timeout
-  static const Duration totalItemTimeout = Duration(minutes: 10); // Total timeout per item
-  static const Duration waitForCompletionTimeout = Duration(minutes: 8); // Wait for completion timeout
-  static const Duration progressStuckTimeout = Duration(seconds: 45); // Progress stuck timeout
-  static const Duration maxProcessingTimeout = Duration(minutes: 8); // Max processing time for subscriptions
-  static const int maxAutoRetries = 3; // Maximum automatic retries for timeout errors
+  static const Duration functionCallTimeout = Duration(
+    minutes: 3,
+  ); // AI processing function call timeout
+  static const Duration totalItemTimeout = Duration(
+    minutes: 10,
+  ); // Total timeout per item
+  static const Duration waitForCompletionTimeout = Duration(
+    minutes: 8,
+  ); // Wait for completion timeout
+  static const Duration progressStuckTimeout = Duration(
+    seconds: 45,
+  ); // Progress stuck timeout
+  static const Duration maxProcessingTimeout = Duration(
+    minutes: 8,
+  ); // Max processing time for subscriptions
+  static const int maxAutoRetries =
+      3; // Maximum automatic retries for timeout errors
 }
 
 /// Simple semaphore implementation for concurrency control
@@ -325,7 +336,9 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
 
     while (currentRetryCount <= maxRetries) {
       try {
-        await _processSingleItemAndWaitForCompletion(item).timeout(totalTimeout);
+        await _processSingleItemAndWaitForCompletion(
+          item,
+        ).timeout(totalTimeout);
         return; // Success, exit retry loop
       } on TimeoutException {
         currentRetryCount++;
@@ -340,7 +353,8 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
           );
 
           // Add log entry for retry attempt
-          final logEntry = 'Retry attempt $currentRetryCount/$maxRetries after timeout. Waiting ${delay.inSeconds}s before retry.';
+          final logEntry =
+              'Retry attempt $currentRetryCount/$maxRetries after timeout. Waiting ${delay.inSeconds}s before retry.';
           _addProcessingLog(item.id, logEntry);
 
           // Update item with new retry count and status
@@ -368,7 +382,8 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
           _updateItemStatus(
             item.id,
             BatchUploadItemStatus.failed,
-            error: 'AI processing timed out after $maxRetries automatic retries. The receipt may be complex or the server is busy. Please try again later or use manual retry.',
+            error:
+                'AI processing timed out after $maxRetries automatic retries. The receipt may be complex or the server is busy. Please try again later or use manual retry.',
           );
         }
       } catch (e) {
@@ -509,7 +524,9 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
 
       // Check if disposed before using ref
       if (_disposed) {
-        _logger.w('Provider disposed, skipping item processing: ${item.fileName}');
+        _logger.w(
+          'Provider disposed, skipping item processing: ${item.fileName}',
+        );
         return;
       }
 
@@ -532,7 +549,10 @@ class BatchUploadNotifier extends StateNotifier<BatchUploadState> {
 
       // Use timestamp-based filename to match React app behavior and avoid conflicts
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final fileId = receiptId.substring(0, 8); // Use first 8 chars of UUID as fileId
+      final fileId = receiptId.substring(
+        0,
+        8,
+      ); // Use first 8 chars of UUID as fileId
       final fileName = '${timestamp}_$fileId$fileExtension';
       final filePath = '${user.id}/$fileName';
 

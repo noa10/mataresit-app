@@ -205,7 +205,9 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
       _addOutput('Session Expiry: ${authResult['sessionExpiry'] ?? 'null'}');
 
       if (authResult['canQueryReceipts'] == true) {
-        _addOutput('✅ Can query receipts (${authResult['receiptsCount']} found)');
+        _addOutput(
+          '✅ Can query receipts (${authResult['receiptsCount']} found)',
+        );
       } else {
         _addOutput('❌ Cannot query receipts: ${authResult['receiptsError']}');
       }
@@ -215,18 +217,25 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
         _addOutput('\n=== Testing Processing Logs Insert ===');
         try {
           // Create a test receipt ID (this should fail if receipt doesn't exist)
-          final testReceiptId = 'test-receipt-${DateTime.now().millisecondsSinceEpoch}';
+          final testReceiptId =
+              'test-receipt-${DateTime.now().millisecondsSinceEpoch}';
           await logsService.saveProcessingLog(
             testReceiptId,
             'TEST',
             'Testing processing logs authentication',
           );
-          _addOutput('✅ Processing log insert succeeded (unexpected - receipt should not exist)');
+          _addOutput(
+            '✅ Processing log insert succeeded (unexpected - receipt should not exist)',
+          );
         } catch (e) {
           if (e.toString().contains('violates foreign key constraint') ||
               e.toString().contains('receipt_id')) {
-            _addOutput('✅ Processing log insert failed as expected (receipt doesn\'t exist)');
-            _addOutput('   This means authentication is working, but receipt validation is also working');
+            _addOutput(
+              '✅ Processing log insert failed as expected (receipt doesn\'t exist)',
+            );
+            _addOutput(
+              '   This means authentication is working, but receipt validation is also working',
+            );
           } else if (e.toString().contains('row-level security policy')) {
             _addOutput('❌ RLS policy still blocking insert: $e');
           } else {
@@ -237,7 +246,6 @@ class _DatabaseDebugScreenState extends ConsumerState<DatabaseDebugScreen> {
         _addOutput('\n❌ Cannot test processing logs - user not authenticated');
         _addOutput('   Please sign in to test processing logs functionality');
       }
-
     } catch (e) {
       _addOutput('Processing logs test failed: $e');
     }

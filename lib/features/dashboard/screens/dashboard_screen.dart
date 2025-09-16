@@ -22,7 +22,9 @@ class DashboardScreen extends ConsumerWidget {
     final userPreferredCurrency = ref.watch(userPreferredCurrencyProvider);
 
     debugPrint('🔍 DASHBOARD SCREEN DEBUG: build() called, user=${user?.id}');
-    debugPrint('🔍 DASHBOARD SCREEN DEBUG: stats totalReceipts=${stats.totalReceipts}, totalAmount=${stats.totalAmount}');
+    debugPrint(
+      '🔍 DASHBOARD SCREEN DEBUG: stats totalReceipts=${stats.totalReceipts}, totalAmount=${stats.totalAmount}',
+    );
     debugPrint('🔍 DASHBOARD SCREEN DEBUG: Platform.isIOS = ${Platform.isIOS}');
 
     return Scaffold(
@@ -75,7 +77,9 @@ class DashboardScreen extends ConsumerWidget {
                               'Welcome back,',
                               style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                   ),
                             ),
                             Text(
@@ -236,9 +240,12 @@ class DashboardScreen extends ConsumerWidget {
                         const SizedBox(height: AppConstants.smallPadding),
                         Text(
                           'Start by capturing your first receipt!',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -340,9 +347,7 @@ class DashboardScreen extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),

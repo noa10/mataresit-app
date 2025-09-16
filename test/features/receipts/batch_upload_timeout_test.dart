@@ -88,7 +88,10 @@ void main() {
 
   group('BatchProcessingStage', () {
     test('should include retrying stage', () {
-      expect(BatchProcessingStage.values, contains(BatchProcessingStage.retrying));
+      expect(
+        BatchProcessingStage.values,
+        contains(BatchProcessingStage.retrying),
+      );
     });
 
     test('retrying stage should have correct description', () {

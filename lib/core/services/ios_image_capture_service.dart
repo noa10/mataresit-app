@@ -30,7 +30,7 @@ class IOSImageCaptureService {
       }
     } catch (e) {
       AppLogger.error('Camera capture failed: $e');
-      
+
       if (context.mounted) {
         await _showErrorDialog(
           context,
@@ -38,7 +38,7 @@ class IOSImageCaptureService {
           _getCameraErrorMessage(e),
         );
       }
-      
+
       return null;
     }
   }
@@ -65,7 +65,7 @@ class IOSImageCaptureService {
       }
     } catch (e) {
       AppLogger.error('Gallery selection failed: $e');
-      
+
       if (context.mounted) {
         await _showErrorDialog(
           context,
@@ -73,13 +73,15 @@ class IOSImageCaptureService {
           _getGalleryErrorMessage(e),
         );
       }
-      
+
       return null;
     }
   }
 
   /// Select multiple images from gallery
-  static Future<List<File>> selectMultipleFromGallery(BuildContext context) async {
+  static Future<List<File>> selectMultipleFromGallery(
+    BuildContext context,
+  ) async {
     try {
       AppLogger.info('Starting multiple gallery selection on iOS');
 
@@ -90,7 +92,9 @@ class IOSImageCaptureService {
       );
 
       if (images.isNotEmpty) {
-        AppLogger.info('Multiple gallery selection successful: ${images.length} images');
+        AppLogger.info(
+          'Multiple gallery selection successful: ${images.length} images',
+        );
         return images.map((image) => File(image.path)).toList();
       } else {
         AppLogger.warning('Multiple gallery selection cancelled by user');
@@ -98,7 +102,7 @@ class IOSImageCaptureService {
       }
     } catch (e) {
       AppLogger.error('Multiple gallery selection failed: $e');
-      
+
       if (context.mounted) {
         await _showErrorDialog(
           context,
@@ -106,7 +110,7 @@ class IOSImageCaptureService {
           _getGalleryErrorMessage(e),
         );
       }
-      
+
       return [];
     }
   }
@@ -114,12 +118,14 @@ class IOSImageCaptureService {
   /// Get user-friendly camera error message
   static String _getCameraErrorMessage(dynamic error) {
     final errorString = error.toString().toLowerCase();
-    
+
     if (errorString.contains('permission') || errorString.contains('denied')) {
       return 'Camera access was denied. Please enable camera permissions in Settings > Privacy & Security > Camera > Mataresit App.';
-    } else if (errorString.contains('not available') || errorString.contains('unavailable')) {
+    } else if (errorString.contains('not available') ||
+        errorString.contains('unavailable')) {
       return 'Camera is not available on this device or is currently being used by another app.';
-    } else if (errorString.contains('channel-error') || errorString.contains('plugin')) {
+    } else if (errorString.contains('channel-error') ||
+        errorString.contains('plugin')) {
       return 'Camera service is temporarily unavailable. Please restart the app and try again.';
     } else {
       return 'Unable to access camera. Please check your device settings and try again.';
@@ -129,12 +135,14 @@ class IOSImageCaptureService {
   /// Get user-friendly gallery error message
   static String _getGalleryErrorMessage(dynamic error) {
     final errorString = error.toString().toLowerCase();
-    
+
     if (errorString.contains('permission') || errorString.contains('denied')) {
       return 'Photo library access was denied. Please enable photo permissions in Settings > Privacy & Security > Photos > Mataresit App.';
-    } else if (errorString.contains('not available') || errorString.contains('unavailable')) {
+    } else if (errorString.contains('not available') ||
+        errorString.contains('unavailable')) {
       return 'Photo library is not available on this device.';
-    } else if (errorString.contains('channel-error') || errorString.contains('plugin')) {
+    } else if (errorString.contains('channel-error') ||
+        errorString.contains('plugin')) {
       return 'Photo library service is temporarily unavailable. Please restart the app and try again.';
     } else {
       return 'Unable to access photo library. Please check your device settings and try again.';

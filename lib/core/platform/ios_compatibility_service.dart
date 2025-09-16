@@ -26,26 +26,30 @@ class IOSCompatibilityService {
       _startWindowSizeMonitoring();
 
       _initialized = true;
-      AppLogger.info('✅ iOS_COMPAT: iOS compatibility service initialized successfully');
+      AppLogger.info(
+        '✅ iOS_COMPAT: iOS compatibility service initialized successfully',
+      );
     } catch (e) {
-      AppLogger.warning('⚠️ iOS_COMPAT: Failed to initialize iOS compatibility service: $e');
+      AppLogger.warning(
+        '⚠️ iOS_COMPAT: Failed to initialize iOS compatibility service: $e',
+      );
     }
   }
 
   /// Apply iOS 18.x specific fixes
   static Future<void> _applyiOS18Fixes() async {
     AppLogger.debug('🔧 iOS_COMPAT: Applying iOS 18.x compatibility fixes');
-    
+
     // Fix 1: Ensure WidgetsBinding is properly initialized
     WidgetsFlutterBinding.ensureInitialized();
-    
+
     // Fix 2: Force window metrics update
     final binding = WidgetsBinding.instance;
     binding.handleMetricsChanged();
-    
+
     // Fix 3: Check and fix zero-size window
     await _checkAndFixZeroSizeWindow();
-    
+
     // Fix 4: Apply iOS-specific rendering optimizations
     _applyiOSRenderingOptimizations();
   }
@@ -55,10 +59,14 @@ class IOSCompatibilityService {
     final binding = WidgetsBinding.instance;
     final view = binding.platformDispatcher.views.first;
 
-    AppLogger.debug('🔧 iOS_COMPAT: Checking window size - Physical: ${view.physicalSize}, DPR: ${view.devicePixelRatio}');
+    AppLogger.debug(
+      '🔧 iOS_COMPAT: Checking window size - Physical: ${view.physicalSize}, DPR: ${view.devicePixelRatio}',
+    );
 
     if (view.physicalSize.width == 0 || view.physicalSize.height == 0) {
-      AppLogger.warning('🚨 iOS_COMPAT: Zero-size window detected, applying fixes');
+      AppLogger.warning(
+        '🚨 iOS_COMPAT: Zero-size window detected, applying fixes',
+      );
 
       // Retry mechanism for window size fix
       for (int i = 0; i < _maxRetries; i++) {
@@ -66,8 +74,11 @@ class IOSCompatibilityService {
 
         // Check if fix was successful
         final currentView = binding.platformDispatcher.views.first;
-        if (currentView.physicalSize.width > 0 && currentView.physicalSize.height > 0) {
-          AppLogger.info('✅ iOS_COMPAT: Window size fix successful on attempt ${i + 1}');
+        if (currentView.physicalSize.width > 0 &&
+            currentView.physicalSize.height > 0) {
+          AppLogger.info(
+            '✅ iOS_COMPAT: Window size fix successful on attempt ${i + 1}',
+          );
           break;
         }
 
@@ -81,18 +92,20 @@ class IOSCompatibilityService {
 
   /// Attempt to fix window size
   static Future<void> _attemptWindowSizeFix(int attempt) async {
-    AppLogger.debug('🔧 iOS_COMPAT: Window size fix attempt $attempt/$_maxRetries');
-    
+    AppLogger.debug(
+      '🔧 iOS_COMPAT: Window size fix attempt $attempt/$_maxRetries',
+    );
+
     final binding = WidgetsBinding.instance;
-    
+
     // Method 1: Force metrics update
     binding.handleMetricsChanged();
-    
+
     // Method 2: Schedule multiple frames
     binding.scheduleFrame();
     await Future.delayed(const Duration(milliseconds: 16));
     binding.scheduleFrame();
-    
+
     // Method 3: Force render view update if available
     final renderViews = binding.renderViews;
     if (renderViews.isNotEmpty) {
@@ -101,12 +114,14 @@ class IOSCompatibilityService {
       renderView.markNeedsPaint();
       renderView.markNeedsCompositingBitsUpdate();
     }
-    
+
     // Method 4: Platform-specific window size request
     try {
       await _requestWindowSizeUpdate();
     } catch (e) {
-      AppLogger.warning('⚠️ iOS_COMPAT: Platform window size request failed: $e');
+      AppLogger.warning(
+        '⚠️ iOS_COMPAT: Platform window size request failed: $e',
+      );
     }
   }
 
@@ -114,10 +129,10 @@ class IOSCompatibilityService {
   static Future<void> _requestWindowSizeUpdate() async {
     const platform = MethodChannel('flutter/platform');
     try {
-      await platform.invokeMethod('SystemChrome.setApplicationSwitcherDescription', {
-        'label': 'Mataresit',
-        'primaryColor': 0xFF2196F3,
-      });
+      await platform.invokeMethod(
+        'SystemChrome.setApplicationSwitcherDescription',
+        {'label': 'Mataresit', 'primaryColor': 0xFF2196F3},
+      );
     } catch (e) {
       // Ignore platform method errors
     }
@@ -126,11 +141,11 @@ class IOSCompatibilityService {
   /// Apply iOS-specific rendering optimizations
   static void _applyiOSRenderingOptimizations() {
     AppLogger.debug('🔧 iOS_COMPAT: Applying iOS rendering optimizations');
-    
+
     // Disable problematic debug flags that might interfere with iOS rendering
     debugPaintSizeEnabled = false;
     debugRepaintRainbowEnabled = false;
-    
+
     // Set iOS-specific rendering preferences
     if (Platform.isIOS) {
       // Force immediate frame scheduling
@@ -141,7 +156,7 @@ class IOSCompatibilityService {
   /// Start monitoring window size changes
   static void _startWindowSizeMonitoring() {
     AppLogger.debug('🔧 iOS_COMPAT: Starting window size monitoring');
-    
+
     _windowSizeMonitor = Timer.periodic(const Duration(seconds: 2), (timer) {
       _checkWindowSizeHealth();
     });
@@ -154,13 +169,17 @@ class IOSCompatibilityService {
 
     if (view.physicalSize.width == 0 || view.physicalSize.height == 0) {
       _retryCount++;
-      AppLogger.warning('🚨 iOS_COMPAT: Window size became zero during runtime (retry $_retryCount)');
+      AppLogger.warning(
+        '🚨 iOS_COMPAT: Window size became zero during runtime (retry $_retryCount)',
+      );
 
       if (_retryCount <= 3) {
         // Attempt to fix
         _attemptWindowSizeFix(_retryCount);
       } else {
-        AppLogger.error('🚨 iOS_COMPAT: Too many window size failures, stopping monitoring');
+        AppLogger.error(
+          '🚨 iOS_COMPAT: Too many window size failures, stopping monitoring',
+        );
         _windowSizeMonitor?.cancel();
       }
     } else {
@@ -186,7 +205,9 @@ class IOSCompatibilityService {
       'window_view_padding': '${view.viewPadding}',
       'window_view_insets': '${view.viewInsets}',
       'render_view_exists': renderViews.isNotEmpty,
-      'render_view_size': renderViews.isNotEmpty ? renderViews.first.size.toString() : 'null',
+      'render_view_size': renderViews.isNotEmpty
+          ? renderViews.first.size.toString()
+          : 'null',
       'monitoring_active': _windowSizeMonitor?.isActive ?? false,
       'retry_count': _retryCount,
     };

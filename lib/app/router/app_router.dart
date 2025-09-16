@@ -87,7 +87,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isLoading = authState.isLoading;
       final location = state.uri.path;
 
-      AppLogger.debug('🔍 ROUTER DEBUG: location=$location, isLoading=$isLoading, isAuthenticated=$isAuthenticated');
+      AppLogger.debug(
+        '🔍 ROUTER DEBUG: location=$location, isLoading=$isLoading, isAuthenticated=$isAuthenticated',
+      );
 
       // Show splash screen while loading
       if (isLoading) {
@@ -99,20 +101,26 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (!isLoading) {
         // If on splash screen and not loading, redirect based on auth status
         if (location == AppRoutes.splash) {
-          final redirectTo = isAuthenticated ? AppRoutes.dashboard : AppRoutes.login;
+          final redirectTo = isAuthenticated
+              ? AppRoutes.dashboard
+              : AppRoutes.login;
           AppLogger.debug('🔍 ROUTER: Redirecting from splash to $redirectTo');
           return redirectTo;
         }
 
         // Redirect to login if not authenticated and trying to access protected routes
         if (!isAuthenticated && !_isPublicRoute(location)) {
-          AppLogger.debug('🔍 ROUTER: Redirecting to login (not authenticated)');
+          AppLogger.debug(
+            '🔍 ROUTER: Redirecting to login (not authenticated)',
+          );
           return AppRoutes.login;
         }
 
         // Redirect to dashboard if authenticated and trying to access auth routes
         if (isAuthenticated && _isAuthRoute(location)) {
-          AppLogger.debug('🔍 ROUTER: Redirecting to dashboard (authenticated)');
+          AppLogger.debug(
+            '🔍 ROUTER: Redirecting to dashboard (authenticated)',
+          );
           return AppRoutes.dashboard;
         }
       }

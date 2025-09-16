@@ -90,17 +90,23 @@ class _AdaptiveNavigationWrapperState
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('🔍 ADAPTIVE NAVIGATION DEBUG: Platform.isIOS = ${Platform.isIOS}, Platform.isMacOS = ${Platform.isMacOS}');
+    debugPrint(
+      '🔍 ADAPTIVE NAVIGATION DEBUG: Platform.isIOS = ${Platform.isIOS}, Platform.isMacOS = ${Platform.isMacOS}',
+    );
 
     if (Platform.isIOS) {
       // Use proper Cupertino navigation for iOS
-      debugPrint('🔍 ADAPTIVE NAVIGATION DEBUG: iOS detected - building Cupertino navigation');
+      debugPrint(
+        '🔍 ADAPTIVE NAVIGATION DEBUG: iOS detected - building Cupertino navigation',
+      );
       return _buildCupertinoNavigation();
     }
 
     if (Platform.isMacOS) {
       // Use macOS-style navigation
-      debugPrint('🔍 ADAPTIVE NAVIGATION DEBUG: macOS detected - building macOS navigation');
+      debugPrint(
+        '🔍 ADAPTIVE NAVIGATION DEBUG: macOS detected - building macOS navigation',
+      );
       return _buildMacOSNavigation();
     }
 
@@ -123,7 +129,9 @@ class _AdaptiveNavigationWrapperState
       final activeColor = colorScheme.primary;
       final inactiveColor = colorScheme.onSurface.withValues(alpha: 0.6);
 
-      debugPrint('🔍 iOS NAVIGATION DEBUG: Theme colors resolved - backgroundColor: $backgroundColor, activeColor: $activeColor');
+      debugPrint(
+        '🔍 iOS NAVIGATION DEBUG: Theme colors resolved - backgroundColor: $backgroundColor, activeColor: $activeColor',
+      );
 
       final scaffold = Scaffold(
         backgroundColor: materialTheme.scaffoldBackgroundColor,
@@ -156,15 +164,20 @@ class _AdaptiveNavigationWrapperState
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       );
 
-      debugPrint('🔍 iOS NAVIGATION DEBUG: Cupertino navigation built successfully');
+      debugPrint(
+        '🔍 iOS NAVIGATION DEBUG: Cupertino navigation built successfully',
+      );
       return scaffold;
-
     } catch (e, stackTrace) {
-      debugPrint('🔍 iOS NAVIGATION ERROR: Failed to build Cupertino navigation: $e');
+      debugPrint(
+        '🔍 iOS NAVIGATION ERROR: Failed to build Cupertino navigation: $e',
+      );
       debugPrint('🔍 iOS NAVIGATION ERROR: Stack trace: $stackTrace');
 
       // Fallback to Material navigation for iOS if Cupertino fails
-      debugPrint('🔍 iOS NAVIGATION DEBUG: Falling back to Material navigation for iOS');
+      debugPrint(
+        '🔍 iOS NAVIGATION DEBUG: Falling back to Material navigation for iOS',
+      );
       return _buildMaterialNavigationForIOS();
     }
   }
@@ -232,7 +245,8 @@ class _AdaptiveNavigationWrapperState
         elevation: 0, // iOS-style flat design
         selectedItemColor: Theme.of(context).primaryColor,
         unselectedItemColor: Colors.grey[600],
-        backgroundColor: Theme.of(context).bottomNavigationBarTheme.backgroundColor ??
+        backgroundColor:
+            Theme.of(context).bottomNavigationBarTheme.backgroundColor ??
             Theme.of(context).scaffoldBackgroundColor,
         selectedFontSize: 12,
         unselectedFontSize: 12,
@@ -290,11 +304,15 @@ class _AdaptiveNavigationWrapperState
               fontSize: 11,
               fontWeight: FontWeight.w400,
             ),
-            items: _navigationItems.map((item) => BottomNavigationBarItem(
-              icon: Icon(item.icon, size: 22),
-              activeIcon: Icon(item.selectedIcon, size: 22),
-              label: item.label,
-            )).toList(),
+            items: _navigationItems
+                .map(
+                  (item) => BottomNavigationBarItem(
+                    icon: Icon(item.icon, size: 22),
+                    activeIcon: Icon(item.selectedIcon, size: 22),
+                    label: item.label,
+                  ),
+                )
+                .toList(),
           ),
         ),
         floatingActionButton: _shouldShowFAB()
@@ -302,13 +320,16 @@ class _AdaptiveNavigationWrapperState
             : null,
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       );
-
     } catch (e, stackTrace) {
-      debugPrint('🔍 macOS NAVIGATION ERROR: Failed to build macOS navigation: $e');
+      debugPrint(
+        '🔍 macOS NAVIGATION ERROR: Failed to build macOS navigation: $e',
+      );
       debugPrint('🔍 macOS NAVIGATION ERROR: Stack trace: $stackTrace');
 
       // Fallback to Material navigation for macOS if custom navigation fails
-      debugPrint('🔍 macOS NAVIGATION DEBUG: Falling back to Material navigation for macOS');
+      debugPrint(
+        '🔍 macOS NAVIGATION DEBUG: Falling back to Material navigation for macOS',
+      );
       return _buildMaterialNavigation();
     }
   }
@@ -340,8 +361,6 @@ class _AdaptiveNavigationWrapperState
   }
 }
 
-
-
 class NavigationItem {
   final IconData icon;
   final IconData selectedIcon;
@@ -367,5 +386,3 @@ class NavigationItem {
   @override
   int get hashCode => route.hashCode;
 }
-
-

@@ -1165,7 +1165,9 @@ class _SmartNetworkImageState extends State<_SmartNetworkImage> {
     // This handles cases where CachedNetworkImage fails silently due to path_provider issues
     _fallbackTimer = Timer(const Duration(seconds: 5), () {
       if (mounted && !_useFallback && _error == null) {
-        debugPrint('🖼️ SMART IMAGE: Timeout reached, falling back to Image.network');
+        debugPrint(
+          '🖼️ SMART IMAGE: Timeout reached, falling back to Image.network',
+        );
         setState(() {
           _useFallback = true;
         });
@@ -1232,7 +1234,9 @@ class _SmartNetworkImageState extends State<_SmartNetworkImage> {
       // Restart the fallback timer
       _fallbackTimer = Timer(const Duration(seconds: 5), () {
         if (mounted && !_useFallback && _error == null) {
-          debugPrint('🖼️ SMART IMAGE: Timeout reached on retry, falling back to Image.network');
+          debugPrint(
+            '🖼️ SMART IMAGE: Timeout reached on retry, falling back to Image.network',
+          );
           setState(() {
             _useFallback = true;
           });
@@ -1285,10 +1289,7 @@ class _SmartNetworkImageState extends State<_SmartNetworkImage> {
           _handleImageLoaded();
         });
 
-        return Image(
-          image: imageProvider,
-          fit: widget.fit,
-        );
+        return Image(image: imageProvider, fit: widget.fit);
       },
     );
   }
@@ -1379,21 +1380,27 @@ class _SmartNetworkImageFullscreen extends StatefulWidget {
   });
 
   @override
-  State<_SmartNetworkImageFullscreen> createState() => _SmartNetworkImageFullscreenState();
+  State<_SmartNetworkImageFullscreen> createState() =>
+      _SmartNetworkImageFullscreenState();
 }
 
-class _SmartNetworkImageFullscreenState extends State<_SmartNetworkImageFullscreen> {
+class _SmartNetworkImageFullscreenState
+    extends State<_SmartNetworkImageFullscreen> {
   bool _useFallback = false;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    debugPrint('🖼️ SMART IMAGE (Fullscreen): Attempting to load ${widget.imageUrl}');
+    debugPrint(
+      '🖼️ SMART IMAGE (Fullscreen): Attempting to load ${widget.imageUrl}',
+    );
   }
 
   void _handleCachedImageError(Object error) {
-    debugPrint('🖼️ SMART IMAGE (Fullscreen): CachedNetworkImage failed with error: $error');
+    debugPrint(
+      '🖼️ SMART IMAGE (Fullscreen): CachedNetworkImage failed with error: $error',
+    );
     debugPrint('🖼️ SMART IMAGE (Fullscreen): Falling back to Image.network');
 
     if (mounted) {
@@ -1405,7 +1412,9 @@ class _SmartNetworkImageFullscreenState extends State<_SmartNetworkImageFullscre
   }
 
   void _handleFallbackError(Object error, StackTrace? stackTrace) {
-    debugPrint('🖼️ SMART IMAGE (Fullscreen): Image.network also failed with error: $error');
+    debugPrint(
+      '🖼️ SMART IMAGE (Fullscreen): Image.network also failed with error: $error',
+    );
 
     if (mounted) {
       setState(() {
@@ -1515,9 +1524,7 @@ class _SmartNetworkImageFullscreenState extends State<_SmartNetworkImageFullscre
             onPressed: _retry,
             icon: const Icon(Icons.refresh, size: 16, color: Colors.white54),
             label: const Text('Retry', style: TextStyle(color: Colors.white54)),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.white54,
-            ),
+            style: TextButton.styleFrom(foregroundColor: Colors.white54),
           ),
         ],
       ),

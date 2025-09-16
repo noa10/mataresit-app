@@ -33,7 +33,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     AppLogger.debug('🔍 LOGIN_SCREEN: Context: $context');
 
     final authState = ref.watch(authProvider);
-    AppLogger.debug('🔍 LOGIN_SCREEN: authState - isLoading=${authState.isLoading}, isAuthenticated=${authState.isAuthenticated}');
+    AppLogger.debug(
+      '🔍 LOGIN_SCREEN: authState - isLoading=${authState.isLoading}, isAuthenticated=${authState.isAuthenticated}',
+    );
 
     // Listen to auth state changes
     ref.listen<AuthState>(authProvider, (previous, next) {
@@ -65,12 +67,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppConstants.largePadding),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+          padding: const EdgeInsets.all(AppConstants.largePadding),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
                 const SizedBox(height: AppConstants.largePadding * 2),
 
                 // Logo/Icon
@@ -79,8 +81,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     width: 100,
                     height: 100,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
+                      color: Theme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.largeBorderRadius,
+                      ),
                     ),
                     child: Icon(
                       Icons.receipt_long,
@@ -106,7 +112,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Text(
                   'Sign in to your account',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -127,7 +135,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
                     }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                    if (!RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    ).hasMatch(value)) {
                       return 'Please enter a valid email';
                     }
                     return null;
@@ -147,7 +157,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                       onPressed: () {
                         setState(() {
@@ -214,10 +226,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   void _handleSignIn() {
     if (_formKey.currentState!.validate()) {
-      ref.read(authProvider.notifier).signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
+      ref
+          .read(authProvider.notifier)
+          .signInWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          );
     }
   }
 }

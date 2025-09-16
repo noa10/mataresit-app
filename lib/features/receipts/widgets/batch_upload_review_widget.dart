@@ -366,13 +366,14 @@ class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
       child: LayoutBuilder(
         builder: (context, constraints) {
           // Check if we have enough space for all buttons in a row
-          final hasRetryButton = widget.batchState.failedItems.isNotEmpty &&
+          final hasRetryButton =
+              widget.batchState.failedItems.isNotEmpty &&
               widget.onRetryFailed != null;
           final hasViewButton = widget.batchState.completedItems.isNotEmpty;
 
           // Estimate button widths (approximate)
           const retryButtonWidth = 130.0; // "Retry Failed" button
-          const viewButtonWidth = 140.0;  // "View Results" button
+          const viewButtonWidth = 140.0; // "View Results" button
           const newBatchButtonWidth = 120.0; // "New Batch" button
           const paddingWidth = AppConstants.smallPadding;
 
@@ -414,7 +415,9 @@ class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
                                 widget.onViewAllReceipts!();
                               } else {
                                 // Get all completed receipt IDs
-                                final receiptIds = widget.batchState.completedItems
+                                final receiptIds = widget
+                                    .batchState
+                                    .completedItems
                                     .where((item) => item.receiptId != null)
                                     .map((item) => item.receiptId!)
                                     .toList();
@@ -425,8 +428,10 @@ class _BatchUploadReviewWidgetState extends State<BatchUploadReviewWidget>
                                     context: context,
                                     builder: (context) => ReceiptBrowserModal(
                                       receiptIds: receiptIds,
-                                      title: 'Uploaded Receipts (${receiptIds.length})',
-                                      onClose: () => Navigator.of(context).pop(),
+                                      title:
+                                          'Uploaded Receipts (${receiptIds.length})',
+                                      onClose: () =>
+                                          Navigator.of(context).pop(),
                                     ),
                                   );
                                 } else {
