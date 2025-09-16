@@ -95,7 +95,7 @@ jobs:
       - name: Check build conditions
         id: check
         run: |
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/master" ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "should_build=true" >> $GITHUB_OUTPUT
           else
             echo "should_build=false" >> $GITHUB_OUTPUT
@@ -301,7 +301,7 @@ jobs:
           retention-days: 7
         if: always()
 
-  # Cost optimization job - only build on main branch pushes or manual dispatch
+  # Cost optimization job - only build on master branch pushes or manual dispatch
   cost-gate:
     name: Cost Optimization Gate
     runs-on: ubuntu-latest
@@ -335,15 +335,15 @@ jobs:
 
           echo "estimated_cost=$TOTAL_COST" >> $GITHUB_OUTPUT
 
-          # Only create releases on main branch pushes or manual dispatch
-          if [[ "$EVENT_TYPE" == "push" && "${{ github.ref }}" == "refs/heads/main" ]] || [[ "$EVENT_TYPE" == "workflow_dispatch" ]]; then
+          # Only create releases on master branch pushes or manual dispatch
+          if [[ "$EVENT_TYPE" == "push" && "${{ github.ref }}" == "refs/heads/master" ]] || [[ "$EVENT_TYPE" == "workflow_dispatch" ]]; then
             echo "should_release=true" >> $GITHUB_OUTPUT
           else
             echo "should_release=false" >> $GITHUB_OUTPUT
           fi
 
           echo "Estimated build cost: \$${TOTAL_COST}"
-          echo "Should create release: $([[ "$EVENT_TYPE" == "push" && "${{ github.ref }}" == "refs/heads/main" ]] || [[ "$EVENT_TYPE" == "workflow_dispatch" ]] && echo "true" || echo "false")"
+          echo "Should create release: $([[ "$EVENT_TYPE" == "push" && "${{ github.ref }}" == "refs/heads/master" ]] || [[ "$EVENT_TYPE" == "workflow_dispatch" ]] && echo "true" || echo "false")"
 
   # Enhanced release job with comprehensive metadata
   desktop-release:
@@ -502,7 +502,7 @@ jobs:
           if [[ "${{ needs.desktop-release.result }}" == "success" ]]; then
             echo "✅ Release created successfully" >> $GITHUB_STEP_SUMMARY
           elif [[ "${{ needs.desktop-release.result }}" == "skipped" ]]; then
-            echo "⏭️ Release skipped (not on main branch)" >> $GITHUB_STEP_SUMMARY
+            echo "⏭️ Release skipped (not on master branch)" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ Release creation failed" >> $GITHUB_STEP_SUMMARY
           fi

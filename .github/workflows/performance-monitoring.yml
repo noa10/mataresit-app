@@ -9,6 +9,11 @@ on:
     - cron: '0 2 * * 1'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
 env:
   FLUTTER_VERSION: '3.35.0'
 
@@ -310,25 +315,27 @@ jobs:
       - name: Create performance issue (if needed)
         if: needs.collect_metrics.outputs.build_duration > 900
         uses: actions/github-script@v7
+        continue-on-error: true
         with:
           script: |
-            const buildDuration = ${{ needs.collect_metrics.outputs.build_duration }};
-            
-            // Check if there's already an open performance issue
-            const issues = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              labels: ['performance', 'ci/cd'],
-              state: 'open'
-            });
-            
-            if (issues.data.length === 0) {
-              // Create new performance issue
-              await github.rest.issues.create({
+            try {
+              const buildDuration = ${{ needs.collect_metrics.outputs.build_duration }};
+
+              // Check if there's already an open performance issue
+              const issues = await github.rest.issues.listForRepo({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                title: `Performance Alert: Build duration is ${buildDuration}s`,
-                body: `## Performance Alert
+                labels: ['performance', 'ci/cd'],
+                state: 'open'
+              });
+
+              if (issues.data.length === 0) {
+                // Create new performance issue
+                await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: `Performance Alert: Build duration is ${buildDuration}s`,
+                  body: `## Performance Alert
                 
                 The CI/CD build duration has exceeded the threshold of 15 minutes.
                 
@@ -342,6 +349,13 @@ jobs:
                 
                 ## Performance Reports
                 Check the latest workflow run for detailed performance analysis.`,
-                labels: ['performance', 'ci/cd', 'needs-investigation']
-              });
+                  labels: ['performance', 'ci/cd', 'needs-investigation']
+                });
+                console.log('Performance issue created successfully');
+              } else {
+                console.log('Performance issue already exists, skipping creation');
+              }
+            } catch (error) {
+              console.error('Failed to create performance issue:', error.message);
+              console.log('This is likely due to insufficient permissions. Performance monitoring will continue without issue creation.');
             }
