@@ -20,20 +20,23 @@ class SyncService {
   static Stream<SyncStatus> get syncStatusStream =>
       _syncStatusController.stream;
 
+  /// Check if Supabase is ready for sync operations
+  static bool get _isSupabaseReady => SupabaseService.isInitialized;
+
   /// Initialize sync service
   static Future<void> initialize() async {
     try {
       // Listen to connectivity changes
       ConnectivityService.connectivityStream.listen((isOnline) {
-        if (isOnline && !_isSyncing) {
-          _logger.i('Device online - starting sync');
+        if (isOnline && !_isSyncing && _isSupabaseReady) {
+          _logger.i('Device online and Supabase ready - starting sync');
           syncPendingOperations();
         }
       });
 
       // Start periodic sync (every 5 minutes when online)
       _syncTimer = Timer.periodic(const Duration(minutes: 5), (timer) {
-        if (ConnectivityService.isOnline && !_isSyncing) {
+        if (ConnectivityService.isOnline && !_isSyncing && _isSupabaseReady) {
           syncPendingOperations();
         }
       });
@@ -54,6 +57,11 @@ class SyncService {
 
     if (!ConnectivityService.isOnline) {
       _logger.d('Device offline, skipping sync');
+      return;
+    }
+
+    if (!_isSupabaseReady) {
+      _logger.d('Supabase not initialized, skipping sync');
       return;
     }
 
@@ -139,6 +147,10 @@ class SyncService {
     String entityId,
     Map<String, dynamic> data,
   ) async {
+    if (!_isSupabaseReady) {
+      throw Exception('Supabase not initialized - cannot sync receipt operation');
+    }
+
     switch (operation) {
       case 'create':
       case 'update':
@@ -196,6 +208,10 @@ class SyncService {
     String entityId,
     Map<String, dynamic> data,
   ) async {
+    if (!_isSupabaseReady) {
+      throw Exception('Supabase not initialized - cannot sync team operation');
+    }
+
     switch (operation) {
       case 'create':
       case 'update':
@@ -213,6 +229,10 @@ class SyncService {
     String entityId,
     Map<String, dynamic> data,
   ) async {
+    if (!_isSupabaseReady) {
+      throw Exception('Supabase not initialized - cannot sync user operation');
+    }
+
     switch (operation) {
       case 'create':
       case 'update':
@@ -307,6 +327,11 @@ class SyncService {
 
   /// Check and resolve data consistency between local and remote
   static Future<void> checkDataConsistency(String userId) async {
+    if (!_isSupabaseReady) {
+      _logger.w('Supabase not initialized, skipping data consistency check');
+      return;
+    }
+
     try {
       _logger.i('Checking data consistency for user: $userId');
 
@@ -353,6 +378,11 @@ class SyncService {
 
   /// Check receipts consistency between local and remote
   static Future<void> _checkReceiptsConsistency(String userId) async {
+    if (!_isSupabaseReady) {
+      _logger.w('Supabase not initialized, skipping receipts consistency check');
+      return;
+    }
+
     try {
       // Get local receipts
       final localReceipts = OfflineDatabaseService.getAllReceipts()
@@ -430,6 +460,11 @@ class SyncService {
 
   /// Sync remote receipts to local storage
   static Future<void> _syncRemoteReceipts(DateTime lastSync) async {
+    if (!_isSupabaseReady) {
+      _logger.w('Supabase not initialized, skipping remote receipt sync');
+      return;
+    }
+
     try {
       // Get current user to filter receipts properly
       final user = SupabaseService.client.auth.currentUser;
@@ -464,6 +499,11 @@ class SyncService {
 
   /// Sync remote teams to local storage
   static Future<void> _syncRemoteTeams(DateTime lastSync) async {
+    if (!_isSupabaseReady) {
+      _logger.w('Supabase not initialized, skipping remote team sync');
+      return;
+    }
+
     try {
       final response = await SupabaseService.client
           .from('teams')
@@ -507,8 +547,8 @@ class SyncService {
       data: data,
     );
 
-    // Try immediate sync if online
-    if (ConnectivityService.isOnline && !_isSyncing) {
+    // Try immediate sync if online and Supabase is ready
+    if (ConnectivityService.isOnline && !_isSyncing && _isSupabaseReady) {
       syncPendingOperations();
     }
   }

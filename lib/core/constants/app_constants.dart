@@ -7,25 +7,54 @@ class AppConstants {
   static const String appVersion = '1.0.0';
 
   // Supabase Configuration - Use environment variables in production
-  static String get supabaseUrl =>
-      dotenv.env['SUPABASE_URL'] ??
-      const String.fromEnvironment(
+  static String get supabaseUrl {
+    try {
+      return dotenv.env['SUPABASE_URL'] ??
+          const String.fromEnvironment(
+            'SUPABASE_URL',
+            defaultValue: 'https://mpmkbtsufihzdelrlszs.supabase.co',
+          );
+    } catch (e) {
+      // Fallback if dotenv is not initialized
+      return const String.fromEnvironment(
         'SUPABASE_URL',
         defaultValue: 'https://mpmkbtsufihzdelrlszs.supabase.co',
       );
-  static String get supabaseAnonKey =>
-      dotenv.env['SUPABASE_ANON_KEY'] ??
-      const String.fromEnvironment(
+    }
+  }
+
+  static String get supabaseAnonKey {
+    try {
+      return dotenv.env['SUPABASE_ANON_KEY'] ??
+          const String.fromEnvironment(
+            'SUPABASE_ANON_KEY',
+            defaultValue:
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wbWtidHN1ZmloemRlbHJsc3pzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwMTIzODksImV4cCI6MjA1ODU4ODM4OX0.25ZyBSIl0TQxXFZsaT1R55118Tn8b6Ri8N556gOQyPY',
+          );
+    } catch (e) {
+      // Fallback if dotenv is not initialized
+      return const String.fromEnvironment(
         'SUPABASE_ANON_KEY',
         defaultValue:
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wbWtidHN1ZmloemRlbHJsc3pzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwMTIzODksImV4cCI6MjA1ODU4ODM4OX0.25ZyBSIl0TQxXFZsaT1R55118Tn8b6Ri8N556gOQyPY',
       );
-  static String get supabaseProjectId =>
-      dotenv.env['SUPABASE_PROJECT_ID'] ??
-      const String.fromEnvironment(
+    }
+  }
+  static String get supabaseProjectId {
+    try {
+      return dotenv.env['SUPABASE_PROJECT_ID'] ??
+          const String.fromEnvironment(
+            'SUPABASE_PROJECT_ID',
+            defaultValue: 'mpmkbtsufihzdelrlszs',
+          );
+    } catch (e) {
+      // Fallback if dotenv is not initialized
+      return const String.fromEnvironment(
         'SUPABASE_PROJECT_ID',
         defaultValue: 'mpmkbtsufihzdelrlszs',
       );
+    }
+  }
 
   // Stripe Configuration - Use environment variables in production
   static const String stripePublicKey = String.fromEnvironment(

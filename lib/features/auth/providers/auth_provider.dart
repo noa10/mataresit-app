@@ -48,42 +48,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
         '🔍 Initial auth state: isLoading=${state.isLoading}, isAuthenticated=${state.isAuthenticated}',
       );
 
-      // Check if Supabase is initialized with retry logic
+      // Wait for Supabase initialization to complete
       if (!SupabaseService.isInitialized) {
         AppLogger.warning('⚠️ Supabase not yet initialized, waiting...');
 
-        // Wait with exponential backoff
-        const maxRetries = 10;
-        int retryCount = 0;
-
-        while (!SupabaseService.isInitialized && retryCount < maxRetries) {
-          final waitTime = Duration(
-            milliseconds: 100 * (1 << retryCount),
-          ); // Exponential backoff
-          AppLogger.debug(
-            '🔄 Waiting ${waitTime.inMilliseconds}ms for Supabase initialization (attempt ${retryCount + 1}/$maxRetries)',
-          );
-          await Future.delayed(waitTime);
-          retryCount++;
-        }
-
-        if (!SupabaseService.isInitialized) {
-          AppLogger.error(
-            '❌ Supabase still not initialized after $maxRetries attempts',
-          );
+        try {
+          // Wait for initialization with a timeout
+          await SupabaseService.waitForInitialization()
+              .timeout(const Duration(seconds: 30));
+          AppLogger.info('✅ Supabase initialization completed');
+        } catch (e) {
+          AppLogger.error('❌ Supabase initialization failed or timed out: $e');
           state = state.copyWith(
             isLoading: false,
-            error: 'Supabase initialization failed after multiple attempts',
+            error: 'Supabase initialization failed: ${e.toString()}',
             isAuthenticated: false,
           );
           AppLogger.debug(
             '🔍 Auth state after Supabase failure: isLoading=${state.isLoading}, isAuthenticated=${state.isAuthenticated}',
           );
           return;
-        } else {
-          AppLogger.info(
-            '✅ Supabase initialization completed after $retryCount retries',
-          );
         }
       }
 

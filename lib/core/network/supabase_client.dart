@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -10,14 +11,15 @@ class SupabaseService {
   static SupabaseClient? _client;
   static bool _isInitializing = false;
   static bool _initializationCompleted = false;
+  static Completer<void>? _initializationCompleter;
 
   /// Initialize Supabase with retry logic and better error handling
   static Future<void> initialize() async {
     if (_isInitializing) {
       _logger.w('Supabase initialization already in progress, waiting...');
-      // Wait for ongoing initialization to complete
-      while (_isInitializing && !_initializationCompleted) {
-        await Future.delayed(const Duration(milliseconds: 100));
+      // Wait for the existing initialization to complete
+      if (_initializationCompleter != null) {
+        await _initializationCompleter!.future;
       }
       return;
     }
@@ -28,6 +30,7 @@ class SupabaseService {
     }
 
     _isInitializing = true;
+    _initializationCompleter = Completer<void>();
 
     try {
       _logger.i('Starting Supabase initialization...');
@@ -135,13 +138,34 @@ class SupabaseService {
 
       _initializationCompleted = true;
       _logger.i('✅ Supabase initialization completed successfully');
+
+      // Complete the initialization future
+      if (_initializationCompleter != null && !_initializationCompleter!.isCompleted) {
+        _initializationCompleter!.complete();
+      }
     } catch (e) {
       _logger.e('❌ Supabase initialization failed: $e');
       _initializationCompleted = false;
       _client = null;
+
+      // Complete the initialization future with error
+      if (_initializationCompleter != null && !_initializationCompleter!.isCompleted) {
+        _initializationCompleter!.completeError(e);
+      }
       rethrow;
     } finally {
       _isInitializing = false;
+    }
+  }
+
+  /// Wait for Supabase initialization to complete
+  static Future<void> waitForInitialization() async {
+    if (_initializationCompleted && _client != null) {
+      return; // Already initialized
+    }
+
+    if (_initializationCompleter != null) {
+      await _initializationCompleter!.future;
     }
   }
 
@@ -456,5 +480,8 @@ class SupabaseService {
 
 /// Provider for Supabase client
 final supabaseClientProvider = Provider<SupabaseClient>((ref) {
+  if (!SupabaseService.isInitialized) {
+    throw Exception('Supabase not initialized. Please wait for initialization to complete.');
+  }
   return SupabaseService.client;
 });
