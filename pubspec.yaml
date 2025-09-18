@@ -95,6 +95,7 @@ dev_dependencies:
   # Code Generation
   build_runner: ^2.4.13
   json_serializable: ^6.8.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
@@ -102,3 +103,28 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/translations/
+
+# Flutter Launcher Icons Configuration
+flutter_launcher_icons:
+  android: true
+  ios: true
+  linux: true
+  image_path: "assets/mataresit-icon.png"
+  
+  # macOS configuration (requires map format)
+  macos:
+    generate: true
+    image_path: "assets/mataresit-icon.png"
+  
+  # Windows configuration (requires map format)
+  windows:
+    generate: true
+    image_path: "assets/mataresit-icon.png"
+    icon_size: 48
+  
+  # Android adaptive icon configuration
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "assets/mataresit-icon.png"
+  
+  # Remove old icons before generating new ones
+  remove_alpha_ios: true
