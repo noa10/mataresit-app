@@ -140,7 +140,8 @@ class SupabaseService {
       _logger.i('✅ Supabase initialization completed successfully');
 
       // Complete the initialization future
-      if (_initializationCompleter != null && !_initializationCompleter!.isCompleted) {
+      if (_initializationCompleter != null &&
+          !_initializationCompleter!.isCompleted) {
         _initializationCompleter!.complete();
       }
     } catch (e) {
@@ -149,7 +150,8 @@ class SupabaseService {
       _client = null;
 
       // Complete the initialization future with error
-      if (_initializationCompleter != null && !_initializationCompleter!.isCompleted) {
+      if (_initializationCompleter != null &&
+          !_initializationCompleter!.isCompleted) {
         _initializationCompleter!.completeError(e);
       }
       rethrow;
@@ -481,7 +483,9 @@ class SupabaseService {
 /// Provider for Supabase client
 final supabaseClientProvider = Provider<SupabaseClient>((ref) {
   if (!SupabaseService.isInitialized) {
-    throw Exception('Supabase not initialized. Please wait for initialization to complete.');
+    throw Exception(
+      'Supabase not initialized. Please wait for initialization to complete.',
+    );
   }
   return SupabaseService.client;
 });

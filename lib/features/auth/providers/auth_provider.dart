@@ -54,8 +54,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
         try {
           // Wait for initialization with a timeout
-          await SupabaseService.waitForInitialization()
-              .timeout(const Duration(seconds: 30));
+          await SupabaseService.waitForInitialization().timeout(
+            const Duration(seconds: 30),
+          );
           AppLogger.info('✅ Supabase initialization completed');
         } catch (e) {
           AppLogger.error('❌ Supabase initialization failed or timed out: $e');

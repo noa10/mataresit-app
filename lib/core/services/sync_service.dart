@@ -148,7 +148,9 @@ class SyncService {
     Map<String, dynamic> data,
   ) async {
     if (!_isSupabaseReady) {
-      throw Exception('Supabase not initialized - cannot sync receipt operation');
+      throw Exception(
+        'Supabase not initialized - cannot sync receipt operation',
+      );
     }
 
     switch (operation) {
@@ -379,7 +381,9 @@ class SyncService {
   /// Check receipts consistency between local and remote
   static Future<void> _checkReceiptsConsistency(String userId) async {
     if (!_isSupabaseReady) {
-      _logger.w('Supabase not initialized, skipping receipts consistency check');
+      _logger.w(
+        'Supabase not initialized, skipping receipts consistency check',
+      );
       return;
     }
 

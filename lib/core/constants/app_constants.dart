@@ -40,6 +40,7 @@ class AppConstants {
       );
     }
   }
+
   static String get supabaseProjectId {
     try {
       return dotenv.env['SUPABASE_PROJECT_ID'] ??
