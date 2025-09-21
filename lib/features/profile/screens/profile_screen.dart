@@ -55,9 +55,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   Tab(icon: Icon(Icons.settings_outlined), text: 'Preferences'),
                   Tab(icon: Icon(Icons.security_outlined), text: 'Security'),
                 ],
-                labelColor: Theme.of(context).primaryColor,
-                unselectedLabelColor: Colors.grey[600],
-                indicatorColor: Theme.of(context).primaryColor,
+                labelColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.primary,
+                unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                indicatorColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.primary,
               )
             : null,
       ),

@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/services/app_logger.dart';
 import '../../../shared/widgets/loading_widget.dart';
+import '../../../shared/widgets/google_icon.dart';
+import '../../../shared/widgets/mataresit_logo.dart';
 import '../providers/auth_provider.dart';
 import '../../../app/router/app_router.dart';
 
@@ -75,24 +77,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               children: [
                 const SizedBox(height: AppConstants.largePadding * 2),
 
-                // Logo/Icon
+                // Mataresit Logo with Title
                 Center(
-                  child: Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(
-                        AppConstants.largeBorderRadius,
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.receipt_long,
-                      size: 50,
-                      color: Theme.of(context).primaryColor,
-                    ),
+                  child: MataresitLogo.login(
+                    size: 100.0,
+                    showTitle: true,
                   ),
                 ),
 
@@ -198,6 +187,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   onPressed: _handleSignIn,
                   text: 'Sign In',
                   isLoading: authState.isLoading,
+                ),
+
+
+                // OAuth Divider
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: Theme.of(context).dividerColor)),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text('OR'),
+                    ),
+                    Expanded(child: Divider(color: Theme.of(context).dividerColor)),
+                  ],
+                ),
+
+                const SizedBox(height: AppConstants.defaultPadding),
+
+                // Continue with Google
+                OutlinedButton.icon(
+                  onPressed: () =>
+                      ref.read(authProvider.notifier).signInWithGoogle(),
+                  icon: const GoogleIcon(size: 20),
+                  label: const Text('Continue with Google'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                  ),
                 ),
 
                 const SizedBox(height: AppConstants.largePadding),

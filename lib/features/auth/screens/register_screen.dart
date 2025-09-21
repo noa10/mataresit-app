@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/widgets/loading_widget.dart';
+import '../../../shared/widgets/google_icon.dart';
 import '../providers/auth_provider.dart';
 import '../../../app/router/app_router.dart';
 
@@ -211,6 +212,34 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   onPressed: _handleRegister,
                   text: 'Create Account',
                   isLoading: authState.isLoading,
+                ),
+
+                // OAuth Divider
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: Theme.of(context).dividerColor)),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text('OR'),
+                    ),
+                    Expanded(child: Divider(color: Theme.of(context).dividerColor)),
+                  ],
+                ),
+
+                const SizedBox(height: AppConstants.defaultPadding),
+
+                // Continue with Google
+                OutlinedButton.icon(
+                  onPressed: () =>
+                      ref.read(authProvider.notifier).signInWithGoogle(),
+                  icon: const GoogleIcon(size: 20),
+                  label: const Text('Continue with Google'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                  ),
                 ),
 
                 const SizedBox(height: AppConstants.largePadding),

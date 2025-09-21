@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../receipts/providers/receipts_provider.dart';
+import '../../teams/providers/teams_provider.dart';
 import '../../../shared/models/receipt_model.dart';
 import '../../../core/services/app_logger.dart';
 
@@ -49,13 +50,17 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
   final receiptsState = ref.watch(receiptsProvider);
   final receipts = receiptsState.receipts;
 
+  // Watch teams state to get the correct teams count
+  final teamsState = ref.watch(teamsProvider);
+  final totalTeams = teamsState.teams.length;
+
   AppLogger.info(
     '📊 Dashboard calculating stats from ${receipts.length} receipts',
   );
 
   if (receipts.isEmpty) {
-    AppLogger.warning('📊 No receipts found, returning empty stats');
-    return const DashboardStats();
+    AppLogger.warning('📊 No receipts found, returning stats with teams count only');
+    return DashboardStats(totalTeams: totalTeams);
   }
 
   // Calculate total receipts
@@ -104,14 +109,14 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
   }
 
   AppLogger.info(
-    '📈 Dashboard stats calculated: Total: $totalReceipts, This month: $thisMonthReceipts, Amount: \$${totalAmount.toStringAsFixed(2)}',
+    '📈 Dashboard stats calculated: Total: $totalReceipts, This month: $thisMonthReceipts, Amount: \$${totalAmount.toStringAsFixed(2)}, Teams: $totalTeams',
   );
 
   return DashboardStats(
     totalReceipts: totalReceipts,
     thisMonthReceipts: thisMonthReceipts,
     totalAmount: totalAmount,
-    totalTeams: 0, // TODO: Implement teams count
+    totalTeams: totalTeams,
     recentReceipts: recentReceipts,
     categoryBreakdown: categoryBreakdown,
     monthlySpending: monthlySpending,

@@ -11,6 +11,8 @@ import '../../subscription/widgets/subscription_status_card.dart';
 import '../../subscription/widgets/subscription_limits_widget.dart';
 import '../../../shared/providers/currency_provider.dart';
 import '../../../shared/utils/currency_utils.dart';
+import '../../../shared/widgets/mataresit_logo.dart';
+import '../../../shared/widgets/enhanced_user_avatar.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -29,7 +31,10 @@ class DashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        title: const MataresitLogoHorizontal(
+          size: 28.0,
+        ),
+        centerTitle: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
@@ -52,21 +57,17 @@ class DashboardScreen extends ConsumerWidget {
             children: [
               // Welcome Section
               Card(
+                elevation: 2,
                 child: Padding(
                   padding: const EdgeInsets.all(AppConstants.defaultPadding),
                   child: Row(
                     children: [
-                      CircleAvatar(
-                        radius: 30,
-                        backgroundColor: Theme.of(context).primaryColor,
-                        child: Text(
-                          user?.fullName?.substring(0, 1).toUpperCase() ?? 'U',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onPrimary,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                      WelcomeAvatar(
+                        user: user,
+                        onTap: () {
+                          // Navigate to profile screen
+                          context.push(AppRoutes.profile);
+                        },
                       ),
                       const SizedBox(width: AppConstants.defaultPadding),
                       Expanded(
@@ -82,13 +83,34 @@ class DashboardScreen extends ConsumerWidget {
                                     ).colorScheme.onSurfaceVariant,
                                   ),
                             ),
+                            const SizedBox(height: 4),
                             Text(
                               user?.fullName ?? 'User',
                               style: Theme.of(context).textTheme.headlineSmall
                                   ?.copyWith(fontWeight: FontWeight.bold),
                             ),
+                            if (user?.email != null) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                user!.email!,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ],
                         ),
+                      ),
+                      // Profile action button
+                      IconButton(
+                        onPressed: () => context.push(AppRoutes.profile),
+                        icon: const Icon(Icons.arrow_forward_ios),
+                        iconSize: 16,
+                        tooltip: 'View Profile',
                       ),
                     ],
                   ),
