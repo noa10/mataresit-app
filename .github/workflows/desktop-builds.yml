@@ -244,12 +244,46 @@ jobs:
       - name: Create debug symbols directory
         run: mkdir -p debug-symbols
 
+      - name: Configure macOS for CI build (disable code signing)
+        if: matrix.platform == 'macos'
+        run: |
+          echo "Configuring macOS project for CI build without code signing..."
+
+          # Create a temporary xcconfig file to override code signing settings
+          cat > macos/ci-override.xcconfig << EOF
+          // CI Build Configuration - Disable Code Signing
+          CODE_SIGNING_REQUIRED = NO
+          CODE_SIGNING_ALLOWED = NO
+          CODE_SIGN_IDENTITY =
+          DEVELOPMENT_TEAM =
+          PROVISIONING_PROFILE_SPECIFIER =
+          CODE_SIGN_STYLE = Manual
+          EOF
+
+          # Backup original xcconfig files
+          cp macos/Runner/Configs/Release.xcconfig macos/Runner/Configs/Release.xcconfig.bak
+
+          # Prepend CI override to Release config
+          cat macos/ci-override.xcconfig macos/Runner/Configs/Release.xcconfig.bak > macos/Runner/Configs/Release.xcconfig
+
+          echo "✅ macOS project configured for CI build"
+
       - name: Build ${{ matrix.platform }} app with optimizations
         run: |
           echo "Building for ${{ matrix.platform }}..."
           ${{ matrix.build_command }}
         env:
           FLUTTER_BUILD_MODE: release
+
+      - name: Restore macOS configuration
+        if: matrix.platform == 'macos' && always()
+        run: |
+          echo "Restoring original macOS configuration..."
+          if [ -f macos/Runner/Configs/Release.xcconfig.bak ]; then
+            mv macos/Runner/Configs/Release.xcconfig.bak macos/Runner/Configs/Release.xcconfig
+            echo "✅ Original configuration restored"
+          fi
+          rm -f macos/ci-override.xcconfig
 
       - name: Verify build output (macOS/Linux)
         if: matrix.platform != 'windows'
