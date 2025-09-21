@@ -101,19 +101,57 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (SupabaseService.isInitialized) {
       SupabaseService.authStateStream.listen((authState) {
         AppLogger.info('🔄 Auth state change detected: ${authState.event}');
-        if (authState.event == AuthChangeEvent.signedIn) {
-          final user = authState.session?.user;
-          if (user != null) {
-            AppLogger.info(
-              '👤 User signed in via auth state change: ${user.email}',
-            );
-            _loadUserProfile(user.id);
-          } else {
-            AppLogger.warning('⚠️ SignedIn event but no user in session');
-          }
-        } else if (authState.event == AuthChangeEvent.signedOut) {
-          AppLogger.info('👋 User signed out');
-          state = const AuthState(isLoading: false, isAuthenticated: false);
+
+        switch (authState.event) {
+          case AuthChangeEvent.signedIn:
+            final user = authState.session?.user;
+            if (user != null) {
+              AppLogger.info(
+                '👤 User signed in via auth state change: ${user.email}',
+              );
+              _loadUserProfile(user.id);
+            } else {
+              AppLogger.warning('⚠️ SignedIn event but no user in session');
+            }
+            break;
+
+          case AuthChangeEvent.initialSession:
+            final user = authState.session?.user;
+            if (user != null) {
+              AppLogger.info(
+                '🔄 Initial session detected for user: ${user.email}',
+              );
+              _loadUserProfile(user.id);
+            } else {
+              AppLogger.info('🔄 Initial session check - no existing session');
+              state = const AuthState(isLoading: false, isAuthenticated: false);
+            }
+            break;
+
+          case AuthChangeEvent.signedOut:
+            AppLogger.info('👋 User signed out');
+            state = const AuthState(isLoading: false, isAuthenticated: false);
+            break;
+
+          case AuthChangeEvent.tokenRefreshed:
+            AppLogger.info('🔄 Token refreshed');
+            // Don't change auth state for token refresh
+            break;
+
+          case AuthChangeEvent.userUpdated:
+            AppLogger.info('👤 User updated');
+            // Don't change auth state for user updates
+            break;
+
+          case AuthChangeEvent.passwordRecovery:
+            AppLogger.info('🔑 Password recovery initiated');
+            // Don't change auth state for password recovery
+            break;
+
+          default:
+            AppLogger.info('🔄 Unhandled auth event: ${authState.event}');
+            // Don't change auth state for unknown events
+            break;
         }
       });
     } else {
@@ -313,6 +351,32 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
     }
   }
+
+  /// Sign in with Google (OAuth)
+  /// This triggers an external browser flow and returns via deep link
+  Future<void> signInWithGoogle() async {
+    try {
+      AppLogger.info('🔐 Starting Google OAuth sign-in');
+      state = state.copyWith(isLoading: true, error: null);
+
+      await SupabaseService.signInWithGoogle();
+
+      // On mobile, control will return via deep link and onAuthStateChange
+      // will fire AuthChangeEvent.signedIn. We keep UI responsive and avoid
+      // setting error/success here.
+      state = state.copyWith(isLoading: false);
+    } on AuthException catch (e) {
+      AppLogger.error('❌ Google OAuth error: ${e.message}', e);
+      state = state.copyWith(isLoading: false, error: e.message);
+    } catch (e) {
+      AppLogger.error('❌ Unexpected Google sign-in error', e);
+      state = state.copyWith(
+        isLoading: false,
+        error: 'An unexpected error occurred: ${e.toString()}',
+      );
+    }
+  }
+
 
   /// Sign up with email and password
   Future<void> signUpWithEmailAndPassword({

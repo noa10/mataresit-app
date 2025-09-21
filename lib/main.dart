@@ -21,6 +21,7 @@ import 'core/services/performance_service.dart';
 import 'core/services/workspace_preferences_service.dart';
 import 'core/services/currency_cache_service.dart';
 import 'core/services/shared_preferences_compatibility_service.dart';
+import 'core/services/deep_link_service.dart';
 // import 'core/platform/ios_compatibility_service.dart'; // Disabled - causing issues
 
 // import 'comprehensive_visual_debug.dart'; // Disabled for production
@@ -174,6 +175,15 @@ void main() async {
     } catch (e) {
       logger.w('⚠️ Currency cache service initialization failed: $e');
       logger.i('ℹ️ App will continue with default currency settings');
+    }
+
+    // Initialize deep link service for OAuth callbacks
+    try {
+      await DeepLinkService.instance.initialize();
+      logger.i('✅ Deep link service initialized');
+    } catch (e) {
+      logger.w('⚠️ Deep link service initialization failed: $e');
+      logger.i('ℹ️ OAuth redirects may not work properly');
     }
 
     // Initialize EasyLocalization - it can work without SharedPreferences

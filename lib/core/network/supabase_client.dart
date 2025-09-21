@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:logger/logger.dart';
 import '../constants/app_constants.dart';
+import '../services/app_logger.dart';
+import '../services/google_auth_service.dart';
 
 /// Supabase client configuration and initialization
 class SupabaseService {
@@ -208,6 +210,39 @@ class SupabaseService {
       email: email,
       password: password,
     );
+  }
+
+  /// The OAuth redirect URI used for mobile deep linking
+  /// Ensure this scheme is configured on iOS (Info.plist CFBundleURLSchemes)
+  /// and Android (intent-filter in AndroidManifest.xml), and added to
+  /// Supabase Auth -> URL Configuration -> Additional Redirect URLs
+  static String get oauthRedirectUri => 'mataresit://login-callback';
+
+  /// Sign in with Google using platform-appropriate method
+  /// Uses native Google Sign-In on mobile platforms for better UX
+  /// Falls back to web OAuth on web and other platforms
+  static Future<void> signInWithGoogle() async {
+    await GoogleAuthService.signInWithGoogle();
+  }
+
+  /// Handle OAuth callback from deep link
+  /// This processes the authentication tokens from the redirect URL
+  static Future<bool> handleOAuthCallback(String url) async {
+    try {
+      AppLogger.info('🔗 Processing OAuth callback URL: $url');
+
+      // Use Supabase's built-in method to handle the OAuth callback
+      // This will automatically parse the URL and set the session
+      final response = await client.auth.getSessionFromUrl(Uri.parse(url));
+
+      AppLogger.info('✅ OAuth callback processed successfully');
+      AppLogger.info('✅ User authenticated: ${response.session.user.email}');
+      return true;
+
+    } catch (e) {
+      AppLogger.error('❌ Error handling OAuth callback: $e');
+      return false;
+    }
   }
 
   /// Sign up with email and password
