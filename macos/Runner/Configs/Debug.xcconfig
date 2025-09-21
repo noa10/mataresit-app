@@ -1,2 +1,6 @@
 #include "../../Flutter/Flutter-Debug.xcconfig"
 #include "Warnings.xcconfig"
+#include "../../Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"
+
+// Set deployment target to 10.14 for flutter_local_notifications compatibility
+MACOSX_DEPLOYMENT_TARGET = 10.14

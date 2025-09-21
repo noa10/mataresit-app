@@ -164,12 +164,23 @@
 	<!-- URL Schemes for Deep Linking -->
 	<key>CFBundleURLTypes</key>
 	<array>
+		<!-- Mataresit App Deep Link Scheme -->
 		<dict>
 			<key>CFBundleURLName</key>
 			<string>mataresit.co.mataresitApp</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>mataresit</string>
+			</array>
+		</dict>
+		<!-- Google Sign-In URL Scheme -->
+		<!-- TODO: Replace with actual REVERSED_CLIENT_ID from GoogleService-Info.plist -->
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>GoogleSignIn</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.835461278848-elj0ll0vlcr9hv3d1b44iuu1a7otj9qo</string>
 			</array>
 		</dict>
 	</array>

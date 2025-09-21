@@ -28,6 +28,28 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<!-- Google Sign-In Configuration -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<!-- Google Sign-In URL Scheme -->
+				<string>com.googleusercontent.apps.835461278848-elj0ll0vlcr9hv3d1b44iuu1a7otj9qo</string>
+				<!-- App Deep Link Scheme -->
+				<string>mataresit</string>
+			</array>
+		</dict>
+	</array>
+
+	<!-- Google Client IDs -->
+	<key>GIDClientID</key>
+	<string>835461278848-elj0ll0vlcr9hv3d1b44iuu1a7otj9qo.apps.googleusercontent.com</string>
+	<key>GIDServerClientID</key>
+	<string>835461278848-85lf9ffh18kk22u1qm9bln7v8q64ku15.apps.googleusercontent.com</string>
+
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
