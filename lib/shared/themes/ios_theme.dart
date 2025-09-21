@@ -49,6 +49,9 @@ class IOSTheme {
       // iOS-style list tiles
       listTileTheme: _buildIOSListTileTheme(baseTheme.colorScheme),
 
+      // iOS-style tab bar
+      tabBarTheme: _buildIOSTabBarTheme(baseTheme.colorScheme),
+
       // iOS-style typography
       textTheme: _buildIOSTextTheme(baseTheme.textTheme, brightness),
     );
@@ -224,6 +227,28 @@ class IOSTheme {
     );
   }
 
+  static TabBarThemeData _buildIOSTabBarTheme(ColorScheme colorScheme) {
+    // Use high contrast colors for better visibility in dark mode
+    final activeColor = colorScheme.brightness == Brightness.dark
+        ? Colors.white
+        : colorScheme.primary;
+
+    return TabBarThemeData(
+      labelColor: activeColor,
+      unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.7),
+      indicatorColor: activeColor,
+      indicatorSize: TabBarIndicatorSize.tab,
+      labelStyle: const TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w600,
+      ),
+      unselectedLabelStyle: const TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w400,
+      ),
+    );
+  }
+
   static TextTheme _buildIOSTextTheme(
     TextTheme baseTheme,
     Brightness brightness,
@@ -333,13 +358,24 @@ class IOSTheme {
     final definition = theme_model.ThemeVariantDefinition.getDefinition(
       variant,
     );
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: definition.seedColor,
+      brightness: brightness,
+    );
     return ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: definition.seedColor,
-        brightness: brightness,
-      ),
+      colorScheme: colorScheme,
       brightness: brightness,
+      tabBarTheme: TabBarThemeData(
+        labelColor: colorScheme.brightness == Brightness.dark
+            ? Colors.white
+            : colorScheme.primary,
+        unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.6),
+        indicatorColor: colorScheme.brightness == Brightness.dark
+            ? Colors.white
+            : colorScheme.primary,
+        indicatorSize: TabBarIndicatorSize.tab,
+      ),
     );
   }
 }

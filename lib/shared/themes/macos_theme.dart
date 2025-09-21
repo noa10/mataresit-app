@@ -51,6 +51,9 @@ class MacOSTheme {
       // macOS-style list tiles
       listTileTheme: _buildMacOSListTileTheme(baseTheme.colorScheme),
 
+      // macOS-style tab bar
+      tabBarTheme: _buildMacOSTabBarTheme(baseTheme.colorScheme),
+
       // macOS-style typography
       textTheme: _buildMacOSTextTheme(baseTheme.textTheme, brightness),
 
@@ -209,6 +212,29 @@ class MacOSTheme {
         color: colorScheme.onSurface.withValues(alpha: 0.7),
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    );
+  }
+
+  /// Build macOS-style tab bar theme
+  static TabBarThemeData _buildMacOSTabBarTheme(ColorScheme colorScheme) {
+    // Use high contrast colors for better visibility in dark mode
+    final activeColor = colorScheme.brightness == Brightness.dark
+        ? Colors.white
+        : colorScheme.primary;
+
+    return TabBarThemeData(
+      labelColor: activeColor,
+      unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.6),
+      indicatorColor: activeColor,
+      indicatorSize: TabBarIndicatorSize.tab,
+      labelStyle: const TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w500,
+      ),
+      unselectedLabelStyle: const TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w400,
+      ),
     );
   }
 
