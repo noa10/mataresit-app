@@ -377,7 +377,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-
   /// Sign up with email and password
   Future<void> signUpWithEmailAndPassword({
     required String email,

@@ -24,9 +24,9 @@ class DeepLinkService {
 
     try {
       AppLogger.info('🔗 Initializing DeepLinkService...');
-      
+
       _appLinks = AppLinks();
-      
+
       // Listen for incoming links when app is already running
       _linkSubscription = _appLinks.uriLinkStream.listen(
         _handleIncomingLink,
@@ -58,12 +58,14 @@ class DeepLinkService {
   Future<void> _handleIncomingLink(Uri uri) async {
     try {
       AppLogger.info('🔗 Processing incoming link: $uri');
-      
+
       final scheme = uri.scheme;
       final host = uri.host;
       final path = uri.path;
-      
-      AppLogger.debug('🔗 Link details - scheme: $scheme, host: $host, path: $path');
+
+      AppLogger.debug(
+        '🔗 Link details - scheme: $scheme, host: $host, path: $path',
+      );
 
       // Check if this is an OAuth callback
       if (scheme == 'mataresit' && host == 'login-callback') {
@@ -82,13 +84,13 @@ class DeepLinkService {
   Future<void> _handleOAuthCallback(Uri uri) async {
     try {
       AppLogger.info('🔐 Processing OAuth callback: $uri');
-      
+
       // Convert URI to string for processing
       final urlString = uri.toString();
-      
+
       // Use SupabaseService to handle the OAuth callback
       final success = await SupabaseService.handleOAuthCallback(urlString);
-      
+
       if (success) {
         AppLogger.info('✅ OAuth callback processed successfully');
       } else {

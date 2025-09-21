@@ -238,7 +238,6 @@ class SupabaseService {
       AppLogger.info('✅ OAuth callback processed successfully');
       AppLogger.info('✅ User authenticated: ${response.session.user.email}');
       return true;
-
     } catch (e) {
       AppLogger.error('❌ Error handling OAuth callback: $e');
       return false;

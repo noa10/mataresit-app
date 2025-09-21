@@ -7,37 +7,37 @@ import '../models/user_model.dart';
 class EnhancedUserAvatar extends StatelessWidget {
   /// The user model containing avatar information
   final UserModel? user;
-  
+
   /// The size of the avatar (radius)
   final double radius;
-  
+
   /// Custom background color for the avatar
   final Color? backgroundColor;
-  
+
   /// Custom text color for initials
   final Color? textColor;
-  
+
   /// Custom text style for initials
   final TextStyle? textStyle;
-  
+
   /// Whether to show a border around the avatar
   final bool showBorder;
-  
+
   /// Border color
   final Color? borderColor;
-  
+
   /// Border width
   final double borderWidth;
-  
+
   /// Custom fallback text (overrides user initials)
   final String? fallbackText;
-  
+
   /// Custom fallback icon
   final IconData? fallbackIcon;
-  
+
   /// Whether to show online indicator
   final bool showOnlineIndicator;
-  
+
   /// Online status
   final bool isOnline;
 
@@ -107,16 +107,16 @@ class EnhancedUserAvatar extends StatelessWidget {
   /// Get the best available avatar URL
   String? get _avatarUrl {
     if (user == null) return null;
-    
+
     // Priority: custom avatar_url > google_avatar_url
     if (user!.avatarUrl != null && user!.avatarUrl!.isNotEmpty) {
       return user!.avatarUrl;
     }
-    
+
     if (user!.googleAvatarUrl != null && user!.googleAvatarUrl!.isNotEmpty) {
       return user!.googleAvatarUrl;
     }
-    
+
     return null;
   }
 
@@ -124,10 +124,10 @@ class EnhancedUserAvatar extends StatelessWidget {
   String get _userInitials {
     if (fallbackText != null) return fallbackText!;
     if (user == null) return 'U';
-    
+
     final firstName = user!.firstName?.trim() ?? '';
     final lastName = user!.lastName?.trim() ?? '';
-    
+
     if (firstName.isNotEmpty && lastName.isNotEmpty) {
       return '${firstName[0]}${lastName[0]}'.toUpperCase();
     } else if (firstName.isNotEmpty) {
@@ -137,34 +137,36 @@ class EnhancedUserAvatar extends StatelessWidget {
     } else if (user!.email != null && user!.email!.isNotEmpty) {
       return user!.email![0].toUpperCase();
     }
-    
+
     return 'U';
   }
 
   /// Build the fallback avatar with initials or icon
-  Widget _buildFallbackAvatar(BuildContext context, Color bgColor, Color fgColor) {
+  Widget _buildFallbackAvatar(
+    BuildContext context,
+    Color bgColor,
+    Color fgColor,
+  ) {
     if (fallbackIcon != null) {
-      return Icon(
-        fallbackIcon,
-        size: radius * 0.8,
-        color: fgColor,
-      );
+      return Icon(fallbackIcon, size: radius * 0.8, color: fgColor);
     }
-    
+
     return Text(
       _userInitials,
-      style: textStyle ?? TextStyle(
-        color: fgColor,
-        fontSize: radius * 0.6,
-        fontWeight: FontWeight.bold,
-      ),
+      style:
+          textStyle ??
+          TextStyle(
+            color: fgColor,
+            fontSize: radius * 0.6,
+            fontWeight: FontWeight.bold,
+          ),
     );
   }
 
   /// Build the online indicator
   Widget _buildOnlineIndicator() {
     if (!showOnlineIndicator) return const SizedBox.shrink();
-    
+
     return Positioned(
       bottom: 0,
       right: 0,
@@ -174,10 +176,7 @@ class EnhancedUserAvatar extends StatelessWidget {
         decoration: BoxDecoration(
           color: isOnline ? Colors.green : Colors.grey,
           shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.white,
-            width: 1.0,
-          ),
+          border: Border.all(color: Colors.white, width: 1.0),
         ),
       ),
     );
@@ -189,10 +188,10 @@ class EnhancedUserAvatar extends StatelessWidget {
     final bgColor = backgroundColor ?? theme.primaryColor;
     final fgColor = textColor ?? theme.colorScheme.onPrimary;
     final bColor = borderColor ?? theme.colorScheme.outline;
-    
+
     Widget avatar;
     final avatarUrl = _avatarUrl;
-    
+
     if (avatarUrl != null) {
       // Try to load network image with caching
       avatar = CachedNetworkImage(
@@ -234,10 +233,7 @@ class EnhancedUserAvatar extends StatelessWidget {
       avatar = Container(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(
-            color: bColor,
-            width: borderWidth,
-          ),
+          border: Border.all(color: bColor, width: borderWidth),
         ),
         child: avatar,
       );
@@ -245,12 +241,7 @@ class EnhancedUserAvatar extends StatelessWidget {
 
     // Add online indicator if requested
     if (showOnlineIndicator) {
-      avatar = Stack(
-        children: [
-          avatar,
-          _buildOnlineIndicator(),
-        ],
-      );
+      avatar = Stack(children: [avatar, _buildOnlineIndicator()]);
     }
 
     return avatar;
@@ -262,24 +253,14 @@ class WelcomeAvatar extends StatelessWidget {
   final UserModel? user;
   final VoidCallback? onTap;
 
-  const WelcomeAvatar({
-    super.key,
-    this.user,
-    this.onTap,
-  });
+  const WelcomeAvatar({super.key, this.user, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final avatar = EnhancedUserAvatar.large(
-      user: user,
-      showBorder: true,
-    );
+    final avatar = EnhancedUserAvatar.large(user: user, showBorder: true);
 
     if (onTap != null) {
-      return GestureDetector(
-        onTap: onTap,
-        child: avatar,
-      );
+      return GestureDetector(onTap: onTap, child: avatar);
     }
 
     return avatar;

@@ -31,9 +31,7 @@ class DashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const MataresitLogoHorizontal(
-          size: 28.0,
-        ),
+        title: const MataresitLogoHorizontal(size: 28.0),
         centerTitle: false,
         actions: [
           IconButton(

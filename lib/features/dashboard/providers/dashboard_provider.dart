@@ -59,7 +59,9 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
   );
 
   if (receipts.isEmpty) {
-    AppLogger.warning('📊 No receipts found, returning stats with teams count only');
+    AppLogger.warning(
+      '📊 No receipts found, returning stats with teams count only',
+    );
     return DashboardStats(totalTeams: totalTeams);
   }
 

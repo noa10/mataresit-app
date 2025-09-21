@@ -217,12 +217,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 // OAuth Divider
                 Row(
                   children: [
-                    Expanded(child: Divider(color: Theme.of(context).dividerColor)),
+                    Expanded(
+                      child: Divider(color: Theme.of(context).dividerColor),
+                    ),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8.0),
                       child: Text('OR'),
                     ),
-                    Expanded(child: Divider(color: Theme.of(context).dividerColor)),
+                    Expanded(
+                      child: Divider(color: Theme.of(context).dividerColor),
+                    ),
                   ],
                 ),
 

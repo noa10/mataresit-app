@@ -3,20 +3,15 @@ import 'package:flutter/material.dart';
 /// Custom Google icon widget with proper branding colors
 class GoogleIcon extends StatelessWidget {
   final double size;
-  
-  const GoogleIcon({
-    super.key,
-    this.size = 24.0,
-  });
+
+  const GoogleIcon({super.key, this.size = 24.0});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: size,
       height: size,
-      child: CustomPaint(
-        painter: _GoogleIconPainter(),
-      ),
+      child: CustomPaint(painter: _GoogleIconPainter()),
     );
   }
 }
@@ -34,14 +29,14 @@ class _GoogleIconPainter extends CustomPainter {
 
     // Google Blue (#4285F4)
     paint.color = const Color(0xFF4285F4);
-    
+
     // Draw the blue section (top-right quarter and right half)
     final bluePath = Path();
     bluePath.moveTo(center.dx, center.dy - radius);
     bluePath.arcTo(
       Rect.fromCircle(center: center, radius: radius),
       -1.57, // -90 degrees (top)
-      1.57,  // 90 degrees (to right)
+      1.57, // 90 degrees (to right)
       false,
     );
     bluePath.lineTo(center.dx + radius * 0.6, center.dy);
@@ -52,7 +47,7 @@ class _GoogleIconPainter extends CustomPainter {
 
     // Google Red (#EA4335)
     paint.color = const Color(0xFFEA4335);
-    
+
     // Draw the red section (top-left quarter)
     final redPath = Path();
     redPath.moveTo(center.dx, center.dy - radius);
@@ -68,7 +63,7 @@ class _GoogleIconPainter extends CustomPainter {
 
     // Google Yellow (#FBBC05)
     paint.color = const Color(0xFFFBBC05);
-    
+
     // Draw the yellow section (bottom-left quarter)
     final yellowPath = Path();
     yellowPath.moveTo(center.dx - radius, center.dy);
@@ -84,7 +79,7 @@ class _GoogleIconPainter extends CustomPainter {
 
     // Google Green (#34A853)
     paint.color = const Color(0xFF34A853);
-    
+
     // Draw the green section (bottom-right quarter)
     final greenPath = Path();
     greenPath.moveTo(center.dx, center.dy + radius);

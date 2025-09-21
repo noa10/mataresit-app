@@ -58,7 +58,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 labelColor: Theme.of(context).brightness == Brightness.dark
                     ? Colors.white
                     : Theme.of(context).colorScheme.primary,
-                unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                unselectedLabelColor: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
                 indicatorColor: Theme.of(context).brightness == Brightness.dark
                     ? Colors.white
                     : Theme.of(context).colorScheme.primary,

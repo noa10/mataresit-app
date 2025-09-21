@@ -79,10 +79,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 // Mataresit Logo with Title
                 Center(
-                  child: MataresitLogo.login(
-                    size: 100.0,
-                    showTitle: true,
-                  ),
+                  child: MataresitLogo.login(size: 100.0, showTitle: true),
                 ),
 
                 const SizedBox(height: AppConstants.largePadding),
@@ -189,16 +186,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   isLoading: authState.isLoading,
                 ),
 
-
                 // OAuth Divider
                 Row(
                   children: [
-                    Expanded(child: Divider(color: Theme.of(context).dividerColor)),
+                    Expanded(
+                      child: Divider(color: Theme.of(context).dividerColor),
+                    ),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8.0),
                       child: Text('OR'),
                     ),
-                    Expanded(child: Divider(color: Theme.of(context).dividerColor)),
+                    Expanded(
+                      child: Divider(color: Theme.of(context).dividerColor),
+                    ),
                   ],
                 ),
 

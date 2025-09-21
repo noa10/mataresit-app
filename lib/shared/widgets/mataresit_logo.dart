@@ -6,22 +6,22 @@ import '../../core/constants/app_constants.dart';
 class MataresitLogo extends StatelessWidget {
   /// The size of the logo
   final double size;
-  
+
   /// Whether to show the app title below the logo
   final bool showTitle;
-  
+
   /// The title text style
   final TextStyle? titleStyle;
-  
+
   /// The spacing between logo and title
   final double spacing;
-  
+
   /// Whether to show the logo in a container with background
   final bool showContainer;
-  
+
   /// The container background color
   final Color? containerColor;
-  
+
   /// The container border radius
   final double? borderRadius;
 
@@ -37,10 +37,7 @@ class MataresitLogo extends StatelessWidget {
   });
 
   /// Factory constructor for login screen usage
-  factory MataresitLogo.login({
-    double size = 100.0,
-    bool showTitle = true,
-  }) {
+  factory MataresitLogo.login({double size = 100.0, bool showTitle = true}) {
     return MataresitLogo(
       size: size,
       showTitle: showTitle,
@@ -50,10 +47,7 @@ class MataresitLogo extends StatelessWidget {
   }
 
   /// Factory constructor for dashboard/app bar usage
-  factory MataresitLogo.appBar({
-    double size = 32.0,
-    bool showTitle = true,
-  }) {
+  factory MataresitLogo.appBar({double size = 32.0, bool showTitle = true}) {
     return MataresitLogo(
       size: size,
       showTitle: showTitle,
@@ -63,10 +57,7 @@ class MataresitLogo extends StatelessWidget {
   }
 
   /// Factory constructor for splash screen usage
-  factory MataresitLogo.splash({
-    double size = 120.0,
-    bool showTitle = true,
-  }) {
+  factory MataresitLogo.splash({double size = 120.0, bool showTitle = true}) {
     return MataresitLogo(
       size: size,
       showTitle: showTitle,
@@ -78,7 +69,7 @@ class MataresitLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     Widget logoImage = Image.asset(
       'assets/mataresit-icon.png',
       width: size,
@@ -109,8 +100,7 @@ class MataresitLogo extends StatelessWidget {
       logoImage = Container(
         padding: EdgeInsets.all(size * 0.1),
         decoration: BoxDecoration(
-          color: containerColor ?? 
-                 theme.primaryColor.withValues(alpha: 0.1),
+          color: containerColor ?? theme.primaryColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(
             borderRadius ?? AppConstants.largeBorderRadius,
           ),
@@ -139,11 +129,12 @@ class MataresitLogo extends StatelessWidget {
         SizedBox(height: spacing),
         Text(
           AppConstants.appName,
-          style: titleStyle ??
-                 theme.textTheme.headlineMedium?.copyWith(
-                   fontWeight: FontWeight.bold,
-                   color: theme.colorScheme.onSurface,
-                 ),
+          style:
+              titleStyle ??
+              theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
           textAlign: TextAlign.center,
         ),
       ],
@@ -155,10 +146,10 @@ class MataresitLogo extends StatelessWidget {
 class MataresitLogoHorizontal extends StatelessWidget {
   /// The size of the logo
   final double size;
-  
+
   /// The title text style
   final TextStyle? titleStyle;
-  
+
   /// The spacing between logo and title
   final double spacing;
 
@@ -172,7 +163,7 @@ class MataresitLogoHorizontal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -193,11 +184,12 @@ class MataresitLogoHorizontal extends StatelessWidget {
         SizedBox(width: spacing),
         Text(
           AppConstants.appName,
-          style: titleStyle ??
-                 theme.textTheme.titleLarge?.copyWith(
-                   fontWeight: FontWeight.bold,
-                   color: theme.colorScheme.onSurface,
-                 ),
+          style:
+              titleStyle ??
+              theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
         ),
       ],
     );

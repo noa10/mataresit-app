@@ -227,10 +227,7 @@ class MacOSTheme {
       unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.6),
       indicatorColor: activeColor,
       indicatorSize: TabBarIndicatorSize.tab,
-      labelStyle: const TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.w500,
-      ),
+      labelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
       unselectedLabelStyle: const TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w400,

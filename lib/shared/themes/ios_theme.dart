@@ -238,10 +238,7 @@ class IOSTheme {
       unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.7),
       indicatorColor: activeColor,
       indicatorSize: TabBarIndicatorSize.tab,
-      labelStyle: const TextStyle(
-        fontSize: 10,
-        fontWeight: FontWeight.w600,
-      ),
+      labelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
       unselectedLabelStyle: const TextStyle(
         fontSize: 10,
         fontWeight: FontWeight.w400,
