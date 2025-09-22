@@ -945,9 +945,11 @@ final refreshReceiptProvider = FutureProvider.family<ReceiptModel?, String>((
     AppLogger.info('🔄 Refreshing receipt $receiptId from database');
     final receipt = await ReceiptService.getReceiptWithLineItems(receiptId);
 
-    // Update the main receipts list with the refreshed data
-    final receiptsNotifier = ref.read(receiptsProvider.notifier);
-    receiptsNotifier.updateReceiptInList(receipt);
+    if (receipt != null) {
+      // Update the main receipts list with the refreshed data
+      final receiptsNotifier = ref.read(receiptsProvider.notifier);
+      receiptsNotifier.updateReceiptInList(receipt);
+    }
 
     return receipt;
   } catch (error) {

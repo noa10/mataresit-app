@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/constants/app_constants.dart';
+import '../../../core/guards/subscription_guard.dart';
+import '../../../app/router/app_router.dart';
 import '../providers/receipts_provider.dart';
 import '../../../shared/models/receipt_model.dart';
 import '../../../shared/models/team_model.dart';
@@ -58,6 +60,19 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       ref.read(receiptsProvider.notifier).loadMore();
+    }
+  }
+
+  Future<void> _handleCaptureReceipt(BuildContext context, WidgetRef ref) async {
+    // Check subscription limits before allowing receipt capture
+    final canUpload = await SubscriptionGuard.showReceiptLimitDialogIfNeeded(
+      context,
+      ref,
+      additionalReceipts: 1,
+    );
+
+    if (canUpload && context.mounted) {
+      context.push(AppRoutes.receiptCapture);
     }
   }
 
@@ -118,12 +133,9 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
             onPressed: _showSearchDialog,
           ),
           IconButton(
-            icon: Icon(
-              receiptsState.isGroupedView ? Icons.view_list : Icons.view_agenda,
-            ),
-            onPressed: () =>
-                ref.read(receiptsProvider.notifier).toggleGroupedView(),
-            tooltip: receiptsState.isGroupedView ? 'List view' : 'Grouped view',
+            icon: const Icon(Icons.camera_alt),
+            onPressed: () => _handleCaptureReceipt(context, ref),
+            tooltip: 'Capture Receipt',
           ),
           PopupMenuButton<String>(
             onSelected: _handleMenuAction,
