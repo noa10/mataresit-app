@@ -13,6 +13,7 @@ import '../../../shared/providers/currency_provider.dart';
 import '../../../shared/utils/currency_utils.dart';
 import '../../../shared/widgets/mataresit_logo.dart';
 import '../../../shared/widgets/enhanced_user_avatar.dart';
+import '../../../shared/widgets/notification_center.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -34,12 +35,10 @@ class DashboardScreen extends ConsumerWidget {
         title: const MataresitLogoHorizontal(size: 28.0),
         centerTitle: false,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {
-              // TODO: Navigate to notifications
-            },
+          const NotificationCenter(
+            showBadge: true,
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: RefreshIndicator(

@@ -335,9 +335,8 @@ class _AdaptiveNavigationWrapperState
   }
 
   bool _shouldShowFAB() {
-    // Show FAB only on receipts screen and only on Android and macOS
-    // iOS uses different patterns for primary actions
-    return !Platform.isIOS && _selectedIndex == 1; // Receipts index
+    // FAB removed - capture receipt functionality moved to header
+    return false;
   }
 
   Widget _buildFloatingActionButton() {

@@ -31,6 +31,7 @@ import '../../features/settings/screens/currency_settings_screen.dart';
 import '../../features/settings/screens/theme_settings_screen.dart';
 import '../../features/settings/screens/help_screen.dart';
 import '../../features/settings/screens/privacy_policy_screen.dart';
+import '../../features/notifications/screens/notifications_screen.dart';
 import '../../shared/widgets/adaptive_navigation_wrapper.dart';
 import '../../shared/widgets/splash_screen.dart';
 import '../../debug/database_debug_screen.dart';
@@ -52,6 +53,7 @@ class AppRoutes {
   static const String claims = '/claims';
   static const String claimDetail = '/claims/:id';
   static const String teams = '/teams';
+  static const String notifications = '/notifications';
   static const String settings = '/settings';
   static const String securitySettings = '/settings/security';
   static const String passwordChange = '/settings/security/password';
@@ -197,6 +199,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.teams,
             builder: (context, state) => const TeamsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.notifications,
+            builder: (context, state) => const NotificationsScreen(),
           ),
           GoRoute(
             path: AppRoutes.settings,
