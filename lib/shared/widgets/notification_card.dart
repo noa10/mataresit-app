@@ -27,20 +27,28 @@ class NotificationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUnread = notification.isUnread;
-    final typeColor = NotificationDisplayHelpers.getNotificationColor(notification.type);
-    final icon = NotificationDisplayHelpers.getNotificationIcon(notification.type);
+    final typeColor = NotificationDisplayHelpers.getNotificationColor(
+      notification.type,
+    );
+    final icon = NotificationDisplayHelpers.getNotificationIcon(
+      notification.type,
+    );
 
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(compact ? AppConstants.smallPadding : AppConstants.defaultPadding),
+        padding: EdgeInsets.all(
+          compact ? AppConstants.smallPadding : AppConstants.defaultPadding,
+        ),
         decoration: BoxDecoration(
           color: isUnread
               ? Theme.of(context).primaryColor.withValues(alpha: 0.05)
               : null,
           border: Border(
             left: BorderSide(
-              color: isUnread ? Theme.of(context).primaryColor : Colors.transparent,
+              color: isUnread
+                  ? Theme.of(context).primaryColor
+                  : Colors.transparent,
               width: 3,
             ),
           ),
@@ -50,9 +58,7 @@ class NotificationCard extends StatelessWidget {
           children: [
             _buildIcon(context, icon, typeColor),
             const SizedBox(width: AppConstants.defaultPadding),
-            Expanded(
-              child: _buildContent(context),
-            ),
+            Expanded(child: _buildContent(context)),
             if (showActions && !compact) ...[
               const SizedBox(width: AppConstants.smallPadding),
               _buildActions(context),
@@ -71,11 +77,7 @@ class NotificationCard extends StatelessWidget {
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(compact ? 16 : 20),
       ),
-      child: Icon(
-        icon,
-        color: color,
-        size: compact ? 16 : 20,
-      ),
+      child: Icon(icon, color: color, size: compact ? 16 : 20),
     );
   }
 
@@ -89,7 +91,9 @@ class NotificationCard extends StatelessWidget {
               child: Text(
                 notification.title,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: notification.isUnread ? FontWeight.bold : FontWeight.normal,
+                  fontWeight: notification.isUnread
+                      ? FontWeight.bold
+                      : FontWeight.normal,
                 ),
                 maxLines: compact ? 1 : 2,
                 overflow: TextOverflow.ellipsis,
@@ -98,10 +102,7 @@ class NotificationCard extends StatelessWidget {
             if (notification.priority == NotificationPriority.high)
               Container(
                 margin: const EdgeInsets.only(left: AppConstants.smallPadding),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: Colors.red.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
@@ -121,7 +122,9 @@ class NotificationCard extends StatelessWidget {
         Text(
           notification.message,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
+            color: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
           ),
           maxLines: compact ? 2 : 3,
           overflow: TextOverflow.ellipsis,
@@ -133,8 +136,10 @@ class NotificationCard extends StatelessWidget {
   }
 
   Widget _buildMetadata(BuildContext context) {
-    final summary = NotificationDisplayHelpers.getNotificationSummary(notification);
-    
+    final summary = NotificationDisplayHelpers.getNotificationSummary(
+      notification,
+    );
+
     return Row(
       children: [
         Expanded(
@@ -264,19 +269,13 @@ class SwipeableNotificationCard extends StatelessWidget {
         color: Colors.green,
         alignment: Alignment.centerLeft,
         padding: const EdgeInsets.only(left: 20),
-        child: const Icon(
-          Icons.mark_email_read,
-          color: Colors.white,
-        ),
+        child: const Icon(Icons.mark_email_read, color: Colors.white),
       ),
       secondaryBackground: Container(
         color: Colors.red,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        child: const Icon(
-          Icons.delete,
-          color: Colors.white,
-        ),
+        child: const Icon(Icons.delete, color: Colors.white),
       ),
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
@@ -293,7 +292,9 @@ class SwipeableNotificationCard extends StatelessWidget {
               context: context,
               builder: (context) => AlertDialog(
                 title: const Text('Delete notification'),
-                content: const Text('Are you sure you want to delete this notification?'),
+                content: const Text(
+                  'Are you sure you want to delete this notification?',
+                ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(false),

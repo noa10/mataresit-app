@@ -17,7 +17,7 @@ class NotificationDisplayHelpers {
     NotificationType.claimRejected: Icons.cancel,
     NotificationType.claimReviewRequested: Icons.visibility,
     NotificationType.teamSettingsUpdated: Icons.settings,
-    
+
     // Receipt processing notifications
     NotificationType.receiptProcessingStarted: Icons.flash_on,
     NotificationType.receiptProcessingCompleted: Icons.check_circle,
@@ -25,7 +25,7 @@ class NotificationDisplayHelpers {
     NotificationType.receiptReadyForReview: Icons.visibility,
     NotificationType.receiptBatchCompleted: Icons.inventory,
     NotificationType.receiptBatchFailed: Icons.warning,
-    
+
     // Team receipt collaboration notifications
     NotificationType.receiptShared: Icons.share,
     NotificationType.receiptCommentAdded: Icons.comment,
@@ -48,7 +48,7 @@ class NotificationDisplayHelpers {
     NotificationType.claimRejected: Colors.red,
     NotificationType.claimReviewRequested: Colors.orange,
     NotificationType.teamSettingsUpdated: Colors.grey,
-    
+
     // Receipt processing notifications
     NotificationType.receiptProcessingStarted: Colors.blue,
     NotificationType.receiptProcessingCompleted: Colors.green,
@@ -56,7 +56,7 @@ class NotificationDisplayHelpers {
     NotificationType.receiptReadyForReview: Colors.orange,
     NotificationType.receiptBatchCompleted: Colors.green,
     NotificationType.receiptBatchFailed: Colors.red,
-    
+
     // Team receipt collaboration notifications
     NotificationType.receiptShared: Colors.blue,
     NotificationType.receiptCommentAdded: Colors.purple,
@@ -86,7 +86,7 @@ class NotificationDisplayHelpers {
     NotificationType.claimRejected: 'Claim Rejected',
     NotificationType.claimReviewRequested: 'Claim Review Requested',
     NotificationType.teamSettingsUpdated: 'Team Settings Updated',
-    
+
     // Receipt processing notifications
     NotificationType.receiptProcessingStarted: 'Receipt Processing Started',
     NotificationType.receiptProcessingCompleted: 'Receipt Processing Completed',
@@ -94,7 +94,7 @@ class NotificationDisplayHelpers {
     NotificationType.receiptReadyForReview: 'Receipt Ready for Review',
     NotificationType.receiptBatchCompleted: 'Batch Processing Completed',
     NotificationType.receiptBatchFailed: 'Batch Processing Failed',
-    
+
     // Team receipt collaboration notifications
     NotificationType.receiptShared: 'Receipt Shared',
     NotificationType.receiptCommentAdded: 'Receipt Comment Added',
@@ -189,7 +189,7 @@ class NotificationDisplayHelpers {
   static String getNotificationSummary(NotificationModel notification) {
     final typeName = getNotificationDisplayName(notification.type);
     final timeAgo = formatNotificationTime(notification.createdAt);
-    
+
     if (notification.teamName != null) {
       return '$typeName • ${notification.teamName} • $timeAgo';
     } else {

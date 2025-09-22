@@ -28,7 +28,7 @@ enum NotificationType {
   claimReviewRequested,
   @JsonValue('team_settings_updated')
   teamSettingsUpdated,
-  
+
   // Receipt processing notifications
   @JsonValue('receipt_processing_started')
   receiptProcessingStarted,
@@ -42,7 +42,7 @@ enum NotificationType {
   receiptBatchCompleted,
   @JsonValue('receipt_batch_failed')
   receiptBatchFailed,
-  
+
   // Team receipt collaboration notifications
   @JsonValue('receipt_shared')
   receiptShared,
@@ -76,34 +76,34 @@ class NotificationModel extends Equatable {
   final String? teamId;
   final NotificationType type;
   final NotificationPriority priority;
-  
+
   // Content
   final String title;
   final String message;
   @JsonKey(name: 'action_url')
   final String? actionUrl;
-  
+
   // Status
   @JsonKey(name: 'read_at')
   final DateTime? readAt;
   @JsonKey(name: 'archived_at')
   final DateTime? archivedAt;
-  
+
   // Related entities
   @JsonKey(name: 'related_entity_type')
   final String? relatedEntityType;
   @JsonKey(name: 'related_entity_id')
   final String? relatedEntityId;
-  
+
   // Metadata
   final Map<String, dynamic> metadata;
-  
+
   // Timestamps
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
   @JsonKey(name: 'expires_at')
   final DateTime? expiresAt;
-  
+
   // Joined data
   @JsonKey(name: 'team_name')
   final String? teamName;
@@ -193,23 +193,23 @@ class NotificationModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        recipientId,
-        teamId,
-        type,
-        priority,
-        title,
-        message,
-        actionUrl,
-        readAt,
-        archivedAt,
-        relatedEntityType,
-        relatedEntityId,
-        metadata,
-        createdAt,
-        expiresAt,
-        teamName,
-      ];
+    id,
+    recipientId,
+    teamId,
+    type,
+    priority,
+    title,
+    message,
+    actionUrl,
+    readAt,
+    archivedAt,
+    relatedEntityType,
+    relatedEntityId,
+    metadata,
+    createdAt,
+    expiresAt,
+    teamName,
+  ];
 }
 
 /// Notification filters for querying
@@ -263,13 +263,13 @@ class NotificationFilters extends Equatable {
 
   @override
   List<Object?> get props => [
-        teamId,
-        type,
-        priority,
-        unreadOnly,
-        dateFrom,
-        dateTo,
-      ];
+    teamId,
+    type,
+    priority,
+    unreadOnly,
+    dateFrom,
+    dateTo,
+  ];
 }
 
 /// Notification statistics
@@ -300,9 +300,9 @@ class NotificationStats extends Equatable {
 
   @override
   List<Object?> get props => [
-        totalNotifications,
-        unreadNotifications,
-        highPriorityUnread,
-        notificationsByType,
-      ];
+    totalNotifications,
+    unreadNotifications,
+    highPriorityUnread,
+    notificationsByType,
+  ];
 }

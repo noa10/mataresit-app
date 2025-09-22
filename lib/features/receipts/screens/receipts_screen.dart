@@ -63,7 +63,10 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
     }
   }
 
-  Future<void> _handleCaptureReceipt(BuildContext context, WidgetRef ref) async {
+  Future<void> _handleCaptureReceipt(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     // Check subscription limits before allowing receipt capture
     final canUpload = await SubscriptionGuard.showReceiptLimitDialogIfNeeded(
       context,

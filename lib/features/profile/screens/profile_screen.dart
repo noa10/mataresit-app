@@ -37,9 +37,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final profileState = ref.watch(profileProvider);
     final authState = ref.watch(authProvider);
 
-    return Scaffold(
-      body: _buildBody(profileState, authState),
-    );
+    return Scaffold(body: _buildBody(profileState, authState));
   }
 
   Widget _buildBody(ProfileState profileState, AuthState authState) {

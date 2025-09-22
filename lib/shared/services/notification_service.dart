@@ -57,7 +57,11 @@ class NotificationService {
       await _setupRealtimeSubscription();
       AppLogger.info('Notification service initialized successfully');
     } catch (e, stackTrace) {
-      AppLogger.error('Failed to initialize notification service', e, stackTrace);
+      AppLogger.error(
+        'Failed to initialize notification service',
+        e,
+        stackTrace,
+      );
       rethrow;
     }
   }
@@ -154,10 +158,10 @@ class NotificationService {
       }
 
       // Use RPC function for efficient stats calculation
-      final response = await supabase.rpc('get_notification_stats', params: {
-        'user_id': userId,
-        'team_id': teamId,
-      });
+      final response = await supabase.rpc(
+        'get_notification_stats',
+        params: {'user_id': userId, 'team_id': teamId},
+      );
 
       final stats = NotificationStats.fromJson(response);
       _cachedStats = stats;
@@ -232,7 +236,11 @@ class NotificationService {
 
       AppLogger.info('All notifications marked as read');
     } catch (e, stackTrace) {
-      AppLogger.error('Failed to mark all notifications as read', e, stackTrace);
+      AppLogger.error(
+        'Failed to mark all notifications as read',
+        e,
+        stackTrace,
+      );
       rethrow;
     }
   }
@@ -331,14 +339,18 @@ class NotificationService {
       final userId = supabase.auth.currentUser?.id;
 
       if (userId == null) {
-        AppLogger.warning('Cannot setup real-time subscription: user not authenticated');
+        AppLogger.warning(
+          'Cannot setup real-time subscription: user not authenticated',
+        );
         return;
       }
 
       // Clean up existing subscriptions
       await _cleanupSubscriptions();
 
-      AppLogger.info('Setting up real-time notification subscription for user: $userId');
+      AppLogger.info(
+        'Setting up real-time notification subscription for user: $userId',
+      );
 
       final channelName = 'notifications-$userId';
       final channel = supabase.channel(channelName);
@@ -422,7 +434,9 @@ class NotificationService {
       final updatedNotification = _parseNotificationFromJson(payload.newRecord);
 
       // Update in cache
-      final index = _cachedNotifications.indexWhere((n) => n.id == updatedNotification.id);
+      final index = _cachedNotifications.indexWhere(
+        (n) => n.id == updatedNotification.id,
+      );
       if (index != -1) {
         _cachedNotifications[index] = updatedNotification;
         _notificationsController.add(_cachedNotifications);
@@ -451,7 +465,11 @@ class NotificationService {
   }
 
   /// Handle subscription status changes
-  void _handleSubscriptionStatus(String channelName, RealtimeSubscribeStatus status, [Object? error]) {
+  void _handleSubscriptionStatus(
+    String channelName,
+    RealtimeSubscribeStatus status, [
+    Object? error,
+  ]) {
     AppLogger.info('Subscription status for $channelName: $status');
 
     switch (status) {
@@ -490,7 +508,9 @@ class NotificationService {
     _reconnectAttempts++;
     final delay = _reconnectDelay * _reconnectAttempts;
 
-    AppLogger.info('Scheduling reconnection attempt $_reconnectAttempts in ${delay}ms');
+    AppLogger.info(
+      'Scheduling reconnection attempt $_reconnectAttempts in ${delay}ms',
+    );
 
     Timer(Duration(milliseconds: delay), () {
       _updateConnectionStatus('reconnecting');
@@ -546,13 +566,19 @@ class NotificationService {
         title: json['title'],
         message: json['message'],
         actionUrl: json['action_url'],
-        readAt: json['read_at'] != null ? DateTime.parse(json['read_at']) : null,
-        archivedAt: json['archived_at'] != null ? DateTime.parse(json['archived_at']) : null,
+        readAt: json['read_at'] != null
+            ? DateTime.parse(json['read_at'])
+            : null,
+        archivedAt: json['archived_at'] != null
+            ? DateTime.parse(json['archived_at'])
+            : null,
         relatedEntityType: json['related_entity_type'],
         relatedEntityId: json['related_entity_id'],
         metadata: json['metadata'] ?? {},
         createdAt: DateTime.parse(json['created_at']),
-        expiresAt: json['expires_at'] != null ? DateTime.parse(json['expires_at']) : null,
+        expiresAt: json['expires_at'] != null
+            ? DateTime.parse(json['expires_at'])
+            : null,
         teamName: teamName,
       );
     } catch (e, stackTrace) {
@@ -562,8 +588,13 @@ class NotificationService {
   }
 
   /// Update notification in cache
-  void _updateNotificationInCache(String notificationId, NotificationModel Function(NotificationModel) updater) {
-    final index = _cachedNotifications.indexWhere((n) => n.id == notificationId);
+  void _updateNotificationInCache(
+    String notificationId,
+    NotificationModel Function(NotificationModel) updater,
+  ) {
+    final index = _cachedNotifications.indexWhere(
+      (n) => n.id == notificationId,
+    );
     if (index != -1) {
       _cachedNotifications[index] = updater(_cachedNotifications[index]);
       _notificationsController.add(_cachedNotifications);
@@ -573,7 +604,7 @@ class NotificationService {
   /// Check if cache is valid
   bool _isCacheValid() {
     return _lastFetch != null &&
-           DateTime.now().difference(_lastFetch!) < _cacheExpiry;
+        DateTime.now().difference(_lastFetch!) < _cacheExpiry;
   }
 
   /// Convert notification type to string

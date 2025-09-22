@@ -233,104 +233,101 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
     return SliverPadding(
       padding: const EdgeInsets.all(16.0),
       sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            if (index >= state.claims.length) {
-              // Loading indicator for pagination
-              return const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Center(child: CircularProgressIndicator()),
-              );
-            }
-
-            final claim = state.claims[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: ClaimListItem(
-                claim: claim,
-                onTap: () => _onClaimTap(claim),
-                onEdit: (claim) {
-                  // TODO: Show edit dialog
-                },
-                onSubmit: (claim) async {
-                  final messenger = ScaffoldMessenger.of(context);
-                  try {
-                    await ref.read(claimsProvider.notifier).submitClaim(claim.id);
-                    if (mounted) {
-                      messenger.showSnackBar(
-                        const SnackBar(
-                          content: Text('Claim submitted for review'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      messenger.showSnackBar(
-                        SnackBar(
-                          content: Text('Failed to submit claim: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  }
-                },
-                onApprove: (claim) async {
-                  final messenger = ScaffoldMessenger.of(context);
-                  try {
-                    await ref
-                        .read(claimsProvider.notifier)
-                        .approveClaim(ClaimApprovalRequest(claimId: claim.id));
-                    if (mounted) {
-                      messenger.showSnackBar(
-                        const SnackBar(
-                          content: Text('Claim approved'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      messenger.showSnackBar(
-                        SnackBar(
-                          content: Text('Failed to approve claim: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  }
-                },
-                onReject: (claim) async {
-                  // TODO: Show rejection dialog with reason
-                },
-                onDelete: (claim) async {
-                  final messenger = ScaffoldMessenger.of(context);
-                  try {
-                    await ref.read(claimsProvider.notifier).deleteClaim(claim.id);
-                    if (mounted) {
-                      messenger.showSnackBar(
-                        const SnackBar(
-                          content: Text('Claim deleted'),
-                          backgroundColor: Colors.orange,
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      messenger.showSnackBar(
-                        SnackBar(
-                          content: Text('Failed to delete claim: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  }
-                },
-              ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          if (index >= state.claims.length) {
+            // Loading indicator for pagination
+            return const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: CircularProgressIndicator()),
             );
-          },
-          childCount: state.claims.length + (state.hasMore ? 1 : 0),
-        ),
+          }
+
+          final claim = state.claims[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: ClaimListItem(
+              claim: claim,
+              onTap: () => _onClaimTap(claim),
+              onEdit: (claim) {
+                // TODO: Show edit dialog
+              },
+              onSubmit: (claim) async {
+                final messenger = ScaffoldMessenger.of(context);
+                try {
+                  await ref.read(claimsProvider.notifier).submitClaim(claim.id);
+                  if (mounted) {
+                    messenger.showSnackBar(
+                      const SnackBar(
+                        content: Text('Claim submitted for review'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to submit claim: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              onApprove: (claim) async {
+                final messenger = ScaffoldMessenger.of(context);
+                try {
+                  await ref
+                      .read(claimsProvider.notifier)
+                      .approveClaim(ClaimApprovalRequest(claimId: claim.id));
+                  if (mounted) {
+                    messenger.showSnackBar(
+                      const SnackBar(
+                        content: Text('Claim approved'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to approve claim: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              onReject: (claim) async {
+                // TODO: Show rejection dialog with reason
+              },
+              onDelete: (claim) async {
+                final messenger = ScaffoldMessenger.of(context);
+                try {
+                  await ref.read(claimsProvider.notifier).deleteClaim(claim.id);
+                  if (mounted) {
+                    messenger.showSnackBar(
+                      const SnackBar(
+                        content: Text('Claim deleted'),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to delete claim: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+          );
+        }, childCount: state.claims.length + (state.hasMore ? 1 : 0)),
       ),
     );
   }

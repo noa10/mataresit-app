@@ -35,9 +35,7 @@ class DashboardScreen extends ConsumerWidget {
         title: const MataresitLogoHorizontal(size: 28.0),
         centerTitle: false,
         actions: [
-          const NotificationCenter(
-            showBadge: true,
-          ),
+          const NotificationCenter(showBadge: true),
           const SizedBox(width: 8),
         ],
       ),

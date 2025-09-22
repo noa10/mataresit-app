@@ -15,7 +15,8 @@ class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
 }
 
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
@@ -56,7 +57,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             onTap: () => _showConnectionDialog(context, notificationState),
           ),
           const SizedBox(width: 8),
-          
+
           // Filter toggle
           IconButton(
             icon: Icon(
@@ -66,14 +67,14 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             onPressed: () => setState(() => _showFilters = !_showFilters),
             tooltip: 'Filter notifications',
           ),
-          
+
           // Refresh button
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _handleRefresh,
             tooltip: 'Refresh notifications',
           ),
-          
+
           // Mark all as read
           if (notificationState.unreadCount > 0)
             IconButton(
@@ -81,7 +82,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               onPressed: _handleMarkAllAsRead,
               tooltip: 'Mark all as read',
             ),
-          
+
           const SizedBox(width: 8),
         ],
       ),
@@ -89,7 +90,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         children: [
           // Filter section
           if (_showFilters) _buildFilterSection(),
-          
+
           // Notifications list
           Expanded(child: _buildNotificationsList(notificationState)),
         ],
@@ -103,10 +104,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).dividerColor,
-            width: 1,
-          ),
+          bottom: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),
       ),
       child: Column(
@@ -114,12 +112,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         children: [
           Text(
             'Filters',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: AppConstants.smallPadding),
-          
+
           // Filter chips
           Wrap(
             spacing: 8,
@@ -130,7 +128,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 selected: _filters.unreadOnly == true,
                 onSelected: (selected) {
                   setState(() {
-                    _filters = _filters.copyWith(unreadOnly: selected ? true : null);
+                    _filters = _filters.copyWith(
+                      unreadOnly: selected ? true : null,
+                    );
                   });
                   _applyFilters();
                 },
@@ -171,10 +171,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
     if (state.error != null && state.notifications.isEmpty) {
       return Center(
-        child: AppErrorWidget(
-          error: state.error!,
-          onRetry: _handleRefresh,
-        ),
+        child: AppErrorWidget(error: state.error!, onRetry: _handleRefresh),
       );
     }
 
@@ -247,7 +244,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     try {
       final notifier = ref.read(notificationProvider.notifier);
       await notifier.markAllAsRead();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('All notifications marked as read')),
@@ -270,7 +267,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
     // Use navigation service for proper handling
     if (mounted) {
-      await NotificationNavigationService().handleNotificationTap(context, notification);
+      await NotificationNavigationService().handleNotificationTap(
+        context,
+        notification,
+      );
     }
   }
 
@@ -280,9 +280,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       await notifier.markAsRead(notificationId);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to mark as read: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to mark as read: $e')));
       }
     }
   }
@@ -291,11 +291,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     try {
       final notifier = ref.read(notificationProvider.notifier);
       await notifier.archiveNotification(notificationId);
-      
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Notification archived')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Notification archived')));
       }
     } catch (e) {
       if (mounted) {
@@ -310,11 +310,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     try {
       final notifier = ref.read(notificationProvider.notifier);
       await notifier.deleteNotification(notificationId);
-      
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Notification deleted')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Notification deleted')));
       }
     } catch (e) {
       if (mounted) {

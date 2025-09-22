@@ -511,18 +511,22 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
           _logger.i('✅ Receipts list refreshed successfully after upload');
 
           // Double-check by loading more to ensure the new receipt appears
-          final secondaryTimer = Timer(const Duration(milliseconds: 500), () async {
-            if (_isDisposed || !mounted) return;
+          final secondaryTimer = Timer(
+            const Duration(milliseconds: 500),
+            () async {
+              if (_isDisposed || !mounted) return;
 
-            try {
-              await ref.read(receiptsProvider.notifier).loadReceipts(refresh: true);
-              _logger.i('✅ Secondary refresh completed');
-            } catch (e) {
-              _logger.e('❌ Secondary refresh failed: $e');
-            }
-          });
+              try {
+                await ref
+                    .read(receiptsProvider.notifier)
+                    .loadReceipts(refresh: true);
+                _logger.i('✅ Secondary refresh completed');
+              } catch (e) {
+                _logger.e('❌ Secondary refresh failed: $e');
+              }
+            },
+          );
           _activeTimers.add(secondaryTimer);
-
         } catch (refreshError) {
           _logger.e('❌ Failed to refresh receipts list: $refreshError');
           // Don't block navigation if refresh fails, but show a warning
@@ -539,7 +543,6 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
         }
       });
       _activeTimers.add(refreshTimer);
-
     } catch (e) {
       _logger.e('Receipt upload failed: $e');
 
@@ -784,10 +787,7 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
 
   void _showSuccessSnackBar(String message) {
     _showSnackBarSafely(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
     );
   }
 

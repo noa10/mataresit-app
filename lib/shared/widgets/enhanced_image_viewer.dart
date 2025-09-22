@@ -1223,7 +1223,9 @@ class _SmartNetworkImageState extends State<_SmartNetworkImage> {
     // Only log success for non-thumbnail images to reduce noise
     // Thumbnails are typically smaller and load frequently
     if (!_hasLoggedSuccess && !widget.imageUrl.contains('thumbnails/')) {
-      debugPrint('🖼️ SMART IMAGE: Image loaded successfully - ${widget.imageUrl}');
+      debugPrint(
+        '🖼️ SMART IMAGE: Image loaded successfully - ${widget.imageUrl}',
+      );
       _hasLoggedSuccess = true;
     }
     _fallbackTimer?.cancel();

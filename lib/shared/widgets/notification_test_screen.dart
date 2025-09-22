@@ -13,11 +13,14 @@ class NotificationTestScreen extends ConsumerStatefulWidget {
   const NotificationTestScreen({super.key});
 
   @override
-  ConsumerState<NotificationTestScreen> createState() => _NotificationTestScreenState();
+  ConsumerState<NotificationTestScreen> createState() =>
+      _NotificationTestScreenState();
 }
 
-class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen> {
-  final LocalNotificationService _localNotificationService = LocalNotificationService();
+class _NotificationTestScreenState
+    extends ConsumerState<NotificationTestScreen> {
+  final LocalNotificationService _localNotificationService =
+      LocalNotificationService();
 
   @override
   void initState() {
@@ -42,13 +45,9 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
       appBar: AppBar(
         title: const Text('Notification Test'),
         actions: [
-          NotificationStatusIndicator(
-            onTap: () => _showStatusDialog(context),
-          ),
+          NotificationStatusIndicator(onTap: () => _showStatusDialog(context)),
           const SizedBox(width: 16),
-          NotificationCenter(
-            showBadge: true,
-          ),
+          NotificationCenter(showBadge: true),
           const SizedBox(width: 16),
         ],
       ),
@@ -58,9 +57,7 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
           _buildStats(notificationState),
           _buildTestButtons(),
           const Divider(),
-          Expanded(
-            child: _buildNotificationsList(notificationState),
-          ),
+          Expanded(child: _buildNotificationsList(notificationState)),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -76,7 +73,9 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
       padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _getConnectionColor(state.connectionStatus).withValues(alpha: 0.1),
+        color: _getConnectionColor(
+          state.connectionStatus,
+        ).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: _getConnectionColor(state.connectionStatus),
@@ -116,17 +115,17 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Theme.of(context).dividerColor,
-          width: 1,
-        ),
+        border: Border.all(color: Theme.of(context).dividerColor, width: 1),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildStatItem('Total', state.notifications.length.toString()),
           _buildStatItem('Unread', state.unreadCount.toString()),
-          _buildStatItem('High Priority', state.highPriorityUnreadCount.toString()),
+          _buildStatItem(
+            'High Priority',
+            state.highPriorityUnreadCount.toString(),
+          ),
         ],
       ),
     );
@@ -137,14 +136,11 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
       children: [
         Text(
           value,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
         ),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
       ],
     );
   }
@@ -315,9 +311,9 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
   }
 
   Future<void> _handleNotificationTap(NotificationModel notification) async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Tapped: ${notification.title}')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Tapped: ${notification.title}')));
   }
 
   Future<void> _handleMarkAsRead(String notificationId) async {

@@ -77,54 +77,54 @@ class _ClaimFiltersWidgetState extends State<ClaimFiltersWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-                // Header
-                Row(
-                  children: [
-                    Icon(
-                      Icons.filter_list,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Filters',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Spacer(),
-                    if (_currentFilters.hasFilters)
-                      TextButton(
-                        onPressed: _clearAllFilters,
-                        child: const Text('Clear All'),
-                      ),
-                  ],
+            // Header
+            Row(
+              children: [
+                Icon(
+                  Icons.filter_list,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
-
-                const SizedBox(height: 16),
-
-                // Status filter
-                _buildStatusFilter(),
-
-                const SizedBox(height: 16),
-
-                // Priority filter
-                _buildPriorityFilter(),
-
-                const SizedBox(height: 16),
-
-                // Amount range filter
-                _buildAmountRangeFilter(),
-
-                const SizedBox(height: 16),
-
-                // Category filter
-                _buildCategoryFilter(),
-
-                const SizedBox(height: 16),
-
-                // Date range filter
-                _buildDateRangeFilter(),
+                const SizedBox(width: 8),
+                Text(
+                  'Filters',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                if (_currentFilters.hasFilters)
+                  TextButton(
+                    onPressed: _clearAllFilters,
+                    child: const Text('Clear All'),
+                  ),
               ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Status filter
+            _buildStatusFilter(),
+
+            const SizedBox(height: 16),
+
+            // Priority filter
+            _buildPriorityFilter(),
+
+            const SizedBox(height: 16),
+
+            // Amount range filter
+            _buildAmountRangeFilter(),
+
+            const SizedBox(height: 16),
+
+            // Category filter
+            _buildCategoryFilter(),
+
+            const SizedBox(height: 16),
+
+            // Date range filter
+            _buildDateRangeFilter(),
+          ],
         ),
       ),
     );

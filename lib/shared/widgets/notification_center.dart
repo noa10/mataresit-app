@@ -48,7 +48,8 @@ class _NotificationCenterState extends ConsumerState<NotificationCenter> {
   void _openDropdown() {
     if (_overlayEntry != null) return;
 
-    final RenderBox renderBox = _buttonKey.currentContext!.findRenderObject() as RenderBox;
+    final RenderBox renderBox =
+        _buttonKey.currentContext!.findRenderObject() as RenderBox;
     final size = renderBox.size;
     final offset = renderBox.localToGlobal(Offset.zero);
 
@@ -57,7 +58,9 @@ class _NotificationCenterState extends ConsumerState<NotificationCenter> {
         builder: (context, ref, child) {
           final notificationState = ref.watch(notificationProvider);
           final notifications = widget.teamId != null
-              ? notificationState.notifications.where((n) => n.teamId == widget.teamId).toList()
+              ? notificationState.notifications
+                    .where((n) => n.teamId == widget.teamId)
+                    .toList()
               : notificationState.notifications;
 
           return Positioned(
@@ -115,8 +118,8 @@ class _NotificationCenterState extends ConsumerState<NotificationCenter> {
         final notificationState = ref.watch(notificationProvider);
         final unreadCount = widget.teamId != null
             ? notificationState.notifications
-                .where((n) => n.teamId == widget.teamId && n.isUnread)
-                .length
+                  .where((n) => n.teamId == widget.teamId && n.isUnread)
+                  .length
             : notificationState.unreadCount;
 
         return Container(
@@ -131,10 +134,7 @@ class _NotificationCenterState extends ConsumerState<NotificationCenter> {
           ),
           child: Row(
             children: [
-              Icon(
-                Icons.notifications,
-                color: Theme.of(context).primaryColor,
-              ),
+              Icon(Icons.notifications, color: Theme.of(context).primaryColor),
               const SizedBox(width: AppConstants.smallPadding),
               Expanded(
                 child: Column(
@@ -177,7 +177,9 @@ class _NotificationCenterState extends ConsumerState<NotificationCenter> {
   Widget _buildConnectionIndicator() {
     return Consumer(
       builder: (context, ref, child) {
-        final connectionStatus = ref.watch(notificationConnectionStatusProvider);
+        final connectionStatus = ref.watch(
+          notificationConnectionStatusProvider,
+        );
 
         Color color;
         IconData icon;
@@ -202,11 +204,7 @@ class _NotificationCenterState extends ConsumerState<NotificationCenter> {
 
         return Tooltip(
           message: tooltip,
-          child: Icon(
-            icon,
-            color: color,
-            size: 16,
-          ),
+          child: Icon(icon, color: color, size: 16),
         );
       },
     );
@@ -218,18 +216,15 @@ class _NotificationCenterState extends ConsumerState<NotificationCenter> {
         final notificationState = ref.watch(notificationProvider);
         final unreadCount = widget.teamId != null
             ? notificationState.notifications
-                .where((n) => n.teamId == widget.teamId && n.isUnread)
-                .length
+                  .where((n) => n.teamId == widget.teamId && n.isUnread)
+                  .length
             : notificationState.unreadCount;
 
         return Container(
           padding: const EdgeInsets.all(AppConstants.defaultPadding),
           decoration: BoxDecoration(
             border: Border(
-              top: BorderSide(
-                color: Theme.of(context).dividerColor,
-                width: 1,
-              ),
+              top: BorderSide(color: Theme.of(context).dividerColor, width: 1),
             ),
           ),
           child: Row(
@@ -290,7 +285,10 @@ class _NotificationCenterState extends ConsumerState<NotificationCenter> {
     // Use navigation service for proper handling
     if (mounted) {
       _closeDropdown();
-      await NotificationNavigationService().handleNotificationTap(context, notification);
+      await NotificationNavigationService().handleNotificationTap(
+        context,
+        notification,
+      );
     }
   }
 
@@ -300,9 +298,9 @@ class _NotificationCenterState extends ConsumerState<NotificationCenter> {
       await notifier.markAsRead(notificationId);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to mark as read: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to mark as read: $e')));
       }
     }
   }
@@ -338,13 +336,15 @@ class _NotificationCenterState extends ConsumerState<NotificationCenter> {
     return GestureDetector(
       key: _buttonKey,
       onTap: _toggleDropdown,
-      child: widget.child ??
+      child:
+          widget.child ??
           Consumer(
             builder: (context, ref, child) {
               final unreadCount = widget.teamId != null
-                  ? ref.watch(teamNotificationsProvider(widget.teamId))
-                      .where((n) => n.isUnread)
-                      .length
+                  ? ref
+                        .watch(teamNotificationsProvider(widget.teamId))
+                        .where((n) => n.isUnread)
+                        .length
                   : ref.watch(unreadNotificationCountProvider);
 
               return Stack(

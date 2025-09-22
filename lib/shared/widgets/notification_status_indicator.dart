@@ -16,10 +16,12 @@ class NotificationStatusIndicator extends StatefulWidget {
   });
 
   @override
-  State<NotificationStatusIndicator> createState() => _NotificationStatusIndicatorState();
+  State<NotificationStatusIndicator> createState() =>
+      _NotificationStatusIndicatorState();
 }
 
-class _NotificationStatusIndicatorState extends State<NotificationStatusIndicator> {
+class _NotificationStatusIndicatorState
+    extends State<NotificationStatusIndicator> {
   final NotificationService _notificationService = NotificationService();
   String _connectionStatus = 'disconnected';
 
@@ -35,7 +37,7 @@ class _NotificationStatusIndicatorState extends State<NotificationStatusIndicato
         setState(() => _connectionStatus = status);
       }
     });
-    
+
     // Get initial status
     _connectionStatus = _notificationService.connectionStatus;
   }
@@ -51,11 +53,7 @@ class _NotificationStatusIndicatorState extends State<NotificationStatusIndicato
           height: widget.size.height,
           child: Stack(
             children: [
-              Icon(
-                _getIcon(),
-                color: _getColor(),
-                size: widget.size.width,
-              ),
+              Icon(_getIcon(), color: _getColor(), size: widget.size.width),
               if (widget.showBadge && _shouldShowBadge())
                 Positioned(
                   right: 0,
@@ -166,10 +164,7 @@ class NotificationBadge extends StatelessWidget {
                 color: badgeColor ?? Theme.of(context).colorScheme.error,
                 borderRadius: BorderRadius.circular(10),
               ),
-              constraints: const BoxConstraints(
-                minWidth: 16,
-                minHeight: 16,
-              ),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
               child: Text(
                 count > 99 ? '99+' : count.toString(),
                 style: TextStyle(
@@ -200,10 +195,12 @@ class AnimatedNotificationIndicator extends StatefulWidget {
   });
 
   @override
-  State<AnimatedNotificationIndicator> createState() => _AnimatedNotificationIndicatorState();
+  State<AnimatedNotificationIndicator> createState() =>
+      _AnimatedNotificationIndicatorState();
 }
 
-class _AnimatedNotificationIndicatorState extends State<AnimatedNotificationIndicator>
+class _AnimatedNotificationIndicatorState
+    extends State<AnimatedNotificationIndicator>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
@@ -217,13 +214,9 @@ class _AnimatedNotificationIndicatorState extends State<AnimatedNotificationIndi
       vsync: this,
     );
 
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.2,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.elasticOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
+    );
 
     _colorAnimation = ColorTween(
       begin: Colors.grey,
@@ -261,9 +254,7 @@ class _AnimatedNotificationIndicatorState extends State<AnimatedNotificationIndi
         return Transform.scale(
           scale: _scaleAnimation.value,
           child: IconTheme(
-            data: IconThemeData(
-              color: _colorAnimation.value,
-            ),
+            data: IconThemeData(color: _colorAnimation.value),
             child: widget.child,
           ),
         );
@@ -286,7 +277,8 @@ class NotificationPulseIndicator extends StatefulWidget {
   });
 
   @override
-  State<NotificationPulseIndicator> createState() => _NotificationPulseIndicatorState();
+  State<NotificationPulseIndicator> createState() =>
+      _NotificationPulseIndicatorState();
 }
 
 class _NotificationPulseIndicatorState extends State<NotificationPulseIndicator>
@@ -302,13 +294,9 @@ class _NotificationPulseIndicatorState extends State<NotificationPulseIndicator>
       vsync: this,
     );
 
-    _pulseAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
 
     if (widget.isPulsing) {
       _animationController.repeat(reverse: true);
@@ -347,7 +335,9 @@ class _NotificationPulseIndicatorState extends State<NotificationPulseIndicator>
                 width: 40 * (1 + _pulseAnimation.value * 0.5),
                 height: 40 * (1 + _pulseAnimation.value * 0.5),
                 decoration: BoxDecoration(
-                  color: widget.pulseColor.withValues(alpha: 0.3 * (1 - _pulseAnimation.value)),
+                  color: widget.pulseColor.withValues(
+                    alpha: 0.3 * (1 - _pulseAnimation.value),
+                  ),
                   borderRadius: BorderRadius.circular(20),
                 ),
               );

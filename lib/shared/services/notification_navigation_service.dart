@@ -5,7 +5,8 @@ import '../../core/services/app_logger.dart';
 
 /// Service for handling notification navigation and action URLs
 class NotificationNavigationService {
-  static final NotificationNavigationService _instance = NotificationNavigationService._internal();
+  static final NotificationNavigationService _instance =
+      NotificationNavigationService._internal();
   factory NotificationNavigationService() => _instance;
   NotificationNavigationService._internal();
 
@@ -32,7 +33,10 @@ class NotificationNavigationService {
   }
 
   /// Navigate to action URL using GoRouter
-  Future<void> _navigateToActionUrl(BuildContext context, String actionUrl) async {
+  Future<void> _navigateToActionUrl(
+    BuildContext context,
+    String actionUrl,
+  ) async {
     try {
       AppLogger.info('Navigating to action URL: $actionUrl');
 
@@ -146,7 +150,10 @@ class NotificationNavigationService {
   }
 
   /// Navigate to specific receipt using GoRouter
-  Future<void> _navigateToReceipt(BuildContext context, NotificationModel notification) async {
+  Future<void> _navigateToReceipt(
+    BuildContext context,
+    NotificationModel notification,
+  ) async {
     final receiptId = notification.relatedEntityId;
     if (context.mounted) {
       if (receiptId != null) {
@@ -165,7 +172,10 @@ class NotificationNavigationService {
   }
 
   /// Navigate to team using GoRouter
-  Future<void> _navigateToTeam(BuildContext context, NotificationModel notification) async {
+  Future<void> _navigateToTeam(
+    BuildContext context,
+    NotificationModel notification,
+  ) async {
     final teamId = notification.teamId;
     if (context.mounted) {
       if (teamId != null) {
@@ -177,7 +187,10 @@ class NotificationNavigationService {
   }
 
   /// Navigate to claim using GoRouter
-  Future<void> _navigateToClaim(BuildContext context, NotificationModel notification) async {
+  Future<void> _navigateToClaim(
+    BuildContext context,
+    NotificationModel notification,
+  ) async {
     final claimId = notification.relatedEntityId;
     if (context.mounted) {
       if (claimId != null) {
@@ -261,7 +274,8 @@ class NotificationNavigationService {
 
 /// Notification action handler
 class NotificationActionHandler {
-  static final NotificationActionHandler _instance = NotificationActionHandler._internal();
+  static final NotificationActionHandler _instance =
+      NotificationActionHandler._internal();
   factory NotificationActionHandler() => _instance;
   NotificationActionHandler._internal();
 
@@ -272,11 +286,16 @@ class NotificationActionHandler {
     String action,
   ) async {
     try {
-      AppLogger.info('Handling notification action: $action for ${notification.id}');
+      AppLogger.info(
+        'Handling notification action: $action for ${notification.id}',
+      );
 
       switch (action) {
         case 'view':
-          await NotificationNavigationService().handleNotificationTap(context, notification);
+          await NotificationNavigationService().handleNotificationTap(
+            context,
+            notification,
+          );
           break;
         case 'dismiss':
           // Just dismiss - no action needed

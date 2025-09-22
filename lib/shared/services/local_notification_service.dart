@@ -9,13 +9,17 @@ import '../../core/services/app_logger.dart';
 
 /// Enhanced local notification service that integrates with the notification system
 class LocalNotificationService {
-  static final LocalNotificationService _instance = LocalNotificationService._internal();
+  static final LocalNotificationService _instance =
+      LocalNotificationService._internal();
   factory LocalNotificationService() => _instance;
   LocalNotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
-  final StreamController<NotificationAction> _actionController = StreamController<NotificationAction>.broadcast();
-  final NotificationPreferencesService _preferencesService = NotificationPreferencesService();
+  final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
+  final StreamController<NotificationAction> _actionController =
+      StreamController<NotificationAction>.broadcast();
+  final NotificationPreferencesService _preferencesService =
+      NotificationPreferencesService();
 
   bool _isInitialized = false;
 
@@ -32,14 +36,20 @@ class LocalNotificationService {
       _isInitialized = true;
       AppLogger.info('Local notification service initialized successfully');
     } catch (e, stackTrace) {
-      AppLogger.error('Failed to initialize local notification service', e, stackTrace);
+      AppLogger.error(
+        'Failed to initialize local notification service',
+        e,
+        stackTrace,
+      );
       rethrow;
     }
   }
 
   /// Initialize local notifications
   Future<void> _initializeLocalNotifications() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -97,7 +107,9 @@ class LocalNotificationService {
 
     for (final channel in channels) {
       await _localNotifications
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
           ?.createNotificationChannel(channel);
     }
   }
@@ -106,13 +118,10 @@ class LocalNotificationService {
   void _onNotificationResponse(NotificationResponse response) {
     try {
       AppLogger.info('Notification tapped: ${response.id}');
-      
+
       if (response.payload != null) {
         final data = jsonDecode(response.payload!);
-        _actionController.add(NotificationAction(
-          type: 'tap',
-          data: data,
-        ));
+        _actionController.add(NotificationAction(type: 'tap', data: data));
       }
     } catch (e, stackTrace) {
       AppLogger.error('Failed to handle notification response', e, stackTrace);
@@ -123,14 +132,19 @@ class LocalNotificationService {
   Future<void> showNotificationFromModel(NotificationModel notification) async {
     try {
       // Check if push notifications are enabled for this type
-      final preferences = await _preferencesService.getUserNotificationPreferences();
+      final preferences = await _preferencesService
+          .getUserNotificationPreferences();
       if (!_shouldShowPushNotification(notification.type, preferences)) {
-        AppLogger.debug('Push notification disabled for type: ${notification.type}');
+        AppLogger.debug(
+          'Push notification disabled for type: ${notification.type}',
+        );
         return;
       }
 
       final channelId = _getChannelIdForNotificationType(notification.type);
-      final color = NotificationDisplayHelpers.getNotificationColor(notification.type);
+      final color = NotificationDisplayHelpers.getNotificationColor(
+        notification.type,
+      );
 
       await showNotification(
         id: notification.id.hashCode,
@@ -271,7 +285,9 @@ class LocalNotificationService {
   /// Request notification permissions (iOS/macOS)
   Future<bool> requestPermissions() async {
     final iosImplementation = _localNotifications
-        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
 
     if (iosImplementation != null) {
       return await iosImplementation.requestPermissions(
@@ -283,7 +299,9 @@ class LocalNotificationService {
     }
 
     final macosImplementation = _localNotifications
-        .resolvePlatformSpecificImplementation<MacOSFlutterLocalNotificationsPlugin>();
+        .resolvePlatformSpecificImplementation<
+          MacOSFlutterLocalNotificationsPlugin
+        >();
 
     if (macosImplementation != null) {
       return await macosImplementation.requestPermissions(
@@ -337,7 +355,7 @@ class LocalNotificationService {
       case NotificationType.receiptApprovedByTeam:
       case NotificationType.receiptFlaggedForReview:
         return 'receipts';
-      
+
       case NotificationType.teamInvitationSent:
       case NotificationType.teamInvitationAccepted:
       case NotificationType.teamMemberJoined:
@@ -346,7 +364,7 @@ class LocalNotificationService {
       case NotificationType.teamMemberRoleChanged:
       case NotificationType.teamSettingsUpdated:
         return 'teams';
-      
+
       case NotificationType.claimSubmitted:
       case NotificationType.claimApproved:
       case NotificationType.claimRejected:
@@ -420,8 +438,5 @@ class NotificationAction {
   final String type;
   final Map<String, dynamic> data;
 
-  NotificationAction({
-    required this.type,
-    required this.data,
-  });
+  NotificationAction({required this.type, required this.data});
 }

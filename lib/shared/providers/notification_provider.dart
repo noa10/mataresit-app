@@ -53,7 +53,8 @@ class NotificationState {
 /// Notification provider
 class NotificationNotifier extends StateNotifier<NotificationState> {
   final NotificationService _notificationService = NotificationService();
-  final LocalNotificationService _localNotificationService = LocalNotificationService();
+  final LocalNotificationService _localNotificationService =
+      LocalNotificationService();
   bool _isInitialized = false;
 
   NotificationNotifier() : super(const NotificationState()) {
@@ -94,10 +95,7 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
 
       _isInitialized = true;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -126,10 +124,7 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
         error: null,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -224,8 +219,9 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
       state.notifications.where((n) => n.isUnread).toList();
 
   /// Get high priority notifications
-  List<NotificationModel> get highPriorityNotifications =>
-      state.notifications.where((n) => n.priority == NotificationPriority.high).toList();
+  List<NotificationModel> get highPriorityNotifications => state.notifications
+      .where((n) => n.priority == NotificationPriority.high)
+      .toList();
 
   @override
   void dispose() {
@@ -236,9 +232,10 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
 }
 
 /// Notification provider
-final notificationProvider = StateNotifierProvider<NotificationNotifier, NotificationState>((ref) {
-  return NotificationNotifier();
-});
+final notificationProvider =
+    StateNotifierProvider<NotificationNotifier, NotificationState>((ref) {
+      return NotificationNotifier();
+    });
 
 /// Unread notification count provider
 final unreadNotificationCountProvider = Provider<int>((ref) {
@@ -259,10 +256,11 @@ final notificationConnectionStatusProvider = Provider<String>((ref) {
 });
 
 /// Notifications for specific team provider
-final teamNotificationsProvider = Provider.family<List<NotificationModel>, String?>((ref, teamId) {
-  final notifier = ref.watch(notificationProvider.notifier);
-  return notifier.getNotificationsForTeam(teamId);
-});
+final teamNotificationsProvider =
+    Provider.family<List<NotificationModel>, String?>((ref, teamId) {
+      final notifier = ref.watch(notificationProvider.notifier);
+      return notifier.getNotificationsForTeam(teamId);
+    });
 
 /// Unread notifications provider
 final unreadNotificationsProvider = Provider<List<NotificationModel>>((ref) {
@@ -271,7 +269,9 @@ final unreadNotificationsProvider = Provider<List<NotificationModel>>((ref) {
 });
 
 /// High priority notifications provider
-final highPriorityNotificationsProvider = Provider<List<NotificationModel>>((ref) {
+final highPriorityNotificationsProvider = Provider<List<NotificationModel>>((
+  ref,
+) {
   final notifier = ref.watch(notificationProvider.notifier);
   return notifier.highPriorityNotifications;
 });

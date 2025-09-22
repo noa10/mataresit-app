@@ -44,7 +44,9 @@ class NotificationList extends StatelessWidget {
         return NotificationCard(
           notification: notification,
           onTap: () => onNotificationTap(notification),
-          onMarkAsRead: showActions ? () => onMarkAsRead(notification.id) : null,
+          onMarkAsRead: showActions
+              ? () => onMarkAsRead(notification.id)
+              : null,
           onArchive: showActions ? () => onArchive(notification.id) : null,
           onDelete: showActions ? () => onDelete(notification.id) : null,
         );
@@ -140,33 +142,33 @@ class GroupedNotificationList extends StatelessWidget {
 
   List<NotificationGroup> _groupNotificationsByDate() {
     final groups = <String, List<NotificationModel>>{};
-    
+
     for (final notification in notifications) {
       final dateKey = _getDateGroupKey(notification.createdAt);
       groups.putIfAbsent(dateKey, () => []).add(notification);
     }
 
     return groups.entries
-        .map((entry) => NotificationGroup(
-              title: entry.key,
-              notifications: entry.value,
-            ))
+        .map(
+          (entry) =>
+              NotificationGroup(title: entry.key, notifications: entry.value),
+        )
         .toList();
   }
 
   List<NotificationGroup> _groupNotificationsByCategory() {
     final groups = <String, List<NotificationModel>>{};
-    
+
     for (final notification in notifications) {
       final category = _getCategoryForNotificationType(notification.type);
       groups.putIfAbsent(category, () => []).add(notification);
     }
 
     return groups.entries
-        .map((entry) => NotificationGroup(
-              title: entry.key,
-              notifications: entry.value,
-            ))
+        .map(
+          (entry) =>
+              NotificationGroup(title: entry.key, notifications: entry.value),
+        )
         .toList();
   }
 
@@ -190,7 +192,8 @@ class GroupedNotificationList extends StatelessWidget {
   }
 
   String _getCategoryForNotificationType(NotificationType type) {
-    for (final category in NotificationDisplayHelpers.notificationCategories.values) {
+    for (final category
+        in NotificationDisplayHelpers.notificationCategories.values) {
       if (category.types.contains(type)) {
         return category.label;
       }
@@ -198,7 +201,10 @@ class GroupedNotificationList extends StatelessWidget {
     return 'Other';
   }
 
-  Widget _buildNotificationGroup(BuildContext context, NotificationGroup group) {
+  Widget _buildNotificationGroup(
+    BuildContext context,
+    NotificationGroup group,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -215,21 +221,27 @@ class GroupedNotificationList extends StatelessWidget {
             ),
           ),
         ),
-        ...group.notifications.map((notification) => Column(
-              children: [
-                NotificationCard(
-                  notification: notification,
-                  onTap: () => onNotificationTap(notification),
-                  onMarkAsRead: showActions ? () => onMarkAsRead(notification.id) : null,
-                  onArchive: showActions ? () => onArchive(notification.id) : null,
-                  onDelete: showActions ? () => onDelete(notification.id) : null,
-                ),
-                Divider(
-                  height: 1,
-                  color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
-                ),
-              ],
-            )),
+        ...group.notifications.map(
+          (notification) => Column(
+            children: [
+              NotificationCard(
+                notification: notification,
+                onTap: () => onNotificationTap(notification),
+                onMarkAsRead: showActions
+                    ? () => onMarkAsRead(notification.id)
+                    : null,
+                onArchive: showActions
+                    ? () => onArchive(notification.id)
+                    : null,
+                onDelete: showActions ? () => onDelete(notification.id) : null,
+              ),
+              Divider(
+                height: 1,
+                color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: AppConstants.defaultPadding),
       ],
     );
@@ -241,8 +253,5 @@ class NotificationGroup {
   final String title;
   final List<NotificationModel> notifications;
 
-  const NotificationGroup({
-    required this.title,
-    required this.notifications,
-  });
+  const NotificationGroup({required this.title, required this.notifications});
 }
