@@ -202,6 +202,11 @@ class ReceiptService {
       // Fetch the updated receipt with line items
       _logger.d('🔍 Fetching updated receipt with line items...');
       final result = await getReceiptWithLineItems(receiptId);
+
+      if (result == null) {
+        throw Exception('Receipt $receiptId not found after update');
+      }
+
       _logger.i('✅ Receipt update completed successfully');
 
       // Trigger embedding synchronization to update search index
@@ -239,9 +244,11 @@ class ReceiptService {
   }
 
   /// Get a receipt with its line items
-  static Future<ReceiptModel> getReceiptWithLineItems(String receiptId) async {
+  static Future<ReceiptModel?> getReceiptWithLineItems(String receiptId) async {
     try {
       _logger.d('🔍 Fetching receipt $receiptId with line items...');
+
+      // Fetch the receipt with line items using maybeSingle to handle missing receipts
       final response = await _supabase
           .from('receipts')
           .select('''
@@ -249,7 +256,12 @@ class ReceiptService {
             line_items (*)
           ''')
           .eq('id', receiptId)
-          .single();
+          .maybeSingle();
+
+      if (response == null) {
+        _logger.w('⚠️ Receipt $receiptId not found in database');
+        return null;
+      }
 
       // Note: 'unreviewed' is a valid status in ReceiptStatus enum, no conversion needed
 

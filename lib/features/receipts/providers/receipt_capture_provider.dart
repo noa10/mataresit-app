@@ -93,6 +93,7 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
   StreamSubscription? _logsSubscription;
   bool _disposed = false;
   Timer? _processingTimeoutTimer;
+  Timer? _autoResetTimer;
   final Map<String, StreamSubscription> _realtimeSubscriptions = {};
 
   ReceiptCaptureNotifier(this.ref) : super(const ReceiptCaptureState());
@@ -103,6 +104,7 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
     _progressTimer?.cancel();
     _logsSubscription?.cancel();
     _processingTimeoutTimer?.cancel();
+    _autoResetTimer?.cancel();
 
     // Cancel all realtime subscriptions
     for (final subscription in _realtimeSubscriptions.values) {
@@ -738,7 +740,9 @@ class ReceiptCaptureNotifier extends StateNotifier<ReceiptCaptureState> {
       );
 
       // Auto-reset state after showing completion for 3 seconds
-      Future.delayed(const Duration(seconds: 3), () {
+      // Use a cancellable timer instead of Future.delayed
+      _autoResetTimer?.cancel(); // Cancel any existing timer
+      _autoResetTimer = Timer(const Duration(seconds: 3), () {
         if (!_disposed && state.currentStage == 'COMPLETE') {
           reset();
         }

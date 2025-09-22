@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,6 +29,32 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
   final ImagePicker _picker = ImagePicker();
   final Logger _logger = Logger();
   File? _selectedImage;
+
+  // Lifecycle management
+  ScaffoldMessengerState? _scaffoldMessenger;
+  final List<Timer> _activeTimers = [];
+  bool _isDisposed = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Store ScaffoldMessenger reference to avoid repeated lookups
+    // and prevent accessing deactivated widget's ancestor
+    _scaffoldMessenger = ScaffoldMessenger.of(context);
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+
+    // Cancel all active timers
+    for (final timer in _activeTimers) {
+      timer.cancel();
+    }
+    _activeTimers.clear();
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -444,7 +471,7 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
   }
 
   Future<void> _uploadReceipt() async {
-    if (_selectedImage == null) return;
+    if (_selectedImage == null || _isDisposed) return;
 
     // Check subscription limits before upload
     final canUpload = await SubscriptionGuard.showReceiptLimitDialogIfNeeded(
@@ -453,32 +480,29 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
       additionalReceipts: 1,
     );
 
-    if (!canUpload) {
-      return; // User was shown upgrade dialog
+    if (!canUpload || _isDisposed) {
+      return; // User was shown upgrade dialog or widget disposed
     }
 
     try {
       // Check if widget is still mounted before starting upload
-      if (!mounted) return;
+      if (!mounted || _isDisposed) return;
 
       await ref
           .read(receiptCaptureProvider.notifier)
           .uploadReceipt(_selectedImage!);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Receipt uploaded successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+      // Check disposal state before proceeding with UI updates
+      if (_isDisposed || !mounted) return;
 
-        // Add a longer delay to ensure database transaction is committed and replicated
-        _logger.i('⏳ Waiting for database consistency before refresh...');
-        await Future.delayed(const Duration(milliseconds: 1500));
+      _showSuccessSnackBar('Receipt uploaded successfully!');
 
-        // Check if widget is still mounted before refreshing
-        if (!mounted) return;
+      // Add a longer delay to ensure database transaction is committed and replicated
+      _logger.i('⏳ Waiting for database consistency before refresh...');
+
+      // Use a timer that can be cancelled if widget is disposed
+      final refreshTimer = Timer(const Duration(milliseconds: 1500), () async {
+        if (_isDisposed || !mounted) return;
 
         // Refresh the receipts list to show the newly uploaded receipt
         try {
@@ -487,33 +511,35 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
           _logger.i('✅ Receipts list refreshed successfully after upload');
 
           // Double-check by loading more to ensure the new receipt appears
-          await Future.delayed(const Duration(milliseconds: 500));
+          final secondaryTimer = Timer(const Duration(milliseconds: 500), () async {
+            if (_isDisposed || !mounted) return;
 
-          // Check mounted again after delay
-          if (!mounted) return;
+            try {
+              await ref.read(receiptsProvider.notifier).loadReceipts(refresh: true);
+              _logger.i('✅ Secondary refresh completed');
+            } catch (e) {
+              _logger.e('❌ Secondary refresh failed: $e');
+            }
+          });
+          _activeTimers.add(secondaryTimer);
 
-          await ref.read(receiptsProvider.notifier).loadReceipts(refresh: true);
-          _logger.i('✅ Secondary refresh completed');
         } catch (refreshError) {
           _logger.e('❌ Failed to refresh receipts list: $refreshError');
           // Don't block navigation if refresh fails, but show a warning
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Receipt uploaded but list refresh failed. Pull to refresh manually.',
-                ),
-                backgroundColor: Colors.orange,
-                duration: Duration(seconds: 3),
-              ),
+          if (!_isDisposed && mounted) {
+            _showWarningSnackBar(
+              'Receipt uploaded but list refresh failed. Pull to refresh manually.',
             );
           }
         }
 
-        if (mounted) {
+        // Navigate back if still mounted
+        if (!_isDisposed && mounted) {
           context.pop();
         }
-      }
+      });
+      _activeTimers.add(refreshTimer);
+
     } catch (e) {
       _logger.e('Receipt upload failed: $e');
 
@@ -733,11 +759,45 @@ class _ReceiptCaptureScreenState extends ConsumerState<ReceiptCaptureScreen> {
     );
   }
 
-  void _showErrorSnackBar(String message) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: Colors.red),
-      );
+  /// Safely show a SnackBar with proper lifecycle checks
+  void _showSnackBarSafely(SnackBar snackBar) {
+    if (_isDisposed || !mounted) {
+      _logger.w('Attempted to show SnackBar after widget disposal');
+      return;
     }
+
+    try {
+      // Use stored reference if available, otherwise fallback to context lookup
+      final messenger = _scaffoldMessenger ?? ScaffoldMessenger.of(context);
+      messenger.showSnackBar(snackBar);
+    } catch (e) {
+      _logger.e('Failed to show SnackBar: $e');
+      // Don't rethrow - this is a UI convenience, not critical functionality
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    _showSnackBarSafely(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+  }
+
+  void _showSuccessSnackBar(String message) {
+    _showSnackBarSafely(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void _showWarningSnackBar(String message) {
+    _showSnackBarSafely(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.orange,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 }
