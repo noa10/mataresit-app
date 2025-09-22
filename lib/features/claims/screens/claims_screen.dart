@@ -103,6 +103,11 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
         subtitle: currentTeamState.currentTeam!.name,
         actions: [
           IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: _showCreateClaimDialog,
+            tooltip: 'New Claim',
+          ),
+          IconButton(
             icon: Icon(
               _showFilters ? Icons.filter_list_off : Icons.filter_list,
               color: claimsState.filters.hasFilters
@@ -129,7 +134,19 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: _buildScrollableBody(claimsState),
+    );
+  }
+
+  Widget _buildScrollableBody(ClaimsState claimsState) {
+    // If we have claims or are loading, use the custom scroll view
+    if (claimsState.claims.isNotEmpty || claimsState.isLoading) {
+      return _buildCustomScrollView(claimsState);
+    }
+
+    // For empty states and errors, use a simple scrollable column
+    return SingleChildScrollView(
+      child: Column(
         children: [
           // Statistics Card
           if (claimsState.stats != null)
@@ -150,14 +167,170 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
               },
             ),
 
-          // Claims List
-          Expanded(child: _buildClaimsList(claimsState)),
+          // Claims List (for empty states)
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.6,
+            child: _buildClaimsList(claimsState),
+          ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showCreateClaimDialog,
-        icon: const Icon(Icons.add),
-        label: const Text('New Claim'),
+    );
+  }
+
+  Widget _buildCustomScrollView(ClaimsState claimsState) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        await ref.read(claimsProvider.notifier).loadClaims(refresh: true);
+        try {
+          await ref.read(claimsProvider.notifier).loadClaimStats();
+        } catch (error) {
+          // Silently ignore stats loading errors for now
+          _logger.w(
+            'Stats loading failed (expected if database not set up): $error',
+          );
+        }
+      },
+      child: CustomScrollView(
+        controller: _scrollController,
+        slivers: [
+          // Statistics Card
+          if (claimsState.stats != null)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: ClaimStatsCard(stats: claimsState.stats!),
+              ),
+            ),
+
+          // Filters
+          if (_showFilters)
+            SliverToBoxAdapter(
+              child: ClaimFiltersWidget(
+                filters: claimsState.filters,
+                onFiltersChanged: (filters) {
+                  ref.read(claimsProvider.notifier).applyFilters(filters);
+                },
+                onClearFilters: () {
+                  ref.read(claimsProvider.notifier).clearFilters();
+                },
+              ),
+            ),
+
+          // Claims List
+          _buildClaimsSliver(claimsState),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClaimsSliver(ClaimsState state) {
+    if (state.isLoading && state.claims.isEmpty) {
+      return const SliverFillRemaining(
+        child: LoadingWidget(message: 'Loading claims...'),
+      );
+    }
+
+    return SliverPadding(
+      padding: const EdgeInsets.all(16.0),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            if (index >= state.claims.length) {
+              // Loading indicator for pagination
+              return const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final claim = state.claims[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: ClaimListItem(
+                claim: claim,
+                onTap: () => _onClaimTap(claim),
+                onEdit: (claim) {
+                  // TODO: Show edit dialog
+                },
+                onSubmit: (claim) async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  try {
+                    await ref.read(claimsProvider.notifier).submitClaim(claim.id);
+                    if (mounted) {
+                      messenger.showSnackBar(
+                        const SnackBar(
+                          content: Text('Claim submitted for review'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to submit claim: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
+                onApprove: (claim) async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  try {
+                    await ref
+                        .read(claimsProvider.notifier)
+                        .approveClaim(ClaimApprovalRequest(claimId: claim.id));
+                    if (mounted) {
+                      messenger.showSnackBar(
+                        const SnackBar(
+                          content: Text('Claim approved'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to approve claim: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
+                onReject: (claim) async {
+                  // TODO: Show rejection dialog with reason
+                },
+                onDelete: (claim) async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  try {
+                    await ref.read(claimsProvider.notifier).deleteClaim(claim.id);
+                    if (mounted) {
+                      messenger.showSnackBar(
+                        const SnackBar(
+                          content: Text('Claim deleted'),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to delete claim: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+            );
+          },
+          childCount: state.claims.length + (state.hasMore ? 1 : 0),
+        ),
       ),
     );
   }
@@ -200,146 +373,9 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: () async {
-        await ref.read(claimsProvider.notifier).loadClaims(refresh: true);
-        try {
-          await ref.read(claimsProvider.notifier).loadClaimStats();
-        } catch (error) {
-          // Silently ignore stats loading errors for now
-          _logger.w(
-            'Stats loading failed (expected if database not set up): $error',
-          );
-        }
-      },
-      child: ListView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.all(16.0),
-        itemCount: state.claims.length + (state.hasMore ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index >= state.claims.length) {
-            // Loading indicator for pagination
-            return const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
-
-          final claim = state.claims[index];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: ClaimListItem(
-              claim: claim,
-              onTap: () => _onClaimTap(claim),
-              onEdit: (claim) {
-                // TODO: Show edit dialog
-              },
-              onSubmit: (claim) async {
-                final messenger = ScaffoldMessenger.of(context);
-                try {
-                  await ref.read(claimsProvider.notifier).submitClaim(claim.id);
-                  if (mounted) {
-                    messenger.showSnackBar(
-                      const SnackBar(
-                        content: Text('Claim submitted for review'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    messenger.showSnackBar(
-                      SnackBar(
-                        content: Text('Failed to submit claim: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                }
-              },
-              onApprove: (claim) async {
-                final messenger = ScaffoldMessenger.of(context);
-                try {
-                  await ref
-                      .read(claimsProvider.notifier)
-                      .approveClaim(ClaimApprovalRequest(claimId: claim.id));
-                  if (mounted) {
-                    messenger.showSnackBar(
-                      const SnackBar(
-                        content: Text('Claim approved'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    messenger.showSnackBar(
-                      SnackBar(
-                        content: Text('Failed to approve claim: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                }
-              },
-              onReject: (claim) async {
-                // TODO: Show rejection dialog with reason
-              },
-              onDelete: (claim) async {
-                final messenger = ScaffoldMessenger.of(context);
-                final confirmed = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Delete Claim'),
-                    content: const Text(
-                      'Are you sure you want to delete this claim? This action cannot be undone.',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(true),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.red,
-                        ),
-                        child: const Text('Delete'),
-                      ),
-                    ],
-                  ),
-                );
-
-                if (confirmed == true) {
-                  try {
-                    await ref
-                        .read(claimsProvider.notifier)
-                        .deleteClaim(claim.id);
-                    if (mounted) {
-                      messenger.showSnackBar(
-                        const SnackBar(
-                          content: Text('Claim deleted'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      messenger.showSnackBar(
-                        SnackBar(
-                          content: Text('Failed to delete claim: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  }
-                }
-              },
-            ),
-          );
-        },
-      ),
-    );
+    // This method is now only used for empty states, errors, and loading
+    // The actual claims list is handled by _buildClaimsSliver in CustomScrollView
+    return const SizedBox.shrink();
   }
 
   Widget _buildDatabaseSetupMessage() {

@@ -38,35 +38,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final authState = ref.watch(authProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        elevation: 0,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        foregroundColor: Theme.of(context).textTheme.titleLarge?.color,
-        bottom: profileState.profile != null
-            ? TabBar(
-                controller: _tabController,
-                tabs: const [
-                  Tab(icon: Icon(Icons.person_outline), text: 'Profile'),
-                  Tab(
-                    icon: Icon(Icons.credit_card_outlined),
-                    text: 'Subscription',
-                  ),
-                  Tab(icon: Icon(Icons.settings_outlined), text: 'Preferences'),
-                  Tab(icon: Icon(Icons.security_outlined), text: 'Security'),
-                ],
-                labelColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
-                    : Theme.of(context).colorScheme.primary,
-                unselectedLabelColor: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withValues(alpha: 0.6),
-                indicatorColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
-                    : Theme.of(context).colorScheme.primary,
-              )
-            : null,
-      ),
       body: _buildBody(profileState, authState),
     );
   }
@@ -126,45 +97,117 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       );
     }
 
-    return Column(
-      children: [
-        // Profile Header
-        ProfileHeader(profile: profileState.profile!),
-
-        const SizedBox(height: AppConstants.defaultPadding),
-
-        // Tab Content
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              // Profile Info Tab
-              SingleChildScrollView(
-                padding: const EdgeInsets.all(AppConstants.defaultPadding),
-                child: ProfileInfoEditor(profile: profileState.profile!),
-              ),
-
-              // Subscription Tab
-              SingleChildScrollView(
-                padding: const EdgeInsets.all(AppConstants.defaultPadding),
-                child: ProfileSubscription(profile: profileState.profile!),
-              ),
-
-              // Preferences Tab
-              SingleChildScrollView(
-                padding: const EdgeInsets.all(AppConstants.defaultPadding),
-                child: ProfilePreferences(profile: profileState.profile!),
-              ),
-
-              // Security Tab
-              SingleChildScrollView(
-                padding: const EdgeInsets.all(AppConstants.defaultPadding),
-                child: ProfileSecurity(profile: profileState.profile!),
-              ),
-            ],
+    return NestedScrollView(
+      headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+        return <Widget>[
+          // App Bar with title
+          SliverAppBar(
+            title: const Text('Profile'),
+            elevation: 0,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            foregroundColor: Theme.of(context).textTheme.titleLarge?.color,
+            floating: true,
+            snap: true,
+            pinned: false,
           ),
-        ),
-      ],
+
+          // Profile Header as a sliver
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                ProfileHeader(profile: profileState.profile!),
+                const SizedBox(height: AppConstants.defaultPadding),
+              ],
+            ),
+          ),
+
+          // Tab Bar
+          SliverPersistentHeader(
+            delegate: _SliverTabBarDelegate(
+              TabBar(
+                controller: _tabController,
+                tabs: const [
+                  Tab(icon: Icon(Icons.person_outline), text: 'Profile'),
+                  Tab(
+                    icon: Icon(Icons.credit_card_outlined),
+                    text: 'Subscription',
+                  ),
+                  Tab(icon: Icon(Icons.settings_outlined), text: 'Preferences'),
+                  Tab(icon: Icon(Icons.security_outlined), text: 'Security'),
+                ],
+                labelColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.primary,
+                unselectedLabelColor: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
+                indicatorColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            pinned: true,
+          ),
+        ];
+      },
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          // Profile Info Tab
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(AppConstants.defaultPadding),
+            child: ProfileInfoEditor(profile: profileState.profile!),
+          ),
+
+          // Subscription Tab
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(AppConstants.defaultPadding),
+            child: ProfileSubscription(profile: profileState.profile!),
+          ),
+
+          // Preferences Tab
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(AppConstants.defaultPadding),
+            child: ProfilePreferences(profile: profileState.profile!),
+          ),
+
+          // Security Tab
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(AppConstants.defaultPadding),
+            child: ProfileSecurity(profile: profileState.profile!),
+          ),
+        ],
+      ),
     );
+  }
+}
+
+// Custom delegate for the persistent tab bar
+class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
+  final TabBar _tabBar;
+
+  _SliverTabBarDelegate(this._tabBar);
+
+  @override
+  double get minExtent => _tabBar.preferredSize.height;
+
+  @override
+  double get maxExtent => _tabBar.preferredSize.height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: _tabBar,
+    );
+  }
+
+  @override
+  bool shouldRebuild(_SliverTabBarDelegate oldDelegate) {
+    return false;
   }
 }
