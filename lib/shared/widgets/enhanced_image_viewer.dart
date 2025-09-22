@@ -147,9 +147,6 @@ class _EnhancedImageViewerState extends State<EnhancedImageViewer>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Debug image URL
-    debugPrint('🖼️ IMAGE DEBUG: Loading image URL: ${widget.imageUrl}');
-
     return Container(
       decoration: BoxDecoration(
         color: colorScheme.surface,
@@ -1155,11 +1152,15 @@ class _SmartNetworkImageState extends State<_SmartNetworkImage> {
   bool _useFallback = false;
   String? _error;
   Timer? _fallbackTimer;
+  bool _hasLoggedSuccess = false; // Track if we've already logged success
 
   @override
   void initState() {
     super.initState();
-    debugPrint('🖼️ SMART IMAGE: Attempting to load ${widget.imageUrl}');
+    // Only log for non-thumbnail images to reduce noise during app startup
+    if (!widget.imageUrl.contains('thumbnails/')) {
+      debugPrint('🖼️ IMAGE DEBUG: Loading image URL: ${widget.imageUrl}');
+    }
 
     // Start a timer to automatically fallback if CachedNetworkImage takes too long
     // This handles cases where CachedNetworkImage fails silently due to path_provider issues
@@ -1173,6 +1174,19 @@ class _SmartNetworkImageState extends State<_SmartNetworkImage> {
         });
       }
     });
+  }
+
+  @override
+  void didUpdateWidget(_SmartNetworkImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reset success flag if image URL changes
+    if (oldWidget.imageUrl != widget.imageUrl) {
+      _hasLoggedSuccess = false;
+      // Only log for non-thumbnail images to reduce noise
+      if (!widget.imageUrl.contains('thumbnails/')) {
+        debugPrint('🖼️ IMAGE DEBUG: Loading image URL: ${widget.imageUrl}');
+      }
+    }
   }
 
   @override
@@ -1206,7 +1220,12 @@ class _SmartNetworkImageState extends State<_SmartNetworkImage> {
   }
 
   void _handleImageLoaded() {
-    debugPrint('🖼️ SMART IMAGE: Image loaded successfully');
+    // Only log success for non-thumbnail images to reduce noise
+    // Thumbnails are typically smaller and load frequently
+    if (!_hasLoggedSuccess && !widget.imageUrl.contains('thumbnails/')) {
+      debugPrint('🖼️ SMART IMAGE: Image loaded successfully - ${widget.imageUrl}');
+      _hasLoggedSuccess = true;
+    }
     _fallbackTimer?.cancel();
 
     if (mounted) {
@@ -1224,6 +1243,7 @@ class _SmartNetworkImageState extends State<_SmartNetworkImage> {
       setState(() {
         _useFallback = false;
         _error = null;
+        _hasLoggedSuccess = false; // Reset success flag on retry
       });
 
       // Clear cache if using cached image
