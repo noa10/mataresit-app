@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_constants.dart';
@@ -6,6 +7,7 @@ import '../../auth/providers/auth_provider.dart';
 import '../widgets/profile_header.dart';
 import '../widgets/profile_info_editor.dart';
 import '../widgets/profile_preferences.dart';
+import '../widgets/profile_rewards.dart';
 import '../widgets/profile_security.dart';
 import '../widgets/profile_subscription.dart';
 
@@ -23,7 +25,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -124,14 +126,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             delegate: _SliverTabBarDelegate(
               TabBar(
                 controller: _tabController,
-                tabs: const [
-                  Tab(icon: Icon(Icons.person_outline), text: 'Profile'),
-                  Tab(
+                // Five tabs no longer fit side by side on a phone, so the bar
+                // scrolls instead of overflowing.
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                tabs: [
+                  const Tab(icon: Icon(Icons.person_outline), text: 'Profile'),
+                  const Tab(
                     icon: Icon(Icons.credit_card_outlined),
                     text: 'Subscription',
                   ),
-                  Tab(icon: Icon(Icons.settings_outlined), text: 'Preferences'),
-                  Tab(icon: Icon(Icons.security_outlined), text: 'Security'),
+                  const Tab(
+                    icon: Icon(Icons.settings_outlined),
+                    text: 'Preferences',
+                  ),
+                  const Tab(
+                    icon: Icon(Icons.security_outlined),
+                    text: 'Security',
+                  ),
+                  Tab(
+                    icon: const Icon(Icons.emoji_events_outlined),
+                    text: 'gamification.tabs.rewards'.tr(),
+                  ),
                 ],
                 labelColor: Theme.of(context).brightness == Brightness.dark
                     ? Colors.white
@@ -174,6 +190,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             padding: const EdgeInsets.all(AppConstants.defaultPadding),
             child: ProfileSecurity(profile: profileState.profile!),
           ),
+
+          // Rewards Tab — owns its own scrolling so the pull-to-refresh and the
+          // badge grid share one scrollable.
+          const ProfileRewards(),
         ],
       ),
     );
