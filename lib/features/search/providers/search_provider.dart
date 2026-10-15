@@ -105,6 +105,15 @@ class SearchNotifier extends StateNotifier<SearchState> {
 
   static const int pageSize = 20;
 
+  /// Bumped every time a search replaces the current one. A request in flight
+  /// belongs to the generation it started in, and anything older is discarded.
+  ///
+  /// Comparing the query string is not sufficient: re-running the *same* query
+  /// (toggling a source, retrying) leaves it unchanged, so a stale page from
+  /// the previous source selection would pass that check and be appended to the
+  /// new results.
+  int _generation = 0;
+
   SearchNotifier(this._searchService) : super(const SearchState());
 
   /// Run a new search, replacing any previous results.
@@ -116,6 +125,7 @@ class SearchNotifier extends StateNotifier<SearchState> {
     }
     if (state.isLoading) return;
 
+    _generation++;
     state = SearchState(
       query: trimmed,
       selectedSources: state.selectedSources,
@@ -136,6 +146,7 @@ class SearchNotifier extends StateNotifier<SearchState> {
   Future<void> retry() async {
     if (state.query.isEmpty || state.isLoading || state.isLoadingMore) return;
 
+    _generation++;
     await _execute(offset: 0, append: false);
   }
 
@@ -164,6 +175,7 @@ class SearchNotifier extends StateNotifier<SearchState> {
 
   Future<void> _execute({required int offset, required bool append}) async {
     final query = state.query;
+    final generation = _generation;
 
     state = state.copyWith(
       isLoading: !append,
@@ -183,7 +195,7 @@ class SearchNotifier extends StateNotifier<SearchState> {
 
       // A newer search may have replaced this one while the request was in
       // flight; drop the stale page instead of mixing it into fresh results.
-      if (state.query != query) return;
+      if (generation != _generation) return;
 
       // `pagination.nextOffset` is absent on the enhanced path, so derive the
       // next offset from the offset we asked for plus what came back.
@@ -209,7 +221,7 @@ class SearchNotifier extends StateNotifier<SearchState> {
       );
     } on SearchException catch (e) {
       _logger.e('Search failed: ${e.message}');
-      if (state.query != query) return;
+      if (generation != _generation) return;
       state = state.copyWith(
         isLoading: false,
         isLoadingMore: false,
@@ -219,7 +231,7 @@ class SearchNotifier extends StateNotifier<SearchState> {
       );
     } catch (e) {
       _logger.e('Search failed: $e');
-      if (state.query != query) return;
+      if (generation != _generation) return;
       state = state.copyWith(
         isLoading: false,
         isLoadingMore: false,

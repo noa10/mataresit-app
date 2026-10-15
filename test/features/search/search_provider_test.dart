@@ -6,10 +6,15 @@ import 'package:mataresit_app/features/search/services/search_service.dart';
 
 /// Records every request and replays canned responses / exceptions.
 class _FakeSearchService extends SearchService {
-  _FakeSearchService(this._script, {this.delay = Duration.zero});
+  _FakeSearchService(this._script, {this.delay = Duration.zero, this.delays});
 
   final List<Object> _script;
   final Duration delay;
+
+  /// Optional per-call delays, indexed by call order. Lets a test make an
+  /// earlier request resolve *after* a later one, which is the ordering that
+  /// exposes a stale-response race.
+  final List<Duration>? delays;
   final List<SearchRequest> requests = [];
   int _index = 0;
 
@@ -17,11 +22,15 @@ class _FakeSearchService extends SearchService {
   Future<SearchResponse> search(SearchRequest request) async {
     requests.add(request);
 
+    final callIndex = _index;
     final step = _script[_index < _script.length ? _index : _script.length - 1];
     _index++;
 
-    if (delay > Duration.zero) {
-      await Future<void>.delayed(delay);
+    final wait = delays != null && callIndex < delays!.length
+        ? delays![callIndex]
+        : delay;
+    if (wait > Duration.zero) {
+      await Future<void>.delayed(wait);
     }
 
     if (step is SearchException) throw step;
@@ -221,6 +230,39 @@ void main() {
       final state = container.read(searchProvider);
       expect(state.query, 'teh');
       expect(state.results, hasLength(2));
+      expect(state.isLoadingMore, isFalse);
+    });
+
+    test('drops a stale page when the same query is re-run', () async {
+      // The load-more is slow and the re-run is fast, so the stale page lands
+      // last -- the ordering that corrupts state. Re-running the *same* query
+      // (here, changing the source filter) leaves state.query unchanged, so a
+      // query-string comparison cannot catch it; only the generation can.
+      service = _FakeSearchService(
+        [_page(20, hasMore: true), _page(20, hasMore: true), _page(3)],
+        delays: const [
+          Duration.zero,
+          Duration(milliseconds: 60),
+          Duration(milliseconds: 10),
+        ],
+      );
+      container.dispose();
+      container = buildContainer(service);
+
+      final notifier = container.read(searchProvider.notifier);
+      await notifier.search('kopi');
+
+      final stalePage = notifier.loadMore();
+      notifier.toggleSource('custom_category');
+
+      await stalePage;
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+
+      final state = container.read(searchProvider);
+      expect(state.query, 'kopi');
+      // Exactly the re-run's page. Without the generation guard the stale
+      // 20-result page would be appended on top of it.
+      expect(state.results, hasLength(3));
       expect(state.isLoadingMore, isFalse);
     });
   });
