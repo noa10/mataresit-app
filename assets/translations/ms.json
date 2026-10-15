@@ -150,6 +150,11 @@
     "messages": {
       "saved": "Tetapan berjaya disimpan",
       "error": "Gagal menyimpan tetapan"
+    },
+    "legal": {
+      "sectionTitle": "Perundangan",
+      "terms": "Terma & Syarat",
+      "termsSubtitle": "Peraturan penggunaan Mataresit"
     }
   },
   "navigation": {
@@ -215,5 +220,433 @@
     "processing": "Memproses...",
     "processed": "Diproses",
     "failed": "Gagal"
+  },
+  "duplicates": {
+    "title": "Resit Pendua",
+    "scan": {
+      "button": "Imbas Resit Pendua",
+      "rescan": "Imbas Semula",
+      "scanning": "Mengimbas resit anda..."
+    },
+    "config": {
+      "title": "Tetapan Imbasan",
+      "merchant": "Peniaga",
+      "merchantAlwaysOn": "Sentiasa dipadankan — setiap kumpulan pendua berpandukan peniaga",
+      "date": "Padankan tarikh",
+      "dateTolerance": "Toleransi tarikh",
+      "dateToleranceValue": "{days} hari",
+      "total": "Padankan jumlah",
+      "totalTolerance": "Toleransi jumlah",
+      "totalToleranceValue": "±{value}",
+      "totalToleranceExact": "Jumlah tepat",
+      "tax": "Padankan cukai",
+      "currency": "Padankan mata wang"
+    },
+    "criteria": {
+      "merchant": "Peniaga",
+      "date": "Tarikh",
+      "total": "Jumlah",
+      "tax": "Cukai",
+      "currency": "Mata Wang"
+    },
+    "initial": {
+      "title": "Cari resit pendua",
+      "message": "Imbasan akan membaca resit anda dan mengumpulkan resit yang mempunyai peniaga, tarikh dan jumlah yang sama, supaya anda boleh memadam salinan berlebihan dan menyimpan yang tertua."
+    },
+    "empty": {
+      "title": "Tiada pendua dijumpai",
+      "message": "Tiada resit dalam ruang kerja ini yang kelihatan pendua dengan tetapan semasa. Cuba luaskan toleransi tarikh atau jumlah, kemudian imbas semula."
+    },
+    "error": {
+      "title": "Imbasan gagal"
+    },
+    "results": {
+      "title": "Keputusan",
+      "scanned": "{count} resit diimbas",
+      "matchOn": "Dipadankan pada {criteria}",
+      "totalDuplicates": "{count} resit berada dalam kumpulan pendua",
+      "deletableCount": "{count} daripadanya boleh dipadam (satu disimpan bagi setiap kumpulan)",
+      "stale": "Keputusan ini berusia lebih 5 minit dan mungkin sudah lapuk.",
+      "capped": "Hanya {max} resit pertama diimbas, jadi sebahagian ruang kerja ini tidak diperiksa.",
+      "skippedNoMerchant": "{count} resit tiada peniaga dan tidak dapat dibandingkan."
+    },
+    "group": {
+      "title": "Kumpulan {index}"
+    },
+    "receipt": {
+      "unknownMerchant": "Peniaga tidak diketahui"
+    },
+    "kept": "Disimpan",
+    "selectedCount": "{count} dipilih",
+    "selectAll": "Pilih semua pendua",
+    "clearSelection": "Kosongkan",
+    "deleteSelected": "Padam yang dipilih",
+    "deleteAllKeepOldest": "Padam semua, simpan yang tertua",
+    "nothingSelected": "Pilih sekurang-kurangnya satu resit untuk dipadam.",
+    "delete": {
+      "success": "{count} resit telah dipadam.",
+      "failed": "Resit yang dipilih tidak dapat dipadam."
+    },
+    "confirm": {
+      "title": "Padam resit",
+      "message": "Anda akan memadam {count} resit secara kekal.",
+      "warning": "Tindakan ini tidak boleh dibatalkan.",
+      "cancel": "Batal",
+      "confirm": "Padam"
+    }
+  },
+  "gamification": {
+    "tabs": {
+      "rewards": "Ganjaran"
+    },
+    "rewards": {
+      "loading": "Memuatkan ganjaran anda..."
+    },
+    "error": {
+      "title": "Ralat berlaku"
+    },
+    "actions": {
+      "missions": "Misi",
+      "leaderboard": "Papan Pendahulu",
+      "refresh": "Muat Semula"
+    },
+    "level": {
+      "label": "Tahap {{level}}",
+      "total_xp": "{{xp}} XP keseluruhan",
+      "progress": "{{current}} / {{total}} XP",
+      "to_next": "{{xp}} XP lagi ke tahap {{level}}"
+    },
+    "streaks": {
+      "title": "Rentetan",
+      "login": "Rentetan log masuk",
+      "scan": "Rentetan imbasan",
+      "longest_login": "Rentetan log masuk terpanjang",
+      "longest_scan": "Rentetan imbasan terpanjang",
+      "days": "{{count}} hari"
+    },
+    "daily_goal": {
+      "title": "Sasaran harian",
+      "completed": "Anda telah mengimbas resit hari ini. Syabas!",
+      "pending": "Imbas resit hari ini untuk mengekalkan rentetan anda."
+    },
+    "missions": {
+      "title": "Misi",
+      "loading": "Memuatkan misi...",
+      "tabs": {
+        "one_time": "Sekali Sahaja",
+        "weekly": "Mingguan",
+        "community": "Komuniti"
+      },
+      "summary": {
+        "active": "Aktif",
+        "completed": "Selesai",
+        "xp_earned": "XP diperoleh"
+      },
+      "reward_xp": "+{{xp}} XP",
+      "progress": "{{current}} / {{target}}",
+      "community_progress": "Komuniti: {{current}} / {{target}}",
+      "completed": "Selesai",
+      "completed_on": "Selesai pada {{date}}",
+      "empty_title": "Tiada misi buat masa ini",
+      "empty": "Misi baharu akan dipaparkan di sini sebaik sahaja tersedia.",
+      "empty_group_title": "Tiada apa-apa dalam bahagian ini",
+      "empty_group": "Tiada misi jenis ini buat masa ini."
+    },
+    "leaderboard": {
+      "title": "Papan Pendahulu",
+      "loading": "Memuatkan papan pendahulu...",
+      "metrics": {
+        "weekly_xp": "XP Mingguan",
+        "monthly_receipts": "Resit Bulanan",
+        "deductible_total": "Jumlah Boleh Tolak"
+      },
+      "scope": {
+        "malaysia": "Malaysia",
+        "global": "Global"
+      },
+      "your_rank": "Kedudukan anda",
+      "rank": "#{{rank}}",
+      "gap_to_top_ten": "{{gap}} lagi ke 10 teratas",
+      "in_top_ten": "Anda berada dalam 10 teratas!",
+      "anonymous": "Tanpa Nama",
+      "empty_title": "Belum ada penyertaan",
+      "empty": "Belum ada sesiapa dalam papan pendahulu ini."
+    },
+    "privacy_gate": {
+      "title": "Anda belum menyertai papan pendahulu",
+      "message": "Hidupkan penyertaan papan pendahulu dalam tab Ganjaran untuk melihat perbandingan anda.",
+      "action": "Pergi ke Ganjaran"
+    },
+    "referral": {
+      "title": "Jemput rakan",
+      "your_code": "Kod rujukan anda",
+      "no_code": "Belum ada kod rujukan.",
+      "copy": "Salin",
+      "copied": "Kod rujukan disalin.",
+      "successful": "{{count}} rujukan berjaya",
+      "redeem_label": "Tebus kod jemputan",
+      "redeem_hint": "Masukkan kod rakan anda",
+      "redeem_action": "Tebus",
+      "redeem_success": "Kod jemputan berjaya ditebus!",
+      "redeem_failed": "Kod ini tidak dapat ditebus."
+    },
+    "badges": {
+      "title": "Lencana",
+      "empty_title": "Belum ada lencana",
+      "empty": "Terus imbas resit untuk membuka lencana pertama anda.",
+      "locked": "Berkunci",
+      "unlocked": "Dibuka",
+      "unlocked_on": "Dibuka pada {{date}}",
+      "equipped": "Dipakai",
+      "unknown": "Lencana dibuka",
+      "rarity": {
+        "common": "Biasa",
+        "rare": "Jarang",
+        "epic": "Epik",
+        "legendary": "Legenda"
+      }
+    },
+    "privacy": {
+      "title": "Privasi papan pendahulu",
+      "opt_in": "Tunjukkan saya di papan pendahulu",
+      "opt_in_description": "Pengguna lain boleh melihat kedudukan anda semasa tetapan ini dihidupkan.",
+      "display_mode": "Mod paparan",
+      "display_modes": {
+        "anonymous": "Tanpa Nama",
+        "name": "Tunjuk nama saya"
+      },
+      "opt_out_hint": "Sertai papan pendahulu untuk memilih cara nama anda dipaparkan.",
+      "save_failed": "Tetapan privasi anda tidak dapat disimpan."
+    }
+  },
+  "invitations": {
+    "title": "Jemputan Pasukan",
+    "loading": "Mengesahkan jemputan...",
+    "accept": "Terima Jemputan",
+    "accepted": "Selamat menyertai pasukan! Anda telah menyertai {teamName}.",
+    "alreadyMember": "Anda sudah menjadi ahli pasukan ini.",
+    "goToTeams": "Pergi ke Pasukan",
+    "signInToAccept": "Log masuk untuk menerima",
+    "createAccountToAccept": "Cipta akaun untuk menerima",
+    "signInWithDifferentAccount": "Log masuk dengan akaun lain",
+    "signedInAs": "Anda log masuk sebagai {email}",
+    "retry": "Cuba lagi",
+    "forEmail": "Jemputan untuk {email}",
+    "invitedBy": "Dijemput oleh {name}",
+    "expiresAt": "Tamat tempoh pada {date}",
+    "message": "Mesej",
+    "unknownTeam": "pasukan ini",
+    "roles": {
+      "owner": "Pemilik",
+      "admin": "Pentadbir",
+      "member": "Ahli",
+      "viewer": "Pemerhati"
+    },
+    "crossTeam": {
+      "message": "Jemputan ini dihantar kepada {email}. Log masuk dengan akaun tersebut untuk menerimanya."
+    },
+    "loggedOut": {
+      "message": "Log masuk dengan akaun yang menerima jemputan ini untuk menyertai pasukan."
+    },
+    "unregistered": {
+      "message": "Cipta akaun dengan {email} untuk menyertai pasukan."
+    },
+    "unknownState": {
+      "title": "Jemputan ini tidak dapat diproses",
+      "message": "Kami tidak dapat menentukan keadaan akaun anda untuk jemputan ini. Sila cuba lagi."
+    },
+    "errors": {
+      "title": "Ralat jemputan",
+      "expiredTitle": "Jemputan telah tamat tempoh",
+      "notFoundTitle": "Jemputan tidak dijumpai",
+      "expired": "Jemputan ini telah tamat tempoh.",
+      "notFound": "Jemputan ini tidak dijumpai atau telah tamat tempoh.",
+      "generic": "Kami tidak dapat mengesahkan jemputan ini. Sila cuba lagi."
+    },
+    "reasons": {
+      "alreadyMember": "Anda sudah menjadi ahli pasukan ini.",
+      "emailMismatch": "Jemputan ini dihantar kepada alamat e-mel yang berbeza. Log masuk dengan akaun yang dijemput untuk menerimanya.",
+      "invalid": "Jemputan ini tidak lagi sah. Ia mungkin telah tamat tempoh atau dibatalkan.",
+      "generic": "Anda tidak boleh menerima jemputan ini buat masa ini."
+    }
+  },
+  "legal": {
+    "terms": {
+      "title": "Terma Perkhidmatan",
+      "subtitle": "Mataresit - Platform Pengurusan Resit Berkuasa AI",
+      "lastUpdated": "Dikemas kini: Januari 2025",
+      "versionLine": "Dikemas kini: Januari 2025 | Versi 1.0",
+      "footerTitle": "Terma Perkhidmatan Mataresit",
+      "acknowledgement": "Dengan menggunakan Mataresit, anda mengakui bahawa anda telah membaca, memahami dan bersetuju untuk terikat dengan Terma Perkhidmatan ini.",
+      "disclaimerNotice": "PENTING: SILA BACA BAHAGIAN INI DENGAN TELITI",
+      "sections": {
+        "introduction": {
+          "title": "Pengenalan dan Penerimaan",
+          "body": "Selamat datang ke Mataresit, sebuah platform Perisian sebagai Perkhidmatan (SaaS) berkuasa AI yang mengautomasikan pengekstrakan dan penyusunan data resit untuk perniagaan. Terma Perkhidmatan (\"Terma\") ini mengawal akses dan penggunaan anda terhadap perkhidmatan, laman web dan aplikasi Mataresit (secara kolektif, \"Perkhidmatan\") yang dikendalikan oleh Mataresit (\"kami\").\nDengan mengakses atau menggunakan Perkhidmatan kami, anda bersetuju untuk terikat dengan Terma ini. Jika anda tidak bersetuju dengan mana-mana bahagian Terma ini, anda tidak boleh mengakses Perkhidmatan ini.\nPerkhidmatan kami menyediakan:\n• Pemprosesan resit dan pengekstrakan data berkuasa AI\n• Pengkategorian dan penyusunan perbelanjaan secara automatik\n• Keupayaan eksport ke Excel, QuickBooks dan perisian perakaunan lain\n• Ciri kerjasama pasukan dan perkongsian masa nyata\n• Carian pintar dan pertanyaan bahasa semula jadi\n• Akses API untuk integrasi pihak ketiga"
+        },
+        "userAccounts": {
+          "title": "Akaun Pengguna dan Pendaftaran",
+          "body": ""
+        },
+        "accountCreation": {
+          "title": "Penciptaan Akaun",
+          "body": "Untuk menggunakan Perkhidmatan kami, anda perlu mencipta akaun dengan memberikan:\n• Alamat e-mel yang sah\n• Kata laluan yang selamat\nSebagai alternatif, anda boleh mendaftar menggunakan perkhidmatan pengesahan Google."
+        },
+        "accountSecurity": {
+          "title": "Keselamatan Akaun",
+          "body": "Anda bertanggungjawab untuk:\n• Memastikan kerahsiaan kelayakan akaun anda\n• Semua aktiviti yang berlaku di bawah akaun anda\n• Memaklumkan kami dengan segera tentang sebarang akses tanpa kebenaran\n• Menggunakan kata laluan yang kukuh dan unik"
+        },
+        "accountEligibility": {
+          "title": "Kelayakan Akaun",
+          "body": "Anda mesti berumur sekurang-kurangnya 18 tahun untuk menggunakan Perkhidmatan kami. Dengan mencipta akaun, anda menyatakan dan menjamin bahawa anda memenuhi syarat umur ini dan mempunyai kapasiti undang-undang untuk memasuki Terma ini."
+        },
+        "subscriptionBilling": {
+          "title": "Pelan Langganan dan Pengebilan",
+          "body": ""
+        },
+        "servicePlans": {
+          "title": "Pelan Perkhidmatan",
+          "body": "• Pelan Free — RM 0/bulan: 5 resit sebulan, storan 100MB, ciri asas\n• Pelan Pro — RM 10/bulan: 50 resit sebulan, storan 5GB, ciri lanjutan, percubaan percuma 14 hari\n• Pelan Max — RM 20/bulan: 100 resit sebulan, storan 20GB, ciri premium, akses API, percubaan percuma 14 hari"
+        },
+        "billingTerms": {
+          "title": "Terma Pengebilan",
+          "body": "• Kitaran Pengebilan: Langganan bulanan atau tahunan tersedia\n• Diskaun Tahunan: Jimat 20% dengan pengebilan tahunan\n• Pemprosesan Pembayaran: Pembayaran diproses dengan selamat melalui Stripe\n• Pembaharuan Automatik: Langganan diperbaharui secara automatik melainkan dibatalkan\n• Perubahan Pelan: Anda boleh menaik taraf, menurun taraf atau membatalkan pada bila-bila masa"
+        },
+        "freeTrialAndRefunds": {
+          "title": "Percubaan Percuma dan Bayaran Balik",
+          "body": "• Percubaan Percuma: Pelan Pro dan Max termasuk percubaan percuma 14 hari tanpa memerlukan kad kredit\n• Jaminan Wang Dikembalikan: Jaminan wang dikembalikan 30 hari untuk semua pelan berbayar\n• Pemprosesan Bayaran Balik: Bayaran balik diproses dalam tempoh 5-10 hari bekerja"
+        },
+        "serviceFeatures": {
+          "title": "Ciri dan Penggunaan Perkhidmatan",
+          "body": ""
+        },
+        "aiProcessing": {
+          "title": "Pemprosesan Berkuasa AI",
+          "body": "Perkhidmatan kami menggunakan teknologi AI termaju, termasuk model Google Gemini, untuk:\n• Mengekstrak data daripada resit dengan jaminan ketepatan 99%\n• Mengkategorikan perbelanjaan secara automatik\n• Memproses muat naik kelompok dengan cekap\n• Memberikan skor keyakinan untuk ketepatan data"
+        },
+        "dataProcessing": {
+          "title": "Pemprosesan dan Penyimpanan Data",
+          "body": "• Imej resit sehingga 5MB disokong\n• Data diproses menggunakan teknologi penglihatan AI\n• Data yang diproses disimpan dengan selamat menggunakan penyulitan bertaraf bank\n• Keupayaan eksport ke Excel, QuickBooks dan perisian perakaunan lain"
+        },
+        "teamCollaboration": {
+          "title": "Kerjasama Pasukan",
+          "body": "Platform kami menyediakan:\n• Ciri kerjasama masa nyata\n• Kebenaran berasaskan peranan (admin/pengguna)\n• Jejak audit untuk akauntabiliti\n• Pengurusan resit bersama"
+        },
+        "userObligations": {
+          "title": "Kewajipan Pengguna dan Penggunaan yang Diterima",
+          "body": ""
+        },
+        "permittedUse": {
+          "title": "Penggunaan yang Dibenarkan",
+          "body": "Anda boleh menggunakan Perkhidmatan kami hanya untuk:\n• Pengurusan perbelanjaan perniagaan yang sah\n• Penyusunan resit peribadi\n• Penyediaan cukai dan pelaporan kewangan\n• Kerjasama pasukan yang dibenarkan"
+        },
+        "prohibitedActivities": {
+          "title": "Aktiviti yang Dilarang",
+          "body": "Anda bersetuju untuk TIDAK:\n• Memuat naik resit palsu, diubah suai atau haram\n• Cuba memintas had penggunaan atau langkah keselamatan\n• Berkongsi kelayakan akaun dengan pengguna yang tidak dibenarkan\n• Menggunakan Perkhidmatan untuk pengubahan wang haram atau penipuan cukai\n• Membalik kejuruteraan, mengubah suai atau mengedar perisian kami\n• Memuat naik kandungan berniat jahat atau perisian hasad\n• Melanggar mana-mana undang-undang atau peraturan yang terpakai"
+        },
+        "dataAccuracy": {
+          "title": "Ketepatan Data",
+          "body": "Walaupun AI kami memberikan ketepatan 99%, anda bertanggungjawab untuk:\n• Menyemak dan meluluskan data yang diekstrak\n• Memastikan kesahihan resit\n• Membetulkan sebarang ketidaktepatan sebelum eksport\n• Mematuhi keperluan perakaunan dan cukai"
+        },
+        "dataHandling": {
+          "title": "Pengendalian Data dan Privasi",
+          "body": ""
+        },
+        "dataCollection": {
+          "title": "Pengumpulan Data",
+          "body": "Kami mengumpul dan memproses:\n• Maklumat akaun (e-mel, data pengesahan)\n• Imej resit dan data kewangan yang diekstrak\n• Analitik penggunaan dan interaksi perkhidmatan\n• Maklumat pembayaran dan pengebilan (diproses oleh Stripe)"
+        },
+        "securityMeasures": {
+          "title": "Langkah Keselamatan",
+          "body": "Kami melaksanakan:\n• Standard pematuhan SOC 2\n• Penyulitan hujung ke hujung untuk perlindungan data\n• Protokol keselamatan bertaraf bank\n• Pemprosesan AI yang selamat melalui Google Gemini\n• Audit keselamatan dan kemas kini secara berkala"
+        },
+        "thirdPartyIntegrations": {
+          "title": "Integrasi Pihak Ketiga",
+          "body": "Perkhidmatan kami berintegrasi dengan:\n• Perkhidmatan Google: Pengesahan dan pemprosesan AI Gemini\n• Stripe: Pemprosesan pembayaran dan pengurusan langganan\n• OpenRouter: Akses penyedia AI tambahan secara pilihan\n• Perisian Perakaunan: Excel, QuickBooks dan integrasi eksport lain"
+        },
+        "privacyPolicy": {
+          "title": "Polisi Privasi",
+          "body": "Untuk maklumat terperinci tentang pengumpulan, penggunaan dan perkongsian data, sila rujuk Polisi Privasi kami, yang merupakan bahagian penting dalam Terma ini."
+        },
+        "disclaimers": {
+          "title": "Penafian dan Had Liabiliti",
+          "body": ""
+        },
+        "serviceDisclaimers": {
+          "title": "Penafian Perkhidmatan",
+          "body": "PERKHIDMATAN INI DISEDIAKAN \"SEADANYA\" DAN \"SEPERTI YANG TERSEDIA\" TANPA SEBARANG JAMINAN. KAMI MENAFIKAN SEMUA JAMINAN, TERSURAT ATAU TERSIRAT, TERMASUK:\n• Ketepatan data yang diekstrak oleh AI (walaupun menyasarkan ketepatan 99%)\n• Operasi perkhidmatan yang tidak terganggu atau bebas ralat\n• Keserasian dengan semua peranti atau perisian\n• Hasil yang diperoleh daripada penggunaan Perkhidmatan"
+        },
+        "limitationOfLiability": {
+          "title": "Had Liabiliti",
+          "body": "SETAKAT YANG DIBENARKAN OLEH UNDANG-UNDANG, LIABILITI KAMI TERHAD KEPADA:\n• Jumlah yang anda bayar untuk Perkhidmatan dalam 12 bulan sebelum tuntutan\n• Ganti rugi langsung sahaja (tiada ganti rugi tidak langsung, berbangkit atau punitif)\n• Isu yang disebabkan secara langsung oleh Perkhidmatan kami"
+        },
+        "userResponsibilities": {
+          "title": "Tanggungjawab Pengguna",
+          "body": "Anda mengakui bahawa:\n• Pemprosesan AI mungkin mengandungi ralat yang memerlukan semakan manusia\n• Anda bertanggungjawab untuk pengesahan ketepatan data\n• Pematuhan kewangan dan cukai adalah tanggungjawab anda\n• Anda harus menyimpan salinan sandaran data penting"
+        },
+        "contactInformation": {
+          "title": "Maklumat Hubungan",
+          "body": "Hubungi Kami\nJika anda mempunyai soalan tentang Terma ini atau memerlukan bantuan, sila hubungi kami:\n• Sokongan Pelanggan — support@mataresit.com — Respons dalam masa 24 jam\n• Pertanyaan Perundangan — legal@mataresit.com — https://mataresit.vercel.app"
+        }
+      }
+    }
+  },
+  "search": {
+    "title": "Carian",
+    "field": {
+      "hint": "Cari resit, kategori, perniagaan",
+      "clear": "Kosongkan"
+    },
+    "button": "Cari",
+    "loading": "Mencari...",
+    "loadingMore": "Memuatkan lebih banyak hasil...",
+    "total": "{count} hasil",
+    "initial": {
+      "title": "Cari dalam ruang kerja anda",
+      "message": "Cari resit, kategori dan perniagaan Malaysia dengan kata kunci."
+    },
+    "examples": {
+      "title": "Cuba salah satu daripada ini",
+      "recentReceipts": "Tunjukkan resit terbaharu",
+      "grocery": "Cari perbelanjaan runcit",
+      "restaurant": "Cari resit restoran",
+      "businesses": "Cari dalam direktori perniagaan"
+    },
+    "sources": {
+      "label": "Sumber",
+      "receipt": "Resit",
+      "claim": "Tuntutan",
+      "team_member": "Ahli pasukan",
+      "custom_category": "Kategori",
+      "business_directory": "Perniagaan",
+      "conversation": "Perbualan"
+    },
+    "empty": {
+      "title": "Tiada hasil ditemui",
+      "message": "Tiada padanan untuk \"{query}\". Cuba kata kunci atau sumber lain.",
+      "action": "Carian baharu"
+    },
+    "error": {
+      "title": "Carian gagal",
+      "sessionExpired": "Sesi anda telah tamat. Sila log masuk semula."
+    },
+    "degraded": {
+      "title": "Hasil separa",
+      "message": "Kedudukan AI tidak tersedia, jadi padanan ini kurang tepat."
+    },
+    "result": {
+      "similarity": "{percent}% padanan",
+      "created": "Dicipta",
+      "updated": "Dikemas kini",
+      "noDescription": "Tiada penerangan diberikan"
+    },
+    "detail": {
+      "title": "Butiran hasil",
+      "source": "Sumber",
+      "similarity": "Persamaan",
+      "accessLevel": "Akses",
+      "metadata": "Butiran",
+      "close": "Tutup"
+    }
   }
 }
