@@ -22,6 +22,7 @@ import 'core/services/workspace_preferences_service.dart';
 import 'core/services/currency_cache_service.dart';
 import 'core/services/shared_preferences_compatibility_service.dart';
 import 'core/services/deep_link_service.dart';
+
 // import 'core/platform/ios_compatibility_service.dart'; // Disabled - causing issues
 
 // import 'comprehensive_visual_debug.dart'; // Disabled for production

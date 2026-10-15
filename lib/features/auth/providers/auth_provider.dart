@@ -100,6 +100,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     // Listen to auth state changes (only if Supabase is initialized)
     if (SupabaseService.isInitialized) {
       SupabaseService.authStateStream.listen((authState) {
+        // The stream is app-wide, so it can still deliver (for example the
+        // replayed current value) after this notifier has been disposed.
+        if (!mounted) return;
         AppLogger.info('🔄 Auth state change detected: ${authState.event}');
 
         switch (authState.event) {

@@ -23,7 +23,10 @@ void main() {
       expect(state.receipts, isEmpty);
       expect(state.groupedReceipts, isEmpty);
       expect(state.isLoading, false);
-      expect(state.error, isNull);
+      // ReceiptsNotifier loads on creation and this container has no
+      // authenticated user, so the load stops on the auth check. Reported as an
+      // error, not as a clean default state.
+      expect(state.error, 'User not authenticated');
       expect(state.hasMore, true);
       expect(state.currentPage, 0);
       expect(state.dateFilter.option, DateFilterOption.last7Days);

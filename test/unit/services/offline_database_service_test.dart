@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mataresit_app/core/services/offline_database_service.dart';
@@ -5,7 +8,26 @@ import 'package:mataresit_app/shared/models/receipt_model.dart';
 
 void main() {
   group('OfflineDatabaseService', () {
+    late Directory hiveDirectory;
+
     setUpAll(() async {
+      TestWidgetsFlutterBinding.ensureInitialized();
+
+      // Hive.initFlutter() (called by OfflineDatabaseService.initialize as
+      // well) resolves its storage path through path_provider. There is no
+      // platform implementation in a test, so point it at a temp directory.
+      hiveDirectory = Directory.systemTemp.createTempSync(
+        'mataresit_hive_test',
+      );
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            (MethodCall call) async =>
+                call.method == 'getApplicationDocumentsDirectory'
+                ? hiveDirectory.path
+                : null,
+          );
+
       // Initialize Hive for testing
       await Hive.initFlutter();
       await OfflineDatabaseService.initialize();
@@ -13,6 +35,10 @@ void main() {
 
     tearDownAll(() async {
       await OfflineDatabaseService.close();
+      await Hive.close();
+      if (hiveDirectory.existsSync()) {
+        hiveDirectory.deleteSync(recursive: true);
+      }
     });
 
     setUp(() async {

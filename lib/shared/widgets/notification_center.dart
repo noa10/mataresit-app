@@ -33,7 +33,9 @@ class _NotificationCenterState extends ConsumerState<NotificationCenter> {
 
   @override
   void dispose() {
-    _closeDropdown();
+    // The element is already defunct while it is being unmounted, so calling
+    // setState() here would trip the framework assertion. Close without it.
+    _closeDropdown(updateState: false);
     super.dispose();
   }
 
@@ -106,10 +108,14 @@ class _NotificationCenterState extends ConsumerState<NotificationCenter> {
     setState(() => _isOpen = true);
   }
 
-  void _closeDropdown() {
+  void _closeDropdown({bool updateState = true}) {
     _overlayEntry?.remove();
     _overlayEntry = null;
-    setState(() => _isOpen = false);
+    if (updateState) {
+      setState(() => _isOpen = false);
+    } else {
+      _isOpen = false;
+    }
   }
 
   Widget _buildHeader() {

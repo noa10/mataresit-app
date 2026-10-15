@@ -152,8 +152,10 @@ class CategoryService {
 
         return allCategories;
       } else {
-        // In personal context, just fetch personal categories
-        return fetchUserCategories(teamId: teamId);
+        // In personal context, just fetch personal categories.
+        // Await inside the try so a fetch failure is handled by the catch
+        // below (and reported as "no categories") instead of escaping.
+        return await fetchUserCategories(teamId: teamId);
       }
     } catch (error) {
       _logger.e('Error fetching categories for display: $error');

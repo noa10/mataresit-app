@@ -553,10 +553,10 @@ void _callbackDispatcher() {
         default:
           logger.w('Unknown background task: $task');
       }
-      return Future.value(true);
+      return await Future.value(true);
     } catch (e) {
       logger.e('Background task failed: $e');
-      return Future.value(false);
+      return await Future.value(false);
     }
   });
 }
