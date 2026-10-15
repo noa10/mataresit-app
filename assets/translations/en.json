@@ -311,10 +311,10 @@
       "refresh": "Refresh"
     },
     "level": {
-      "label": "Level {{level}}",
-      "total_xp": "{{xp}} XP in total",
-      "progress": "{{current}} / {{total}} XP",
-      "to_next": "{{xp}} XP to level {{level}}"
+      "label": "Level {level}",
+      "total_xp": "{xp} XP in total",
+      "progress": "{current} / {total} XP",
+      "to_next": "{xp} XP to level {level}"
     },
     "streaks": {
       "title": "Streaks",
@@ -322,7 +322,7 @@
       "scan": "Scan streak",
       "longest_login": "Longest login streak",
       "longest_scan": "Longest scan streak",
-      "days": "{{count}} days"
+      "days": "{count} days"
     },
     "daily_goal": {
       "title": "Daily goal",
@@ -342,11 +342,11 @@
         "completed": "Completed",
         "xp_earned": "XP earned"
       },
-      "reward_xp": "+{{xp}} XP",
-      "progress": "{{current}} / {{target}}",
-      "community_progress": "Community: {{current}} / {{target}}",
+      "reward_xp": "+{xp} XP",
+      "progress": "{current} / {target}",
+      "community_progress": "Community: {current} / {target}",
       "completed": "Completed",
-      "completed_on": "Completed {{date}}",
+      "completed_on": "Completed {date}",
       "empty_title": "No missions right now",
       "empty": "New missions appear here as soon as they are available.",
       "empty_group_title": "Nothing in this section",
@@ -365,8 +365,8 @@
         "global": "Global"
       },
       "your_rank": "Your rank",
-      "rank": "#{{rank}}",
-      "gap_to_top_ten": "{{gap}} to the top 10",
+      "rank": "#{rank}",
+      "gap_to_top_ten": "{gap} to the top 10",
       "in_top_ten": "You are in the top 10!",
       "anonymous": "Anonymous",
       "empty_title": "No entries yet",
@@ -383,7 +383,7 @@
       "no_code": "No referral code yet.",
       "copy": "Copy",
       "copied": "Referral code copied.",
-      "successful": "{{count}} successful referrals",
+      "successful": "{count} successful referrals",
       "redeem_label": "Redeem an invite code",
       "redeem_hint": "Enter a friend's code",
       "redeem_action": "Redeem",
@@ -396,7 +396,7 @@
       "empty": "Keep scanning receipts to unlock your first badge.",
       "locked": "Locked",
       "unlocked": "Unlocked",
-      "unlocked_on": "Unlocked {{date}}",
+      "unlocked_on": "Unlocked {date}",
       "equipped": "Equipped",
       "unknown": "Unlocked badge",
       "rarity": {

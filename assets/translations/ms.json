@@ -311,10 +311,10 @@
       "refresh": "Muat Semula"
     },
     "level": {
-      "label": "Tahap {{level}}",
-      "total_xp": "{{xp}} XP keseluruhan",
-      "progress": "{{current}} / {{total}} XP",
-      "to_next": "{{xp}} XP lagi ke tahap {{level}}"
+      "label": "Tahap {level}",
+      "total_xp": "{xp} XP keseluruhan",
+      "progress": "{current} / {total} XP",
+      "to_next": "{xp} XP lagi ke tahap {level}"
     },
     "streaks": {
       "title": "Rentetan",
@@ -322,7 +322,7 @@
       "scan": "Rentetan imbasan",
       "longest_login": "Rentetan log masuk terpanjang",
       "longest_scan": "Rentetan imbasan terpanjang",
-      "days": "{{count}} hari"
+      "days": "{count} hari"
     },
     "daily_goal": {
       "title": "Sasaran harian",
@@ -342,11 +342,11 @@
         "completed": "Selesai",
         "xp_earned": "XP diperoleh"
       },
-      "reward_xp": "+{{xp}} XP",
-      "progress": "{{current}} / {{target}}",
-      "community_progress": "Komuniti: {{current}} / {{target}}",
+      "reward_xp": "+{xp} XP",
+      "progress": "{current} / {target}",
+      "community_progress": "Komuniti: {current} / {target}",
       "completed": "Selesai",
-      "completed_on": "Selesai pada {{date}}",
+      "completed_on": "Selesai pada {date}",
       "empty_title": "Tiada misi buat masa ini",
       "empty": "Misi baharu akan dipaparkan di sini sebaik sahaja tersedia.",
       "empty_group_title": "Tiada apa-apa dalam bahagian ini",
@@ -365,8 +365,8 @@
         "global": "Global"
       },
       "your_rank": "Kedudukan anda",
-      "rank": "#{{rank}}",
-      "gap_to_top_ten": "{{gap}} lagi ke 10 teratas",
+      "rank": "#{rank}",
+      "gap_to_top_ten": "{gap} lagi ke 10 teratas",
       "in_top_ten": "Anda berada dalam 10 teratas!",
       "anonymous": "Tanpa Nama",
       "empty_title": "Belum ada penyertaan",
@@ -383,7 +383,7 @@
       "no_code": "Belum ada kod rujukan.",
       "copy": "Salin",
       "copied": "Kod rujukan disalin.",
-      "successful": "{{count}} rujukan berjaya",
+      "successful": "{count} rujukan berjaya",
       "redeem_label": "Tebus kod jemputan",
       "redeem_hint": "Masukkan kod rakan anda",
       "redeem_action": "Tebus",
@@ -396,7 +396,7 @@
       "empty": "Terus imbas resit untuk membuka lencana pertama anda.",
       "locked": "Berkunci",
       "unlocked": "Dibuka",
-      "unlocked_on": "Dibuka pada {{date}}",
+      "unlocked_on": "Dibuka pada {date}",
       "equipped": "Dipakai",
       "unknown": "Lencana dibuka",
       "rarity": {
