@@ -1,15 +1,15 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../app/router/app_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/widgets/empty_state_widget.dart';
 import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
 import '../../gamification/models/gamification_profile.dart';
 import '../../gamification/providers/gamification_provider.dart';
-import '../../gamification/screens/leaderboard_screen.dart';
-import '../../gamification/screens/missions_screen.dart';
 import '../../gamification/widgets/badge_tile.dart';
 import '../../gamification/widgets/referral_card.dart';
 import '../../gamification/widgets/xp_progress_card.dart';
@@ -82,9 +82,7 @@ class _SectionLinks extends StatelessWidget {
       children: [
         Expanded(
           child: FilledButton.tonalIcon(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const MissionsScreen()),
-            ),
+            onPressed: () => context.push(AppRoutes.missions),
             icon: const Icon(Icons.flag_outlined),
             label: Text('gamification.actions.missions'.tr()),
           ),
@@ -92,11 +90,7 @@ class _SectionLinks extends StatelessWidget {
         const SizedBox(width: AppConstants.smallPadding),
         Expanded(
           child: FilledButton.tonalIcon(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const LeaderboardScreen(),
-              ),
-            ),
+            onPressed: () => context.push(AppRoutes.leaderboard),
             icon: const Icon(Icons.leaderboard_outlined),
             label: Text('gamification.actions.leaderboard'.tr()),
           ),

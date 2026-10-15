@@ -11,8 +11,29 @@ import '../widgets/profile_rewards.dart';
 import '../widgets/profile_security.dart';
 import '../widgets/profile_subscription.dart';
 
+/// Tab order, used to resolve a `?tab=` query parameter to an index.
+enum ProfileTab {
+  profile,
+  subscription,
+  preferences,
+  security,
+  rewards;
+
+  /// Index of [name] in the tab bar, defaulting to the first tab so an unknown
+  /// or absent value never selects a tab that does not exist.
+  static int indexOf(String? name) {
+    if (name == null) return 0;
+    final match = ProfileTab.values.where((t) => t.name == name);
+    return match.isEmpty ? 0 : match.first.index;
+  }
+}
+
 class ProfileScreen extends ConsumerStatefulWidget {
-  const ProfileScreen({super.key});
+  /// Which tab to open on. Supplied by the router from `?tab=`, so a link such
+  /// as `/profile?tab=rewards` lands on Rewards rather than the first tab.
+  final int initialTab;
+
+  const ProfileScreen({super.key, this.initialTab = 0});
 
   @override
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
@@ -25,7 +46,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(
+      length: ProfileTab.values.length,
+      vsync: this,
+      initialIndex: widget.initialTab.clamp(0, ProfileTab.values.length - 1),
+    );
   }
 
   @override

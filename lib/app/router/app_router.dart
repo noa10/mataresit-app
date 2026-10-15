@@ -270,7 +270,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.profile,
-            builder: (context, state) => const ProfileScreen(),
+            builder: (context, state) => ProfileScreen(
+              initialTab: ProfileTab.indexOf(state.uri.queryParameters['tab']),
+            ),
           ),
           GoRoute(
             path: AppRoutes.analytics,

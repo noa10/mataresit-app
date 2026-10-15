@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/utils/currency_utils.dart';
@@ -67,7 +68,11 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
         ),
         data: (profile) => profile.leaderboardOptIn
             ? _buildBoard()
-            : PrivacyGateCard(onOpenRewards: () => Navigator.of(context).pop()),
+            : PrivacyGateCard(
+                // Opting in is done from the Rewards tab; popping here would
+                // land the user wherever they came from, not on that switch.
+                onOpenRewards: () => context.push('/profile?tab=rewards'),
+              ),
       ),
     );
   }
