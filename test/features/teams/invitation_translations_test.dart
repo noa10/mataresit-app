@@ -3,16 +3,16 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// The `invitations` fragments are merged into `assets/translations/*.json` by
-/// hand, so they must keep identical key sets.
+/// Reads the shipped translation file rather than any build-time fragment, so
+/// the test exercises exactly what the app loads and passes on a fresh clone.
 void main() {
-  group('invitations translation fragments', () {
+  group('invitations translations', () {
     late Set<String> englishKeys;
     late Set<String> malayKeys;
 
     setUpAll(() {
-      englishKeys = _flattenKeys(_read('en'));
-      malayKeys = _flattenKeys(_read('ms'));
+      englishKeys = _invitationKeys('en');
+      malayKeys = _invitationKeys('ms');
     });
 
     test('declare the same keys in English and Malay', () {
@@ -69,9 +69,18 @@ void main() {
   });
 }
 
-Map<String, dynamic> _read(String languageCode) {
-  final file = File('.omc/i18n/invitations.$languageCode.json');
-  return jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
+/// Flattens the `invitations` namespace of the shipped translation file,
+/// keeping the namespace prefix so paths match the keys the flow uses.
+Set<String> _invitationKeys(String languageCode) {
+  final file = File('assets/translations/$languageCode.json');
+  final all = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
+  final invitations = all['invitations'];
+  if (invitations is! Map<String, dynamic>) {
+    fail(
+      'assets/translations/$languageCode.json has no "invitations" namespace',
+    );
+  }
+  return _flattenKeys(invitations, 'invitations');
 }
 
 Set<String> _flattenKeys(Map<String, dynamic> json, [String prefix = '']) {

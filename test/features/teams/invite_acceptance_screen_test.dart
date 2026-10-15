@@ -46,12 +46,15 @@ class _FakeTeamsNotifier extends TeamsNotifier {
 }
 
 /// Loads the fragment this feature ships instead of a bundled asset file.
-class _InvitationFragmentAssetLoader extends AssetLoader {
-  const _InvitationFragmentAssetLoader();
+/// Loads the shipped translation file — what the app actually bundles at
+/// runtime, rather than a build-time fragment — so the test stays honest and
+/// passes on a fresh clone.
+class _ShippedTranslationsAssetLoader extends AssetLoader {
+  const _ShippedTranslationsAssetLoader();
 
   @override
   Future<Map<String, dynamic>?> load(String path, Locale locale) async {
-    final file = File('$path/invitations.${locale.languageCode}.json');
+    final file = File('$path/${locale.languageCode}.json');
     return jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
   }
 }
@@ -128,7 +131,7 @@ ProviderContainer _container(RecordingInvitationRpc rpc) {
 }
 
 /// Mirrors the EasyLocalization wiring of `lib/main.dart`, pointed at the
-/// fragment this feature ships.
+/// translations the app ships.
 Widget _app(ProviderContainer container, GoRouter router) {
   return UncontrolledProviderScope(
     container: container,
@@ -136,9 +139,9 @@ Widget _app(ProviderContainer container, GoRouter router) {
       supportedLocales: const [Locale('en')],
       startLocale: const Locale('en'),
       fallbackLocale: const Locale('en'),
-      path: '.omc/i18n',
+      path: 'assets/translations',
       saveLocale: false,
-      assetLoader: const _InvitationFragmentAssetLoader(),
+      assetLoader: const _ShippedTranslationsAssetLoader(),
       child: Builder(
         builder: (context) => MaterialApp.router(
           routerConfig: router,
