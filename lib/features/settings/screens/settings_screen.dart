@@ -204,6 +204,14 @@ class SettingsScreen extends ConsumerWidget {
                 context.push('/privacy-policy');
               },
             ),
+            _buildSettingsTile(
+              context,
+              'settings.legal.terms'.tr(),
+              Icons.description_outlined,
+              () {
+                context.push('/terms-conditions');
+              },
+            ),
           ]),
 
           const SizedBox(height: AppConstants.largePadding),
