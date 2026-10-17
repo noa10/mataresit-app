@@ -236,10 +236,11 @@ void main() {
 
         expect(outcome.groups, hasLength(1));
         expect(outcome.skippedNoMerchant, 2);
-        expect(outcome.groups.single.receipts.map((r) => r.id), [
-          'a',
-          'b',
-        ], reason: 'receipts without a merchant must not join a group');
+        expect(
+          outcome.groups.single.receipts.map((r) => r.id),
+          ['a', 'b'],
+          reason: 'receipts without a merchant must not join a group',
+        );
       });
     });
 

@@ -123,8 +123,13 @@ class SearchNotifier extends StateNotifier<SearchState> {
       _logger.w('Ignoring empty search query');
       return;
     }
-    if (state.isLoading) return;
 
+    // A new search always supersedes whatever is in flight. The generation bump
+    // makes the older response discardable, so this must not bail out while
+    // another request is running -- doing so was a bug: a source toggle during
+    // an in-flight search updated the filter in the UI but left the running
+    // request to publish results for the *previous* selection under the newly
+    // displayed one.
     _generation++;
     state = SearchState(
       query: trimmed,
@@ -170,6 +175,9 @@ class SearchNotifier extends StateNotifier<SearchState> {
 
   /// Return to the pre-search state, keeping the selected sources.
   void clear() {
+    // Bump the generation so a request still in flight cannot repopulate the
+    // results the user just cleared.
+    _generation++;
     state = SearchState(selectedSources: state.selectedSources);
   }
 

@@ -265,6 +265,64 @@ void main() {
       expect(state.results, hasLength(3));
       expect(state.isLoadingMore, isFalse);
     });
+
+    test('a source toggle during an in-flight search supersedes it', () async {
+      // The first search is slow and the toggle's re-run is fast, so the
+      // superseded response arrives last. If the new search is refused while
+      // one is already loading, the old response publishes under the newly
+      // selected source filter.
+      service = _FakeSearchService(
+        [_page(5), _page(2)],
+        delays: const [Duration(milliseconds: 60), Duration(milliseconds: 10)],
+      );
+      container.dispose();
+      container = buildContainer(service);
+
+      final notifier = container.read(searchProvider.notifier);
+      final superseded = notifier.search('kopi');
+
+      // Same query, extra source: the UI now claims a filter the in-flight
+      // request was not made with.
+      notifier.toggleSource(SearchSources.customCategory);
+
+      await superseded;
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+
+      final state = container.read(searchProvider);
+      expect(service.requests, hasLength(2));
+      expect(
+        service.requests.last.sources,
+        contains(SearchSources.customCategory),
+      );
+      // The visible results belong to the new source selection, not the
+      // superseded request's five.
+      expect(state.results, hasLength(2));
+      expect(state.isLoading, isFalse);
+    });
+
+    test('clear discards a response that is still in flight', () async {
+      service = _FakeSearchService(
+        [_page(5)],
+        delays: const [Duration(milliseconds: 60)],
+      );
+      container.dispose();
+      container = buildContainer(service);
+
+      final notifier = container.read(searchProvider.notifier);
+      final inFlight = notifier.search('kopi');
+
+      notifier.clear();
+
+      await inFlight;
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+
+      final state = container.read(searchProvider);
+      // Without the generation bump in clear() the in-flight response would
+      // repopulate the results the user just cleared.
+      expect(state.results, isEmpty);
+      expect(state.hasSearched, isFalse);
+      expect(state.query, '');
+    });
   });
 
   group('SearchNotifier empty and degraded results', () {
