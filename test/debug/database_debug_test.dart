@@ -1,16 +1,42 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:mataresit_app/core/network/supabase_client.dart';
-import 'package:mataresit_app/core/constants/app_constants.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {
   group('Database Debug Tests', () {
     setUpAll(() async {
-      // Initialize Supabase for testing
+      TestWidgetsFlutterBinding.ensureInitialized();
+
+      // supabase_flutter persists the auth session through shared_preferences.
+      // Without a platform implementation the channel call throws and
+      // Supabase.initialize() never completes.
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/shared_preferences'),
+            (MethodCall call) async =>
+                call.method == 'getAll' ? <String, Object>{} : null,
+          );
+
+      // These queries are diagnostics: they only report what the backend
+      // returns. They run against a stubbed transport so the suite never
+      // reaches a real (let alone production) database and stays
+      // deterministic - every query resolves with an empty result set.
       await Supabase.initialize(
-        url: AppConstants.supabaseUrl,
-        anonKey: AppConstants.supabaseAnonKey,
+        url: 'https://test.supabase.co',
+        anonKey: 'test-anon-key',
+        httpClient: MockClient(
+          (request) async => http.Response(
+            '[]',
+            200,
+            request: request,
+            headers: {'content-type': 'application/json'},
+          ),
+        ),
       );
+      await SupabaseService.initialize();
     });
 
     test('Check receipts table structure and data', () async {

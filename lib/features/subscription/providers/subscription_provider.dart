@@ -80,8 +80,10 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
   Future<void> _initialize() async {
     await loadSubscriptionData();
 
-    // Listen to subscription updates
+    // Listen to subscription updates. Both streams are static (app-wide), so
+    // they can still emit after this notifier has been disposed.
     SubscriptionService.subscriptionStream.listen((subscription) {
+      if (!mounted) return;
       state = state.copyWith(
         subscription: subscription,
         lastUpdated: DateTime.now(),
@@ -90,6 +92,7 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
 
     // Listen to Stripe loading state
     StripeService.loadingStream.listen((isLoading) {
+      if (!mounted) return;
       state = state.copyWith(isLoading: isLoading);
     });
   }
