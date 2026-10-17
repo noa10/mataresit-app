@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/constants/app_constants.dart';
 import '../../../features/auth/providers/auth_provider.dart';
@@ -221,6 +222,60 @@ class DashboardScreen extends ConsumerWidget {
                       Icons.analytics,
                       Colors.green,
                       () => context.push(AppRoutes.analytics),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: AppConstants.defaultPadding),
+
+              // Second row keeps the search and duplicate surfaces reachable
+              // without widening the bottom navigation beyond its five tabs.
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildActionCard(
+                      context,
+                      'search.title'.tr(),
+                      Icons.search,
+                      Colors.purple,
+                      () => context.push(AppRoutes.search),
+                    ),
+                  ),
+                  const SizedBox(width: AppConstants.defaultPadding),
+                  Expanded(
+                    child: _buildActionCard(
+                      context,
+                      'duplicates.title'.tr(),
+                      Icons.content_copy_outlined,
+                      Colors.orange,
+                      () => context.push(AppRoutes.duplicates),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: AppConstants.defaultPadding),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildActionCard(
+                      context,
+                      'gamification.missions.title'.tr(),
+                      Icons.emoji_events_outlined,
+                      Colors.teal,
+                      () => context.push(AppRoutes.missions),
+                    ),
+                  ),
+                  const SizedBox(width: AppConstants.defaultPadding),
+                  Expanded(
+                    child: _buildActionCard(
+                      context,
+                      'gamification.leaderboard.title'.tr(),
+                      Icons.leaderboard_outlined,
+                      Colors.amber,
+                      () => context.push(AppRoutes.leaderboard),
                     ),
                   ),
                 ],

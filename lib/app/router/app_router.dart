@@ -32,6 +32,12 @@ import '../../features/settings/screens/theme_settings_screen.dart';
 import '../../features/settings/screens/help_screen.dart';
 import '../../features/settings/screens/privacy_policy_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
+import '../../features/search/screens/search_screen.dart';
+import '../../features/duplicates/screens/duplicate_detection_screen.dart';
+import '../../features/gamification/screens/leaderboard_screen.dart';
+import '../../features/gamification/screens/missions_screen.dart';
+import '../../features/legal/screens/terms_conditions_screen.dart';
+import '../../features/teams/screens/invite_acceptance_screen.dart';
 import '../../shared/widgets/adaptive_navigation_wrapper.dart';
 import '../../shared/widgets/splash_screen.dart';
 import '../../debug/database_debug_screen.dart';
@@ -65,6 +71,15 @@ class AppRoutes {
   static const String privacyPolicy = '/privacy-policy';
   static const String profile = '/profile';
   static const String analytics = '/analytics';
+
+  // Routes added for feature parity with the web app
+  static const String search = '/search';
+  static const String duplicates = '/duplicates';
+  static const String missions = '/missions';
+  static const String leaderboard = '/leaderboard';
+  static const String termsConditions = '/terms-conditions';
+  static const String invite = '/invite';
+  static const String inviteAcceptance = '/invite/:token';
 
   // Admin routes
   static const String admin = '/admin';
@@ -255,11 +270,29 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.profile,
-            builder: (context, state) => const ProfileScreen(),
+            builder: (context, state) => ProfileScreen(
+              initialTab: ProfileTab.indexOf(state.uri.queryParameters['tab']),
+            ),
           ),
           GoRoute(
             path: AppRoutes.analytics,
             builder: (context, state) => const AnalyticsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.search,
+            builder: (context, state) => const SearchScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.duplicates,
+            builder: (context, state) => const DuplicateDetectionScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.missions,
+            builder: (context, state) => const MissionsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.leaderboard,
+            builder: (context, state) => const LeaderboardScreen(),
           ),
         ],
       ),
@@ -282,6 +315,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.privacyPolicy,
         builder: (context, state) => const PrivacyPolicyScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.termsConditions,
+        builder: (context, state) => const TermsConditionsScreen(),
+      ),
+
+      // Team invitation acceptance. Reachable without a session (see
+      // _isPublicRoute) because the invited person may not have an account yet;
+      // the screen routes them to sign-in or sign-up itself and re-runs
+      // detection once they authenticate.
+      GoRoute(
+        path: AppRoutes.inviteAcceptance,
+        builder: (context, state) =>
+            InviteAcceptanceScreen(token: state.pathParameters['token']!),
       ),
 
       // Debug routes (outside shell for easier access)
@@ -323,7 +370,14 @@ bool _isPublicRoute(String location) {
     AppRoutes.register,
     AppRoutes.forgotPassword,
   ];
-  return publicRoutes.contains(location);
+  if (publicRoutes.contains(location)) return true;
+
+  // Invitation acceptance has to render for someone who is not signed in yet —
+  // the whole point of the screen is that it works out whether they need to
+  // sign in, sign up, or can accept immediately. Matched on the path prefix
+  // because the token is a path parameter, so an exact-match check cannot see it.
+  return location == AppRoutes.invite ||
+      location.startsWith('${AppRoutes.invite}/');
 }
 
 /// Check if route is an auth route

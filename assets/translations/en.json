@@ -150,6 +150,11 @@
     "messages": {
       "saved": "Settings saved successfully",
       "error": "Failed to save settings"
+    },
+    "legal": {
+      "sectionTitle": "Legal",
+      "terms": "Terms & Conditions",
+      "termsSubtitle": "The rules for using Mataresit"
     }
   },
   "navigation": {
@@ -215,5 +220,433 @@
     "processing": "Processing...",
     "processed": "Processed",
     "failed": "Failed"
+  },
+  "duplicates": {
+    "title": "Duplicate Receipts",
+    "scan": {
+      "button": "Scan for Duplicates",
+      "rescan": "Scan Again",
+      "scanning": "Scanning your receipts..."
+    },
+    "config": {
+      "title": "Scan Settings",
+      "merchant": "Merchant",
+      "merchantAlwaysOn": "Always matched — every duplicate group is anchored to a merchant",
+      "date": "Match on date",
+      "dateTolerance": "Date tolerance",
+      "dateToleranceValue": "{days} day(s)",
+      "total": "Match on total",
+      "totalTolerance": "Amount tolerance",
+      "totalToleranceValue": "±{value}",
+      "totalToleranceExact": "Exact amount",
+      "tax": "Match on tax",
+      "currency": "Match on currency"
+    },
+    "criteria": {
+      "merchant": "Merchant",
+      "date": "Date",
+      "total": "Total",
+      "tax": "Tax",
+      "currency": "Currency"
+    },
+    "initial": {
+      "title": "Find duplicate receipts",
+      "message": "A scan reads your receipts and groups the ones that share the same merchant, date and total, so you can delete the copies and keep the oldest."
+    },
+    "empty": {
+      "title": "No duplicates found",
+      "message": "Nothing in this workspace looks like a duplicate with the current settings. Try a wider date or amount tolerance, then scan again."
+    },
+    "error": {
+      "title": "Scan failed"
+    },
+    "results": {
+      "title": "Results",
+      "scanned": "{count} receipts scanned",
+      "matchOn": "Matched on {criteria}",
+      "totalDuplicates": "{count} receipts are part of duplicate groups",
+      "deletableCount": "{count} of them can be deleted (one kept per group)",
+      "stale": "These results are more than 5 minutes old and may be out of date.",
+      "capped": "Only the first {max} receipts were scanned, so part of this workspace was not checked.",
+      "skippedNoMerchant": "{count} receipts have no merchant and could not be compared."
+    },
+    "group": {
+      "title": "Group {index}"
+    },
+    "receipt": {
+      "unknownMerchant": "Unknown merchant"
+    },
+    "kept": "Kept",
+    "selectedCount": "{count} selected",
+    "selectAll": "Select all duplicates",
+    "clearSelection": "Clear",
+    "deleteSelected": "Delete selected",
+    "deleteAllKeepOldest": "Delete all, keep oldest",
+    "nothingSelected": "Select at least one receipt to delete.",
+    "delete": {
+      "success": "{count} receipts deleted.",
+      "failed": "Could not delete the selected receipts."
+    },
+    "confirm": {
+      "title": "Delete receipts",
+      "message": "You are about to permanently delete {count} receipts.",
+      "warning": "This cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete"
+    }
+  },
+  "gamification": {
+    "tabs": {
+      "rewards": "Rewards"
+    },
+    "rewards": {
+      "loading": "Loading your rewards..."
+    },
+    "error": {
+      "title": "Something went wrong"
+    },
+    "actions": {
+      "missions": "Missions",
+      "leaderboard": "Leaderboard",
+      "refresh": "Refresh"
+    },
+    "level": {
+      "label": "Level {level}",
+      "total_xp": "{xp} XP in total",
+      "progress": "{current} / {total} XP",
+      "to_next": "{xp} XP to level {level}"
+    },
+    "streaks": {
+      "title": "Streaks",
+      "login": "Login streak",
+      "scan": "Scan streak",
+      "longest_login": "Longest login streak",
+      "longest_scan": "Longest scan streak",
+      "days": "{count} days"
+    },
+    "daily_goal": {
+      "title": "Daily goal",
+      "completed": "You scanned a receipt today. Well done!",
+      "pending": "Scan a receipt today to keep your streak going."
+    },
+    "missions": {
+      "title": "Missions",
+      "loading": "Loading missions...",
+      "tabs": {
+        "one_time": "One-time",
+        "weekly": "Weekly",
+        "community": "Community"
+      },
+      "summary": {
+        "active": "Active",
+        "completed": "Completed",
+        "xp_earned": "XP earned"
+      },
+      "reward_xp": "+{xp} XP",
+      "progress": "{current} / {target}",
+      "community_progress": "Community: {current} / {target}",
+      "completed": "Completed",
+      "completed_on": "Completed {date}",
+      "empty_title": "No missions right now",
+      "empty": "New missions appear here as soon as they are available.",
+      "empty_group_title": "Nothing in this section",
+      "empty_group": "There are no missions of this type at the moment."
+    },
+    "leaderboard": {
+      "title": "Leaderboard",
+      "loading": "Loading the leaderboard...",
+      "metrics": {
+        "weekly_xp": "Weekly XP",
+        "monthly_receipts": "Monthly Receipts",
+        "deductible_total": "Deductible Total"
+      },
+      "scope": {
+        "malaysia": "Malaysia",
+        "global": "Global"
+      },
+      "your_rank": "Your rank",
+      "rank": "#{rank}",
+      "gap_to_top_ten": "{gap} to the top 10",
+      "in_top_ten": "You are in the top 10!",
+      "anonymous": "Anonymous",
+      "empty_title": "No entries yet",
+      "empty": "Nobody has made it onto this leaderboard yet."
+    },
+    "privacy_gate": {
+      "title": "You have not joined the leaderboard",
+      "message": "Turn on leaderboard participation in the Rewards tab to see how you compare.",
+      "action": "Go to Rewards"
+    },
+    "referral": {
+      "title": "Invite friends",
+      "your_code": "Your referral code",
+      "no_code": "No referral code yet.",
+      "copy": "Copy",
+      "copied": "Referral code copied.",
+      "successful": "{count} successful referrals",
+      "redeem_label": "Redeem an invite code",
+      "redeem_hint": "Enter a friend's code",
+      "redeem_action": "Redeem",
+      "redeem_success": "Invite code redeemed!",
+      "redeem_failed": "Could not redeem this code."
+    },
+    "badges": {
+      "title": "Badges",
+      "empty_title": "No badges yet",
+      "empty": "Keep scanning receipts to unlock your first badge.",
+      "locked": "Locked",
+      "unlocked": "Unlocked",
+      "unlocked_on": "Unlocked {date}",
+      "equipped": "Equipped",
+      "unknown": "Unlocked badge",
+      "rarity": {
+        "common": "Common",
+        "rare": "Rare",
+        "epic": "Epic",
+        "legendary": "Legendary"
+      }
+    },
+    "privacy": {
+      "title": "Leaderboard privacy",
+      "opt_in": "Show me on the leaderboard",
+      "opt_in_description": "Other users can see your rank while this is on.",
+      "display_mode": "Display mode",
+      "display_modes": {
+        "anonymous": "Anonymous",
+        "name": "Show my name"
+      },
+      "opt_out_hint": "Join the leaderboard to choose how your name is shown.",
+      "save_failed": "Could not save your privacy settings."
+    }
+  },
+  "invitations": {
+    "title": "Team Invitation",
+    "loading": "Validating invitation...",
+    "accept": "Accept Invitation",
+    "accepted": "Welcome to the team! You have joined {teamName}.",
+    "alreadyMember": "You are already a member of this team.",
+    "goToTeams": "Go to Teams",
+    "signInToAccept": "Sign in to accept",
+    "createAccountToAccept": "Create an account to accept",
+    "signInWithDifferentAccount": "Sign in with a different account",
+    "signedInAs": "You are signed in as {email}",
+    "retry": "Try again",
+    "forEmail": "Invitation for {email}",
+    "invitedBy": "Invited by {name}",
+    "expiresAt": "Expires on {date}",
+    "message": "Message",
+    "unknownTeam": "this team",
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "member": "Member",
+      "viewer": "Viewer"
+    },
+    "crossTeam": {
+      "message": "This invitation was sent to {email}. Sign in with that account to accept it."
+    },
+    "loggedOut": {
+      "message": "Sign in with the account that received this invitation to join the team."
+    },
+    "unregistered": {
+      "message": "Create an account with {email} to join the team."
+    },
+    "unknownState": {
+      "title": "This invitation cannot be processed",
+      "message": "We could not determine your account state for this invitation. Please try again."
+    },
+    "errors": {
+      "title": "Invitation error",
+      "expiredTitle": "Invitation expired",
+      "notFoundTitle": "Invitation not found",
+      "expired": "This invitation has expired.",
+      "notFound": "This invitation was not found or has expired.",
+      "generic": "We could not validate this invitation. Please try again."
+    },
+    "reasons": {
+      "alreadyMember": "You are already a member of this team.",
+      "emailMismatch": "This invitation was sent to a different email address. Sign in with the invited account to accept it.",
+      "invalid": "This invitation is no longer valid. It may have expired or been cancelled.",
+      "generic": "You cannot accept this invitation right now."
+    }
+  },
+  "legal": {
+    "terms": {
+      "title": "Terms of Service",
+      "subtitle": "Mataresit - AI-Powered Receipt Management Platform",
+      "lastUpdated": "Last Updated: January 2025",
+      "versionLine": "Last Updated: January 2025 | Version 1.0",
+      "footerTitle": "Mataresit Terms of Service",
+      "acknowledgement": "By using Mataresit, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.",
+      "disclaimerNotice": "IMPORTANT: PLEASE READ THIS SECTION CAREFULLY",
+      "sections": {
+        "introduction": {
+          "title": "Introduction and Acceptance",
+          "body": "Welcome to Mataresit, an AI-powered Software as a Service (SaaS) platform that automates receipt data extraction and organization for businesses. These Terms of Service (\"Terms\") govern your access to and use of Mataresit's services, website, and applications (collectively, the \"Service\") operated by Mataresit (\"we,\" \"us,\" or \"our\").\nBy accessing or using our Service, you agree to be bound by these Terms. If you disagree with any part of these Terms, you may not access the Service.\nOur Service provides:\n• AI-powered receipt processing and data extraction\n• Automated expense categorization and organization\n• Export capabilities to Excel, QuickBooks, and other accounting software\n• Team collaboration and real-time sharing features\n• Smart search and natural language querying\n• API access for third-party integrations"
+        },
+        "userAccounts": {
+          "title": "User Accounts and Registration",
+          "body": ""
+        },
+        "accountCreation": {
+          "title": "Account Creation",
+          "body": "To use our Service, you must create an account by providing:\n• A valid email address\n• A secure password\nAlternatively, you may register using Google authentication services."
+        },
+        "accountSecurity": {
+          "title": "Account Security",
+          "body": "You are responsible for:\n• Maintaining the confidentiality of your account credentials\n• All activities that occur under your account\n• Notifying us immediately of any unauthorized access\n• Using strong, unique passwords"
+        },
+        "accountEligibility": {
+          "title": "Account Eligibility",
+          "body": "You must be at least 18 years old to use our Service. By creating an account, you represent and warrant that you meet this age requirement and have the legal capacity to enter into these Terms."
+        },
+        "subscriptionBilling": {
+          "title": "Subscription Plans and Billing",
+          "body": ""
+        },
+        "servicePlans": {
+          "title": "Service Plans",
+          "body": "• Free Plan — RM 0/month: 5 receipts per month, 100MB storage, Basic features\n• Pro Plan — RM 10/month: 50 receipts per month, 5GB storage, Advanced features, 14-day free trial\n• Max Plan — RM 20/month: 100 receipts per month, 20GB storage, Premium features, API access, 14-day free trial"
+        },
+        "billingTerms": {
+          "title": "Billing Terms",
+          "body": "• Billing Cycles: Monthly or annual subscriptions available\n• Annual Discount: Save 20% with annual billing\n• Payment Processing: Payments processed securely through Stripe\n• Auto-Renewal: Subscriptions automatically renew unless cancelled\n• Plan Changes: You may upgrade, downgrade, or cancel anytime"
+        },
+        "freeTrialAndRefunds": {
+          "title": "Free Trial and Refunds",
+          "body": "• Free Trial: Pro and Max plans include a 14-day free trial with no credit card required\n• Money-Back Guarantee: 30-day money-back guarantee for all paid plans\n• Refund Processing: Refunds processed within 5-10 business days"
+        },
+        "serviceFeatures": {
+          "title": "Service Features and Usage",
+          "body": ""
+        },
+        "aiProcessing": {
+          "title": "AI-Powered Processing",
+          "body": "Our Service utilizes advanced AI technology, including Google Gemini models, to:\n• Extract data from receipts with 99% accuracy guarantee\n• Automatically categorize expenses\n• Process batch uploads efficiently\n• Provide confidence scores for data accuracy"
+        },
+        "dataProcessing": {
+          "title": "Data Processing and Storage",
+          "body": "• Receipt images up to 5MB are supported\n• Data is processed using AI vision technology\n• Processed data is stored securely with bank-level encryption\n• Export capabilities to Excel, QuickBooks, and other accounting software"
+        },
+        "teamCollaboration": {
+          "title": "Team Collaboration",
+          "body": "Our platform provides:\n• Real-time collaboration features\n• Role-based permissions (admin/user)\n• Audit trails for accountability\n• Shared receipt management"
+        },
+        "userObligations": {
+          "title": "User Obligations and Acceptable Use",
+          "body": ""
+        },
+        "permittedUse": {
+          "title": "Permitted Use",
+          "body": "You may use our Service only for:\n• Legitimate business expense management\n• Personal receipt organization\n• Tax preparation and financial reporting\n• Authorized team collaboration"
+        },
+        "prohibitedActivities": {
+          "title": "Prohibited Activities",
+          "body": "You agree NOT to:\n• Upload fraudulent, altered, or illegal receipts\n• Attempt to circumvent usage limits or security measures\n• Share account credentials with unauthorized users\n• Use the Service for money laundering or tax fraud\n• Reverse engineer, modify, or distribute our software\n• Upload malicious content or malware\n• Violate any applicable laws or regulations"
+        },
+        "dataAccuracy": {
+          "title": "Data Accuracy",
+          "body": "While our AI provides 99% accuracy, you are responsible for:\n• Reviewing and approving extracted data\n• Ensuring receipt authenticity\n• Correcting any inaccuracies before export\n• Compliance with accounting and tax requirements"
+        },
+        "dataHandling": {
+          "title": "Data Handling and Privacy",
+          "body": ""
+        },
+        "dataCollection": {
+          "title": "Data Collection",
+          "body": "We collect and process:\n• Account information (email, authentication data)\n• Receipt images and extracted financial data\n• Usage analytics and service interactions\n• Payment and billing information (processed by Stripe)"
+        },
+        "securityMeasures": {
+          "title": "Security Measures",
+          "body": "We implement:\n• SOC 2 compliance standards\n• End-to-end encryption for data protection\n• Bank-level security protocols\n• Secure AI processing through Google Gemini\n• Regular security audits and updates"
+        },
+        "thirdPartyIntegrations": {
+          "title": "Third-Party Integrations",
+          "body": "Our Service integrates with:\n• Google Services: Authentication and Gemini AI processing\n• Stripe: Payment processing and subscription management\n• OpenRouter: Optional additional AI provider access\n• Accounting Software: Excel, QuickBooks, and other export integrations"
+        },
+        "privacyPolicy": {
+          "title": "Privacy Policy",
+          "body": "For detailed information about data collection, use, and sharing practices, please review our Privacy Policy, which forms an integral part of these Terms."
+        },
+        "disclaimers": {
+          "title": "Disclaimers and Limitations of Liability",
+          "body": ""
+        },
+        "serviceDisclaimers": {
+          "title": "Service Disclaimers",
+          "body": "THE SERVICE IS PROVIDED \"AS IS\" AND \"AS AVAILABLE\" WITHOUT WARRANTIES OF ANY KIND. WE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING:\n• Accuracy of AI-extracted data (despite 99% accuracy goals)\n• Uninterrupted or error-free service operation\n• Compatibility with all devices or software\n• Results obtained from using the Service"
+        },
+        "limitationOfLiability": {
+          "title": "Limitation of Liability",
+          "body": "TO THE MAXIMUM EXTENT PERMITTED BY LAW, OUR LIABILITY IS LIMITED TO:\n• The amount you paid for the Service in the 12 months preceding the claim\n• Direct damages only (no indirect, consequential, or punitive damages)\n• Issues directly caused by our Service"
+        },
+        "userResponsibilities": {
+          "title": "User Responsibilities",
+          "body": "You acknowledge that:\n• AI processing may contain errors requiring human review\n• You are responsible for data accuracy verification\n• Financial and tax compliance is your responsibility\n• You should maintain backup copies of important data"
+        },
+        "contactInformation": {
+          "title": "Contact Information",
+          "body": "Get in Touch\nIf you have questions about these Terms or need support, please contact us:\n• Customer Support — support@mataresit.com — Response within 24 hours\n• Legal Inquiries — legal@mataresit.com — https://mataresit.vercel.app"
+        }
+      }
+    }
+  },
+  "search": {
+    "title": "Search",
+    "field": {
+      "hint": "Search receipts, categories, businesses",
+      "clear": "Clear"
+    },
+    "button": "Search",
+    "loading": "Searching...",
+    "loadingMore": "Loading more results...",
+    "total": "{count} results",
+    "initial": {
+      "title": "Search your workspace",
+      "message": "Find receipts, categories and Malaysian businesses by keyword."
+    },
+    "examples": {
+      "title": "Try one of these",
+      "recentReceipts": "Show me recent receipts",
+      "grocery": "Find grocery expenses",
+      "restaurant": "Find restaurant receipts",
+      "businesses": "Search the business directory"
+    },
+    "sources": {
+      "label": "Sources",
+      "receipt": "Receipts",
+      "claim": "Claims",
+      "team_member": "Team members",
+      "custom_category": "Categories",
+      "business_directory": "Businesses",
+      "conversation": "Conversations"
+    },
+    "empty": {
+      "title": "No results found",
+      "message": "Nothing matched \"{query}\". Try different keywords or sources.",
+      "action": "New search"
+    },
+    "error": {
+      "title": "Search failed",
+      "sessionExpired": "Your session has expired. Please sign in again."
+    },
+    "degraded": {
+      "title": "Partial results",
+      "message": "AI ranking was unavailable, so these matches are less precise."
+    },
+    "result": {
+      "similarity": "{percent}% match",
+      "created": "Created",
+      "updated": "Updated",
+      "noDescription": "No description provided"
+    },
+    "detail": {
+      "title": "Result details",
+      "source": "Source",
+      "similarity": "Similarity",
+      "accessLevel": "Access",
+      "metadata": "Details",
+      "close": "Close"
+    }
   }
 }

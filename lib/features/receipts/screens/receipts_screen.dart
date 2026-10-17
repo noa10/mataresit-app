@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/constants/app_constants.dart';
 import '../../../core/guards/subscription_guard.dart';
@@ -81,6 +82,12 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
 
   void _handleMenuAction(String action) {
     switch (action) {
+      case 'search_all':
+        // The AppBar search icon filters this list in place; this opens the
+        // unified search surface, which queries receipts, categories and the
+        // business directory together.
+        context.push(AppRoutes.search);
+        break;
       case 'add_receipt':
         context.push('/receipts/capture');
         break;
@@ -143,6 +150,14 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
           PopupMenuButton<String>(
             onSelected: _handleMenuAction,
             itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'search_all',
+                child: ListTile(
+                  leading: const Icon(Icons.manage_search),
+                  title: Text('search.title'.tr()),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
               const PopupMenuItem(
                 value: 'add_receipt',
                 child: ListTile(
