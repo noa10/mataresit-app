@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/services/app_logger.dart';
-import '../../../shared/widgets/loading_widget.dart';
-import '../../../shared/widgets/google_icon.dart';
-import '../../../shared/widgets/mataresit_logo.dart';
+
 import '../providers/auth_provider.dart';
-import '../../../app/router/app_router.dart';
+import '../widgets/auth_layout.dart';
+
+/// Auth destinations are kept local, matching the invitation flow, so the
+/// screens do not pull the whole app router into their widget tests.
+const _dashboardRoute = '/dashboard';
+const _registerRoute = '/register';
+const _forgotPasswordRoute = '/forgot-password';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -31,211 +33,201 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    AppLogger.debug('🔍 LOGIN_SCREEN: LoginScreen.build() called');
-    AppLogger.debug('🔍 LOGIN_SCREEN: Context: $context');
-
     final authState = ref.watch(authProvider);
-    AppLogger.debug(
-      '🔍 LOGIN_SCREEN: authState - isLoading=${authState.isLoading}, isAuthenticated=${authState.isAuthenticated}',
-    );
+    final colors = Theme.of(context).colorScheme;
+    final emailLabel = authLabel(context, 'auth.email', 'Email');
+    final passwordLabel = authLabel(context, 'auth.password', 'Password');
+    final signInLabel = authLabel(context, 'auth.signIn', 'Sign In');
+    final signUpLabel = authLabel(context, 'auth.signUp', 'Sign Up');
 
-    // Listen to auth state changes
     ref.listen<AuthState>(authProvider, (previous, next) {
-      if (next.error != null) {
+      if (next.error != null && previous?.error != next.error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(next.error!),
-            backgroundColor: Colors.red,
+            content: Text(next.error!, style: TextStyle(color: colors.onError)),
+            backgroundColor: colors.error,
             duration: const Duration(seconds: 5),
             action: SnackBarAction(
-              label: 'Dismiss',
-              textColor: Colors.white,
-              onPressed: () {
-                ScaffoldMessenger.of(context).hideCurrentSnackBar();
-              },
+              label: authLabel(context, 'common.buttons.close', 'Close'),
+              textColor: colors.onError,
+              onPressed: () =>
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar(),
             ),
           ),
         );
       }
 
       if (next.isAuthenticated && next.user != null) {
-        context.go(AppRoutes.dashboard);
+        context.go(_dashboardRoute);
       }
     });
 
-    AppLogger.debug('🔍 LOGIN_SCREEN: About to return Scaffold');
-
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppConstants.largePadding),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: AppConstants.largePadding * 2),
-
-                // Mataresit Logo with Title
-                Center(
-                  child: MataresitLogo.login(size: 100.0, showTitle: true),
-                ),
-
-                const SizedBox(height: AppConstants.largePadding),
-
-                // Welcome Text
-                Text(
-                  'Welcome Back',
-                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+    return AuthLayout(
+      child: Form(
+        key: _formKey,
+        child: AutofillGroup(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (context.canPop()) ...[
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: () => context.pop(),
+                    icon: const Icon(Icons.arrow_back, size: 18),
+                    label: Text(
+                      authLabel(context, 'common.buttons.back', 'Back'),
+                    ),
                   ),
-                  textAlign: TextAlign.center,
                 ),
-
-                const SizedBox(height: AppConstants.defaultPadding),
-
-                Text(
-                  'Sign in to your account',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
-                  textAlign: TextAlign.center,
+                const SizedBox(height: 8),
+              ],
+              AuthHeader(
+                title: authCopy(context, 'Log in', 'Log masuk'),
+                subtitle: authCopy(
+                  context,
+                  'Log in to pick up where your receipts left off.',
+                  'Log masuk untuk menyambung semula urusan resit anda.',
                 ),
-
-                const SizedBox(height: AppConstants.largePadding * 2),
-
-                // Email Field
-                TextFormField(
+              ),
+              const SizedBox(height: 26),
+              AuthModeSelector(
+                isSignIn: true,
+                onSignIn: () {},
+                onSignUp: () => context.push(_registerRoute),
+              ),
+              const SizedBox(height: 24),
+              AuthField(
+                label: emailLabel,
+                child: TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    hintText: 'Enter your email',
-                    prefixIcon: Icon(Icons.email_outlined),
+                  autofillHints: const [AutofillHints.email],
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  decoration: authInputDecoration(
+                    context,
+                    hintText: authCopy(
+                      context,
+                      'you@company.com',
+                      'anda@syarikat.com',
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
+                      return authCopy(
+                        context,
+                        'Please enter your email',
+                        'Sila masukkan e-mel anda',
+                      );
                     }
                     if (!RegExp(
                       r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
                     ).hasMatch(value)) {
-                      return 'Please enter a valid email';
+                      return authCopy(
+                        context,
+                        'Please enter a valid email',
+                        'Sila masukkan alamat e-mel yang sah',
+                      );
                     }
                     return null;
                   },
                 ),
-
-                const SizedBox(height: AppConstants.defaultPadding),
-
-                // Password Field
-                TextFormField(
+              ),
+              const SizedBox(height: 18),
+              AuthField(
+                label: passwordLabel,
+                child: TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   textInputAction: TextInputAction.done,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    hintText: 'Enter your password',
-                    prefixIcon: const Icon(Icons.lock_outlined),
+                  autofillHints: const [AutofillHints.password],
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  decoration: authInputDecoration(
+                    context,
                     suffixIcon: IconButton(
+                      tooltip: _obscurePassword
+                          ? authCopy(
+                              context,
+                              'Show password',
+                              'Tunjuk kata laluan',
+                            )
+                          : authCopy(
+                              context,
+                              'Hide password',
+                              'Sembunyi kata laluan',
+                            ),
                       icon: Icon(
                         _obscurePassword
                             ? Icons.visibility
                             : Icons.visibility_off,
                       ),
                       onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
+                        setState(() => _obscurePassword = !_obscurePassword);
                       },
                     ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
+                      return authCopy(
+                        context,
+                        'Please enter your password',
+                        'Sila masukkan kata laluan anda',
+                      );
                     }
                     if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
+                      return authCopy(
+                        context,
+                        'Password must be at least 6 characters',
+                        'Kata laluan mestilah sekurang-kurangnya 6 aksara',
+                      );
                     }
                     return null;
                   },
                   onFieldSubmitted: (_) => _handleSignIn(),
                 ),
-
-                const SizedBox(height: AppConstants.defaultPadding),
-
-                // Forgot Password Link
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => context.push(AppRoutes.forgotPassword),
-                    child: const Text('Forgot Password?'),
-                  ),
-                ),
-
-                const SizedBox(height: AppConstants.largePadding),
-
-                // Sign In Button
-                LoadingButton(
-                  onPressed: _handleSignIn,
-                  text: 'Sign In',
-                  isLoading: authState.isLoading,
-                ),
-
-                // OAuth Divider
-                Row(
-                  children: [
-                    Expanded(
-                      child: Divider(color: Theme.of(context).dividerColor),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text('OR'),
-                    ),
-                    Expanded(
-                      child: Divider(color: Theme.of(context).dividerColor),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: AppConstants.defaultPadding),
-
-                // Continue with Google
-                OutlinedButton.icon(
-                  onPressed: () =>
-                      ref.read(authProvider.notifier).signInWithGoogle(),
-                  icon: const GoogleIcon(size: 20),
-                  label: const Text('Continue with Google'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
+              ),
+              const SizedBox(height: 4),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => context.push(_forgotPasswordRoute),
+                  child: Text(
+                    authLabel(
+                      context,
+                      'auth.forgotPassword',
+                      'Forgot Password?',
                     ),
                   ),
                 ),
-
-                const SizedBox(height: AppConstants.largePadding),
-
-                // Sign Up Link
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Don\'t have an account? ',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    TextButton(
-                      onPressed: () => context.push(AppRoutes.register),
-                      child: const Text('Sign Up'),
-                    ),
-                  ],
+              ),
+              const SizedBox(height: 12),
+              AuthSubmitButton(
+                onPressed: _handleSignIn,
+                text: signInLabel,
+                isLoading: authState.isLoading,
+              ),
+              const SizedBox(height: 22),
+              const AuthDivider(),
+              const SizedBox(height: 16),
+              AuthGoogleButton(
+                onPressed: () =>
+                    ref.read(authProvider.notifier).signInWithGoogle(),
+                isLoading: authState.isLoading,
+              ),
+              const SizedBox(height: 12),
+              AuthAccountLink(
+                prompt: authLabel(
+                  context,
+                  'auth.dontHaveAccount',
+                  "Don't have an account?",
                 ),
-              ],
-            ),
+                action: signUpLabel,
+                onPressed: () => context.push(_registerRoute),
+              ),
+            ],
           ),
         ),
       ),
@@ -243,6 +235,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _handleSignIn() {
+    if (ref.read(authProvider).isLoading) return;
     if (_formKey.currentState!.validate()) {
       ref
           .read(authProvider.notifier)

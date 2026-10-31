@@ -23,10 +23,18 @@ class SettingsScreen extends ConsumerWidget {
     final themeState = ref.watch(themeProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('settings.title'.tr())),
       body: ListView(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
+        padding: const EdgeInsets.fromLTRB(
+          AppConstants.defaultPadding,
+          20,
+          AppConstants.defaultPadding,
+          24,
+        ),
         children: [
+          _buildPageHeader(context),
+
+          const SizedBox(height: 16),
+
           // Profile Section
           Card(
             child: Padding(
@@ -163,8 +171,7 @@ class SettingsScreen extends ConsumerWidget {
               () {
                 context.push('/settings/theme');
               },
-              subtitle:
-                  '${themeState.config.mode.displayName} • ${themeState.config.variant.displayName}',
+              subtitle: '${themeState.config.mode.displayName} • Ledger',
             ),
             _buildSettingsTile(
               context,
@@ -236,9 +243,49 @@ class SettingsScreen extends ConsumerWidget {
           Center(
             child: Text(
               'Version ${AppConstants.appVersion}',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontFamily: 'IBMPlexMono',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPageHeader(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'PREFERENCES',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: colors.onSurfaceVariant,
+              fontFamily: 'IBMPlexMono',
+              fontSize: 10,
+              letterSpacing: 1.4,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Settings',
+            style: theme.textTheme.displaySmall?.copyWith(
+              fontFamily: 'InstrumentSerif',
+              fontSize: 32,
+              height: 1.05,
+              color: colors.onSurface,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Your plan, workspace and app preferences.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colors.onSurfaceVariant,
             ),
           ),
         ],

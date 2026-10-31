@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../shared/models/claim_model.dart';
 import '../../../shared/models/claim_requests.dart';
-import '../providers/claims_provider.dart';
 import '../../../shared/utils/currency_utils.dart';
+import '../providers/claims_provider.dart';
 
 class EditClaimDialog extends ConsumerStatefulWidget {
   final ClaimModel claim;
@@ -78,21 +79,29 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
           .updateClaim(widget.claim.id, request);
 
       if (mounted) {
+        final colors = Theme.of(context).colorScheme;
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Claim updated successfully'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: Text(
+              'Claim updated successfully',
+              style: TextStyle(color: colors.onPrimary),
+            ),
+            backgroundColor: colors.primary,
           ),
         );
         widget.onClaimUpdated?.call();
       }
     } catch (e) {
       if (mounted) {
+        final colors = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update claim: $e'),
-            backgroundColor: Colors.red,
+            content: Text(
+              'Failed to update claim: $e',
+              style: TextStyle(color: colors.onError),
+            ),
+            backgroundColor: colors.error,
           ),
         );
       }
@@ -107,62 +116,70 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Dialog(
-      child: Container(
-        width: MediaQuery.of(context).size.width * 0.9,
-        constraints: const BoxConstraints(maxWidth: 600, maxHeight: 600),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 600, maxHeight: 640),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  topRight: Radius.circular(12),
-                ),
-              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 12, 14),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.edit,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      'Edit Claim',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'EDIT CLAIM',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: colors.onSurfaceVariant,
+                            fontFamily: 'IBMPlexMono',
+                            fontSize: 10,
+                            letterSpacing: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'Edit Claim',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontFamily: 'InstrumentSerif',
+                            fontSize: 26,
+                            height: 1.05,
+                            color: colors.onSurface,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: _isLoading
+                        ? null
+                        : () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close),
+                    tooltip: 'Close',
                   ),
                 ],
               ),
             ),
-
-            // Form
-            Expanded(
+            Divider(height: 1, color: colors.outlineVariant),
+            Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title field
                       TextFormField(
                         controller: _titleController,
                         decoration: const InputDecoration(
                           labelText: 'Claim Title *',
-                          border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.title),
                         ),
                         validator: (value) {
@@ -175,24 +192,18 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
                           return null;
                         },
                       ),
-
                       const SizedBox(height: 16),
-
-                      // Description field
                       TextFormField(
                         controller: _descriptionController,
                         decoration: const InputDecoration(
                           labelText: 'Description',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.description),
+                          prefixIcon: Icon(Icons.description_outlined),
                         ),
                         maxLines: 3,
                       ),
-
                       const SizedBox(height: 16),
-
-                      // Amount and Currency row
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             flex: 2,
@@ -200,8 +211,7 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
                               controller: _amountController,
                               decoration: const InputDecoration(
                                 labelText: 'Amount *',
-                                border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.attach_money),
+                                prefixIcon: Icon(Icons.payments_outlined),
                               ),
                               keyboardType: TextInputType.number,
                               validator: (value) {
@@ -222,7 +232,6 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
                               initialValue: _currency,
                               decoration: const InputDecoration(
                                 labelText: 'Currency',
-                                border: OutlineInputBorder(),
                               ),
                               items:
                                   [
@@ -256,27 +265,19 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 16),
-
-                      // Category field
                       TextFormField(
                         controller: _categoryController,
                         decoration: const InputDecoration(
                           labelText: 'Category',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.category),
+                          prefixIcon: Icon(Icons.category_outlined),
                         ),
                       ),
-
                       const SizedBox(height: 16),
-
-                      // Priority dropdown
                       DropdownButtonFormField<ClaimPriority>(
                         initialValue: _priority,
                         decoration: const InputDecoration(
                           labelText: 'Priority',
-                          border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.priority_high),
                         ),
                         items: ClaimPriority.values
@@ -295,31 +296,29 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
                           }
                         },
                       ),
-
                       const SizedBox(height: 16),
-
-                      // Note about editing limitations
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
+                          color: colors.surfaceContainerLow,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.blue.shade200),
+                          border: Border.all(color: colors.outlineVariant),
                         ),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Icon(
-                              Icons.info,
-                              color: Colors.blue.shade700,
-                              size: 20,
+                              Icons.info_outline,
+                              color: colors.onSurfaceVariant,
+                              size: 18,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 'Claims can only be edited while in draft status. Once submitted, they cannot be modified.',
-                                style: TextStyle(
-                                  color: Colors.blue.shade700,
-                                  fontSize: 12,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colors.onSurfaceVariant,
+                                  height: 1.4,
                                 ),
                               ),
                             ),
@@ -331,15 +330,9 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
                 ),
               ),
             ),
-
-            // Actions
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: Theme.of(context).dividerColor),
-                ),
-              ),
+            Divider(height: 1, color: colors.outlineVariant),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
               child: Row(
                 children: [
                   Expanded(
@@ -352,13 +345,16 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: ElevatedButton(
+                    child: FilledButton(
                       onPressed: _isLoading ? null : _updateClaim,
                       child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                          ? SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: colors.onPrimary,
+                              ),
                             )
                           : const Text('Update Claim'),
                     ),

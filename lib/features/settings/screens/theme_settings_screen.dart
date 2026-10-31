@@ -52,10 +52,10 @@ class ThemeSettingsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(width: AppConstants.smallPadding),
                       Chip(
-                        label: Text(themeState.config.variant.displayName),
+                        label: const Text('Ledger'),
                         backgroundColor: Theme.of(
                           context,
-                        ).colorScheme.secondary.withValues(alpha: 0.1),
+                        ).colorScheme.primaryContainer,
                       ),
                     ],
                   ),
@@ -68,16 +68,6 @@ class ThemeSettingsScreen extends ConsumerWidget {
 
           // Theme Mode Section
           _buildThemeModeSection(
-            context,
-            themeState,
-            themeNotifier,
-            authState.user?.id,
-          ),
-
-          const SizedBox(height: AppConstants.largePadding),
-
-          // Theme Variant Section
-          _buildThemeVariantSection(
             context,
             themeState,
             themeNotifier,
@@ -183,159 +173,6 @@ class ThemeSettingsScreen extends ConsumerWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildThemeVariantSection(
-    BuildContext context,
-    ThemeState themeState,
-    ThemeNotifier themeNotifier,
-    String? userId,
-  ) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Theme Variant',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: AppConstants.smallPadding),
-            Text(
-              'Choose your preferred color scheme',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).textTheme.bodySmall?.color,
-              ),
-            ),
-            const SizedBox(height: AppConstants.defaultPadding),
-
-            // Theme Variant Grid
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: AppConstants.defaultPadding,
-                mainAxisSpacing: AppConstants.defaultPadding,
-                childAspectRatio: 1.2,
-              ),
-              itemCount: theme_model.ThemeVariant.values.length,
-              itemBuilder: (context, index) {
-                final variant = theme_model.ThemeVariant.values[index];
-                final definition =
-                    theme_model.ThemeVariantDefinition.getDefinition(variant);
-                final isSelected = themeState.config.variant == variant;
-                final isLoading = themeState.isLoading;
-
-                return GestureDetector(
-                  onTap: isLoading
-                      ? null
-                      : () {
-                          themeNotifier.updateThemeVariant(
-                            variant,
-                            userId: userId,
-                          );
-                        },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: isSelected
-                            ? Theme.of(context).primaryColor
-                            : Theme.of(context).dividerColor,
-                        width: isSelected ? 2 : 1,
-                      ),
-                      borderRadius: BorderRadius.circular(
-                        AppConstants.borderRadius,
-                      ),
-                      color: isSelected
-                          ? Theme.of(
-                              context,
-                            ).primaryColor.withValues(alpha: 0.05)
-                          : null,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(
-                        AppConstants.defaultPadding,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  variant.displayName,
-                                  style: Theme.of(context).textTheme.titleSmall
-                                      ?.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              if (isLoading && isSelected)
-                                const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: AppConstants.smallPadding),
-                          Text(
-                            variant.description,
-                            style: Theme.of(context).textTheme.bodySmall,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const Spacer(),
-                          // Color Preview
-                          Row(
-                            children: [
-                              _buildColorPreview(
-                                definition.preview.primaryColor,
-                              ),
-                              const SizedBox(width: 4),
-                              _buildColorPreview(
-                                definition.preview.secondaryColor,
-                              ),
-                              const SizedBox(width: 4),
-                              _buildColorPreview(
-                                definition.preview.accentColor,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildColorPreview(Color color) {
-    return Container(
-      width: 20,
-      height: 20,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 2,
-            offset: const Offset(0, 1),
-          ),
-        ],
       ),
     );
   }

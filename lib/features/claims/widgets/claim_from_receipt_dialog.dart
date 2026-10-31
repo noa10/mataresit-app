@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../shared/models/receipt_model.dart';
 import '../../../shared/models/claim_model.dart';
 import '../../../shared/models/claim_requests.dart';
-import '../providers/claims_provider.dart';
-import '../../teams/providers/teams_provider.dart';
-import '../../../core/constants/app_constants.dart';
 import '../../../shared/utils/currency_utils.dart';
 import '../../../shared/widgets/currency_display_widget.dart';
+import '../providers/claims_provider.dart';
+import '../../teams/providers/teams_provider.dart';
 
 /// Dialog for creating a claim from a receipt
 /// Matches the functionality of React app's ClaimFromReceiptButton
@@ -118,11 +118,15 @@ class _ClaimFromReceiptDialogState
       await ref.read(claimsProvider.notifier).createClaim(request);
 
       if (mounted) {
+        final colors = Theme.of(context).colorScheme;
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Claim created successfully'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: Text(
+              'Claim created successfully',
+              style: TextStyle(color: colors.onPrimary),
+            ),
+            backgroundColor: colors.primary,
           ),
         );
         widget.onClaimCreated?.call();
@@ -141,256 +145,285 @@ class _ClaimFromReceiptDialogState
   }
 
   void _showErrorSnackBar(String message) {
+    final colors = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+      SnackBar(
+        content: Text(message, style: TextStyle(color: colors.onError)),
+        backgroundColor: colors.error,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colors = theme.colorScheme;
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 700),
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520, maxHeight: 700),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
-            Row(
-              children: [
-                Icon(Icons.receipt_long, color: colorScheme.primary, size: 24),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Create Claim from Receipt',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Receipt preview
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.3,
-                ),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: colorScheme.outline.withValues(alpha: 0.3),
-                ),
-              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 12, 14),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.receipt,
-                    color: colorScheme.onSurfaceVariant,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.receipt.merchantName ?? 'Unknown Merchant',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
+                          'NEW CLAIM',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: colors.onSurfaceVariant,
+                            fontFamily: 'IBMPlexMono',
+                            fontSize: 10,
+                            letterSpacing: 1.4,
                           ),
                         ),
-                        CompactCurrencyDisplay(
-                          amount: widget.receipt.totalAmount ?? 0.0,
-                          currencyCode: widget.receipt.currency ?? 'MYR',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
+                        const SizedBox(height: 3),
+                        Text(
+                          'Create Claim from Receipt',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontFamily: 'InstrumentSerif',
+                            fontSize: 26,
+                            height: 1.05,
+                            color: colors.onSurface,
                           ),
                         ),
                       ],
                     ),
                   ),
+                  IconButton(
+                    onPressed: _isLoading
+                        ? null
+                        : () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close),
+                    tooltip: 'Close',
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-
-            // Form
-            Expanded(
-              child: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Title field
-                      TextFormField(
-                        controller: _titleController,
-                        decoration: const InputDecoration(
-                          labelText: 'Title *',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Title is required';
-                          }
-                          if (value.trim().length < 3) {
-                            return 'Title must be at least 3 characters';
-                          }
-                          return null;
-                        },
+            Divider(height: 1, color: colors.outlineVariant),
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: colors.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: colors.outlineVariant),
                       ),
-                      const SizedBox(height: 16),
-
-                      // Description field
-                      TextFormField(
-                        controller: _descriptionController,
-                        decoration: const InputDecoration(
-                          labelText: 'Description',
-                          border: OutlineInputBorder(),
-                        ),
-                        maxLines: 3,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Amount and Currency row
-                      Row(
+                      child: Row(
                         children: [
-                          Expanded(
-                            flex: 2,
-                            child: TextFormField(
-                              controller: _amountController,
-                              decoration: const InputDecoration(
-                                labelText: 'Amount *',
-                                border: OutlineInputBorder(),
-                              ),
-                              keyboardType: TextInputType.number,
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Amount is required';
-                                }
-                                final amount = double.tryParse(value);
-                                if (amount == null || amount <= 0) {
-                                  return 'Enter a valid amount';
-                                }
-                                return null;
-                              },
+                          Container(
+                            width: 34,
+                            height: 34,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: colors.surfaceContainerHighest,
+                              border: Border.all(color: colors.outlineVariant),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(
+                              Icons.receipt_outlined,
+                              color: colors.onSurfaceVariant,
+                              size: 17,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 10),
                           Expanded(
-                            child: DropdownButtonFormField<String>(
-                              initialValue: _currency,
-                              decoration: const InputDecoration(
-                                labelText: 'Currency',
-                                border: OutlineInputBorder(),
-                              ),
-                              items: const [
-                                DropdownMenuItem(
-                                  value: 'MYR',
-                                  child: Text('MYR'),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.receipt.merchantName ??
+                                      'Unknown Merchant',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                DropdownMenuItem(
-                                  value: 'USD',
-                                  child: Text('USD'),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'EUR',
-                                  child: Text('EUR'),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'GBP',
-                                  child: Text('GBP'),
+                                const SizedBox(height: 2),
+                                CompactCurrencyDisplay(
+                                  amount: widget.receipt.totalAmount ?? 0.0,
+                                  currencyCode:
+                                      widget.receipt.currency ?? 'MYR',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: colors.onSurfaceVariant,
+                                    fontFamily: 'IBMPlexMono',
+                                    fontSize: 10,
+                                  ),
                                 ),
                               ],
-                              onChanged: (value) {
-                                if (value != null) {
-                                  setState(() {
-                                    _currency = value;
-                                  });
-                                }
-                              },
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-
-                      // Category field
-                      TextFormField(
-                        controller: _categoryController,
-                        decoration: const InputDecoration(
-                          labelText: 'Category',
-                          border: OutlineInputBorder(),
-                        ),
+                    ),
+                    const SizedBox(height: 16),
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextFormField(
+                            controller: _titleController,
+                            decoration: const InputDecoration(
+                              labelText: 'Title *',
+                            ),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Title is required';
+                              }
+                              if (value.trim().length < 3) {
+                                return 'Title must be at least 3 characters';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _descriptionController,
+                            decoration: const InputDecoration(
+                              labelText: 'Description',
+                            ),
+                            maxLines: 3,
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: TextFormField(
+                                  controller: _amountController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Amount *',
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return 'Amount is required';
+                                    }
+                                    final amount = double.tryParse(value);
+                                    if (amount == null || amount <= 0) {
+                                      return 'Enter a valid amount';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  initialValue: _currency,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Currency',
+                                  ),
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 'MYR',
+                                      child: Text('MYR'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'USD',
+                                      child: Text('USD'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'EUR',
+                                      child: Text('EUR'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'GBP',
+                                      child: Text('GBP'),
+                                    ),
+                                  ],
+                                  onChanged: (value) {
+                                    if (value != null) {
+                                      setState(() {
+                                        _currency = value;
+                                      });
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _categoryController,
+                            decoration: const InputDecoration(
+                              labelText: 'Category',
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          DropdownButtonFormField<ClaimPriority>(
+                            initialValue: _priority,
+                            decoration: const InputDecoration(
+                              labelText: 'Priority',
+                            ),
+                            items: ClaimPriority.values.map((priority) {
+                              return DropdownMenuItem(
+                                value: priority,
+                                child: Text(priority.displayName),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() {
+                                  _priority = value;
+                                });
+                              }
+                            },
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
-
-                      // Priority field
-                      DropdownButtonFormField<ClaimPriority>(
-                        initialValue: _priority,
-                        decoration: const InputDecoration(
-                          labelText: 'Priority',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: ClaimPriority.values.map((priority) {
-                          return DropdownMenuItem(
-                            value: priority,
-                            child: Text(priority.displayName),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _priority = value;
-                            });
-                          }
-                        },
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
-
-            const SizedBox(height: 16),
-
-            // Action buttons
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _isLoading
-                        ? null
-                        : () => Navigator.of(context).pop(),
-                    child: const Text('Cancel'),
+            Divider(height: 1, color: colors.outlineVariant),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(),
+                      child: const Text('Cancel'),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _createClaim,
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Create Claim'),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: _isLoading ? null : _createClaim,
+                      child: _isLoading
+                          ? SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: colors.onPrimary,
+                              ),
+                            )
+                          : const Text('Create Claim'),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

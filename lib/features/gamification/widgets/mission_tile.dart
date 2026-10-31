@@ -1,7 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/constants/app_constants.dart';
 import '../../../shared/utils/date_utils.dart';
 import '../models/mission.dart';
 
@@ -20,112 +19,139 @@ class MissionTile extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final isCompleted = mission.isCompleted;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    mission.mission.title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        border: Border.all(color: colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                const SizedBox(width: AppConstants.smallPadding),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppConstants.smallPadding,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colorScheme.secondaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    'gamification.missions.reward_xp'.tr(
-                      namedArgs: {'xp': '${mission.rewardXp}'},
-                    ),
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: colorScheme.onSecondaryContainer,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (mission.mission.description.isNotEmpty) ...[
-              const SizedBox(height: AppConstants.smallPadding),
-              Text(
-                mission.mission.description,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
+                child: Icon(
+                  mission.isCommunity
+                      ? Icons.groups_outlined
+                      : Icons.flag_outlined,
+                  size: 18,
+                  color: colorScheme.onPrimaryContainer,
                 ),
               ),
-            ],
-            const SizedBox(height: AppConstants.defaultPadding),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-              child: LinearProgressIndicator(
-                value: mission.progressPercent / 100,
-                minHeight: 8,
-                backgroundColor: colorScheme.surfaceContainerHighest,
-              ),
-            ),
-            const SizedBox(height: AppConstants.smallPadding),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    mission.isCommunity
-                        ? 'gamification.missions.community_progress'.tr(
-                            namedArgs: {
-                              'current': _formatValue(
-                                mission.effectiveCurrentValue,
-                              ),
-                              'target': _formatValue(
-                                mission.effectiveTargetValue,
-                              ),
-                            },
-                          )
-                        : 'gamification.missions.progress'.tr(
-                            namedArgs: {
-                              'current': _formatValue(mission.currentValue),
-                              'target': _formatValue(mission.targetValue),
-                            },
-                          ),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                if (isCompleted)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.check_circle,
-                        size: 16,
-                        color: colorScheme.primary,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      mission.mission.title,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
                       ),
-                      const SizedBox(width: 4),
+                    ),
+                    if (mission.mission.description.isNotEmpty) ...[
+                      const SizedBox(height: 2),
                       Text(
-                        _completedLabel(),
+                        mission.mission.description,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.primary,
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'gamification.missions.reward_xp'.tr(
+                    namedArgs: {'xp': '${mission.rewardXp}'},
                   ),
-              ],
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontFamily: 'IBMPlexMono',
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onPrimaryContainer,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: mission.progressPercent / 100,
+              minHeight: 5,
+              backgroundColor: colorScheme.outlineVariant,
+              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  mission.isCommunity
+                      ? 'gamification.missions.community_progress'.tr(
+                          namedArgs: {
+                            'current': _formatValue(
+                              mission.effectiveCurrentValue,
+                            ),
+                            'target': _formatValue(
+                              mission.effectiveTargetValue,
+                            ),
+                          },
+                        )
+                      : 'gamification.missions.progress'.tr(
+                          namedArgs: {
+                            'current': _formatValue(mission.currentValue),
+                            'target': _formatValue(mission.targetValue),
+                          },
+                        ),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontFamily: 'IBMPlexMono',
+                    fontSize: 11,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              if (isCompleted) ...[
+                const SizedBox(width: 8),
+                Icon(Icons.check_circle, size: 14, color: colorScheme.primary),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    _completedLabel(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
       ),
     );
   }

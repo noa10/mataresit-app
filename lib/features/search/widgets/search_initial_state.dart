@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import '../../../core/constants/app_constants.dart';
 
 /// Pre-search prompt shown before the first query is submitted.
 class SearchInitialState extends StatelessWidget {
@@ -17,57 +16,110 @@ class SearchInitialState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppConstants.largePadding),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.manage_search,
-            size: 80,
-            color: theme.colorScheme.primary.withValues(alpha: 0.7),
-          ),
-          const SizedBox(height: AppConstants.largePadding),
-          Text(
-            'search.initial.title'.tr(),
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: colors.surface,
+              border: Border.all(color: colors.outlineVariant),
+              borderRadius: BorderRadius.circular(10),
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'search.initial.message'.tr(),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppConstants.largePadding),
-          Text(
-            'search.examples.title'.tr(),
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: AppConstants.smallPadding),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: AppConstants.smallPadding,
-            runSpacing: AppConstants.smallPadding,
-            children: examples
-                .map(
-                  (example) => ActionChip(
-                    avatar: const Icon(Icons.search, size: 16),
-                    label: Text(example),
-                    onPressed: () => onExampleSelected(example),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                  child: Text(
+                    'search.initial.title'.tr(),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: colors.onSurface,
+                    ),
                   ),
-                )
-                .toList(),
+                ),
+                Divider(height: 1, thickness: 1, color: colors.outlineVariant),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'search.examples.title'.tr().toUpperCase(),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: colors.onSurfaceVariant,
+                          fontFamily: 'IBMPlexMono',
+                          fontSize: 10,
+                          letterSpacing: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final example in examples)
+                            _ExamplePill(
+                              label: example,
+                              onTap: () => onExampleSelected(example),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Suggested query as a neutral ledger pill with a hairline border.
+class _ExamplePill extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _ExamplePill({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Material(
+      color: colors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: colors.outlineVariant),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.search, size: 14, color: colors.onSurfaceVariant),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colors.onSurface,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

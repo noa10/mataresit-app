@@ -47,8 +47,7 @@ class ReceiptsState {
     this.isSelectionMode = false,
     this.selectedReceiptIds = const {},
     this.isPerformingBulkOperation = false,
-  }) : dateFilter =
-           dateFilter ?? const DateRange(option: DateFilterOption.last7Days);
+  }) : dateFilter = dateFilter ?? const DateRange(option: DateFilterOption.all);
 
   ReceiptsState copyWith({
     List<ReceiptModel>? receipts,
@@ -326,11 +325,12 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
         AppLogger.info('✅ Successfully mapped ${newReceipts.length} receipts');
       } catch (e) {
         AppLogger.error('❌ Failed to load receipts from database', e);
-        // If database fails, create some mock data for demonstration
-        if (state.receipts.isEmpty) {
-          AppLogger.warning('📝 Using mock data as fallback');
-          newReceipts = _createMockReceipts(user.id);
-        }
+        state = state.copyWith(
+          isLoading: false,
+          error:
+              'Could not load receipts. Check your connection and try again.',
+        );
+        return;
       }
 
       final allReceipts = refresh
@@ -432,110 +432,6 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
       default:
         return ProcessingStatus.completed;
     }
-  }
-
-  /// Create mock receipts for demonstration
-  List<ReceiptModel> _createMockReceipts(String userId) {
-    final now = DateTime.now();
-    return [
-      ReceiptModel(
-        id: 'mock-1',
-        userId: userId,
-        merchantName: 'Starbucks Coffee',
-        totalAmount: 15.50,
-        currency: 'USD',
-        transactionDate: now.subtract(const Duration(days: 1)),
-        category: 'Food & Beverage',
-        status: ReceiptStatus.reviewed,
-        processingStatus: ProcessingStatus.completed,
-        isExpense: true,
-        isReimbursable: true,
-        createdAt: now.subtract(const Duration(days: 1)),
-        updatedAt: now.subtract(const Duration(days: 1)),
-        lineItems: [
-          LineItemModel(
-            id: 'line-1-1',
-            receiptId: 'mock-1',
-            description: 'Grande Latte',
-            amount: 5.25,
-            createdAt: now.subtract(const Duration(days: 1)),
-            updatedAt: now.subtract(const Duration(days: 1)),
-          ),
-          LineItemModel(
-            id: 'line-1-2',
-            receiptId: 'mock-1',
-            description: 'Blueberry Muffin',
-            amount: 3.75,
-            createdAt: now.subtract(const Duration(days: 1)),
-            updatedAt: now.subtract(const Duration(days: 1)),
-          ),
-          LineItemModel(
-            id: 'line-1-3',
-            receiptId: 'mock-1',
-            description: 'Americano',
-            amount: 4.50,
-            createdAt: now.subtract(const Duration(days: 1)),
-            updatedAt: now.subtract(const Duration(days: 1)),
-          ),
-          LineItemModel(
-            id: 'line-1-4',
-            receiptId: 'mock-1',
-            description: 'Tax',
-            amount: 2.00,
-            createdAt: now.subtract(const Duration(days: 1)),
-            updatedAt: now.subtract(const Duration(days: 1)),
-          ),
-        ],
-      ),
-      ReceiptModel(
-        id: 'mock-2',
-        userId: userId,
-        merchantName: 'Shell Gas Station',
-        totalAmount: 45.20,
-        currency: 'USD',
-        transactionDate: now.subtract(const Duration(days: 3)),
-        category: 'Transportation',
-        status: ReceiptStatus.unreviewed,
-        processingStatus: ProcessingStatus.completed,
-        isExpense: true,
-        isReimbursable: false,
-        createdAt: now.subtract(const Duration(days: 3)),
-        updatedAt: now.subtract(const Duration(days: 3)),
-        lineItems: [
-          LineItemModel(
-            id: 'line-2-1',
-            receiptId: 'mock-2',
-            description: 'Regular Gasoline',
-            amount: 42.50,
-            createdAt: now.subtract(const Duration(days: 3)),
-            updatedAt: now.subtract(const Duration(days: 3)),
-          ),
-          LineItemModel(
-            id: 'line-2-2',
-            receiptId: 'mock-2',
-            description: 'Car Wash',
-            amount: 2.70,
-            createdAt: now.subtract(const Duration(days: 3)),
-            updatedAt: now.subtract(const Duration(days: 3)),
-          ),
-        ],
-      ),
-      ReceiptModel(
-        id: 'mock-3',
-        userId: userId,
-        merchantName: 'Office Depot',
-        totalAmount: 89.99,
-        currency: 'USD',
-        transactionDate: now.subtract(const Duration(days: 5)),
-        category: 'Office Supplies',
-        status: ReceiptStatus.reviewed,
-        processingStatus: ProcessingStatus.pending,
-        isExpense: true,
-        isReimbursable: true,
-        createdAt: now.subtract(const Duration(days: 5)),
-        updatedAt: now.subtract(const Duration(days: 5)),
-      ),
-    ];
   }
 
   /// Add a new receipt to the list

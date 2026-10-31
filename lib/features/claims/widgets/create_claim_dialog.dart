@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../shared/models/claim_model.dart';
 import '../../../shared/models/claim_requests.dart';
 import '../../../shared/models/receipt_model.dart';
+import '../../../shared/utils/currency_utils.dart';
 import '../providers/claims_provider.dart';
 import '../../teams/providers/teams_provider.dart';
 import '../../receipts/providers/receipts_provider.dart';
-import '../../../shared/utils/currency_utils.dart';
 
 class CreateClaimDialog extends ConsumerStatefulWidget {
   final VoidCallback? onClaimCreated;
@@ -91,9 +92,12 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
     final currentTeamState = ref.read(currentTeamProvider);
     if (currentTeamState.currentTeam == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a team first'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: Text(
+            'Please select a team first',
+            style: TextStyle(color: Theme.of(context).colorScheme.onError),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
       return;
@@ -140,21 +144,29 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
       await ref.read(claimsProvider.notifier).createClaim(request);
 
       if (mounted) {
+        final colors = Theme.of(context).colorScheme;
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Claim created successfully'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: Text(
+              'Claim created successfully',
+              style: TextStyle(color: colors.onPrimary),
+            ),
+            backgroundColor: colors.primary,
           ),
         );
         widget.onClaimCreated?.call();
       }
     } catch (e) {
       if (mounted) {
+        final colors = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to create claim: $e'),
-            backgroundColor: Colors.red,
+            content: Text(
+              'Failed to create claim: $e',
+              style: TextStyle(color: colors.onError),
+            ),
+            backgroundColor: colors.error,
           ),
         );
       }
@@ -169,62 +181,70 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Dialog(
-      child: Container(
-        width: MediaQuery.of(context).size.width * 0.9,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 600, maxHeight: 700),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  topRight: Radius.circular(12),
-                ),
-              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 12, 14),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.add_circle,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      'Create New Claim',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'NEW CLAIM',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: colors.onSurfaceVariant,
+                            fontFamily: 'IBMPlexMono',
+                            fontSize: 10,
+                            letterSpacing: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'Create New Claim',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontFamily: 'InstrumentSerif',
+                            fontSize: 26,
+                            height: 1.05,
+                            color: colors.onSurface,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: _isLoading
+                        ? null
+                        : () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close),
+                    tooltip: 'Close',
                   ),
                 ],
               ),
             ),
-
-            // Form
-            Expanded(
+            Divider(height: 1, color: colors.outlineVariant),
+            Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title field
                       TextFormField(
                         controller: _titleController,
                         decoration: const InputDecoration(
                           labelText: 'Claim Title *',
-                          border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.title),
                         ),
                         validator: (value) {
@@ -237,24 +257,18 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
                           return null;
                         },
                       ),
-
                       const SizedBox(height: 16),
-
-                      // Description field
                       TextFormField(
                         controller: _descriptionController,
                         decoration: const InputDecoration(
                           labelText: 'Description',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.description),
+                          prefixIcon: Icon(Icons.description_outlined),
                         ),
                         maxLines: 3,
                       ),
-
                       const SizedBox(height: 16),
-
-                      // Amount and Currency row
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             flex: 2,
@@ -262,8 +276,7 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
                               controller: _amountController,
                               decoration: const InputDecoration(
                                 labelText: 'Amount *',
-                                border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.attach_money),
+                                prefixIcon: Icon(Icons.payments_outlined),
                               ),
                               keyboardType: TextInputType.number,
                               validator: (value) {
@@ -284,7 +297,6 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
                               initialValue: _currency,
                               decoration: const InputDecoration(
                                 labelText: 'Currency',
-                                border: OutlineInputBorder(),
                               ),
                               items:
                                   [
@@ -318,27 +330,19 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 16),
-
-                      // Category field
                       TextFormField(
                         controller: _categoryController,
                         decoration: const InputDecoration(
                           labelText: 'Category',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.category),
+                          prefixIcon: Icon(Icons.category_outlined),
                         ),
                       ),
-
                       const SizedBox(height: 16),
-
-                      // Priority dropdown
                       DropdownButtonFormField<ClaimPriority>(
                         initialValue: _priority,
                         decoration: const InputDecoration(
                           labelText: 'Priority',
-                          border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.priority_high),
                         ),
                         items: ClaimPriority.values
@@ -357,25 +361,16 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
                           }
                         },
                       ),
-
                       const SizedBox(height: 16),
-
-                      // Receipts section
                       _buildReceiptsSection(),
                     ],
                   ),
                 ),
               ),
             ),
-
-            // Actions
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: Theme.of(context).dividerColor),
-                ),
-              ),
+            Divider(height: 1, color: colors.outlineVariant),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
               child: Row(
                 children: [
                   Expanded(
@@ -388,13 +383,16 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: ElevatedButton(
+                    child: FilledButton(
                       onPressed: _isLoading ? null : _createClaim,
                       child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                          ? SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: colors.onPrimary,
+                              ),
                             )
                           : const Text('Create Claim'),
                     ),
@@ -409,6 +407,9 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
   }
 
   Widget _buildReceiptsSection() {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -416,9 +417,9 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
           children: [
             Text(
               'Attached Receipts',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const Spacer(),
             TextButton.icon(
@@ -431,47 +432,143 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
         const SizedBox(height: 8),
         if (_selectedReceipts.isEmpty)
           Container(
+            width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(color: Theme.of(context).dividerColor),
+              color: colors.surfaceContainerLow,
+              border: Border.all(color: colors.outlineVariant),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Center(
-              child: Text(
-                'No receipts attached\nTap "Add Receipts" to attach receipts to this claim',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
+            child: Text(
+              'No receipts attached\nTap "Add Receipts" to attach receipts to this claim',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colors.onSurfaceVariant,
               ),
             ),
           )
         else
-          ...(_selectedReceipts.map(
-            (receipt) => Card(
-              child: ListTile(
-                leading: const Icon(Icons.receipt),
-                title: Text(receipt.merchantName ?? 'Unknown Merchant'),
-                subtitle: Text(
-                  '${receipt.transactionDate?.day ?? ''}/${receipt.transactionDate?.month ?? ''}/${receipt.transactionDate?.year ?? ''} • ${receipt.currency ?? 'USD'} ${(receipt.totalAmount ?? 0.0).toStringAsFixed(2)}',
-                ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.remove_circle, color: Colors.red),
-                  onPressed: () {
-                    setState(() {
-                      _selectedReceipts.remove(receipt);
-                      _calculateTotalFromReceipts();
-                    });
-                  },
-                ),
-              ),
+          Container(
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              border: Border.all(color: colors.outlineVariant),
+              borderRadius: BorderRadius.circular(8),
             ),
-          )),
+            child: Column(
+              children: [
+                for (
+                  var index = 0;
+                  index < _selectedReceipts.length;
+                  index++
+                ) ...[
+                  if (index > 0)
+                    Divider(height: 1, color: colors.outlineVariant),
+                  _buildReceiptRow(_selectedReceipts[index]),
+                ],
+              ],
+            ),
+          ),
       ],
+    );
+  }
+
+  Widget _buildReceiptRow(ReceiptModel receipt) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final merchant = receipt.merchantName ?? 'Unknown Merchant';
+    final meta =
+        '${receipt.transactionDate?.day ?? ''}/${receipt.transactionDate?.month ?? ''}/${receipt.transactionDate?.year ?? ''} • ${receipt.currency ?? 'MYR'} ${(receipt.totalAmount ?? 0.0).toStringAsFixed(2)}';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 8, 4, 8),
+      child: Row(
+        children: [
+          _ReceiptMonogram(name: merchant),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  merchant,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  meta,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                    fontFamily: 'IBMPlexMono',
+                    fontSize: 10,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.remove_circle, color: colors.error, size: 20),
+            onPressed: () {
+              setState(() {
+                _selectedReceipts.remove(receipt);
+                _calculateTotalFromReceipts();
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReceiptMonogram extends StatelessWidget {
+  const _ReceiptMonogram({required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final trimmed = name.trim();
+    final words = trimmed.isEmpty
+        ? const <String>[]
+        : trimmed.split(RegExp(r'\s+'));
+    final initials = words.isEmpty
+        ? '?'
+        : words.length > 1
+        ? '${words[0].characters.first}${words[1].characters.first}'
+        : words[0].characters.take(2).toString();
+
+    return ExcludeSemantics(
+      child: Container(
+        width: 34,
+        height: 34,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: colors.surfaceContainerHighest,
+          border: Border.all(color: colors.outlineVariant),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          initials.toUpperCase(),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: colors.onSurfaceVariant,
+            fontFamily: 'IBMPlexMono',
+            fontSize: 10,
+          ),
+        ),
+      ),
     );
   }
 }
 
 // Simple receipt picker dialog (placeholder)
-class _ReceiptPickerDialog extends ConsumerWidget {
+class _ReceiptPickerDialog extends ConsumerStatefulWidget {
   final List<ReceiptModel> selectedReceipts;
   final Function(List<ReceiptModel>) onReceiptsSelected;
 
@@ -481,49 +578,125 @@ class _ReceiptPickerDialog extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ReceiptPickerDialog> createState() =>
+      _ReceiptPickerDialogState();
+}
+
+class _ReceiptPickerDialogState extends ConsumerState<_ReceiptPickerDialog> {
+  late List<ReceiptModel> _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = List<ReceiptModel>.from(widget.selectedReceipts);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final receiptsState = ref.watch(receiptsProvider);
 
-    return AlertDialog(
-      title: const Text('Select Receipts'),
-      content: SizedBox(
-        width: double.maxFinite,
-        height: 400,
-        child: receiptsState.receipts.isEmpty
-            ? const Center(child: Text('No receipts available'))
-            : ListView.builder(
-                itemCount: receiptsState.receipts.length,
-                itemBuilder: (context, index) {
-                  final receipt = receiptsState.receipts[index];
-                  final isSelected = selectedReceipts.contains(receipt);
-
-                  return CheckboxListTile(
-                    title: Text(receipt.merchantName ?? 'Unknown Merchant'),
-                    subtitle: Text(
-                      '${receipt.transactionDate?.day ?? ''}/${receipt.transactionDate?.month ?? ''}/${receipt.transactionDate?.year ?? ''} • ${receipt.currency ?? 'USD'} ${(receipt.totalAmount ?? 0.0).toStringAsFixed(2)}',
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520, maxHeight: 600),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 12, 14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Select Receipts',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontFamily: 'InstrumentSerif',
+                        fontSize: 26,
+                        height: 1.05,
+                        color: colors.onSurface,
+                      ),
                     ),
-                    value: isSelected,
-                    onChanged: (selected) {
-                      final newSelection = List<ReceiptModel>.from(
-                        selectedReceipts,
-                      );
-                      if (selected == true) {
-                        newSelection.add(receipt);
-                      } else {
-                        newSelection.remove(receipt);
-                      }
-                      onReceiptsSelected(newSelection);
-                    },
-                  );
-                },
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close),
+                    tooltip: 'Close',
+                  ),
+                ],
               ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Done'),
+            ),
+            Divider(height: 1, color: colors.outlineVariant),
+            Flexible(
+              child: receiptsState.receipts.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        'No receipts available',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      itemCount: receiptsState.receipts.length,
+                      separatorBuilder: (context, index) =>
+                          Divider(height: 1, color: colors.outlineVariant),
+                      itemBuilder: (context, index) {
+                        final receipt = receiptsState.receipts[index];
+                        final isSelected = _selected.contains(receipt);
+
+                        return CheckboxListTile(
+                          title: Text(
+                            receipt.merchantName ?? 'Unknown Merchant',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          subtitle: Text(
+                            '${receipt.transactionDate?.day ?? ''}/${receipt.transactionDate?.month ?? ''}/${receipt.transactionDate?.year ?? ''} • ${receipt.currency ?? 'MYR'} ${(receipt.totalAmount ?? 0.0).toStringAsFixed(2)}',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colors.onSurfaceVariant,
+                              fontFamily: 'IBMPlexMono',
+                              fontSize: 10,
+                            ),
+                          ),
+                          value: isSelected,
+                          onChanged: (selected) {
+                            final newSelection = List<ReceiptModel>.from(
+                              _selected,
+                            );
+                            if (selected == true) {
+                              newSelection.add(receipt);
+                            } else {
+                              newSelection.remove(receipt);
+                            }
+                            setState(() {
+                              _selected = newSelection;
+                            });
+                            widget.onReceiptsSelected(newSelection);
+                          },
+                        );
+                      },
+                    ),
+            ),
+            Divider(height: 1, color: colors.outlineVariant),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Done'),
+                ),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

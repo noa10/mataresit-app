@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import '../../../core/constants/app_constants.dart';
 import '../../../shared/utils/date_utils.dart';
 import '../models/search_result_model.dart';
 import 'search_source_filter.dart';
@@ -28,6 +27,7 @@ class SearchResultDetailSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final title = result.title.isEmpty ? result.sourceType : result.title;
 
     return SafeArea(
@@ -36,31 +36,33 @@ class SearchResultDetailSheet extends StatelessWidget {
           maxHeight: MediaQuery.of(context).size.height * 0.8,
         ),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            AppConstants.defaultPadding,
-            0,
-            AppConstants.defaultPadding,
-            AppConstants.defaultPadding,
-          ),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 title,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
+                style: theme.textTheme.displaySmall?.copyWith(
+                  fontFamily: 'InstrumentSerif',
+                  fontSize: 30,
+                  height: 1.05,
+                  color: colors.onSurface,
                 ),
               ),
-              const SizedBox(height: AppConstants.smallPadding),
+              const SizedBox(height: 8),
               Text(
-                searchSourceLabel(result.sourceType),
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w600,
+                searchSourceLabel(result.sourceType).toUpperCase(),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                  fontFamily: 'IBMPlexMono',
+                  fontSize: 10,
+                  letterSpacing: 1.4,
                 ),
               ),
-              const SizedBox(height: AppConstants.defaultPadding),
+              const SizedBox(height: 12),
+              Divider(height: 1, thickness: 1, color: colors.outlineVariant),
+              const SizedBox(height: 12),
               _detailRow(
                 context,
                 'search.detail.source'.tr(),
@@ -74,6 +76,7 @@ class SearchResultDetailSheet extends StatelessWidget {
                 'search.result.similarity'.tr(
                   namedArgs: {'percent': '${result.similarityPercent}'},
                 ),
+                mono: true,
               ),
               if (result.accessLevel != null)
                 _detailRow(
@@ -86,14 +89,16 @@ class SearchResultDetailSheet extends StatelessWidget {
                   context,
                   'search.result.created'.tr(),
                   AppDateUtils.formatDate(result.createdAt!),
+                  mono: true,
                 ),
               if (result.updatedAt != null)
                 _detailRow(
                   context,
                   'search.result.updated'.tr(),
                   AppDateUtils.formatDate(result.updatedAt!),
+                  mono: true,
                 ),
-              const SizedBox(height: AppConstants.defaultPadding),
+              const SizedBox(height: 4),
               Text(
                 result.description.isEmpty
                     ? 'search.result.noDescription'.tr()
@@ -108,14 +113,17 @@ class SearchResultDetailSheet extends StatelessWidget {
                 ),
               ),
               if (result.metadata.isNotEmpty) ...[
-                const SizedBox(height: AppConstants.defaultPadding),
+                const SizedBox(height: 20),
                 Text(
-                  'search.detail.metadata'.tr(),
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
+                  'search.detail.metadata'.tr().toUpperCase(),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                    fontFamily: 'IBMPlexMono',
+                    fontSize: 10,
+                    letterSpacing: 1.4,
                   ),
                 ),
-                const SizedBox(height: AppConstants.smallPadding),
+                const SizedBox(height: 8),
                 ...result.metadata.entries.map(
                   (entry) => _detailRow(
                     context,
@@ -125,13 +133,14 @@ class SearchResultDetailSheet extends StatelessWidget {
                             entry.value is bool
                         ? '${entry.value}'
                         : jsonEncode(entry.value),
+                    mono: entry.value is num,
                   ),
                 ),
               ],
-              const SizedBox(height: AppConstants.largePadding),
+              const SizedBox(height: 16),
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton(
+                child: OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   child: Text('search.detail.close'.tr()),
                 ),
@@ -143,11 +152,17 @@ class SearchResultDetailSheet extends StatelessWidget {
     );
   }
 
-  Widget _detailRow(BuildContext context, String label, String value) {
+  Widget _detailRow(
+    BuildContext context,
+    String label,
+    String value, {
+    bool mono = false,
+  }) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppConstants.smallPadding),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -156,11 +171,22 @@ class SearchResultDetailSheet extends StatelessWidget {
             child: Text(
               label,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+                color: colors.onSurfaceVariant,
               ),
             ),
           ),
-          Expanded(child: Text(value, style: theme.textTheme.bodyMedium)),
+          Expanded(
+            child: Text(
+              value,
+              style: mono
+                  ? theme.textTheme.bodyMedium?.copyWith(
+                      fontFamily: 'IBMPlexMono',
+                      fontSize: 13,
+                      color: colors.onSurface,
+                    )
+                  : theme.textTheme.bodyMedium,
+            ),
+          ),
         ],
       ),
     );

@@ -65,15 +65,28 @@ class _NotificationCenterState extends ConsumerState<NotificationCenter> {
                     .toList()
               : notificationState.notifications;
 
+          final screenSize = MediaQuery.sizeOf(context);
+          final panelWidth = (screenSize.width - 24).clamp(0.0, 380.0);
+          final panelTop = offset.dy + size.height + 8;
+          final rightInset = screenSize.width >= 24 ? 12.0 : 0.0;
+          final panelRight = (screenSize.width - offset.dx - size.width).clamp(
+            rightInset,
+            screenSize.width - panelWidth - rightInset,
+          );
+          final panelHeight = (screenSize.height - panelTop - 16).clamp(
+            0.0,
+            500.0,
+          );
+
           return Positioned(
-            top: offset.dy + size.height + 8,
-            right: MediaQuery.of(context).size.width - offset.dx - size.width,
+            top: panelTop,
+            right: panelRight,
             child: Material(
               elevation: 8,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
               child: Container(
-                width: 380,
-                height: 500,
+                width: panelWidth,
+                height: panelHeight,
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(12),

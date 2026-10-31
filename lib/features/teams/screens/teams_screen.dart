@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/constants/app_constants.dart';
+
 import '../../../shared/models/team_model.dart';
-import '../providers/teams_provider.dart';
-import '../providers/team_invitation_provider.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../providers/team_invitation_provider.dart';
+import '../providers/teams_provider.dart';
 import '../widgets/team_workspace_selector.dart';
 import 'team_members_screen.dart';
 
@@ -17,29 +17,31 @@ class TeamsScreen extends ConsumerWidget {
     final currentTeamState = ref.watch(currentTeamProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            const Text('Teams'),
-            const SizedBox(width: AppConstants.defaultPadding),
-            Expanded(
-              child: TeamWorkspaceSelector(
-                onCreateTeam: () => _showCreateTeamDialog(context, ref),
-              ),
-            ),
-          ],
-        ),
-        titleSpacing: AppConstants.defaultPadding,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => ref.read(teamsProvider.notifier).refresh(),
-          ),
-        ],
-      ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(teamsProvider.notifier).refresh(),
-        child: _buildBody(context, ref, teamsState, currentTeamState),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 760),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _PageHeader(
+                    onRefresh: () => ref.read(teamsProvider.notifier).refresh(),
+                  ),
+                  const SizedBox(height: 16),
+                  TeamWorkspaceSelector(
+                    onCreateTeam: () => _showCreateTeamDialog(context, ref),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildBody(context, ref, teamsState, currentTeamState),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -50,20 +52,22 @@ class TeamsScreen extends ConsumerWidget {
     TeamsState teamsState,
     CurrentTeamState currentTeamState,
   ) {
-    if (currentTeamState.currentTeam != null) {
-      // Show current team workspace view
+    final team = currentTeamState.currentTeam;
+    if (team != null) {
       return _buildTeamWorkspaceView(
         context,
         ref,
-        currentTeamState.currentTeam!,
+        team,
         currentTeamState.currentRole,
+        teamsState,
       );
-    } else {
-      // Show teams list or empty state
-      return teamsState.teams.isEmpty && !teamsState.isLoading
-          ? _buildEmptyState()
-          : _buildTeamsList(context, ref, teamsState);
     }
+
+    if (teamsState.teams.isEmpty && !teamsState.isLoading) {
+      return _buildEmptyState(context, ref);
+    }
+
+    return _buildTeamsList(context, ref, teamsState);
   }
 
   Widget _buildTeamWorkspaceView(
@@ -71,360 +75,243 @@ class TeamsScreen extends ConsumerWidget {
     WidgetRef ref,
     TeamModel team,
     TeamRole? role,
+    TeamsState teamsState,
   ) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppConstants.defaultPadding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Team header
-          _buildTeamHeader(context, team, role),
-          const SizedBox(height: AppConstants.defaultPadding * 2),
+    final currentUserId = ref.read(currentUserProvider)?.id ?? '';
+    final canManage = role == TeamRole.owner || role == TeamRole.admin;
 
-          // Team stats
-          _buildTeamStats(context, ref, team),
-          const SizedBox(height: AppConstants.defaultPadding * 2),
-
-          // Quick actions
-          _buildQuickActions(context, ref, team, role),
-          const SizedBox(height: AppConstants.defaultPadding * 2),
-
-          // All teams section
-          _buildAllTeamsSection(context, ref, ref.watch(teamsProvider)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTeamHeader(
-    BuildContext context,
-    TeamModel team,
-    TeamRole? role,
-  ) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 32,
-              backgroundColor: Theme.of(context).primaryColor,
-              child: Text(
-                team.name.substring(0, 1).toUpperCase(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24,
-                ),
-              ),
-            ),
-            const SizedBox(width: AppConstants.defaultPadding),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          team.name,
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      if (role != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _getRoleColor(role).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            _getRoleDisplayName(role),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: _getRoleColor(role),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  if (team.description != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        team.description!,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.groups_outlined, size: 64, color: Colors.grey),
-          SizedBox(height: AppConstants.defaultPadding),
-          Text(
-            'No teams yet',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-          SizedBox(height: AppConstants.smallPadding),
-          Text(
-            'Create or join a team to collaborate on receipts',
-            style: TextStyle(color: Colors.grey),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTeamStats(BuildContext context, WidgetRef ref, TeamModel team) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildStatCard(
-            context,
-            'Total Members',
-            '${team.memberCount}',
-            Icons.people,
-            Colors.blue,
-          ),
-        ),
-        const SizedBox(width: AppConstants.defaultPadding),
-        Expanded(
-          child: _buildStatCard(
-            context,
-            'Your Role',
-            _getRoleDisplayName(
-              team.getUserRole(ref.read(currentUserProvider)?.id ?? ''),
-            ),
-            Icons.admin_panel_settings,
-            _getRoleColor(
-              team.getUserRole(ref.read(currentUserProvider)?.id ?? ''),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatCard(
-    BuildContext context,
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: color, size: 20),
-                const SizedBox(width: AppConstants.smallPadding),
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppConstants.smallPadding),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActions(
-    BuildContext context,
-    WidgetRef ref,
-    TeamModel team,
-    TeamRole? role,
-  ) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Quick Actions',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: AppConstants.defaultPadding),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => TeamMembersScreen(team: team),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.people),
-                    label: const Text('Members'),
-                  ),
-                ),
-                const SizedBox(width: AppConstants.defaultPadding),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => TeamMembersScreen(
-                            team: team,
-                            initialTabIndex: 2, // Settings tab
-                          ),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.settings),
-                    label: const Text('Settings'),
-                  ),
-                ),
-              ],
-            ),
-            if (role == TeamRole.owner || role == TeamRole.admin) ...[
-              const SizedBox(height: AppConstants.defaultPadding),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    _showEnhancedInviteMemberDialog(context, ref, team);
-                  },
-                  icon: const Icon(Icons.person_add),
-                  label: const Text('Invite Members'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAllTeamsSection(
-    BuildContext context,
-    WidgetRef ref,
-    TeamsState state,
-  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'All Teams',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            TextButton.icon(
-              onPressed: () =>
-                  ref.read(currentTeamProvider.notifier).switchTeam(null),
-              icon: const Icon(Icons.view_list),
-              label: const Text('View All'),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppConstants.defaultPadding),
-        ...state.teams
-            .take(3)
-            .map(
-              (team) => Padding(
-                padding: const EdgeInsets.only(
-                  bottom: AppConstants.defaultPadding,
-                ),
-                child: _buildCompactTeamCard(context, ref, team),
-              ),
-            ),
+        _buildWorkspacePanel(context, team, role),
+        const SizedBox(height: 16),
+        _buildQuickActionsPanel(context, ref, team, canManage: canManage),
+        const SizedBox(height: 16),
+        _buildAllTeamsPanel(context, ref, teamsState, currentUserId),
       ],
     );
   }
 
-  Widget _buildCompactTeamCard(
+  Widget _buildWorkspacePanel(
     BuildContext context,
-    WidgetRef ref,
     TeamModel team,
+    TeamRole? role,
   ) {
-    final currentUser = ref.read(currentUserProvider);
-    final userRole = team.getUserRole(currentUser?.id ?? '');
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
-    return Card(
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Theme.of(context).primaryColor,
-          child: Text(
-            team.name.substring(0, 1).toUpperCase(),
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
+    return _Panel(
+      title: 'Workspace',
+      meta: _StatusPill(status: team.status),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _MonogramTile(initials: _initialsFor(team.name)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        team.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (team.description != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          team.description!,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (role != null) ...[
+                  const SizedBox(width: 8),
+                  _RolePill(role: role),
+                ],
+              ],
             ),
           ),
-        ),
-        title: Text(team.name),
-        subtitle: Text('${team.memberCount} members'),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: _getRoleColor(userRole).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                _getRoleDisplayName(userRole),
-                style: TextStyle(
-                  fontSize: 10,
-                  color: _getRoleColor(userRole),
-                  fontWeight: FontWeight.w500,
+          Divider(height: 1, thickness: 1, color: colors.outlineVariant),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _Metric(
+                    label: 'Total Members',
+                    value: '${team.memberCount}',
+                  ),
                 ),
-              ),
+                VerticalDivider(
+                  width: 1,
+                  thickness: 1,
+                  color: colors.outlineVariant,
+                ),
+                Expanded(
+                  child: _Metric(
+                    label: 'Your Role',
+                    value: role?.displayName ?? '—',
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            const Icon(Icons.arrow_forward_ios, size: 16),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionsPanel(
+    BuildContext context,
+    WidgetRef ref,
+    TeamModel team, {
+    required bool canManage,
+  }) {
+    return _Panel(
+      title: 'Quick Actions',
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => TeamMembersScreen(team: team),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.people_outline, size: 18),
+              label: const Text('Members'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => TeamMembersScreen(
+                      team: team,
+                      initialTabIndex: 2, // Settings tab
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.settings_outlined, size: 18),
+              label: const Text('Settings'),
+            ),
+            if (canManage)
+              FilledButton.icon(
+                onPressed: () {
+                  _showEnhancedInviteMemberDialog(context, ref, team);
+                },
+                icon: const Icon(Icons.person_add_alt_1, size: 18),
+                label: const Text('Invite Members'),
+              ),
           ],
         ),
-        onTap: () => ref.read(currentTeamProvider.notifier).switchTeam(team.id),
+      ),
+    );
+  }
+
+  Widget _buildAllTeamsPanel(
+    BuildContext context,
+    WidgetRef ref,
+    TeamsState state,
+    String currentUserId,
+  ) {
+    final colors = Theme.of(context).colorScheme;
+    final visibleTeams = state.teams.take(3).toList();
+
+    return _Panel(
+      title: 'All Teams',
+      action: TextButton(
+        onPressed: () =>
+            ref.read(currentTeamProvider.notifier).switchTeam(null),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          visualDensity: VisualDensity.compact,
+        ),
+        child: const Text('View All'),
+      ),
+      child: visibleTeams.isEmpty
+          ? const _PanelMessage('No teams to switch to yet.')
+          : Column(
+              children: [
+                for (var index = 0; index < visibleTeams.length; index++) ...[
+                  if (index > 0)
+                    Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: colors.outlineVariant,
+                    ),
+                  _CompactTeamRow(
+                    team: visibleTeams[index],
+                    role: visibleTeams[index].getUserRole(currentUserId),
+                    onTap: () => ref
+                        .read(currentTeamProvider.notifier)
+                        .switchTeam(visibleTeams[index].id),
+                  ),
+                ],
+              ],
+            ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border.all(color: colors.outlineVariant),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.groups_outlined, size: 32, color: colors.onSurfaceVariant),
+          const SizedBox(height: 12),
+          Text(
+            'No teams yet',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Create or join a team to collaborate on receipts',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colors.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: () => _showCreateTeamDialog(context, ref),
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Create Team'),
+          ),
+        ],
       ),
     );
   }
@@ -434,187 +321,97 @@ class TeamsScreen extends ConsumerWidget {
     WidgetRef ref,
     TeamsState state,
   ) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final currentUserId = ref.read(currentUserProvider)?.id ?? '';
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Error display
-        if (state.error != null)
+        if (state.error != null) ...[
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(AppConstants.defaultPadding),
-            color: Colors.red.withValues(alpha: 0.1),
-            child: Text(
-              state.error!,
-              style: const TextStyle(color: Colors.red),
-              textAlign: TextAlign.center,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colors.errorContainer,
+              borderRadius: BorderRadius.circular(10),
             ),
-          ),
-
-        // Teams list
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(AppConstants.defaultPadding),
-            itemCount: state.teams.length + (state.isLoading ? 1 : 0),
-            itemBuilder: (context, index) {
-              if (index >= state.teams.length) {
-                return const Padding(
-                  padding: EdgeInsets.all(AppConstants.defaultPadding),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-
-              final team = state.teams[index];
-              return _buildTeamCard(context, ref, team);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTeamCard(BuildContext context, WidgetRef ref, TeamModel team) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: AppConstants.defaultPadding),
-      child: Padding(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header row
-            Row(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Team avatar
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: Theme.of(context).primaryColor,
+                Icon(Icons.error_outline, size: 18, color: colors.error),
+                const SizedBox(width: 8),
+                Expanded(
                   child: Text(
-                    team.name.substring(0, 1).toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                    state.error!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors.onErrorContainer,
                     ),
                   ),
                 ),
-                const SizedBox(width: AppConstants.defaultPadding),
-
-                // Team info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        team.name,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      if (team.description != null)
-                        Text(
-                          team.description!,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: Colors.grey[600]),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        _Panel(
+          title: 'Your Teams',
+          meta: Text(
+            '${state.teams.length}',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: colors.onSurfaceVariant,
+              fontFamily: 'IBMPlexMono',
+              fontSize: 11,
+            ),
+          ),
+          child: state.teams.isEmpty
+              ? const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              : Column(
+                  children: [
+                    for (
+                      var index = 0;
+                      index < state.teams.length;
+                      index++
+                    ) ...[
+                      if (index > 0)
+                        Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: colors.outlineVariant,
                         ),
+                      _TeamRow(
+                        team: state.teams[index],
+                        role: state.teams[index].getUserRole(currentUserId),
+                        onTap: () => ref
+                            .read(currentTeamProvider.notifier)
+                            .switchTeam(state.teams[index].id),
+                      ),
                     ],
-                  ),
+                    if (state.isLoading) ...[
+                      Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: colors.outlineVariant,
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: Center(
+                          child: SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-
-                // Status badge
-                _buildStatusBadge(team.status),
-              ],
-            ),
-
-            const SizedBox(height: AppConstants.defaultPadding),
-
-            // Team details
-            Row(
-              children: [
-                Icon(Icons.people, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 4),
-                Text(
-                  '${team.memberCount} members',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-
-                const SizedBox(width: AppConstants.defaultPadding),
-
-                Icon(
-                  Icons.admin_panel_settings,
-                  size: 16,
-                  color: Colors.grey[600],
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  team.isOwner(ref.read(currentUserProvider)?.id ?? '')
-                      ? 'Owner'
-                      : 'Member',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ),
-          ],
         ),
-      ),
+      ],
     );
-  }
-
-  Widget _buildStatusBadge(TeamStatus status) {
-    Color color;
-    switch (status) {
-      case TeamStatus.active:
-        color = Colors.green;
-        break;
-      case TeamStatus.inactive:
-        color = Colors.orange;
-        break;
-      case TeamStatus.suspended:
-        color = Colors.red;
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppConstants.smallPadding,
-        vertical: 2,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        status.displayName,
-        style: TextStyle(
-          fontSize: 11,
-          color: color,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
-  }
-
-  Color _getRoleColor(TeamRole role) {
-    switch (role) {
-      case TeamRole.owner:
-        return Colors.purple;
-      case TeamRole.admin:
-        return Colors.blue;
-      case TeamRole.member:
-        return Colors.green;
-      case TeamRole.viewer:
-        return Colors.orange;
-    }
-  }
-
-  String _getRoleDisplayName(TeamRole role) {
-    switch (role) {
-      case TeamRole.owner:
-        return 'Owner';
-      case TeamRole.admin:
-        return 'Admin';
-      case TeamRole.member:
-        return 'Member';
-      case TeamRole.viewer:
-        return 'Viewer';
-    }
   }
 
   void _showCreateTeamDialog(BuildContext context, WidgetRef ref) {
@@ -636,7 +433,7 @@ class TeamsScreen extends ConsumerWidget {
               ),
               autofocus: true,
             ),
-            const SizedBox(height: AppConstants.defaultPadding),
+            const SizedBox(height: 12),
             TextField(
               controller: descriptionController,
               decoration: const InputDecoration(
@@ -652,7 +449,7 @@ class TeamsScreen extends ConsumerWidget {
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Cancel'),
           ),
-          TextButton(
+          FilledButton(
             onPressed: () async {
               if (nameController.text.trim().isNotEmpty) {
                 Navigator.of(context).pop();
@@ -677,7 +474,6 @@ class TeamsScreen extends ConsumerWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Team created successfully!'),
-                        backgroundColor: Colors.green,
                       ),
                     );
                   }
@@ -686,7 +482,6 @@ class TeamsScreen extends ConsumerWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Failed to create team: ${e.toString()}'),
-                        backgroundColor: Colors.red,
                       ),
                     );
                   }
@@ -724,40 +519,36 @@ class TeamsScreen extends ConsumerWidget {
               children: [
                 Text(
                   'Invite a new member to join ${team.name}',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
-                const SizedBox(height: AppConstants.defaultPadding),
+                const SizedBox(height: 16),
 
                 // Email Address
                 const Text(
                   'Email Address',
-                  style: TextStyle(fontWeight: FontWeight.w500),
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: AppConstants.smallPadding),
+                const SizedBox(height: 6),
                 TextField(
                   controller: emailController,
                   decoration: const InputDecoration(
                     hintText: 'Enter email address',
-                    border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.emailAddress,
                   enabled: !isLoading,
                 ),
-                const SizedBox(height: AppConstants.defaultPadding),
+                const SizedBox(height: 16),
 
                 // Role
                 const Text(
                   'Role',
-                  style: TextStyle(fontWeight: FontWeight.w500),
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: AppConstants.smallPadding),
+                const SizedBox(height: 6),
                 DropdownButtonFormField<TeamRole>(
                   initialValue: selectedRole,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                  ),
                   items: TeamRole.values.map((role) {
                     return DropdownMenuItem(
                       value: role,
@@ -772,36 +563,32 @@ class TeamsScreen extends ConsumerWidget {
                           }
                         },
                 ),
-                const SizedBox(height: AppConstants.defaultPadding),
+                const SizedBox(height: 16),
 
                 // Custom Message
                 const Text(
                   'Custom Message (Optional)',
-                  style: TextStyle(fontWeight: FontWeight.w500),
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: AppConstants.smallPadding),
+                const SizedBox(height: 6),
                 TextField(
                   controller: customMessageController,
                   decoration: const InputDecoration(
                     hintText: 'Add a personal message to the invitation...',
-                    border: OutlineInputBorder(),
                   ),
                   maxLines: 3,
                   enabled: !isLoading,
                 ),
-                const SizedBox(height: AppConstants.defaultPadding),
+                const SizedBox(height: 16),
 
                 // Expires In
                 const Text(
                   'Expires In (Days)',
-                  style: TextStyle(fontWeight: FontWeight.w500),
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: AppConstants.smallPadding),
+                const SizedBox(height: 6),
                 DropdownButtonFormField<int>(
                   initialValue: expiresInDays,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                  ),
                   items: [1, 3, 7, 14, 30].map((days) {
                     return DropdownMenuItem(
                       value: days,
@@ -816,7 +603,7 @@ class TeamsScreen extends ConsumerWidget {
                           }
                         },
                 ),
-                const SizedBox(height: AppConstants.defaultPadding),
+                const SizedBox(height: 12),
 
                 // Send Email Notification
                 SwitchListTile(
@@ -837,7 +624,7 @@ class TeamsScreen extends ConsumerWidget {
               onPressed: isLoading ? null : () => Navigator.of(context).pop(),
               child: const Text('Cancel'),
             ),
-            ElevatedButton.icon(
+            FilledButton.icon(
               onPressed: isLoading || emailController.text.trim().isEmpty
                   ? null
                   : () async {
@@ -881,12 +668,15 @@ class TeamsScreen extends ConsumerWidget {
                       }
                     },
               icon: isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
                     )
-                  : const Icon(Icons.send),
+                  : const Icon(Icons.send, size: 18),
               label: Text(isLoading ? 'Sending...' : 'Send Invitation'),
             ),
           ],
@@ -894,4 +684,458 @@ class TeamsScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+class _PageHeader extends StatelessWidget {
+  const _PageHeader({required this.onRefresh});
+
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'WORKSPACE',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                  fontFamily: 'IBMPlexMono',
+                  fontSize: 10,
+                  letterSpacing: 1.4,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Teams',
+                style: theme.textTheme.displaySmall?.copyWith(
+                  fontFamily: 'InstrumentSerif',
+                  fontSize: 32,
+                  height: 1.05,
+                  color: colors.onSurface,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Switch workspaces, manage members and invite your team.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          tooltip: 'Refresh teams',
+          onPressed: onRefresh,
+          icon: const Icon(Icons.refresh, size: 20),
+        ),
+      ],
+    );
+  }
+}
+
+class _Panel extends StatelessWidget {
+  const _Panel({
+    required this.title,
+    required this.child,
+    this.meta,
+    this.action,
+  });
+
+  final String title;
+  final Widget child;
+  final Widget? meta;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Container(
+      width: double.infinity,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border.all(color: colors.outlineVariant),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(16, 10, action == null ? 16 : 8, 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: colors.onSurface,
+                    ),
+                  ),
+                ),
+                if (meta != null) ...[const SizedBox(width: 8), meta!],
+                if (action != null) action!,
+              ],
+            ),
+          ),
+          Divider(height: 1, thickness: 1, color: colors.outlineVariant),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _PanelMessage extends StatelessWidget {
+  const _PanelMessage(this.message);
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Text(
+        message,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}
+
+class _Metric extends StatelessWidget {
+  const _Metric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colors.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontFamily: 'IBMPlexMono',
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompactTeamRow extends StatelessWidget {
+  const _CompactTeamRow({
+    required this.team,
+    required this.role,
+    required this.onTap,
+  });
+
+  final TeamModel team;
+  final TeamRole role;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 12, 10),
+          child: Row(
+            children: [
+              _MonogramTile(initials: _initialsFor(team.name)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      team.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${team.memberCount} members',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                        fontFamily: 'IBMPlexMono',
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              _RolePill(role: role),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.chevron_right,
+                size: 18,
+                color: colors.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TeamRow extends StatelessWidget {
+  const _TeamRow({required this.team, required this.role, required this.onTap});
+
+  final TeamModel team;
+  final TeamRole role;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _MonogramTile(initials: _initialsFor(team.name)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      team.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (team.description != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        team.description!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          '${team.memberCount} members',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colors.onSurfaceVariant,
+                            fontFamily: 'IBMPlexMono',
+                            fontSize: 11,
+                          ),
+                        ),
+                        _RolePill(role: role),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              _StatusPill(status: team.status),
+              const SizedBox(width: 2),
+              Icon(
+                Icons.chevron_right,
+                size: 18,
+                color: colors.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MonogramTile extends StatelessWidget {
+  const _MonogramTile({required this.initials});
+
+  final String initials;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      width: 34,
+      height: 34,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerHighest,
+        border: Border.all(color: colors.outlineVariant),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        initials,
+        style: TextStyle(
+          color: colors.onSurfaceVariant,
+          fontFamily: 'IBMPlexMono',
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _RolePill extends StatelessWidget {
+  const _RolePill({required this.role});
+
+  final TeamRole role;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final isPrivileged = role == TeamRole.owner || role == TeamRole.admin;
+
+    return _Pill(
+      label: role.displayName,
+      background: isPrivileged
+          ? colors.primaryContainer
+          : colors.surfaceContainerHighest,
+      foreground: isPrivileged
+          ? colors.onPrimaryContainer
+          : colors.onSurfaceVariant,
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.status});
+
+  final TeamStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    final background = switch (status) {
+      TeamStatus.active => colors.primaryContainer,
+      TeamStatus.inactive => colors.tertiaryContainer,
+      TeamStatus.suspended => colors.errorContainer,
+    };
+    final foreground = switch (status) {
+      TeamStatus.active => colors.onPrimaryContainer,
+      TeamStatus.inactive => colors.onTertiaryContainer,
+      TeamStatus.suspended => colors.onErrorContainer,
+    };
+
+    return _Pill(
+      label: status.displayName,
+      background: background,
+      foreground: foreground,
+    );
+  }
+}
+
+class _Pill extends StatelessWidget {
+  const _Pill({
+    required this.label,
+    required this.background,
+    required this.foreground,
+  });
+
+  final String label;
+  final Color background;
+  final Color foreground;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 5,
+            height: 5,
+            decoration: BoxDecoration(
+              color: foreground,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: foreground,
+              fontFamily: 'IBMPlexMono',
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _initialsFor(String value) {
+  final words = value
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((word) => word.isNotEmpty)
+      .toList();
+  if (words.isEmpty) return '?';
+  if (words.length == 1) return words.first[0].toUpperCase();
+  return '${words.first[0]}${words[1][0]}'.toUpperCase();
 }

@@ -17,51 +17,19 @@ class DateFilterBar extends ConsumerWidget {
     final receiptsState = ref.watch(receiptsProvider);
     final currentFilter = receiptsState.dateFilter;
 
-    return Container(
-      height: 60,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppConstants.defaultPadding,
-        vertical: 8,
-      ),
+    return SizedBox(
+      height: 48,
       child: Row(
         children: [
-          // Current filter indicator
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.date_range,
-                  size: 16,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  AppDateUtils.getFilterOptionDisplayName(currentFilter.option),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 12),
-
-          // Quick filter buttons and compact filters
+          // Quick filter chips, horizontally scrollable on narrow phones.
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.only(left: 16, right: 4),
               child: Row(
                 children: [
                   ..._buildQuickFilterButtons(context, ref, currentFilter),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
                   // Compact category filter
                   CompactCategoryFilterWidget(onFilterChanged: onFilterChanged),
                   const SizedBox(width: 8),
@@ -75,10 +43,13 @@ class DateFilterBar extends ConsumerWidget {
           ),
 
           // More options button
-          IconButton(
-            onPressed: () => _showFilterBottomSheet(context, ref),
-            icon: const Icon(Icons.tune),
-            tooltip: 'More filters',
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: IconButton(
+              onPressed: () => _showFilterBottomSheet(context, ref),
+              icon: const Icon(Icons.tune, size: 20),
+              tooltip: 'More filters',
+            ),
           ),
         ],
       ),
@@ -91,6 +62,7 @@ class DateFilterBar extends ConsumerWidget {
     DateRange currentFilter,
   ) {
     final quickFilters = [
+      DateFilterOption.all,
       DateFilterOption.today,
       DateFilterOption.yesterday,
       DateFilterOption.thisWeek,

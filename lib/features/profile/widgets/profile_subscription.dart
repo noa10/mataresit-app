@@ -99,7 +99,9 @@ class ProfileSubscription extends ConsumerWidget {
                           Icon(
                             Icons.receipt_long,
                             size: 16,
-                            color: Colors.grey[600],
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(width: AppConstants.smallPadding),
                           Text(
@@ -218,7 +220,11 @@ class ProfileSubscription extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: AppConstants.smallPadding),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: Colors.grey[600]),
+          Icon(
+            icon,
+            size: 16,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: AppConstants.smallPadding),
           Text(
             '$label: ',

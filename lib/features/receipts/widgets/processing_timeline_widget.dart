@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../shared/models/processing_log_model.dart';
+
 import '../../../core/constants/app_constants.dart';
+import '../../../shared/models/processing_log_model.dart';
 
 /// Enhanced processing timeline widget matching React app functionality
 class ProcessingTimelineWidget extends ConsumerStatefulWidget {
@@ -90,6 +91,7 @@ class _ProcessingTimelineWidgetState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final orderedStages = ProcessingStages.orderedStages;
     final currentStageIndex = widget.currentStage != null
         ? orderedStages.indexOf(widget.currentStage!)
@@ -98,9 +100,9 @@ class _ProcessingTimelineWidgetState
     return Container(
       padding: const EdgeInsets.all(AppConstants.defaultPadding),
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.2)),
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: colors.outlineVariant),
       ),
       child: Column(
         children: [
@@ -126,32 +128,52 @@ class _ProcessingTimelineWidgetState
   }
 
   Widget _buildHeader(ThemeData theme) {
+    final colors = theme.colorScheme;
     final remainingTime = _calculateRemainingTime();
 
     return Row(
       children: [
-        Icon(Icons.schedule, size: 16, color: theme.textTheme.bodySmall?.color),
+        Icon(Icons.schedule_outlined, size: 16, color: colors.onSurfaceVariant),
         const SizedBox(width: 8),
-        Text(
-          remainingTime != null ? '$remainingTime remaining' : 'Processing...',
-          style: theme.textTheme.bodySmall,
-        ),
-        const Spacer(),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: theme.primaryColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: theme.primaryColor.withValues(alpha: 0.3),
+        Expanded(
+          child: Text(
+            remainingTime != null
+                ? '$remainingTime remaining'
+                : 'Processing...',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colors.onSurfaceVariant,
             ),
           ),
-          child: Text(
-            'high confidence',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.primaryColor,
-              fontWeight: FontWeight.w500,
-            ),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+          decoration: BoxDecoration(
+            color: colors.primaryContainer,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 5,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: colors.onPrimaryContainer,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'high confidence',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: colors.onPrimaryContainer,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  height: 1,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -159,40 +181,50 @@ class _ProcessingTimelineWidgetState
   }
 
   Widget _buildProgressBar(ThemeData theme) {
+    final colors = theme.colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              widget.currentStage != null
-                  ? ProcessingStages.getStage(widget.currentStage!).name
-                  : 'Uploading',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+            Expanded(
+              child: Text(
+                widget.currentStage != null
+                    ? ProcessingStages.getStage(widget.currentStage!).name
+                    : 'Uploading',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: colors.onSurface,
+                ),
               ),
             ),
+            const SizedBox(width: 8),
             Text(
               '${widget.uploadProgress}%',
-              style: theme.textTheme.titleMedium?.copyWith(
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontFamily: 'IBMPlexMono',
                 fontWeight: FontWeight.w600,
-                color: theme.primaryColor,
+                color: colors.onSurface,
               ),
             ),
           ],
         ),
         const SizedBox(height: 8),
-        AnimatedBuilder(
-          animation: _progressAnimation,
-          builder: (context, child) {
-            return LinearProgressIndicator(
-              value: _progressAnimation.value * (widget.uploadProgress / 100.0),
-              backgroundColor: theme.dividerColor.withValues(alpha: 0.2),
-              valueColor: AlwaysStoppedAnimation<Color>(theme.primaryColor),
-              minHeight: 6,
-            );
-          },
+        ClipRRect(
+          borderRadius: BorderRadius.circular(3),
+          child: AnimatedBuilder(
+            animation: _progressAnimation,
+            builder: (context, child) {
+              return LinearProgressIndicator(
+                value:
+                    _progressAnimation.value * (widget.uploadProgress / 100.0),
+                backgroundColor: colors.outlineVariant,
+                valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
+                minHeight: 6,
+              );
+            },
+          ),
         ),
       ],
     );
@@ -240,15 +272,17 @@ class _ProcessingTimelineWidgetState
     bool isCompleted,
     bool isActive,
   ) {
+    final colors = theme.colorScheme;
+
     Color getColor() {
-      if (isCompleted) return Colors.green;
-      if (isActive) return theme.primaryColor;
-      return theme.dividerColor;
+      if (isCompleted) return colors.primary;
+      if (isActive) return colors.primary;
+      return colors.outlineVariant;
     }
 
     Widget getIcon() {
       if (isCompleted) {
-        return const Icon(Icons.check, size: 16, color: Colors.white);
+        return Icon(Icons.check, size: 16, color: colors.onPrimary);
       }
       if (isActive) {
         return AnimatedBuilder(
@@ -261,7 +295,7 @@ class _ProcessingTimelineWidgetState
                 height: 12,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  valueColor: AlwaysStoppedAnimation<Color>(colors.onPrimary),
                 ),
               ),
             );
@@ -269,17 +303,22 @@ class _ProcessingTimelineWidgetState
         );
       }
       return Container(
-        width: 8,
-        height: 8,
-        decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+        width: 6,
+        height: 6,
+        decoration: BoxDecoration(
+          color: colors.onSurfaceVariant,
+          shape: BoxShape.circle,
+        ),
       );
     }
+
+    final isPending = !isCompleted && !isActive;
 
     return Column(
       children: [
         Container(
-          width: 32,
-          height: 32,
+          width: 30,
+          height: 30,
           decoration: BoxDecoration(
             color: getColor(),
             shape: BoxShape.circle,
@@ -290,10 +329,12 @@ class _ProcessingTimelineWidgetState
         const SizedBox(height: 8),
         Text(
           stage.name.toUpperCase(),
-          style: theme.textTheme.bodySmall?.copyWith(
+          style: theme.textTheme.labelSmall?.copyWith(
+            fontFamily: 'IBMPlexMono',
             fontSize: 10,
+            letterSpacing: 0.4,
             fontWeight: FontWeight.w600,
-            color: getColor(),
+            color: isPending ? colors.onSurfaceVariant : colors.primary,
           ),
           textAlign: TextAlign.center,
           maxLines: 2,
@@ -304,40 +345,39 @@ class _ProcessingTimelineWidgetState
   }
 
   Widget _buildStageConnector(ThemeData theme, bool isActive) {
+    final colors = theme.colorScheme;
     return Container(
       height: 2,
       margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
-        color: isActive ? theme.primaryColor : theme.dividerColor,
+        color: isActive ? colors.primary : colors.outlineVariant,
         borderRadius: BorderRadius.circular(1),
       ),
     );
   }
 
   Widget _buildTimeEstimate(ThemeData theme) {
+    final colors = theme.colorScheme;
     final elapsed = DateTime.now().difference(widget.startTime!);
     final elapsedSeconds = elapsed.inSeconds;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: colors.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.access_time,
-            size: 14,
-            color: theme.textTheme.bodySmall?.color,
-          ),
+          Icon(Icons.access_time, size: 14, color: colors.onSurfaceVariant),
           const SizedBox(width: 6),
           Text(
             'Live • ${elapsedSeconds}s',
-            style: theme.textTheme.bodySmall?.copyWith(
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontFamily: 'IBMPlexMono',
               fontWeight: FontWeight.w500,
+              color: colors.onSurfaceVariant,
             ),
           ),
         ],

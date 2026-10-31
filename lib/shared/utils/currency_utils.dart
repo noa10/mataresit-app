@@ -161,6 +161,12 @@ class CurrencyUtils {
   /// [fallbackCurrency] - Fallback currency if the provided one fails
   ///
   /// Returns formatted currency string
+  /// ISO-code symbols such as `MYR` read better with a space before the
+  /// amount, matching the web ledger's `MYR 24.70`.
+  static String _symbolText(CurrencyConfig config) {
+    return config.symbol == config.code ? '${config.symbol} ' : config.symbol;
+  }
+
   static String formatCurrencySafe(
     double? amount,
     String? currencyCode, {
@@ -174,7 +180,7 @@ class CurrencyUtils {
       final config = CurrencyConfigs.getConfig(normalizedCurrency);
       final formatter = NumberFormat.currency(
         locale: locale,
-        symbol: config.symbol,
+        symbol: _symbolText(config),
         decimalDigits: config.decimals,
       );
       return formatter.format(safeAmount);
@@ -184,7 +190,7 @@ class CurrencyUtils {
         final fallbackConfig = CurrencyConfigs.getConfig(fallbackCurrency);
         final fallbackFormatter = NumberFormat.currency(
           locale: locale,
-          symbol: fallbackConfig.symbol,
+          symbol: _symbolText(fallbackConfig),
           decimalDigits: fallbackConfig.decimals,
         );
         return fallbackFormatter.format(safeAmount);
@@ -245,10 +251,11 @@ class CurrencyUtils {
     String result = formattedAmount;
 
     if (showSymbol && config.symbol.isNotEmpty) {
+      final symbol = _symbolText(config);
       if (config.position == CurrencyPosition.before) {
-        result = '${config.symbol}$result';
+        result = '$symbol$result';
       } else {
-        result = '$result ${config.symbol}';
+        result = '$result $symbol';
       }
     }
 

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
 import '../../../shared/models/claim_model.dart';
 import '../../../shared/utils/currency_utils.dart';
-import '../../../shared/utils/date_utils.dart';
 
+/// A single claim in the claims ledger.
 class ClaimListItem extends StatelessWidget {
   final ClaimModel claim;
   final VoidCallback? onTap;
@@ -11,6 +13,8 @@ class ClaimListItem extends StatelessWidget {
   final Function(ClaimModel)? onApprove;
   final Function(ClaimModel)? onReject;
   final Function(ClaimModel)? onDelete;
+  final bool isFirst;
+  final bool isLast;
 
   const ClaimListItem({
     super.key,
@@ -21,147 +25,152 @@ class ClaimListItem extends StatelessWidget {
     this.onApprove,
     this.onReject,
     this.onDelete,
+    this.isFirst = false,
+    this.isLast = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final radius = BorderRadius.vertical(
+      top: isFirst ? const Radius.circular(9) : Radius.zero,
+      bottom: isLast ? const Radius.circular(9) : Radius.zero,
+    );
+
+    return Material(
+      color: colors.surface,
+      borderRadius: radius,
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: radius,
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header row with title and status
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
+              _MonogramTile(name: claim.claimantName ?? claim.title),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          claim.title,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (claim.category != null) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            claim.category!,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                claim.title,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: colors.onSurface,
+                                  fontWeight: FontWeight.w600,
                                 ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (claim.category != null) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  claim.category!,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colors.onSurfaceVariant,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ],
                           ),
-                        ],
+                        ),
+                        const SizedBox(width: 8),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 132),
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerRight,
+                              child: Text(
+                                CurrencyUtils.formatCurrency(
+                                  claim.amount,
+                                  claim.currency,
+                                ),
+                                textAlign: TextAlign.end,
+                                style: _dataStyle(
+                                  theme,
+                                  colors,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  _buildStatusBadge(context),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // Amount and priority row
-              Row(
-                children: [
-                  Icon(
-                    Icons.attach_money,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    CurrencyUtils.formatCurrency(claim.amount, claim.currency),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        _ClaimStatusPill(status: claim.status),
+                        Text(
+                          claim.priorityDisplayName.toUpperCase(),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: colors.onSurfaceVariant,
+                            fontFamily: 'IBMPlexMono',
+                            fontSize: 10,
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                        Text(
+                          DateFormat(
+                            'dd MMM',
+                          ).format(claim.createdAt).toUpperCase(),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: colors.onSurfaceVariant,
+                            fontFamily: 'IBMPlexMono',
+                            fontSize: 10,
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const Spacer(),
-                  _buildPriorityBadge(context),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // Claimant and date info
-              Row(
-                children: [
-                  Icon(
-                    Icons.person_outline,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      claim.claimantName ?? 'Unknown',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    if (claim.description != null &&
+                        claim.description!.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        claim.description!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colors.onSurfaceVariant,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ),
-                  Icon(
-                    Icons.schedule,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    AppDateUtils.formatRelativeDate(claim.createdAt),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-
-              // Description if available
-              if (claim.description != null &&
-                  claim.description!.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  claim.description!,
-                  style: Theme.of(context).textTheme.bodySmall,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-
-              // Submitted date for non-draft claims
-              if (claim.submittedAt != null) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.send,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Submitted ${AppDateUtils.formatRelativeDate(claim.submittedAt!)}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ],
+                    if (claim.submittedAt != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Submitted ${DateFormat('dd MMM yyyy').format(claim.submittedAt!).toUpperCase()}',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: colors.onSurfaceVariant,
+                          fontFamily: 'IBMPlexMono',
+                          fontSize: 10,
+                          letterSpacing: 0.4,
+                        ),
                       ),
-                    ),
+                    ],
+                    if (_hasActions) ...[
+                      const SizedBox(height: 8),
+                      _buildActionButtons(context),
+                    ],
                   ],
                 ),
-              ],
-
-              // Action buttons
-              const SizedBox(height: 12),
-              _buildActionButtons(context),
+              ),
             ],
           ),
         ),
@@ -169,136 +178,36 @@ class ClaimListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBadge(BuildContext context) {
-    Color backgroundColor;
-    Color textColor;
-    IconData icon;
+  bool get _hasActions =>
+      (claim.canEdit && onEdit != null) ||
+      (claim.canSubmit && onSubmit != null) ||
+      (claim.canApprove && onApprove != null) ||
+      (claim.canReject && onReject != null) ||
+      (claim.status == ClaimStatus.draft && onDelete != null);
 
-    switch (claim.status) {
-      case ClaimStatus.draft:
-        backgroundColor = Colors.grey.shade100;
-        textColor = Colors.grey.shade700;
-        icon = Icons.edit;
-        break;
-      case ClaimStatus.submitted:
-        backgroundColor = Colors.blue.shade100;
-        textColor = Colors.blue.shade700;
-        icon = Icons.send;
-        break;
-      case ClaimStatus.pending:
-        backgroundColor = Colors.orange.shade100;
-        textColor = Colors.orange.shade700;
-        icon = Icons.hourglass_empty;
-        break;
-      case ClaimStatus.underReview:
-        backgroundColor = Colors.blue.shade100;
-        textColor = Colors.blue.shade700;
-        icon = Icons.visibility;
-        break;
-      case ClaimStatus.approved:
-        backgroundColor = Colors.green.shade100;
-        textColor = Colors.green.shade700;
-        icon = Icons.check_circle;
-        break;
-      case ClaimStatus.rejected:
-        backgroundColor = Colors.red.shade100;
-        textColor = Colors.red.shade700;
-        icon = Icons.cancel;
-        break;
-      case ClaimStatus.paid:
-        backgroundColor = Colors.purple.shade100;
-        textColor = Colors.purple.shade700;
-        icon = Icons.payment;
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: textColor),
-          const SizedBox(width: 4),
-          Text(
-            claim.statusDisplayName,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: textColor,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPriorityBadge(BuildContext context) {
-    Color color;
-    IconData icon;
-
-    switch (claim.priority) {
-      case ClaimPriority.low:
-        color = Colors.green;
-        icon = Icons.keyboard_arrow_down;
-        break;
-      case ClaimPriority.medium:
-        color = Colors.orange;
-        icon = Icons.remove;
-        break;
-      case ClaimPriority.high:
-        color = Colors.red;
-        icon = Icons.keyboard_arrow_up;
-        break;
-      case ClaimPriority.urgent:
-        color = Colors.red.shade700;
-        icon = Icons.priority_high;
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 2),
-          Text(
-            claim.priorityDisplayName,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  TextStyle? _dataStyle(
+    ThemeData theme,
+    ColorScheme colors, {
+    FontWeight? fontWeight,
+  }) => theme.textTheme.bodySmall?.copyWith(
+    color: colors.onSurface,
+    fontFamily: 'IBMPlexMono',
+    fontWeight: fontWeight ?? FontWeight.w500,
+  );
 
   Widget _buildActionButtons(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     final actions = <Widget>[];
 
     // Edit button (only for draft claims)
     if (claim.canEdit && onEdit != null) {
       actions.add(
-        TextButton.icon(
+        _actionButton(
+          context,
+          icon: Icons.edit,
+          label: 'Edit',
           onPressed: () => onEdit!(claim),
-          icon: const Icon(Icons.edit, size: 16),
-          label: const Text('Edit'),
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
+          color: colors.onSurfaceVariant,
         ),
       );
     }
@@ -306,15 +215,12 @@ class ClaimListItem extends StatelessWidget {
     // Submit button (only for draft claims that can be submitted)
     if (claim.canSubmit && onSubmit != null) {
       actions.add(
-        TextButton.icon(
+        _actionButton(
+          context,
+          icon: Icons.send,
+          label: 'Submit',
           onPressed: () => onSubmit!(claim),
-          icon: const Icon(Icons.send, size: 16),
-          label: const Text('Submit'),
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
+          color: colors.primary,
         ),
       );
     }
@@ -322,16 +228,12 @@ class ClaimListItem extends StatelessWidget {
     // Approve button (for pending/under review claims)
     if (claim.canApprove && onApprove != null) {
       actions.add(
-        TextButton.icon(
+        _actionButton(
+          context,
+          icon: Icons.check,
+          label: 'Approve',
           onPressed: () => onApprove!(claim),
-          icon: const Icon(Icons.check, size: 16),
-          label: const Text('Approve'),
-          style: TextButton.styleFrom(
-            foregroundColor: Colors.green,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
+          color: colors.primary,
         ),
       );
     }
@@ -339,16 +241,12 @@ class ClaimListItem extends StatelessWidget {
     // Reject button (for pending/under review claims)
     if (claim.canReject && onReject != null) {
       actions.add(
-        TextButton.icon(
+        _actionButton(
+          context,
+          icon: Icons.close,
+          label: 'Reject',
           onPressed: () => onReject!(claim),
-          icon: const Icon(Icons.close, size: 16),
-          label: const Text('Reject'),
-          style: TextButton.styleFrom(
-            foregroundColor: Colors.red,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
+          color: colors.error,
         ),
       );
     }
@@ -356,24 +254,153 @@ class ClaimListItem extends StatelessWidget {
     // Delete button (only for draft claims)
     if (claim.status == ClaimStatus.draft && onDelete != null) {
       actions.add(
-        TextButton.icon(
+        _actionButton(
+          context,
+          icon: Icons.delete_outline,
+          label: 'Delete',
           onPressed: () => onDelete!(claim),
-          icon: const Icon(Icons.delete, size: 16),
-          label: const Text('Delete'),
-          style: TextButton.styleFrom(
-            foregroundColor: Colors.red,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
+          color: colors.error,
         ),
       );
     }
 
-    if (actions.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    return Wrap(spacing: 4, runSpacing: 2, children: actions);
+  }
 
-    return Wrap(spacing: 8, children: actions);
+  Widget _actionButton(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    required Color color,
+  }) {
+    return TextButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 16),
+      label: Text(label),
+      style: TextButton.styleFrom(
+        foregroundColor: color,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        textStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+}
+
+class _MonogramTile extends StatelessWidget {
+  const _MonogramTile({required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final trimmed = name.trim();
+    final words = trimmed.isEmpty
+        ? const <String>[]
+        : trimmed.split(RegExp(r'\s+'));
+    final initials = words.isEmpty
+        ? '?'
+        : words.length > 1
+        ? '${words[0].characters.first}${words[1].characters.first}'
+        : words[0].characters.take(2).toString();
+
+    return ExcludeSemantics(
+      child: Container(
+        width: 34,
+        height: 34,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: colors.surfaceContainerHighest,
+          border: Border.all(color: colors.outlineVariant),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          initials.toUpperCase(),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: colors.onSurfaceVariant,
+            fontFamily: 'IBMPlexMono',
+            fontSize: 10,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ClaimStatusPill extends StatelessWidget {
+  const _ClaimStatusPill({required this.status});
+
+  final ClaimStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final (background, foreground) = switch (status) {
+      ClaimStatus.approved ||
+      ClaimStatus.paid => (colors.primaryContainer, colors.onPrimaryContainer),
+      ClaimStatus.submitted || ClaimStatus.pending || ClaimStatus.underReview =>
+        (colors.tertiaryContainer, colors.onTertiaryContainer),
+      ClaimStatus.rejected => (colors.errorContainer, colors.onErrorContainer),
+      ClaimStatus.draft => (
+        colors.surfaceContainerHighest,
+        colors.onSurfaceVariant,
+      ),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 5,
+            height: 5,
+            decoration: BoxDecoration(
+              color: foreground,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            statusLabel(status),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: foreground,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              height: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String statusLabel(ClaimStatus status) {
+    switch (status) {
+      case ClaimStatus.draft:
+        return 'Draft';
+      case ClaimStatus.submitted:
+        return 'Submitted';
+      case ClaimStatus.pending:
+        return 'Pending Review';
+      case ClaimStatus.underReview:
+        return 'Under Review';
+      case ClaimStatus.approved:
+        return 'Approved';
+      case ClaimStatus.rejected:
+        return 'Rejected';
+      case ClaimStatus.paid:
+        return 'Paid';
+    }
   }
 }

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/constants/app_constants.dart';
+
+import '../../../shared/models/team_invitation_model.dart';
 import '../../../shared/models/team_model.dart';
 import '../../../shared/models/user_model.dart';
-import '../../../shared/models/team_invitation_model.dart';
 import '../../auth/providers/auth_provider.dart';
-import '../providers/team_members_provider.dart';
 import '../providers/team_invitation_provider.dart';
+import '../providers/team_members_provider.dart';
 
 class TeamMembersScreen extends ConsumerStatefulWidget {
   final TeamModel team;
@@ -47,56 +47,96 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final currentUser = ref.watch(currentUserProvider);
     final userRole = widget.team.getUserRole(currentUser?.id ?? '');
+    final canManage = userRole == TeamRole.owner || userRole == TeamRole.admin;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.team.name} Members'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'TEAM WORKSPACE',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: colors.onSurfaceVariant,
+                fontFamily: 'IBMPlexMono',
+                fontSize: 10,
+                letterSpacing: 1.4,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '${widget.team.name} Members',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontFamily: 'InstrumentSerif',
+                fontSize: 24,
+                height: 1.05,
+                color: colors.onSurface,
+              ),
+            ),
+          ],
+        ),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: 'Members', icon: Icon(Icons.people)),
-            Tab(text: 'Invitations', icon: Icon(Icons.mail)),
-            Tab(text: 'Settings', icon: Icon(Icons.settings)),
+            Tab(text: 'Members'),
+            Tab(text: 'Invitations'),
+            Tab(text: 'Settings'),
           ],
         ),
         actions: [
-          if (userRole == TeamRole.owner || userRole == TeamRole.admin)
+          if (canManage)
             IconButton(
-              icon: const Icon(Icons.person_add),
+              tooltip: 'Invite member',
+              icon: const Icon(Icons.person_add_alt_1, size: 20),
               onPressed: () => _showInviteMemberDialog(context),
             ),
         ],
       ),
       body: Column(
         children: [
-          // Search bar
           Padding(
-            padding: const EdgeInsets.all(AppConstants.defaultPadding),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search members by name, email, or role...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'SEARCH',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                    fontFamily: 'IBMPlexMono',
+                    fontSize: 10,
+                    letterSpacing: 1.4,
+                  ),
                 ),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
-                        },
-                      )
-                    : null,
-              ),
-              onChanged: (value) => setState(() => _searchQuery = value),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search members by name, email, or role...',
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            tooltip: 'Clear search',
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
+                        : null,
+                  ),
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                ),
+              ],
             ),
           ),
-
-          // Tab content
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -120,63 +160,23 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
         );
 
         return membersAsync.when(
-          loading: () => const Center(
-            child: Padding(
-              padding: EdgeInsets.all(AppConstants.defaultPadding),
-              child: CircularProgressIndicator(),
-            ),
-          ),
-          error: (error, stack) => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppConstants.defaultPadding),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  const SizedBox(height: AppConstants.defaultPadding),
-                  Text(
-                    'Failed to load team members',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: AppConstants.smallPadding),
-                  Text(
-                    error.toString(),
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppConstants.defaultPadding),
-                  ElevatedButton(
-                    onPressed: () => ref.refresh(
-                      teamMembersForTeamProvider(widget.team.memberIds),
-                    ),
-                    child: const Text('Retry'),
-                  ),
-                ],
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => _StatePanel(
+            icon: Icons.error_outline,
+            title: 'Failed to load team members',
+            message: error.toString(),
+            action: OutlinedButton(
+              onPressed: () => ref.refresh(
+                teamMembersForTeamProvider(widget.team.memberIds),
               ),
+              child: const Text('Retry'),
             ),
           ),
           data: (members) {
             if (members.isEmpty) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(AppConstants.defaultPadding),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.people_outline, size: 64, color: Colors.grey),
-                      SizedBox(height: AppConstants.defaultPadding),
-                      Text(
-                        'No team members found',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              return const _StatePanel(
+                icon: Icons.people_outline,
+                title: 'No team members found',
               );
             }
 
@@ -188,9 +188,10 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
               final name = '${member.firstName ?? ''} ${member.lastName ?? ''}'
                   .toLowerCase();
               final email = (member.email ?? '').toLowerCase();
-              final role = _getRoleDisplayName(
-                widget.team.memberRoles[member.id] ?? TeamRole.member,
-              ).toLowerCase();
+              final role =
+                  (widget.team.memberRoles[member.id] ?? TeamRole.member)
+                      .displayName
+                      .toLowerCase();
 
               return name.contains(query) ||
                   email.contains(query) ||
@@ -198,46 +199,82 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
             }).toList();
 
             if (filteredMembers.isEmpty && _searchQuery.isNotEmpty) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(AppConstants.defaultPadding),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.search_off, size: 64, color: Colors.grey),
-                      SizedBox(height: AppConstants.defaultPadding),
-                      Text(
-                        'No members match your search',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              return const _StatePanel(
+                icon: Icons.search_off,
+                title: 'No members match your search',
               );
             }
 
-            return ListView.builder(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppConstants.defaultPadding,
-              ),
-              itemCount: filteredMembers.length,
-              itemBuilder: (context, index) {
-                final member = filteredMembers[index];
-                final memberRole =
-                    widget.team.memberRoles[member.id] ?? TeamRole.member;
-                return _buildMemberCard(member, memberRole);
-              },
-            );
+            return _buildMembersList(filteredMembers);
           },
         );
       },
     );
   }
 
-  Widget _buildMemberCard(UserModel member, TeamRole role) {
+  Widget _buildMembersList(List<UserModel> members) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border.all(color: colors.outlineVariant),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Members',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${members.length}',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                    fontFamily: 'IBMPlexMono',
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1, thickness: 1, color: colors.outlineVariant),
+          Expanded(
+            child: ListView.separated(
+              padding: EdgeInsets.zero,
+              itemCount: members.length,
+              separatorBuilder: (context, index) => Divider(
+                height: 1,
+                thickness: 1,
+                color: colors.outlineVariant,
+              ),
+              itemBuilder: (context, index) {
+                final member = members[index];
+                final memberRole =
+                    widget.team.memberRoles[member.id] ?? TeamRole.member;
+                return _buildMemberRow(member, memberRole);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMemberRow(UserModel member, TeamRole role) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final currentUser = ref.watch(currentUserProvider);
     final isCurrentUser = currentUser?.id == member.id;
     final currentUserRole = widget.team.getUserRole(currentUser?.id ?? '');
@@ -245,124 +282,105 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
         (currentUserRole == TeamRole.owner ||
             currentUserRole == TeamRole.admin) &&
         !isCurrentUser;
+    final displayName = isCurrentUser ? 'You' : _getDisplayName(member);
+    // Members without a name fall back to their email, so don't repeat it.
+    final showEmail =
+        !isCurrentUser &&
+        member.email != null &&
+        member.email!.toLowerCase() != displayName.toLowerCase();
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: AppConstants.defaultPadding),
-      child: Padding(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Row(
-          children: [
-            // Avatar
-            CircleAvatar(
-              radius: 24,
-              backgroundColor: Theme.of(context).primaryColor,
-              backgroundImage: member.avatarUrl != null
-                  ? NetworkImage(member.avatarUrl!)
-                  : null,
-              child: member.avatarUrl == null
-                  ? Text(
-                      _getInitials(member),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: AppConstants.defaultPadding),
-
-            // Member info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          isCurrentUser ? 'You' : _getDisplayName(member),
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      if (isCurrentUser)
-                        const Padding(
-                          padding: EdgeInsets.only(left: 8),
-                          child: Icon(
-                            Icons.person,
-                            size: 16,
-                            color: Colors.blue,
-                          ),
-                        ),
-                    ],
-                  ),
-                  if (!isCurrentUser && member.email != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+      child: Row(
+        children: [
+          _MemberAvatar(member: member, initials: _getInitials(member)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
                       child: Text(
-                        member.email!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
+                        displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getRoleColor(role).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      _getRoleDisplayName(role),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: _getRoleColor(role),
-                        fontWeight: FontWeight.w600,
+                    if (isCurrentUser)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8),
+                        child: Icon(
+                          Icons.person_outline,
+                          size: 16,
+                          color: colors.primary,
+                        ),
                       ),
+                  ],
+                ),
+                if (showEmail) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    member.email!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
+                      fontFamily: 'IBMPlexMono',
+                      fontSize: 11,
                     ),
                   ),
                 ],
-              ),
+                const SizedBox(height: 6),
+                _RolePill(role: role),
+              ],
             ),
-
-            // Actions
-            if (canManage)
-              PopupMenuButton<String>(
-                onSelected: (action) =>
-                    _handleMemberAction(action, member.id, role),
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'change_role',
+          ),
+          if (canManage)
+            PopupMenuButton<String>(
+              icon: Icon(
+                Icons.more_horiz,
+                size: 20,
+                color: colors.onSurfaceVariant,
+              ),
+              onSelected: (action) =>
+                  _handleMemberAction(action, member.id, role),
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'change_role',
+                  child: Row(
+                    children: [
+                      Icon(Icons.admin_panel_settings_outlined, size: 18),
+                      SizedBox(width: 8),
+                      Text('Change Role'),
+                    ],
+                  ),
+                ),
+                if (role != TeamRole.owner)
+                  PopupMenuItem(
+                    value: 'remove',
                     child: Row(
                       children: [
-                        Icon(Icons.admin_panel_settings),
-                        SizedBox(width: 8),
-                        Text('Change Role'),
+                        Icon(
+                          Icons.remove_circle_outline,
+                          size: 18,
+                          color: colors.error,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Remove Member',
+                          style: TextStyle(color: colors.error),
+                        ),
                       ],
                     ),
                   ),
-                  if (role != TeamRole.owner)
-                    const PopupMenuItem(
-                      value: 'remove',
-                      child: Row(
-                        children: [
-                          Icon(Icons.remove_circle, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text(
-                            'Remove Member',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-          ],
-        ),
+              ],
+            ),
+        ],
       ),
     );
   }
@@ -375,43 +393,18 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
         );
 
         if (invitationState.isLoading) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(AppConstants.defaultPadding),
-              child: CircularProgressIndicator(),
-            ),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (invitationState.error != null) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppConstants.defaultPadding),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  const SizedBox(height: AppConstants.defaultPadding),
-                  Text(
-                    'Failed to load invitations',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: AppConstants.smallPadding),
-                  Text(
-                    invitationState.error!,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppConstants.defaultPadding),
-                  ElevatedButton(
-                    onPressed: () =>
-                        ref.refresh(teamInvitationProvider(widget.team.id)),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
+          return _StatePanel(
+            icon: Icons.error_outline,
+            title: 'Failed to load invitations',
+            message: invitationState.error!,
+            action: OutlinedButton(
+              onPressed: () =>
+                  ref.refresh(teamInvitationProvider(widget.team.id)),
+              child: const Text('Retry'),
             ),
           );
         }
@@ -419,41 +412,179 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
         final invitations = invitationState.invitations;
 
         if (invitations.isEmpty) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(AppConstants.defaultPadding),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.mail_outline, size: 64, color: Colors.grey),
-                  SizedBox(height: AppConstants.defaultPadding),
-                  Text(
-                    'No pending invitations',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
-                  SizedBox(height: AppConstants.smallPadding),
-                  Text(
-                    'Invite new members to see pending invitations here',
-                    style: TextStyle(color: Colors.grey),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
+          return const _StatePanel(
+            icon: Icons.mail_outline,
+            title: 'No pending invitations',
+            message: 'Invite new members to see pending invitations here',
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppConstants.defaultPadding,
-          ),
-          itemCount: invitations.length,
-          itemBuilder: (context, index) {
-            final invitation = invitations[index];
-            return _buildInvitationCard(invitation);
-          },
-        );
+        return _buildInvitationsList(invitations);
       },
+    );
+  }
+
+  Widget _buildInvitationsList(List<TeamInvitationModel> invitations) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border.all(color: colors.outlineVariant),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Invitations',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${invitations.length}',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                    fontFamily: 'IBMPlexMono',
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1, thickness: 1, color: colors.outlineVariant),
+          Expanded(
+            child: ListView.separated(
+              padding: EdgeInsets.zero,
+              itemCount: invitations.length,
+              separatorBuilder: (context, index) => Divider(
+                height: 1,
+                thickness: 1,
+                color: colors.outlineVariant,
+              ),
+              itemBuilder: (context, index) =>
+                  _buildInvitationRow(invitations[index]),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInvitationRow(TeamInvitationModel invitation) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  invitation.email,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    _RolePill(role: invitation.role),
+                    _InvitationStatusPill(invitation: invitation),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Sent ${_formatTimeAgo(invitation.createdAt)}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                    fontFamily: 'IBMPlexMono',
+                    fontSize: 11,
+                  ),
+                ),
+                if (invitation.isExpired)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      'Expired ${_formatTimeAgo(invitation.expiresAt)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colors.error,
+                        fontFamily: 'IBMPlexMono',
+                        fontSize: 11,
+                      ),
+                    ),
+                  )
+                else if (invitation.isPending)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      'Expires ${_formatTimeAgo(invitation.expiresAt)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                        fontFamily: 'IBMPlexMono',
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          PopupMenuButton<String>(
+            icon: Icon(
+              Icons.more_horiz,
+              size: 20,
+              color: colors.onSurfaceVariant,
+            ),
+            onSelected: (action) => _handleInvitationAction(action, invitation),
+            itemBuilder: (context) => [
+              if (invitation.isPending) ...[
+                const PopupMenuItem(
+                  value: 'resend',
+                  child: Row(
+                    children: [
+                      Icon(Icons.send_outlined, size: 18),
+                      SizedBox(width: 8),
+                      Text('Resend'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'cancel',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.cancel_outlined,
+                        size: 18,
+                        color: colors.error,
+                      ),
+                      const SizedBox(width: 8),
+                      Text('Cancel', style: TextStyle(color: colors.error)),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -462,134 +593,83 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
     final userRole = widget.team.getUserRole(currentUser?.id ?? '');
     final canManageSettings =
         userRole == TeamRole.owner || userRole == TeamRole.admin;
+    final colors = Theme.of(context).colorScheme;
 
     return ListView(
-      padding: const EdgeInsets.all(AppConstants.defaultPadding),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       children: [
-        // Team settings
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(AppConstants.defaultPadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Team Settings',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+        _Panel(
+          title: 'Team Settings',
+          child: Column(
+            children: [
+              SwitchListTile(
+                title: const Text('Allow member invites'),
+                subtitle: const Text(
+                  'Let members invite new people to the team',
                 ),
-                const SizedBox(height: AppConstants.defaultPadding),
-
-                SwitchListTile(
-                  title: const Text('Allow member invites'),
-                  subtitle: const Text(
-                    'Let members invite new people to the team',
-                  ),
-                  value: widget.team.settings.allowMemberInvites,
-                  onChanged: canManageSettings
-                      ? (value) {
-                          // TODO: Update team settings
-                        }
-                      : null,
+                value: widget.team.settings.allowMemberInvites,
+                onChanged: canManageSettings
+                    ? (value) {
+                        // TODO: Update team settings
+                      }
+                    : null,
+              ),
+              Divider(height: 1, thickness: 1, color: colors.outlineVariant),
+              SwitchListTile(
+                title: const Text('Require approval for expenses'),
+                subtitle: const Text(
+                  'All expenses need approval before processing',
                 ),
-
-                SwitchListTile(
-                  title: const Text('Require approval for expenses'),
-                  subtitle: const Text(
-                    'All expenses need approval before processing',
-                  ),
-                  value: widget.team.settings.requireApprovalForExpenses,
-                  onChanged: canManageSettings
-                      ? (value) {
-                          // TODO: Update team settings
-                        }
-                      : null,
-                ),
-
-                SwitchListTile(
-                  title: const Text('Enable notifications'),
-                  subtitle: const Text(
-                    'Send notifications for team activities',
-                  ),
-                  value: widget.team.settings.enableNotifications,
-                  onChanged: canManageSettings
-                      ? (value) {
-                          // TODO: Update team settings
-                        }
-                      : null,
-                ),
-              ],
-            ),
+                value: widget.team.settings.requireApprovalForExpenses,
+                onChanged: canManageSettings
+                    ? (value) {
+                        // TODO: Update team settings
+                      }
+                    : null,
+              ),
+              Divider(height: 1, thickness: 1, color: colors.outlineVariant),
+              SwitchListTile(
+                title: const Text('Enable notifications'),
+                subtitle: const Text('Send notifications for team activities'),
+                value: widget.team.settings.enableNotifications,
+                onChanged: canManageSettings
+                    ? (value) {
+                        // TODO: Update team settings
+                      }
+                    : null,
+              ),
+            ],
           ),
         ),
-
-        const SizedBox(height: AppConstants.defaultPadding),
-
-        // Danger zone
+        const SizedBox(height: 16),
         if (userRole == TeamRole.owner)
-          Card(
-            color: Colors.red.withValues(alpha: 0.05),
+          _Panel(
+            title: 'Danger Zone',
+            titleColor: colors.error,
             child: Padding(
-              padding: const EdgeInsets.all(AppConstants.defaultPadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Danger Zone',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                    ),
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _showDeleteTeamDialog(context),
+                  icon: Icon(
+                    Icons.delete_forever,
+                    size: 18,
+                    color: colors.error,
                   ),
-                  const SizedBox(height: AppConstants.defaultPadding),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () => _showDeleteTeamDialog(context),
-                      icon: const Icon(Icons.delete_forever, color: Colors.red),
-                      label: const Text(
-                        'Delete Team',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.red),
-                      ),
-                    ),
+                  label: Text(
+                    'Delete Team',
+                    style: TextStyle(color: colors.error),
                   ),
-                ],
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: colors.error),
+                  ),
+                ),
               ),
             ),
           ),
       ],
     );
-  }
-
-  Color _getRoleColor(TeamRole role) {
-    switch (role) {
-      case TeamRole.owner:
-        return Colors.purple;
-      case TeamRole.admin:
-        return Colors.blue;
-      case TeamRole.member:
-        return Colors.green;
-      case TeamRole.viewer:
-        return Colors.orange;
-    }
-  }
-
-  String _getRoleDisplayName(TeamRole role) {
-    switch (role) {
-      case TeamRole.owner:
-        return 'Owner';
-      case TeamRole.admin:
-        return 'Admin';
-      case TeamRole.member:
-        return 'Member';
-      case TeamRole.viewer:
-        return 'Viewer';
-    }
   }
 
   void _handleMemberAction(
@@ -627,40 +707,36 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
               children: [
                 Text(
                   'Invite a new member to join ${widget.team.name}',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
-                const SizedBox(height: AppConstants.defaultPadding),
+                const SizedBox(height: 16),
 
                 // Email Address
                 const Text(
                   'Email Address',
-                  style: TextStyle(fontWeight: FontWeight.w500),
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: AppConstants.smallPadding),
+                const SizedBox(height: 6),
                 TextField(
                   controller: emailController,
                   decoration: const InputDecoration(
                     hintText: 'Enter email address',
-                    border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.emailAddress,
                   enabled: !isLoading,
                 ),
-                const SizedBox(height: AppConstants.defaultPadding),
+                const SizedBox(height: 16),
 
                 // Role
                 const Text(
                   'Role',
-                  style: TextStyle(fontWeight: FontWeight.w500),
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: AppConstants.smallPadding),
+                const SizedBox(height: 6),
                 DropdownButtonFormField<TeamRole>(
                   initialValue: selectedRole,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                  ),
                   items: TeamRole.values.map((role) {
                     return DropdownMenuItem(
                       value: role,
@@ -675,36 +751,32 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
                           }
                         },
                 ),
-                const SizedBox(height: AppConstants.defaultPadding),
+                const SizedBox(height: 16),
 
                 // Custom Message
                 const Text(
                   'Custom Message (Optional)',
-                  style: TextStyle(fontWeight: FontWeight.w500),
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: AppConstants.smallPadding),
+                const SizedBox(height: 6),
                 TextField(
                   controller: customMessageController,
                   decoration: const InputDecoration(
                     hintText: 'Add a personal message to the invitation...',
-                    border: OutlineInputBorder(),
                   ),
                   maxLines: 3,
                   enabled: !isLoading,
                 ),
-                const SizedBox(height: AppConstants.defaultPadding),
+                const SizedBox(height: 16),
 
                 // Expires In
                 const Text(
                   'Expires In (Days)',
-                  style: TextStyle(fontWeight: FontWeight.w500),
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: AppConstants.smallPadding),
+                const SizedBox(height: 6),
                 DropdownButtonFormField<int>(
                   initialValue: expiresInDays,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                  ),
                   items: [1, 3, 7, 14, 30].map((days) {
                     return DropdownMenuItem(
                       value: days,
@@ -719,7 +791,7 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
                           }
                         },
                 ),
-                const SizedBox(height: AppConstants.defaultPadding),
+                const SizedBox(height: 12),
 
                 // Send Email Notification
                 SwitchListTile(
@@ -741,7 +813,7 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
               child: const Text('Cancel'),
             ),
             Consumer(
-              builder: (context, ref, child) => ElevatedButton.icon(
+              builder: (context, ref, child) => FilledButton.icon(
                 onPressed: isLoading || emailController.text.trim().isEmpty
                     ? null
                     : () async {
@@ -787,136 +859,18 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
                         }
                       },
                 icon: isLoading
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 16,
                         height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
                       )
-                    : const Icon(Icons.send),
+                    : const Icon(Icons.send, size: 18),
                 label: Text(isLoading ? 'Sending...' : 'Send Invitation'),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInvitationCard(TeamInvitationModel invitation) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: AppConstants.smallPadding),
-      child: Padding(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        invitation.email,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _getRoleColor(
-                                invitation.role,
-                              ).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              invitation.role.displayName,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: _getRoleColor(invitation.role),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _getStatusColor(
-                                invitation.status,
-                              ).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              invitation.statusDisplayName,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: _getStatusColor(invitation.status),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                PopupMenuButton<String>(
-                  onSelected: (action) =>
-                      _handleInvitationAction(action, invitation),
-                  itemBuilder: (context) => [
-                    if (invitation.isPending) ...[
-                      const PopupMenuItem(
-                        value: 'resend',
-                        child: Row(
-                          children: [
-                            Icon(Icons.send),
-                            SizedBox(width: 8),
-                            Text('Resend'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'cancel',
-                        child: Row(
-                          children: [
-                            Icon(Icons.cancel, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('Cancel', style: TextStyle(color: Colors.red)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Sent ${_formatTimeAgo(invitation.createdAt)}',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-            if (invitation.isExpired)
-              Text(
-                'Expired ${_formatTimeAgo(invitation.expiresAt)}',
-                style: const TextStyle(fontSize: 12, color: Colors.red),
-              )
-            else if (invitation.isPending)
-              Text(
-                'Expires ${_formatTimeAgo(invitation.expiresAt)}',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-              ),
           ],
         ),
       ),
@@ -988,9 +942,12 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
             onPressed: () => Navigator.of(context).pop(false),
             child: const Text('No'),
           ),
-          ElevatedButton(
+          FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
             child: const Text('Yes, Cancel'),
           ),
         ],
@@ -1019,19 +976,6 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
           );
         }
       }
-    }
-  }
-
-  Color _getStatusColor(InvitationStatus status) {
-    switch (status) {
-      case InvitationStatus.pending:
-        return Colors.orange;
-      case InvitationStatus.accepted:
-        return Colors.green;
-      case InvitationStatus.expired:
-        return Colors.red;
-      case InvitationStatus.cancelled:
-        return Colors.grey;
     }
   }
 
@@ -1089,5 +1033,248 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
     } else {
       return 'Unknown User';
     }
+  }
+}
+
+class _MemberAvatar extends StatelessWidget {
+  const _MemberAvatar({required this.member, required this.initials});
+
+  final UserModel member;
+  final String initials;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final avatarUrl = member.avatarUrl;
+
+    Widget fallback() => Center(
+      child: Text(
+        initials,
+        style: TextStyle(
+          color: colors.onSurfaceVariant,
+          fontFamily: 'IBMPlexMono',
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+
+    return Container(
+      width: 34,
+      height: 34,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerHighest,
+        border: Border.all(color: colors.outlineVariant),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: avatarUrl == null || avatarUrl.isEmpty
+          ? fallback()
+          : Image.network(
+              avatarUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => fallback(),
+            ),
+    );
+  }
+}
+
+class _StatePanel extends StatelessWidget {
+  const _StatePanel({
+    required this.icon,
+    required this.title,
+    this.message,
+    this.action,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? message;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Center(
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          border: Border.all(color: colors.outlineVariant),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 32, color: colors.onSurfaceVariant),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (message != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                message!,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ],
+            if (action != null) ...[const SizedBox(height: 16), action!],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Panel extends StatelessWidget {
+  const _Panel({required this.title, required this.child, this.titleColor});
+
+  final String title;
+  final Widget child;
+  final Color? titleColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border.all(color: colors.outlineVariant),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: Text(
+              title,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: titleColor ?? colors.onSurface,
+              ),
+            ),
+          ),
+          Divider(height: 1, thickness: 1, color: colors.outlineVariant),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _RolePill extends StatelessWidget {
+  const _RolePill({required this.role});
+
+  final TeamRole role;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final isPrivileged = role == TeamRole.owner || role == TeamRole.admin;
+
+    return _Pill(
+      label: role.displayName,
+      background: isPrivileged
+          ? colors.primaryContainer
+          : colors.surfaceContainerHighest,
+      foreground: isPrivileged
+          ? colors.onPrimaryContainer
+          : colors.onSurfaceVariant,
+    );
+  }
+}
+
+class _InvitationStatusPill extends StatelessWidget {
+  const _InvitationStatusPill({required this.invitation});
+
+  final TeamInvitationModel invitation;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    final background = invitation.isExpired
+        ? colors.errorContainer
+        : switch (invitation.status) {
+            InvitationStatus.pending => colors.tertiaryContainer,
+            InvitationStatus.accepted => colors.primaryContainer,
+            InvitationStatus.expired => colors.errorContainer,
+            InvitationStatus.cancelled => colors.surfaceContainerHighest,
+          };
+    final foreground = invitation.isExpired
+        ? colors.onErrorContainer
+        : switch (invitation.status) {
+            InvitationStatus.pending => colors.onTertiaryContainer,
+            InvitationStatus.accepted => colors.onPrimaryContainer,
+            InvitationStatus.expired => colors.onErrorContainer,
+            InvitationStatus.cancelled => colors.onSurfaceVariant,
+          };
+
+    return _Pill(
+      label: invitation.statusDisplayName,
+      background: background,
+      foreground: foreground,
+    );
+  }
+}
+
+class _Pill extends StatelessWidget {
+  const _Pill({
+    required this.label,
+    required this.background,
+    required this.foreground,
+  });
+
+  final String label;
+  final Color background;
+  final Color foreground;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 5,
+            height: 5,
+            decoration: BoxDecoration(
+              color: foreground,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: foreground,
+              fontFamily: 'IBMPlexMono',
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

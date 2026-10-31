@@ -149,7 +149,8 @@ class PopularCurrencies {
   static const CurrencyModel myr = CurrencyModel(
     code: 'MYR',
     name: 'Malaysian Ringgit',
-    symbol: 'RM',
+    // The web ledger formats MYR with its ISO code, not the "RM" symbol.
+    symbol: 'MYR',
     decimalPlaces: 2,
     symbolPosition: 'before',
     localeCode: 'ms_MY',

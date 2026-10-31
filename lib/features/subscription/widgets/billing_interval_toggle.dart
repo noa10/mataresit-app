@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/config/subscription_config.dart';
 
 /// Billing interval toggle widget
-/// Allows users to switch between monthly and annual billing
+/// Allows users to switch between monthly and annual billing.
 class BillingIntervalToggle extends StatelessWidget {
   final BillingInterval selectedInterval;
   final Function(BillingInterval) onChanged;
@@ -15,11 +15,17 @@ class BillingIntervalToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final savings = PricingInfo.getAnnualSavingsPercentage(
+      SubscriptionTier.pro,
+    );
+
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
+        color: colors.surface,
+        border: Border.all(color: colors.outline),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -35,7 +41,9 @@ class BillingIntervalToggle extends StatelessWidget {
             BillingInterval.annual,
             'Annual',
             selectedInterval == BillingInterval.annual,
-            showSavings: true,
+            savingsLabel: savings > 0
+                ? 'SAVE ${savings.toStringAsFixed(0)}%'
+                : null,
           ),
         ],
       ),
@@ -47,49 +55,61 @@ class BillingIntervalToggle extends StatelessWidget {
     BillingInterval interval,
     String label,
     bool isSelected, {
-    bool showSavings = false,
+    String? savingsLabel,
   }) {
-    return GestureDetector(
-      onTap: () => onChanged(interval),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? Theme.of(context).colorScheme.primary
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: isSelected
-                    ? Theme.of(context).colorScheme.onPrimary
-                    : Theme.of(context).colorScheme.onSurface,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
-            if (showSavings && isSelected) ...[
-              const SizedBox(height: 2),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.green,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  'Save 10%',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Colors.white,
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      child: Material(
+        color: isSelected ? colors.onSurface : colors.surface,
+        borderRadius: BorderRadius.circular(6),
+        child: InkWell(
+          onTap: () => onChanged(interval),
+          borderRadius: BorderRadius.circular(6),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
+                    color: isSelected
+                        ? colors.surface
+                        : colors.onSurfaceVariant,
                   ),
                 ),
-              ),
-            ],
-          ],
+                if (savingsLabel != null) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colors.primaryContainer,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: Text(
+                      savingsLabel,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontFamily: 'IBMPlexMono',
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.4,
+                        color: colors.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );

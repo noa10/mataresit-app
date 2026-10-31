@@ -2,24 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/constants/app_constants.dart';
 import '../../../core/guards/subscription_guard.dart';
 import '../../../app/router/app_router.dart';
 import '../providers/receipts_provider.dart';
 import '../../../shared/models/receipt_model.dart';
 import '../../../shared/models/team_model.dart';
-import '../../../shared/models/category_model.dart';
+import '../../../shared/utils/date_utils.dart';
 
 import '../../categories/providers/categories_provider.dart';
 import '../../teams/providers/teams_provider.dart';
-import '../../../shared/utils/currency_utils.dart';
-import '../../../shared/utils/confidence_utils.dart';
-import '../../../shared/widgets/category_display.dart';
-import '../../../shared/widgets/confidence_indicator.dart';
 import '../widgets/date_filter_bar.dart';
-import '../widgets/active_filters_widget.dart';
 import '../widgets/grouped_receipts_list.dart';
+import '../widgets/receipt_ledger_row.dart';
 import '../widgets/pagination_widget.dart';
 import '../widgets/selection_mode_bar.dart';
 import '../widgets/bulk_actions_bar.dart';
@@ -34,12 +29,14 @@ class ReceiptsScreen extends ConsumerStatefulWidget {
 class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _searchFocus = FocusNode();
   late final WidgetRef _ref;
 
   @override
   void initState() {
     super.initState();
     _ref = ref;
+    _searchController.text = _ref.read(receiptsProvider).searchQuery;
     _scrollController.addListener(_onScroll);
     // Load categories when the screen initializes with team context
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -53,6 +50,7 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocus.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -114,6 +112,16 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
   Widget build(BuildContext context) {
     final receiptsState = ref.watch(receiptsProvider);
 
+    ref.listen<ReceiptsState>(receiptsProvider, (previous, next) {
+      if (previous?.searchQuery != next.searchQuery &&
+          _searchController.text != next.searchQuery) {
+        _searchController.value = TextEditingValue(
+          text: next.searchQuery,
+          selection: TextSelection.collapsed(offset: next.searchQuery.length),
+        );
+      }
+    });
+
     // Listen for team changes and reload categories
     ref.listen<TeamModel?>(currentTeamModelProvider, (previous, next) {
       if (previous?.id != next?.id) {
@@ -123,112 +131,13 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
     });
 
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Receipts'),
-            if (receiptsState.hasActiveFilters)
-              Text(
-                '${receiptsState.totalCount} receipts • ${receiptsState.totalAmount.toStringAsFixed(2)} MYR',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: _showSearchDialog,
-          ),
-          IconButton(
-            icon: const Icon(Icons.camera_alt),
-            onPressed: () => _handleCaptureReceipt(context, ref),
-            tooltip: 'Capture Receipt',
-          ),
-          PopupMenuButton<String>(
-            onSelected: _handleMenuAction,
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'search_all',
-                child: ListTile(
-                  leading: const Icon(Icons.manage_search),
-                  title: Text('search.title'.tr()),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'add_receipt',
-                child: ListTile(
-                  leading: Icon(Icons.add_a_photo),
-                  title: Text('Add Receipt'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'batch_upload',
-                child: ListTile(
-                  leading: Icon(Icons.upload_file),
-                  title: Text('Batch Upload'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'refresh',
-                child: ListTile(
-                  leading: Icon(Icons.refresh),
-                  title: Text('Refresh'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'clear_filters',
-                child: ListTile(
-                  leading: Icon(Icons.clear_all),
-                  title: Text('Clear Filters'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
       body: Column(
         children: [
+          _buildPageHeader(receiptsState),
+          if (!receiptsState.isSelectionMode) _buildFilterPanel(receiptsState),
+
           // Selection mode bar
           const AdaptiveSelectionModeBar(),
-
-          // Date filter bar (only show when not in selection mode)
-          Consumer(
-            builder: (context, ref, child) {
-              final receiptsState = ref.watch(receiptsProvider);
-              if (receiptsState.isSelectionMode) {
-                return const SizedBox.shrink();
-              }
-              return DateFilterBar(
-                onFilterChanged: () {
-                  // Optional: Add any additional logic when filters change
-                },
-              );
-            },
-          ),
-
-          // Active filters indicator
-          Consumer(
-            builder: (context, ref, child) {
-              final receiptsState = ref.watch(receiptsProvider);
-              if (receiptsState.isSelectionMode ||
-                  !receiptsState.hasActiveFilters) {
-                return const SizedBox.shrink();
-              }
-              return ActiveFiltersWidget(
-                onFilterChanged: () {
-                  // Optional: Add any additional logic when filters change
-                },
-              );
-            },
-          ),
 
           // Main content
           Expanded(
@@ -245,7 +154,268 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
     );
   }
 
+  Widget _buildPageHeader(ReceiptsState receiptsState) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 8, 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'INBOX',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                        fontFamily: 'IBMPlexMono',
+                        fontSize: 10,
+                        letterSpacing: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Receipts',
+                      style: theme.textTheme.displaySmall?.copyWith(
+                        fontFamily: 'InstrumentSerif',
+                        fontSize: 32,
+                        height: 1.05,
+                        color: colors.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!receiptsState.isSelectionMode) ...[
+                IconButton(
+                  icon: const Icon(Icons.search, size: 20),
+                  tooltip: 'Search receipts',
+                  onPressed: () => _searchFocus.requestFocus(),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.photo_camera_outlined, size: 20),
+                  onPressed: () => _handleCaptureReceipt(context, ref),
+                  tooltip: 'Capture Receipt',
+                ),
+                PopupMenuButton<String>(
+                  onSelected: _handleMenuAction,
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'search_all',
+                      child: ListTile(
+                        leading: const Icon(Icons.manage_search),
+                        title: Text('search.title'.tr()),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'add_receipt',
+                      child: ListTile(
+                        leading: Icon(Icons.add_a_photo),
+                        title: Text('Add Receipt'),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'batch_upload',
+                      child: ListTile(
+                        leading: Icon(Icons.upload_file),
+                        title: Text('Batch Upload'),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'refresh',
+                      child: ListTile(
+                        leading: Icon(Icons.refresh),
+                        title: Text('Refresh'),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'clear_filters',
+                      child: ListTile(
+                        leading: Icon(Icons.clear_all),
+                        title: Text('Clear Filters'),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Text(
+              'Search, filter and open any receipt.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colors.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterPanel(ReceiptsState receiptsState) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border.all(color: colors.outlineVariant),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        children: [
+          _buildSearchField(),
+          Divider(height: 1, thickness: 1, color: colors.outlineVariant),
+          DateFilterBar(
+            onFilterChanged: () {
+              // Optional: Add any additional logic when filters change
+            },
+          ),
+          if (receiptsState.hasActiveFilters) ...[
+            Divider(height: 1, thickness: 1, color: colors.outlineVariant),
+            _buildActiveFilters(receiptsState),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActiveFilters(ReceiptsState receiptsState) {
+    final categoriesState = ref.watch(categoriesProvider);
+    final chips = <Widget>[];
+
+    if (receiptsState.dateFilter.option != DateFilterOption.all) {
+      chips.add(
+        _buildActiveFilterChip(
+          label: AppDateUtils.getFilterOptionDisplayName(
+            receiptsState.dateFilter.option,
+          ),
+          onDeleted: () => ref
+              .read(receiptsProvider.notifier)
+              .setDateFilter(const DateRange(option: DateFilterOption.all)),
+        ),
+      );
+    }
+
+    if (receiptsState.searchQuery.isNotEmpty) {
+      chips.add(
+        _buildActiveFilterChip(
+          label: 'Search: "${receiptsState.searchQuery}"',
+          onDeleted: () =>
+              ref.read(receiptsProvider.notifier).setSearchQuery(''),
+        ),
+      );
+    }
+
+    if (receiptsState.statusFilter != null) {
+      chips.add(
+        _buildActiveFilterChip(
+          label: 'Status: ${receiptsState.statusFilter!.displayName}',
+          onDeleted: () =>
+              ref.read(receiptsProvider.notifier).setStatusFilter(null),
+        ),
+      );
+    }
+
+    for (final categoryId in receiptsState.categoryFilters) {
+      final category = categoriesState.categories
+          .where((item) => item.id == categoryId)
+          .firstOrNull;
+      if (category == null) continue;
+      chips.add(
+        _buildActiveFilterChip(
+          label: category.name,
+          onDeleted: () => ref
+              .read(receiptsProvider.notifier)
+              .removeCategoryFilter(categoryId),
+        ),
+      );
+    }
+
+    if (receiptsState.reviewedStatusFilter != ReviewedStatusFilter.all) {
+      chips.add(
+        _buildActiveFilterChip(
+          label: receiptsState.reviewedStatusFilter.displayName,
+          onDeleted: () => ref
+              .read(receiptsProvider.notifier)
+              .setReviewedStatusFilter(ReviewedStatusFilter.all),
+        ),
+      );
+    }
+
+    if (chips.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          ...chips,
+          TextButton(
+            onPressed: () =>
+                ref.read(receiptsProvider.notifier).clearAllFilters(),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+            ),
+            child: const Text('Clear all'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActiveFilterChip({
+    required String label,
+    required VoidCallback onDeleted,
+  }) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 220),
+      child: InputChip(
+        label: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.labelSmall,
+        ),
+        onDeleted: onDeleted,
+        deleteIcon: const Icon(Icons.close, size: 14),
+        deleteIconColor: colors.onSurfaceVariant,
+        backgroundColor: colors.surfaceContainerHighest,
+        side: BorderSide(color: colors.outlineVariant),
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+        visualDensity: VisualDensity.compact,
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+    );
+  }
+
   Widget _buildMainContent(ReceiptsState receiptsState) {
+    if (receiptsState.receipts.isEmpty && receiptsState.error != null) {
+      return _buildErrorState(receiptsState.error!);
+    }
+
     if (receiptsState.receipts.isEmpty && !receiptsState.isLoading) {
       return _buildEmptyState();
     }
@@ -261,375 +431,227 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
     }
   }
 
+  Widget _buildErrorState(String error) {
+    final colors = Theme.of(context).colorScheme;
+
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AppConstants.defaultPadding * 2),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.error_outline, size: 40, color: colors.error),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Couldn\'t load receipts',
+                    style: Theme.of(context).textTheme.titleMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    error,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: () =>
+                        ref.read(receiptsProvider.notifier).refresh(),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Try again'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildEmptyState() {
     final receiptsState = ref.watch(receiptsProvider);
+    final colors = Theme.of(context).colorScheme;
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding * 2),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.receipt_long_outlined,
-              size: 64,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(height: AppConstants.defaultPadding),
-            Text(
-              receiptsState.hasActiveFilters
-                  ? 'No receipts match your filters'
-                  : 'No receipts yet',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AppConstants.defaultPadding * 2),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.receipt_long_outlined,
+                    size: 40,
+                    color: colors.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    receiptsState.hasActiveFilters
+                        ? 'No receipts match your filters'
+                        : 'No receipts yet',
+                    style: Theme.of(context).textTheme.titleMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    receiptsState.hasActiveFilters
+                        ? 'Try adjusting your date range or search terms'
+                        : 'Start by capturing your first receipt',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  if (receiptsState.hasActiveFilters)
+                    OutlinedButton(
+                      onPressed: () =>
+                          ref.read(receiptsProvider.notifier).clearAllFilters(),
+                      child: const Text('Clear Filters'),
+                    )
+                  else
+                    FilledButton.icon(
+                      onPressed: () => _handleCaptureReceipt(context, ref),
+                      icon: const Icon(Icons.camera_alt_outlined),
+                      label: const Text('Capture Receipt'),
+                    ),
+                ],
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              receiptsState.hasActiveFilters
-                  ? 'Try adjusting your date range or search terms'
-                  : 'Start by capturing your first receipt',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            if (receiptsState.hasActiveFilters) ...[
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () =>
-                    ref.read(receiptsProvider.notifier).clearAllFilters(),
-                child: const Text('Clear Filters'),
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildFlatReceiptsList(ReceiptsState receiptsState) {
+    final colors = Theme.of(context).colorScheme;
     return Column(
       children: [
-        // Pagination info at the top
-        const PaginationInfoWidget(),
-
-        // Main list
+        const ReceiptLedgerInfo(),
         Expanded(
-          child: ListView.builder(
+          child: CustomScrollView(
             controller: _scrollController,
-            padding: const EdgeInsets.all(AppConstants.defaultPadding),
-            itemCount:
-                receiptsState.receipts.length + 1, // +1 for pagination widget
-            itemBuilder: (context, index) {
-              if (index >= receiptsState.receipts.length) {
-                return PaginationWidget(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              if (receiptsState.receipts.isNotEmpty)
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                  sliver: DecoratedSliver(
+                    position: DecorationPosition.foreground,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: colors.outlineVariant),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    sliver: SliverList.separated(
+                      itemCount: receiptsState.receipts.length,
+                      itemBuilder: (context, index) => ReceiptLedgerRow(
+                        receipt: receiptsState.receipts[index],
+                        isFirst: index == 0,
+                        isLast: index == receiptsState.receipts.length - 1,
+                      ),
+                      separatorBuilder: (context, index) => Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: colors.outlineVariant,
+                      ),
+                    ),
+                  ),
+                ),
+              SliverToBoxAdapter(
+                child: PaginationWidget(
                   onLoadMore: () =>
                       ref.read(receiptsProvider.notifier).loadMore(),
-                  showLoadMoreButton: false, // Use automatic loading
-                );
-              }
-
-              final receipt = receiptsState.receipts[index];
-              return _buildReceiptCard(receipt);
-            },
+                  showLoadMoreButton: false,
+                ),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildReceiptCard(ReceiptModel receipt) {
-    final receiptsState = ref.watch(receiptsProvider);
-    final receiptsNotifier = ref.read(receiptsProvider.notifier);
-    final isSelected = receiptsNotifier.isReceiptSelected(receipt.id);
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: AppConstants.defaultPadding),
-      elevation: isSelected ? 4 : 1,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          border: isSelected
-              ? Border.all(
-                  color: Theme.of(context).colorScheme.primary,
-                  width: 2,
-                )
-              : null,
-        ),
-        child: InkWell(
-          onTap: receiptsState.isSelectionMode
-              ? () => receiptsNotifier.toggleReceiptSelection(receipt.id)
-              : () => context.push('/receipts/${receipt.id}'),
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          child: Padding(
-            padding: const EdgeInsets.all(AppConstants.defaultPadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header row
-                Row(
-                  children: [
-                    // Selection checkbox (only show in selection mode)
-                    if (receiptsState.isSelectionMode) ...[
-                      Checkbox(
-                        value: isSelected,
-                        onChanged: (value) =>
-                            receiptsNotifier.toggleReceiptSelection(receipt.id),
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-
-                    // Merchant name or placeholder
-                    Expanded(
-                      child: Text(
-                        receipt.merchantName ?? 'Unknown Merchant',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-
-                    // Amount with standardized currency formatting
-                    if (receipt.totalAmount != null)
-                      Text(
-                        CurrencyUtils.formatCurrencySafe(
-                          receipt.totalAmount,
-                          receipt.currency,
-                          fallbackCurrency: 'MYR',
-                        ),
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).primaryColor,
-                            ),
-                      ),
-                  ],
-                ),
-
-                const SizedBox(height: 8),
-
-                // Second row with confidence score (matching React web version layout)
-                Row(
-                  children: [
-                    // Store icon and merchant name (smaller version)
-                    Icon(
-                      Icons.store,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        receipt.merchantName ?? 'Unknown Merchant',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-
-                    // Confidence score indicator (match React web aggregate + ai_suggestions fallback)
-                    Builder(
-                      builder: (context) {
-                        final hasConfidence =
-                            (receipt.aiSuggestions != null &&
-                                receipt.aiSuggestions!.containsKey(
-                                  'confidence',
-                                )) ||
-                            (receipt.confidenceScores != null &&
-                                receipt.confidenceScores!.isNotEmpty);
-                        return CompactConfidenceIndicator(
-                          score: hasConfidence
-                              ? ConfidenceUtils.calculateAggregateConfidence(
-                                  receipt,
-                                )
-                              : null,
-                          loading:
-                              !hasConfidence &&
-                              receipt.processingStatus ==
-                                  ProcessingStatus.processing,
-                        );
-                      },
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: AppConstants.smallPadding),
-
-                // Details row
-                Row(
-                  children: [
-                    // Category - Use real category data with fallback - wrapped in Flexible
-                    Flexible(
-                      flex: 2,
-                      child: Consumer(
-                        builder: (context, ref, child) {
-                          // Watch the categories state to ensure they're loaded
-                          final categoriesState = ref.watch(categoriesProvider);
-
-                          // Find the category from display categories (includes both team and personal)
-                          CategoryModel? category;
-                          if (receipt.customCategoryId != null) {
-                            category = categoriesState.displayCategories
-                                .where(
-                                  (cat) => cat.id == receipt.customCategoryId,
-                                )
-                                .firstOrNull;
-
-                            // Debug logging for category lookup removed
-
-                            // If category not found, try to create a fallback based on category field
-                            if (category == null && receipt.category != null) {
-                              // Look for a category with matching name (case-insensitive)
-                              category = categoriesState.displayCategories
-                                  .where(
-                                    (cat) =>
-                                        cat.name.toLowerCase() ==
-                                        receipt.category!.toLowerCase(),
-                                  )
-                                  .firstOrNull;
-                            }
-                          }
-
-                          return CategoryDisplay(
-                            category: category,
-                            size: CategoryDisplaySize.small,
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: AppConstants.smallPadding),
-
-                    // Processing status
-                    _buildStatusChip(receipt.processingStatus),
-
-                    const Spacer(),
-
-                    // Date - wrapped in Flexible to prevent overflow
-                    Flexible(
-                      child: Text(
-                        timeago.format(receipt.createdAt),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Description if available
-                if (receipt.description != null) ...[
-                  const SizedBox(height: AppConstants.smallPadding),
-                  Text(
-                    receipt.description!,
-                    style: Theme.of(context).textTheme.bodySmall,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusChip(ProcessingStatus status) {
-    Color color;
-    IconData icon;
-
-    switch (status) {
-      case ProcessingStatus.completed:
-        color = Colors.green;
-        icon = Icons.check_circle;
-        break;
-      case ProcessingStatus.processing:
-        color = Colors.orange;
-        icon = Icons.hourglass_empty;
-        break;
-      case ProcessingStatus.failed:
-        color = Colors.red;
-        icon = Icons.error;
-        break;
-      case ProcessingStatus.manualReview:
-        color = Colors.blue;
-        icon = Icons.visibility;
-        break;
-      case ProcessingStatus.pending:
-        color = Colors.grey;
-        icon = Icons.schedule;
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppConstants.smallPadding,
-        vertical: 2,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+  Widget _buildSearchField() {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 4),
           Text(
-            status.displayName,
-            style: TextStyle(
-              fontSize: 11,
-              color: color,
-              fontWeight: FontWeight.w500,
+            'SEARCH',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: colors.onSurfaceVariant,
+              fontFamily: 'IBMPlexMono',
+              fontSize: 10,
+              letterSpacing: 1,
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  void _showSearchDialog() {
-    final receiptsState = ref.read(receiptsProvider);
-    _searchController.text = receiptsState.searchQuery;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Search Receipts'),
-        content: TextField(
-          controller: _searchController,
-          decoration: const InputDecoration(
-            hintText: 'Enter merchant name, category, or description',
-            prefixIcon: Icon(Icons.search),
-          ),
-          autofocus: true,
-          onSubmitted: (value) {
-            Navigator.of(context).pop();
-            ref.read(receiptsProvider.notifier).setSearchQuery(value);
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              _searchController.clear();
-              Navigator.of(context).pop();
-              ref.read(receiptsProvider.notifier).setSearchQuery('');
+          const SizedBox(height: 6),
+          TextField(
+            controller: _searchController,
+            focusNode: _searchFocus,
+            textInputAction: TextInputAction.search,
+            onSubmitted: (value) {
+              ref.read(receiptsProvider.notifier).setSearchQuery(value);
+              _searchFocus.unfocus();
             },
-            child: const Text('Clear'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              ref
-                  .read(receiptsProvider.notifier)
-                  .setSearchQuery(_searchController.text);
-            },
-            child: const Text('Search'),
+            decoration: InputDecoration(
+              hintText: 'Search merchant, category or description',
+              hintStyle: theme.textTheme.bodySmall?.copyWith(
+                color: colors.onSurfaceVariant,
+              ),
+              prefixIcon: const Icon(Icons.search, size: 20),
+              suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _searchController,
+                builder: (context, value, child) {
+                  if (value.text.isEmpty) return const SizedBox.shrink();
+                  return IconButton(
+                    tooltip: 'Clear search',
+                    icon: const Icon(Icons.close, size: 18),
+                    onPressed: () {
+                      _searchController.clear();
+                      ref.read(receiptsProvider.notifier).setSearchQuery('');
+                    },
+                  );
+                },
+              ),
+              filled: true,
+              fillColor: colors.surface,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(7),
+                borderSide: BorderSide(color: colors.outlineVariant),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(7),
+                borderSide: BorderSide(color: colors.outlineVariant),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(7),
+                borderSide: BorderSide(color: colors.primary),
+              ),
+            ),
           ),
         ],
       ),

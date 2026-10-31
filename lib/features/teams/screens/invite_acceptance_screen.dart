@@ -3,10 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/constants/app_constants.dart';
 import '../../../core/network/supabase_client.dart';
 import '../../../core/services/app_logger.dart';
-import '../../../shared/utils/date_utils.dart';
 import '../../../shared/widgets/empty_state_widget.dart';
 import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
@@ -54,9 +52,20 @@ class _InviteAcceptanceScreenState
     });
 
     final state = ref.watch(invitationAcceptanceProvider(widget.token));
+    final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text('invitations.title'.tr())),
+      appBar: AppBar(
+        title: Text(
+          'invitations.title'.tr(),
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontFamily: 'InstrumentSerif',
+            fontSize: 24,
+            height: 1.05,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
+      ),
       body: SafeArea(child: _buildBody(state)),
     );
   }
@@ -211,15 +220,25 @@ class _InviteAcceptanceScreenState
     String? errorMessage,
   }) {
     return ListView(
-      padding: const EdgeInsets.all(AppConstants.defaultPadding),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
       children: [
-        _InvitationCard(
-          invitation: invitation,
-          notice: notice,
-          errorMessage: errorMessage,
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _InvitationCard(
+                  invitation: invitation,
+                  notice: notice,
+                  errorMessage: errorMessage,
+                ),
+                const SizedBox(height: 16),
+                ...actions,
+              ],
+            ),
+          ),
         ),
-        const SizedBox(height: AppConstants.defaultPadding),
-        ...actions,
       ],
     );
   }
@@ -305,107 +324,144 @@ class _InvitationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final teamName = invitation.teamName;
     final role = _localizedRole(invitation.role);
     final expiresAt = invitation.expiresAt;
     final invitedBy = invitation.invitedBy;
     final customMessage = invitation.customMessage;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return Container(
+      width: double.infinity,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border.all(color: colors.outlineVariant),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.groups_outlined, color: theme.colorScheme.primary),
-                const SizedBox(width: AppConstants.smallPadding),
-                if (teamName != null)
-                  Expanded(
+                _MonogramTile(initials: _initialsFor(teamName)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'TEAM INVITATION',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: colors.onSurfaceVariant,
+                          fontFamily: 'IBMPlexMono',
+                          fontSize: 10,
+                          letterSpacing: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        teamName ?? 'invitations.unknownTeam'.tr(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (role.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  _RolePill(label: role),
+                ],
+              ],
+            ),
+          ),
+          Divider(height: 1, thickness: 1, color: colors.outlineVariant),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'invitations.forEmail'.tr(
+                    namedArgs: {'email': invitation.email},
+                  ),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+                if (invitedBy != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'invitations.invitedBy'.tr(namedArgs: {'name': invitedBy}),
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+                if (expiresAt != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'invitations.expiresAt'.tr(
+                      namedArgs: {'date': _formatDate(expiresAt)},
+                    ),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
+                      fontFamily: 'IBMPlexMono',
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+                if (customMessage != null && customMessage.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    'invitations.message'.tr(),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: colors.onSurfaceVariant,
+                      fontFamily: 'IBMPlexMono',
+                      fontSize: 10,
+                      letterSpacing: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colors.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     child: Text(
-                      teamName,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+                      customMessage,
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
+                if (notice != null) ...[const SizedBox(height: 16), notice!],
+                if (errorMessage != null) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colors.errorContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      errorMessage!,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colors.onErrorContainer,
                       ),
                     ),
                   ),
+                ],
               ],
             ),
-            const SizedBox(height: AppConstants.smallPadding),
-            Text(
-              'invitations.forEmail'.tr(namedArgs: {'email': invitation.email}),
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            if (role.isNotEmpty) ...[
-              const SizedBox(height: AppConstants.smallPadding),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  role,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-            if (invitedBy != null) ...[
-              const SizedBox(height: AppConstants.smallPadding),
-              Text(
-                'invitations.invitedBy'.tr(namedArgs: {'name': invitedBy}),
-                style: theme.textTheme.bodySmall,
-              ),
-            ],
-            if (expiresAt != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                'invitations.expiresAt'.tr(
-                  namedArgs: {'date': AppDateUtils.formatDate(expiresAt)},
-                ),
-                style: theme.textTheme.bodySmall,
-              ),
-            ],
-            if (customMessage != null && customMessage.isNotEmpty) ...[
-              const SizedBox(height: AppConstants.defaultPadding),
-              Text(
-                'invitations.message'.tr(),
-                style: theme.textTheme.labelLarge,
-              ),
-              const SizedBox(height: 4),
-              Text(customMessage, style: theme.textTheme.bodyMedium),
-            ],
-            if (notice != null) ...[
-              const SizedBox(height: AppConstants.defaultPadding),
-              notice!,
-            ],
-            if (errorMessage != null) ...[
-              const SizedBox(height: AppConstants.defaultPadding),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(AppConstants.smallPadding),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.errorContainer,
-                  borderRadius: BorderRadius.circular(
-                    AppConstants.borderRadius,
-                  ),
-                ),
-                child: Text(
-                  errorMessage!,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onErrorContainer,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -428,20 +484,22 @@ class _Notice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final detail = this.detail;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppConstants.smallPadding),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+        color: colors.surfaceContainerHighest,
+        border: Border.all(color: colors.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: theme.colorScheme.primary),
-          const SizedBox(width: AppConstants.smallPadding),
+          Icon(icon, size: 18, color: colors.primary),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -455,7 +513,7 @@ class _Notice extends StatelessWidget {
                   Text(
                     detail,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                      color: colors.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -484,6 +542,79 @@ class _PrimaryAction extends StatelessWidget {
   }
 }
 
+class _MonogramTile extends StatelessWidget {
+  const _MonogramTile({required this.initials});
+
+  final String initials;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      width: 34,
+      height: 34,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerHighest,
+        border: Border.all(color: colors.outlineVariant),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        initials,
+        style: TextStyle(
+          color: colors.onSurfaceVariant,
+          fontFamily: 'IBMPlexMono',
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _RolePill extends StatelessWidget {
+  const _RolePill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: colors.primaryContainer,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 5,
+            height: 5,
+            decoration: BoxDecoration(
+              color: colors.onPrimaryContainer,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: colors.onPrimaryContainer,
+              fontFamily: 'IBMPlexMono',
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Roles the backend can put on an invitation.
 String _localizedRole(String? role) {
   switch (role) {
@@ -498,6 +629,21 @@ String _localizedRole(String? role) {
     default:
       return role ?? '';
   }
+}
+
+String _formatDate(DateTime date) {
+  return DateFormat('dd MMM').format(date).toUpperCase();
+}
+
+String _initialsFor(String? value) {
+  final trimmed = (value ?? '').trim();
+  if (trimmed.isEmpty) return '?';
+  final words = trimmed
+      .split(RegExp(r'\s+'))
+      .where((word) => word.isNotEmpty)
+      .toList();
+  if (words.length == 1) return words.first[0].toUpperCase();
+  return '${words.first[0]}${words[1][0]}'.toUpperCase();
 }
 
 /// Route paths this screen hands off to. They mirror `AppRoutes` but are kept

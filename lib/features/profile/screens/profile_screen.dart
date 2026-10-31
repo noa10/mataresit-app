@@ -155,34 +155,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 // scrolls instead of overflowing.
                 isScrollable: true,
                 tabAlignment: TabAlignment.start,
-                tabs: [
-                  const Tab(icon: Icon(Icons.person_outline), text: 'Profile'),
-                  const Tab(
-                    icon: Icon(Icons.credit_card_outlined),
-                    text: 'Subscription',
-                  ),
-                  const Tab(
-                    icon: Icon(Icons.settings_outlined),
-                    text: 'Preferences',
-                  ),
-                  const Tab(
-                    icon: Icon(Icons.security_outlined),
-                    text: 'Security',
-                  ),
-                  Tab(
-                    icon: const Icon(Icons.emoji_events_outlined),
-                    text: 'gamification.tabs.rewards'.tr(),
-                  ),
-                ],
-                labelColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
-                    : Theme.of(context).colorScheme.primary,
+                labelPadding: const EdgeInsets.symmetric(horizontal: 14),
+                dividerColor: Colors.transparent,
+                indicatorSize: TabBarIndicatorSize.tab,
+                indicator: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                labelColor: Theme.of(context).colorScheme.onPrimaryContainer,
                 unselectedLabelColor: Theme.of(
                   context,
-                ).colorScheme.onSurface.withValues(alpha: 0.6),
-                indicatorColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
-                    : Theme.of(context).colorScheme.primary,
+                ).colorScheme.onSurfaceVariant,
+                labelStyle: const TextStyle(
+                  fontFamily: 'InstrumentSans',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontFamily: 'InstrumentSans',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+                tabs: [
+                  const Tab(text: 'Profile'),
+                  const Tab(text: 'Subscription'),
+                  const Tab(text: 'Preferences'),
+                  const Tab(text: 'Security'),
+                  Tab(text: 'gamification.tabs.rewards'.tr()),
+                ],
               ),
             ),
             pinned: true,

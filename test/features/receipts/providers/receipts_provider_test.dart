@@ -29,7 +29,7 @@ void main() {
       expect(state.error, 'User not authenticated');
       expect(state.hasMore, true);
       expect(state.currentPage, 0);
-      expect(state.dateFilter.option, DateFilterOption.last7Days);
+      expect(state.dateFilter.option, DateFilterOption.all);
       expect(state.searchQuery, '');
       expect(state.statusFilter, isNull);
       expect(state.isGroupedView, true);
@@ -72,13 +72,7 @@ void main() {
     test('hasActiveFilters should return correct value', () {
       final notifier = container.read(receiptsProvider.notifier);
 
-      // Initially should have active filters (default is last7Days)
-      expect(container.read(receiptsProvider).hasActiveFilters, true);
-
-      // Set to all time filter
-      notifier.state = notifier.state.copyWith(
-        dateFilter: const DateRange(option: DateFilterOption.all),
-      );
+      // The inbox opens on all time, so no filters are active initially.
       expect(container.read(receiptsProvider).hasActiveFilters, false);
 
       // Add search query

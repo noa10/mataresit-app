@@ -8,8 +8,7 @@ import 'package:mataresit_app/features/search/services/search_service.dart';
 import 'package:mataresit_app/features/search/widgets/search_initial_state.dart';
 import 'package:mataresit_app/features/search/widgets/search_result_card.dart';
 import 'package:mataresit_app/features/search/widgets/search_result_detail_sheet.dart';
-import 'package:mataresit_app/shared/widgets/empty_state_widget.dart';
-import 'package:mataresit_app/shared/widgets/error_widget.dart';
+import 'package:mataresit_app/features/search/widgets/search_source_filter.dart';
 import 'package:mataresit_app/shared/widgets/loading_widget.dart';
 
 /// Serves a canned response (or throws a canned exception).
@@ -19,10 +18,12 @@ class _FakeSearchService extends SearchService {
   final Object _step;
   final Duration delay;
   int callCount = 0;
+  SearchRequest? lastRequest;
 
   @override
   Future<SearchResponse> search(SearchRequest request) async {
     callCount++;
+    lastRequest = request;
     if (delay > Duration.zero) {
       await Future<void>.delayed(delay);
     }
@@ -107,6 +108,12 @@ Future<void> _submitQuery(WidgetTester tester, String query) async {
   await tester.pumpAndSettle();
 }
 
+/// The example queries render as private ledger pills; each is one InkWell.
+Finder _examplePills() => find.descendant(
+  of: find.byType(SearchInitialState),
+  matching: find.byType(InkWell),
+);
+
 void main() {
   group('SearchScreen initial state', () {
     testWidgets('prompts to search with tappable example queries', (
@@ -117,23 +124,19 @@ void main() {
       await tester.pumpWidget(_wrap(service));
 
       expect(find.byType(SearchInitialState), findsOneWidget);
-      expect(find.byType(EmptyStateWidget), findsNothing);
       expect(find.byType(LoadingWidget), findsNothing);
       expect(service.callCount, 0);
 
       // No search runs until a query is submitted.
-      final examples = tester
-          .widgetList<ActionChip>(find.byType(ActionChip))
-          .toList();
-      expect(examples, hasLength(4));
+      expect(tester.widgetList<InkWell>(_examplePills()), hasLength(4));
     });
 
     testWidgets('submitting an example query runs the search', (tester) async {
       final service = _FakeSearchService(_receiptResponse());
 
       await tester.pumpWidget(_wrap(service));
-      await tester.ensureVisible(find.byType(ActionChip).first);
-      await tester.tap(find.byType(ActionChip).first);
+      await tester.ensureVisible(_examplePills().first);
+      await tester.tap(_examplePills().first);
       await tester.pumpAndSettle();
 
       expect(service.callCount, 1);
@@ -152,10 +155,12 @@ void main() {
       await _submitQuery(tester, 'nothing at all');
 
       expect(service.callCount, 1);
-      expect(find.byType(EmptyStateWidget), findsOneWidget);
       expect(find.text('search.empty.title'), findsOneWidget);
+      expect(
+        find.widgetWithText(OutlinedButton, 'search.empty.action'),
+        findsOneWidget,
+      );
       expect(find.byType(LoadingWidget), findsNothing);
-      expect(find.byType(AppErrorWidget), findsNothing);
     });
 
     testWidgets('empty state action returns to the initial prompt', (
@@ -165,14 +170,14 @@ void main() {
 
       await tester.pumpWidget(_wrap(service));
       await _submitQuery(tester, 'nothing at all');
-      expect(find.byType(EmptyStateWidget), findsOneWidget);
+      expect(find.text('search.empty.title'), findsOneWidget);
 
       await tester.ensureVisible(find.text('search.empty.action'));
       await tester.tap(find.text('search.empty.action'));
       await tester.pumpAndSettle();
 
       expect(find.byType(SearchInitialState), findsOneWidget);
-      expect(find.byType(EmptyStateWidget), findsNothing);
+      expect(find.text('search.empty.title'), findsNothing);
     });
   });
 
@@ -190,9 +195,10 @@ void main() {
       expect(
         find.descendant(
           of: find.byType(SearchResultCard),
-          matching: find.text('search.sources.receipt'),
+          matching: find.text('SEARCH.SOURCES.RECEIPT'),
         ),
         findsOneWidget,
+        reason: 'the source label renders uppercased from its key',
       );
       expect(
         find.descendant(
@@ -264,11 +270,12 @@ void main() {
       await tester.pumpWidget(_wrap(service));
       await _submitQuery(tester, 'groceries');
 
-      expect(find.byType(AppErrorWidget), findsOneWidget);
+      expect(find.text('search.error.title'), findsOneWidget);
       expect(find.text('Internal server error'), findsOneWidget);
-      expect(find.text('Try Again'), findsOneWidget);
+      final retry = find.widgetWithText(OutlinedButton, 'common.buttons.retry');
+      expect(retry, findsOneWidget);
 
-      await tester.tap(find.text('Try Again'));
+      await tester.tap(retry);
       await tester.pumpAndSettle();
 
       expect(service.callCount, 2);
@@ -337,15 +344,21 @@ void main() {
 
       await tester.pumpWidget(_wrap(service));
 
-      final chips = tester
-          .widgetList<FilterChip>(find.byType(FilterChip))
-          .toList();
-      expect(chips, hasLength(3));
-      expect(
-        chips.where((chip) => chip.selected).length,
-        2,
-        reason: 'receipt + business_directory are selected by default',
+      final pills = find.descendant(
+        of: find.byType(SearchSourceFilter),
+        matching: find.byType(InkWell),
       );
+      expect(tester.widgetList<InkWell>(pills), hasLength(3));
+
+      // The default selection still queries receipts and the business
+      // directory, so submitting sends exactly those two sources.
+      await _submitQuery(tester, 'anything');
+      final sources = service.lastRequest?.sources ?? const <String>[];
+      expect(
+        sources,
+        containsAll([SearchSources.receipt, SearchSources.businessDirectory]),
+      );
+      expect(sources, isNot(contains(SearchSources.customCategory)));
     });
   });
 }

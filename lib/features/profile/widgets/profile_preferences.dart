@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../shared/models/theme_model.dart' as theme_model;
 import '../../../shared/models/user_model.dart';
+import '../../../shared/providers/theme_provider.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../providers/profile_provider.dart';
 
 class ProfilePreferences extends ConsumerStatefulWidget {
@@ -190,14 +193,14 @@ class _ProfilePreferencesState extends ConsumerState<ProfilePreferences> {
                   trailing: Switch(
                     value: Theme.of(context).brightness == Brightness.dark,
                     onChanged: (value) {
-                      // TODO: Implement theme switching
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Theme switching will be implemented soon',
-                          ),
-                        ),
-                      );
+                      ref
+                          .read(themeProvider.notifier)
+                          .updateThemeMode(
+                            value
+                                ? theme_model.ThemeMode.dark
+                                : theme_model.ThemeMode.light,
+                            userId: ref.read(authProvider).user?.id,
+                          );
                     },
                   ),
                   contentPadding: EdgeInsets.zero,

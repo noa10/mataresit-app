@@ -81,12 +81,12 @@ class SubscriptionStatusCard extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: _getTierColor(tier).withValues(alpha: 0.1),
+            color: _getTierColor(context, tier).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
             _getTierIcon(tier),
-            color: _getTierColor(tier),
+            color: _getTierColor(context, tier),
             size: compact ? 20 : 24,
           ),
         ),
@@ -354,14 +354,15 @@ class SubscriptionStatusCard extends ConsumerWidget {
     }
   }
 
-  Color _getTierColor(SubscriptionTier tier) {
+  Color _getTierColor(BuildContext context, SubscriptionTier tier) {
+    final colors = Theme.of(context).colorScheme;
     switch (tier) {
       case SubscriptionTier.free:
-        return Colors.green;
+        return colors.onSurfaceVariant;
       case SubscriptionTier.pro:
-        return Colors.blue;
+        return colors.tertiary;
       case SubscriptionTier.max:
-        return Colors.purple;
+        return colors.primary;
     }
   }
 }
