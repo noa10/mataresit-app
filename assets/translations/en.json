@@ -107,6 +107,8 @@
   },
   "settings": {
     "title": "Settings",
+    "eyebrow": "PREFERENCES",
+    "subtitle": "Your plan, workspace and app preferences.",
     "description": "Configure your receipt processing preferences",
     "tabs": {
       "general": "General",
@@ -167,6 +169,8 @@
     "missionsRewards": "Missions & rewards",
     "personalWorkspace": "Personal workspace",
     "switchWorkspace": "Switch workspace",
+    "switchingWorkspace": "Switching workspace...",
+    "switchWorkspaceFailed": "Could not switch workspace. Please try again.",
     "uploadReceipts": "Upload receipts",
     "receipts": "Receipts",
     "categories": "Categories",
@@ -602,6 +606,7 @@
   },
   "search": {
     "title": "Search",
+    "eyebrow": "UNIFIED SEARCH",
     "field": {
       "hint": "Search receipts, categories, businesses",
       "clear": "Clear"

@@ -83,6 +83,18 @@ class ClaimListItem extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ],
+                              if (claim.claimantName != null &&
+                                  claim.claimantName!.trim().isNotEmpty) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  claim.claimantName!,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colors.onSurfaceVariant,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ],
                           ),
                         ),

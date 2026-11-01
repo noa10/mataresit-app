@@ -338,32 +338,36 @@ class _FilterPill extends StatelessWidget {
         ? colors.onPrimaryContainer
         : colors.onSurfaceVariant;
 
-    return Material(
-      color: selected ? colors.primaryContainer : colors.surface,
-      shape: StadiumBorder(
-        side: BorderSide(
-          color: selected ? colors.primaryContainer : colors.outlineVariant,
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Material(
+        color: selected ? colors.primaryContainer : colors.surface,
+        shape: StadiumBorder(
+          side: BorderSide(
+            color: selected ? colors.primaryContainer : colors.outlineVariant,
+          ),
         ),
-      ),
-      child: InkWell(
-        customBorder: const StadiumBorder(),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontFamily: 'IBMPlexMono',
-                  fontSize: 11,
-                  letterSpacing: 0.4,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                  color: foreground,
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontFamily: 'IBMPlexMono',
+                    fontSize: 11,
+                    letterSpacing: 0.4,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    color: foreground,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

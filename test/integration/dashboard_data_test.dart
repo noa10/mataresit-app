@@ -35,7 +35,10 @@ void main() {
             '[]',
             200,
             request: request,
-            headers: {'content-type': 'application/json'},
+            headers: {
+              'content-type': 'application/json',
+              'content-range': '0-0/0',
+            },
           ),
         ),
       );
@@ -84,26 +87,21 @@ void main() {
     });
 
     test('Should calculate dashboard stats correctly', () async {
-      final container = ProviderContainer();
-
       try {
-        // This will trigger the receipts provider to load data
-        final dashboardStats = container.read(dashboardStatsProvider);
+        final summary = await DashboardSummaryService(
+          SupabaseService.client,
+        ).fetch(userId: 'non-existent-user-id', month: DateTime(2026, 2));
 
         AppLogger.info(
-          '📈 Test: Dashboard stats - Total: ${dashboardStats.totalReceipts}, Amount: \$${dashboardStats.totalAmount}',
+          '📈 Test: Dashboard stats - Total: ${summary.receiptCount}, Amount: ${summary.spend}',
         );
 
-        // Verify stats structure
-        expect(dashboardStats.totalReceipts, isA<int>());
-        expect(dashboardStats.totalAmount, isA<double>());
-        expect(dashboardStats.thisMonthReceipts, isA<int>());
-        expect(dashboardStats.recentReceipts, isA<List>());
+        expect(summary.receiptCount, 0);
+        expect(summary.spend, isNull);
+        expect(summary.recent, isEmpty);
       } catch (e) {
         AppLogger.error('❌ Test failed to calculate dashboard stats', e);
         fail('Failed to calculate dashboard stats: $e');
-      } finally {
-        container.dispose();
       }
     });
 

@@ -251,6 +251,8 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(_SliverTabBarDelegate oldDelegate) {
-    return false;
+    // A new delegate is created when the theme changes, and its tab bar
+    // carries theme-dependent colors.
+    return _tabBar != oldDelegate._tabBar;
   }
 }

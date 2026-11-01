@@ -240,9 +240,20 @@ class ReceiptLedgerInfo extends ConsumerWidget {
     final count = state.totalCount;
     final countText = count == 1 ? '1 receipt' : '$count receipts';
     final loaded = state.hasMore && count > 0 ? ' loaded' : '';
+    final currencies = state.receipts
+        .map((receipt) => CurrencyUtils.normalizeCurrencyCode(receipt.currency))
+        .toSet();
+    final amountText = switch (currencies.length) {
+      0 => '',
+      1 => CurrencyUtils.formatCurrencySafe(
+        state.totalAmount,
+        currencies.single,
+      ),
+      _ => 'Mixed currencies',
+    };
     final summary = count == 0
         ? 'No receipts'
-        : '$countText$loaded • MYR ${state.totalAmount.toStringAsFixed(2)}';
+        : '$countText$loaded • $amountText';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

@@ -87,187 +87,194 @@ class _ClaimApprovalDialogState extends ConsumerState<ClaimApprovalDialog> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520, maxHeight: 680),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 12, 14),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'APPROVAL',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: colors.onSurfaceVariant,
-                            fontFamily: 'IBMPlexMono',
-                            fontSize: 10,
-                            letterSpacing: 1.4,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          'Approve Claim',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontFamily: 'InstrumentSerif',
-                            fontSize: 26,
-                            height: 1.05,
-                            color: colors.onSurface,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: _isLoading
-                        ? null
-                        : () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
-                    tooltip: 'Close',
-                  ),
-                ],
-              ),
-            ),
-            Divider(height: 1, color: colors.outlineVariant),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
-                child: Column(
+    return PopScope(
+      canPop: !_isLoading,
+      child: Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520, maxHeight: 680),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 12, 14),
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: colors.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: colors.outlineVariant),
-                      ),
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.claim.title,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            CurrencyUtils.formatCurrency(
-                              widget.claim.amount,
-                              widget.claim.currency,
-                            ),
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: colors.primary,
+                            'APPROVAL',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colors.onSurfaceVariant,
                               fontFamily: 'IBMPlexMono',
-                              fontWeight: FontWeight.w500,
+                              fontSize: 10,
+                              letterSpacing: 1.4,
                             ),
                           ),
-                          if (widget.claim.claimantName != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              'Claimant: ${widget.claim.claimantName}',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: colors.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                          if (widget.claim.description != null &&
-                              widget.claim.description!.isNotEmpty) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              widget.claim.description!,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: colors.onSurfaceVariant,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: colors.tertiaryContainer,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.warning_amber_outlined,
-                            color: colors.onTertiaryContainer,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'This action will approve the claim and cannot be undone. The claimant will be notified.',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: colors.onTertiaryContainer,
-                                height: 1.4,
-                              ),
+                          const SizedBox(height: 3),
+                          Text(
+                            'Approve Claim',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontFamily: 'InstrumentSerif',
+                              fontSize: 26,
+                              height: 1.05,
+                              color: colors.onSurface,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _commentController,
-                      decoration: const InputDecoration(
-                        labelText: 'Approval Comment (Optional)',
-                        hintText: 'Add any comments about this approval...',
-                        prefixIcon: Icon(Icons.comment_outlined),
-                      ),
-                      maxLines: 3,
-                      maxLength: 500,
+                    IconButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close),
+                      tooltip: 'Close',
                     ),
                   ],
                 ),
               ),
-            ),
-            Divider(height: 1, color: colors.outlineVariant),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: _isLoading
-                        ? null
-                        : () => Navigator.of(context).pop(),
-                    child: const Text('Cancel'),
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    onPressed: _isLoading ? null : _approveClaim,
-                    child: _isLoading
-                        ? SizedBox(
-                            height: 18,
-                            width: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: colors.onPrimary,
+              Divider(height: 1, color: colors.outlineVariant),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: colors.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: colors.outlineVariant),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.claim.title,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          )
-                        : const Text('Approve Claim'),
+                            const SizedBox(height: 6),
+                            Text(
+                              CurrencyUtils.formatCurrency(
+                                widget.claim.amount,
+                                widget.claim.currency,
+                              ),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: colors.primary,
+                                fontFamily: 'IBMPlexMono',
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            if (widget.claim.claimantName != null) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                'Claimant: ${widget.claim.claimantName}',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colors.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                            if (widget.claim.description != null &&
+                                widget.claim.description!.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                widget.claim.description!,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colors.onSurfaceVariant,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: colors.tertiaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.warning_amber_outlined,
+                              color: colors.onTertiaryContainer,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'This action will approve the claim and cannot be undone. The claimant will be notified.',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colors.onTertiaryContainer,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _commentController,
+                        decoration: const InputDecoration(
+                          labelText: 'Approval Comment (Optional)',
+                          hintText: 'Add any comments about this approval...',
+                          prefixIcon: Icon(Icons.comment_outlined),
+                        ),
+                        maxLines: 3,
+                        maxLength: 500,
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ],
+              Divider(height: 1, color: colors.outlineVariant),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      onPressed: _isLoading ? null : _approveClaim,
+                      style: FilledButton.styleFrom(
+                        disabledBackgroundColor: colors.primary,
+                        disabledForegroundColor: colors.onPrimary,
+                      ),
+                      child: _isLoading
+                          ? SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: colors.onPrimary,
+                              ),
+                            )
+                          : const Text('Approve Claim'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

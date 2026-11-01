@@ -142,6 +142,21 @@ void main() {
       expect(find.byType(MissionTile), findsNothing);
       expect(find.text('gamification.missions.empty_title'), findsOneWidget);
     });
+
+    testWidgets('weekly pill switches the visible mission type', (
+      tester,
+    ) async {
+      final service = FakeGamificationService(missions: _seedMissions);
+
+      await tester.pumpWidget(_wrap(service, const MissionsScreen()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('gamification.missions.tabs.weekly'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Log in seven days'), findsOneWidget);
+      expect(find.text('Scan five receipts'), findsNothing);
+    });
   });
 
   group('LeaderboardScreen', () {
@@ -172,6 +187,63 @@ void main() {
       expect(service.fetchLeaderboardCalls, 1);
       expect(service.requestedMetrics.single, LeaderboardMetric.weeklyXp);
       expect(service.requestedCountryCodes.single, 'MY');
+    });
+
+    testWidgets('metric and scope pills issue a new leaderboard query', (
+      tester,
+    ) async {
+      final service = FakeGamificationService(
+        profile: const GamificationProfile(
+          userId: FakeGamificationService.testUserId,
+          currentLevel: 3,
+          leaderboardOptIn: true,
+        ),
+        leaderboardEntries: _seedEntries,
+      );
+
+      await tester.pumpWidget(_wrap(service, const LeaderboardScreen()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.text('gamification.leaderboard.metrics.monthly_receipts'),
+      );
+      await tester.pumpAndSettle();
+      expect(service.requestedMetrics.last, LeaderboardMetric.monthlyReceipts);
+
+      await tester.tap(find.text('gamification.leaderboard.scope.global'));
+      await tester.pumpAndSettle();
+      expect(service.requestedCountryCodes.last, isNull);
+    });
+
+    testWidgets('uses grapheme-safe and anonymous monograms', (tester) async {
+      final service = FakeGamificationService(
+        profile: const GamificationProfile(
+          userId: FakeGamificationService.testUserId,
+          currentLevel: 3,
+          leaderboardOptIn: true,
+        ),
+        leaderboardEntries: const [
+          LeaderboardEntry(
+            rank: 1,
+            userId: 'u-cjk',
+            displayName: '陈大文',
+            metricValue: 4800,
+          ),
+          LeaderboardEntry(
+            rank: 2,
+            userId: 'u-anon',
+            displayName: 'Anonymous',
+            isAnonymous: true,
+            metricValue: 3900,
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(_wrap(service, const LeaderboardScreen()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('陈大'), findsOneWidget);
+      expect(find.text('AN'), findsOneWidget);
     });
 
     testWidgets(

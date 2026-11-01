@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:go_router/go_router.dart';
+import '../../../shared/providers/currency_provider.dart';
 import '../../../shared/utils/currency_utils.dart';
 import '../providers/analytics_provider.dart';
 
@@ -33,6 +35,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       start: now.subtract(const Duration(days: 30)),
       end: now,
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _refreshAnalytics();
+    });
   }
 
   @override
@@ -41,10 +46,11 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final analytics = analyticsState.data;
     final pieChartData = ref.watch(categoryPieChartProvider);
     final lineChartData = ref.watch(spendingTrendChartProvider);
+    final currencyCode = ref.watch(userPreferredCurrencyProvider);
 
     final hasData =
         analytics.totalTransactions > 0 ||
-        pieChartData.isNotEmpty ||
+        !pieChartData.isEmpty ||
         analytics.spendingTrend.isNotEmpty ||
         analytics.paymentMethodBreakdown.isNotEmpty;
 
@@ -64,17 +70,21 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 else if (analyticsState.error != null)
                   _AnalyticsErrorPanel(
                     error: analyticsState.error!,
-                    onRetry: () =>
-                        ref.read(analyticsProvider.notifier).refresh(),
+                    onRetry: _refreshAnalytics,
                   )
                 else ...[
-                  _buildSummaryCards(context, analytics),
+                  _buildSummaryCards(context, analytics, currencyCode),
                   const SizedBox(height: 16),
                   if (!hasData)
                     const _AnalyticsEmptyPanel()
                   else ...[
-                    if (pieChartData.isNotEmpty) ...[
-                      _buildCategoryPanel(context, analytics, pieChartData),
+                    if (!pieChartData.isEmpty) ...[
+                      _buildCategoryPanel(
+                        context,
+                        analytics,
+                        pieChartData,
+                        currencyCode,
+                      ),
                       const SizedBox(height: 16),
                     ],
                     if (analytics.spendingTrend.isNotEmpty) ...[
@@ -82,7 +92,11 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       const SizedBox(height: 16),
                     ],
                     if (analytics.paymentMethodBreakdown.isNotEmpty)
-                      _buildPaymentMethodsPanel(context, analytics),
+                      _buildPaymentMethodsPanel(
+                        context,
+                        analytics,
+                        currencyCode,
+                      ),
                   ],
                 ],
               ],
@@ -100,6 +114,15 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (context.canPop()) ...[
+          IconButton(
+            onPressed: () => context.pop(),
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            icon: const Icon(Icons.arrow_back),
+            visualDensity: VisualDensity.compact,
+          ),
+          const SizedBox(height: 4),
+        ],
         Text(
           'ANALYSIS',
           style: theme.textTheme.labelSmall?.copyWith(
@@ -337,7 +360,11 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     return '${date.day}/${date.month}/${date.year}';
   }
 
-  Widget _buildSummaryCards(BuildContext context, AnalyticsData analytics) {
+  Widget _buildSummaryCards(
+    BuildContext context,
+    AnalyticsData analytics,
+    String currencyCode,
+  ) {
     final topSpend = analytics.categorySpending[analytics.topCategory] ?? 0.0;
     final topShare = analytics.totalSpending > 0 && topSpend > 0
         ? '${(topSpend / analytics.totalSpending * 100).toStringAsFixed(0)}% of spend'
@@ -353,7 +380,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 label: 'Total Spending',
                 value: CurrencyUtils.formatCurrency(
                   analytics.totalSpending,
-                  'MYR',
+                  currencyCode,
                 ),
                 meta: _rangeLabel,
               ),
@@ -377,7 +404,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 label: 'Average',
                 value: CurrencyUtils.formatCurrency(
                   analytics.averageTransaction,
-                  'MYR',
+                  currencyCode,
                 ),
                 meta: 'Per receipt',
               ),
@@ -399,7 +426,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   Widget _buildCategoryPanel(
     BuildContext context,
     AnalyticsData analytics,
-    List<PieChartSectionData> sections,
+    CategoryChartData chartData,
+    String currencyCode,
   ) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -418,7 +446,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 children: [
                   PieChart(
                     PieChartData(
-                      sections: sections,
+                      sections: chartData.sections,
                       centerSpaceRadius: 40,
                       sectionsSpace: 2,
                     ),
@@ -444,7 +472,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                             child: Text(
                               CurrencyUtils.formatCurrency(
                                 analytics.totalSpending,
-                                'MYR',
+                                currencyCode,
                               ),
                               style: theme.textTheme.labelSmall?.copyWith(
                                 fontFamily: 'IBMPlexMono',
@@ -464,7 +492,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             const SizedBox(height: 16),
             Divider(height: 1, thickness: 1, color: colors.outlineVariant),
             const SizedBox(height: 12),
-            _buildCategoryLegend(context, analytics, sections),
+            _buildCategoryLegend(context, chartData, currencyCode),
           ],
         ),
       ),
@@ -473,20 +501,17 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
   Widget _buildCategoryLegend(
     BuildContext context,
-    AnalyticsData analytics,
-    List<PieChartSectionData> sections,
+    CategoryChartData chartData,
+    String currencyCode,
   ) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final entries = analytics.categorySpending.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    final visible = entries.take(sections.length).toList();
 
     return Wrap(
       spacing: 16,
       runSpacing: 8,
       children: [
-        for (var i = 0; i < visible.length; i++)
+        for (final entry in chartData.entries)
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -494,20 +519,20 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 width: 8,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: sections[i].color,
+                  color: entry.color,
                   shape: BoxShape.circle,
                 ),
               ),
               const SizedBox(width: 6),
               Text(
-                visible[i].key,
+                entry.label,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: colors.onSurface,
                 ),
               ),
               const SizedBox(width: 6),
               Text(
-                CurrencyUtils.formatCurrency(visible[i].value, 'MYR'),
+                CurrencyUtils.formatCurrency(entry.value, currencyCode),
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontFamily: 'IBMPlexMono',
                   color: colors.onSurfaceVariant,
@@ -584,6 +609,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   Widget _buildPaymentMethodsPanel(
     BuildContext context,
     AnalyticsData analytics,
+    String currencyCode,
   ) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -602,6 +628,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               context,
               entries[i],
               analytics.totalSpending,
+              currencyCode,
             ),
           ],
         ],
@@ -613,6 +640,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     BuildContext context,
     MapEntry<String, double> entry,
     double totalSpending,
+    String currencyCode,
   ) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -638,7 +666,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               ),
               const SizedBox(width: 12),
               Text(
-                '${CurrencyUtils.formatCurrency(entry.value, 'MYR')} (${percentage.toStringAsFixed(1)}%)',
+                '${CurrencyUtils.formatCurrency(entry.value, currencyCode)} (${percentage.toStringAsFixed(1)}%)',
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontFamily: 'IBMPlexMono',
                   fontWeight: FontWeight.w500,

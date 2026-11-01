@@ -318,7 +318,7 @@ class _ModernReceiptDetailScreenState
       await ReceiptService.updateReceiptWithLineItems(
         receiptId: widget.receiptId,
         receiptData: receiptData,
-        lineItems: _editedLineItems ?? receipt.lineItems ?? const [],
+        lineItems: receipt.lineItems ?? const [],
       );
 
       ref.invalidate(receiptProvider(widget.receiptId));
@@ -889,14 +889,15 @@ class _ModernReceiptDetailScreenState
                           decoration: const InputDecoration(
                             labelText: 'Currency',
                           ),
-                          items: ['MYR', 'USD', 'EUR', 'GBP', 'SGD'].map((
-                            currency,
-                          ) {
-                            return DropdownMenuItem(
-                              value: currency,
-                              child: Text(currency),
-                            );
-                          }).toList(),
+                          items:
+                              CurrencyConfigs.getSelectableCurrencyCodes(
+                                selectedCurrency: _selectedCurrency,
+                              ).map((currency) {
+                                return DropdownMenuItem(
+                                  value: currency,
+                                  child: Text(currency),
+                                );
+                              }).toList(),
                           onChanged: (value) {
                             setState(() {
                               _selectedCurrency = value;

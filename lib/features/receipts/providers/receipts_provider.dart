@@ -133,6 +133,22 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
     bool refresh = false,
     CurrentTeamState? teamContext,
   }) async {
+    final previousReceipts = state.receipts;
+    final previousGroupedReceipts = state.groupedReceipts;
+    final previousCurrentPage = state.currentPage;
+    final previousHasMore = state.hasMore;
+
+    void restoreWithError(String message) {
+      state = state.copyWith(
+        receipts: previousReceipts,
+        groupedReceipts: previousGroupedReceipts,
+        currentPage: previousCurrentPage,
+        hasMore: previousHasMore,
+        isLoading: false,
+        error: message,
+      );
+    }
+
     try {
       if (refresh) {
         state = state.copyWith(
@@ -151,10 +167,7 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
       final user = ref.read(currentUserProvider);
       if (user == null) {
         AppLogger.warning('⚠️ No authenticated user found');
-        state = state.copyWith(
-          isLoading: false,
-          error: 'User not authenticated',
-        );
+        restoreWithError('User not authenticated');
         return;
       }
 
@@ -168,10 +181,7 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
 
       if (currentUser == null || session == null) {
         AppLogger.error('❌ Session invalid or expired');
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Session expired. Please login again.',
-        );
+        restoreWithError('Session expired. Please login again.');
         return;
       }
 
@@ -325,10 +335,8 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
         AppLogger.info('✅ Successfully mapped ${newReceipts.length} receipts');
       } catch (e) {
         AppLogger.error('❌ Failed to load receipts from database', e);
-        state = state.copyWith(
-          isLoading: false,
-          error:
-              'Could not load receipts. Check your connection and try again.',
+        restoreWithError(
+          'Could not load receipts. Check your connection and try again.',
         );
         return;
       }
@@ -350,7 +358,7 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
         currentPage: state.currentPage + 1,
       );
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      restoreWithError(e.toString());
     }
   }
 

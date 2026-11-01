@@ -146,6 +146,37 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     final subscription = subscriptionState.subscription;
     final usage = subscriptionState.usage;
 
+    if (subscriptionState.error != null && subscription == null) {
+      return _LedgerPanel(
+        title: 'Current plan',
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.error_outline, size: 18, color: colors.error),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Could not load subscription status. ${subscriptionState.error}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              TextButton(
+                onPressed: () => ref
+                    .read(subscriptionProvider.notifier)
+                    .refreshSubscriptionData(),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (subscription == null) {
       return _LedgerPanel(
         title: 'Current plan',

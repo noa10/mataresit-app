@@ -62,7 +62,9 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final loading = ref.watch(receiptsProvider).isLoading;
+    final loading = ref.watch(
+      receiptsProvider.select((state) => state.isLoading),
+    );
     if (widget.groupedReceipts.isEmpty && !loading) {
       return _buildEmptyState(context);
     }
@@ -93,7 +95,6 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
                           itemCount: group.receipts.length,
                           itemBuilder: (context, index) => ReceiptLedgerRow(
                             receipt: group.receipts[index],
-                            showConvertedAmount: true,
                             showDate: false,
                             isLast: index == group.receipts.length - 1,
                           ),

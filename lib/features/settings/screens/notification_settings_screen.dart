@@ -30,15 +30,7 @@ class _NotificationSettingsScreenState
     final state = ref.watch(notificationPreferencesProvider);
     final notifier = ref.read(notificationPreferencesProvider.notifier);
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: _buildBody(context, state, notifier),
-    );
+    return Scaffold(body: _buildBody(context, state, notifier));
   }
 
   Widget _buildBody(
@@ -63,6 +55,10 @@ class _NotificationSettingsScreenState
           else if (preferences == null)
             _buildEmptyPanel(context)
           else ...[
+            if (state.error != null) ...[
+              _buildUpdateError(context, state.error!),
+              const SizedBox(height: 16),
+            ],
             if (state.updateError != null) ...[
               _buildUpdateError(context, state.updateError!),
               const SizedBox(height: 16),
@@ -81,56 +77,70 @@ class _NotificationSettingsScreenState
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'NOTIFICATION PREFERENCES',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: colors.onSurfaceVariant,
-                  fontFamily: 'IBMPlexMono',
-                  fontSize: 10,
-                  letterSpacing: 1.4,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Notifications',
-                style: theme.textTheme.displaySmall?.copyWith(
-                  fontFamily: 'InstrumentSerif',
-                  fontSize: 32,
-                  height: 1.05,
-                  color: colors.onSurface,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Control what reaches you, and when.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colors.onSurfaceVariant,
-                ),
-              ),
-            ],
+        if (context.canPop()) ...[
+          IconButton(
+            onPressed: () => context.pop(),
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            icon: const Icon(Icons.arrow_back),
+            visualDensity: VisualDensity.compact,
           ),
-        ),
-        if (state.isUpdating)
-          Padding(
-            padding: const EdgeInsets.only(top: 8, left: 8),
-            child: Text(
-              'SAVING',
-              style: theme.textTheme.labelSmall?.copyWith(
-                fontFamily: 'IBMPlexMono',
-                fontSize: 9,
-                letterSpacing: 1.2,
-                fontWeight: FontWeight.w600,
-                color: colors.primary,
+          const SizedBox(height: 4),
+        ],
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'NOTIFICATION PREFERENCES',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: colors.onSurfaceVariant,
+                      fontFamily: 'IBMPlexMono',
+                      fontSize: 10,
+                      letterSpacing: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Notifications',
+                    style: theme.textTheme.displaySmall?.copyWith(
+                      fontFamily: 'InstrumentSerif',
+                      fontSize: 32,
+                      height: 1.05,
+                      color: colors.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Control what reaches you, and when.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
+            if (state.isUpdating)
+              Padding(
+                padding: const EdgeInsets.only(top: 8, left: 8),
+                child: Text(
+                  'SAVING',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontFamily: 'IBMPlexMono',
+                    fontSize: 9,
+                    letterSpacing: 1.2,
+                    fontWeight: FontWeight.w600,
+                    color: colors.primary,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ],
     );
   }
@@ -516,10 +526,12 @@ class _NotificationSettingsScreenState
     required ValueChanged<bool>? onChanged,
   }) {
     final colors = Theme.of(context).colorScheme;
+    final effectiveOnChanged =
+        ref.read(notificationPreferencesProvider).isUpdating ? null : onChanged;
 
     return Switch(
       value: value,
-      onChanged: onChanged,
+      onChanged: effectiveOnChanged,
       activeThumbColor: colors.onPrimary,
       activeTrackColor: colors.primary,
       inactiveThumbColor: colors.onSurfaceVariant,

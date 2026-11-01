@@ -19,6 +19,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   bool _emailSent = false;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -37,25 +38,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           SnackBar(
             content: Text(next.error!, style: TextStyle(color: colors.onError)),
             backgroundColor: colors.error,
-          ),
-        );
-      }
-
-      if (previous?.isLoading == true &&
-          next.isLoading == false &&
-          next.error == null) {
-        setState(() => _emailSent = true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              authCopy(
-                context,
-                'Password reset email sent! Check your inbox.',
-                'E-mel set semula kata laluan telah dihantar. Semak peti masuk anda.',
-              ),
-              style: TextStyle(color: colors.onPrimary),
-            ),
-            backgroundColor: colors.primary,
           ),
         );
       }
@@ -217,12 +199,38 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     }
   }
 
-  void _handleResetPassword() {
-    if (ref.read(authProvider).isLoading) return;
-    if (_formKey.currentState!.validate()) {
-      ref
-          .read(authProvider.notifier)
-          .resetPassword(_emailController.text.trim());
+  Future<void> _handleResetPassword() async {
+    if (_isSubmitting || ref.read(authProvider).isLoading) return;
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isSubmitting = true);
+    await ref
+        .read(authProvider.notifier)
+        .resetPassword(_emailController.text.trim());
+
+    if (!mounted) return;
+
+    final resetSucceeded = ref.read(authProvider).error == null;
+    final colors = Theme.of(context).colorScheme;
+    setState(() {
+      _isSubmitting = false;
+      if (resetSucceeded) _emailSent = true;
+    });
+
+    if (resetSucceeded) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            authCopy(
+              context,
+              'Password reset email sent! Check your inbox.',
+              'E-mel set semula kata laluan telah dihantar. Semak peti masuk anda.',
+            ),
+            style: TextStyle(color: colors.onPrimary),
+          ),
+          backgroundColor: colors.primary,
+        ),
+      );
     }
   }
 }

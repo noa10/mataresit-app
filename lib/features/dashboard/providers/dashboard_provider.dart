@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/network/supabase_client.dart';
 import '../../../shared/models/receipt_model.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../receipts/providers/receipts_provider.dart';
 import '../../teams/providers/teams_provider.dart';
 
 /// A receipt as displayed on the workspace overview. Unknown amounts and
@@ -298,7 +299,7 @@ int? _confidence(Map scores) {
   double? normalize(dynamic value) {
     final parsed = value is num ? value.toDouble() : double.tryParse('$value');
     if (parsed == null || !parsed.isFinite) return null;
-    return (parsed < 1 ? parsed * 100 : parsed)
+    return (parsed <= 1 ? parsed * 100 : parsed)
         .round()
         .clamp(0, 100)
         .toDouble();
@@ -333,6 +334,14 @@ int _compareRecent(DashboardReceipt a, DashboardReceipt b) {
 }
 
 final dashboardSummaryProvider = FutureProvider<DashboardSummary>((ref) async {
+  // Receipt mutations do not necessarily change the active workspace, so keep
+  // the overview in sync when the shared receipt list changes.
+  ref.listen<ReceiptsState>(receiptsProvider, (previous, next) {
+    if (!identical(previous?.receipts, next.receipts)) {
+      ref.invalidateSelf();
+    }
+  });
+
   final userId = ref.watch(currentUserProvider.select((user) => user?.id));
   final teamState = ref.watch(currentTeamProvider);
   if (userId == null) throw StateError('Sign in to load the overview');

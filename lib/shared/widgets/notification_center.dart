@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -352,10 +353,17 @@ class _NotificationCenterState extends ConsumerState<NotificationCenter> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final colors = Theme.of(context).colorScheme;
+
+    return IconButton(
       key: _buttonKey,
-      onTap: _toggleDropdown,
-      child:
+      onPressed: _toggleDropdown,
+      tooltip: 'common.labels.notifications'.tr(),
+      style: IconButton.styleFrom(
+        minimumSize: const Size(48, 48),
+        foregroundColor: colors.onSurface,
+      ),
+      icon:
           widget.child ??
           Consumer(
             builder: (context, ref, child) {
@@ -368,10 +376,7 @@ class _NotificationCenterState extends ConsumerState<NotificationCenter> {
 
               return Stack(
                 children: [
-                  Icon(
-                    Icons.notifications,
-                    color: Theme.of(context).iconTheme.color,
-                  ),
+                  Icon(Icons.notifications_outlined, color: colors.onSurface),
                   if (widget.showBadge && unreadCount > 0)
                     Positioned(
                       right: 0,

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_constants.dart';
@@ -32,6 +33,7 @@ class _ProfilePreferencesState extends ConsumerState<ProfilePreferences> {
   @override
   Widget build(BuildContext context) {
     final profileState = ref.watch(profileProvider);
+    final themeState = ref.watch(themeProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,16 +194,26 @@ class _ProfilePreferencesState extends ConsumerState<ProfilePreferences> {
                   ),
                   trailing: Switch(
                     value: Theme.of(context).brightness == Brightness.dark,
-                    onChanged: (value) {
-                      ref
-                          .read(themeProvider.notifier)
-                          .updateThemeMode(
-                            value
-                                ? theme_model.ThemeMode.dark
-                                : theme_model.ThemeMode.light,
-                            userId: ref.read(authProvider).user?.id,
-                          );
-                    },
+                    onChanged: themeState.isLoading
+                        ? null
+                        : (value) async {
+                            final updated = await ref
+                                .read(themeProvider.notifier)
+                                .updateThemeMode(
+                                  value
+                                      ? theme_model.ThemeMode.dark
+                                      : theme_model.ThemeMode.light,
+                                  userId: ref.read(authProvider).user?.id,
+                                );
+                            if (!context.mounted || updated) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'common.messages.operationFailed'.tr(),
+                                ),
+                              ),
+                            );
+                          },
                   ),
                   contentPadding: EdgeInsets.zero,
                 ),

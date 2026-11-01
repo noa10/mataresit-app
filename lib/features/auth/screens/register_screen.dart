@@ -312,16 +312,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   void _goToLogin() {
-    // Registration may be opened from an invitation instead of login.
-    final matches = GoRouter.of(
-      context,
-    ).routerDelegate.currentConfiguration.matches;
-    if (matches.length > 1 &&
-        matches[matches.length - 2].matchedLocation == _loginRoute) {
-      context.pop();
-    } else {
-      context.push(_loginRoute);
-    }
+    // Registration can be reached from login or an invitation. Always land on
+    // login rather than depending on go_router's internal match stack.
+    context.go(_loginRoute);
   }
 
   void _handleRegister() {

@@ -462,7 +462,7 @@ class _PodiumCard extends StatelessWidget {
               color: isFirst ? colors.primary : colors.surfaceContainerHigh,
             ),
             child: Text(
-              _initialsFor(name),
+              _entryInitials(entry),
               style: theme.textTheme.labelSmall?.copyWith(
                 fontFamily: 'IBMPlexMono',
                 fontWeight: FontWeight.w600,
@@ -612,7 +612,7 @@ class _RankRow extends StatelessWidget {
                   : colors.surfaceContainerHigh,
             ),
             child: Text(
-              _initialsFor(_displayName(entry)),
+              _entryInitials(entry),
               style: theme.textTheme.labelSmall?.copyWith(
                 fontFamily: 'IBMPlexMono',
                 fontSize: 10,
@@ -707,36 +707,40 @@ class _LedgerPill extends StatelessWidget {
         ? colors.onPrimaryContainer
         : colors.onSurfaceVariant;
 
-    return Material(
-      color: selected ? colors.primaryContainer : colors.surface,
-      shape: StadiumBorder(
-        side: BorderSide(
-          color: selected ? colors.primaryContainer : colors.outlineVariant,
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Material(
+        color: selected ? colors.primaryContainer : colors.surface,
+        shape: StadiumBorder(
+          side: BorderSide(
+            color: selected ? colors.primaryContainer : colors.outlineVariant,
+          ),
         ),
-      ),
-      child: InkWell(
-        customBorder: const StadiumBorder(),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: 14, color: foreground),
-                const SizedBox(width: 6),
-              ],
-              Text(
-                label,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontFamily: 'IBMPlexMono',
-                  fontSize: 11,
-                  letterSpacing: 0.4,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                  color: foreground,
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 14, color: foreground),
+                  const SizedBox(width: 6),
+                ],
+                Text(
+                  label,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontFamily: 'IBMPlexMono',
+                    fontSize: 11,
+                    letterSpacing: 0.4,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    color: foreground,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -752,20 +756,24 @@ String _displayName(LeaderboardEntry entry) {
 }
 
 /// Two-letter monogram for an entry, with the web's anonymous fallback.
+String _entryInitials(LeaderboardEntry entry) {
+  if (entry.isAnonymous) return 'AN';
+  return _initialsFor(_displayName(entry));
+}
+
+/// Grapheme-safe two-letter monogram for a display name.
 String _initialsFor(String name) {
-  final cleaned = name.replaceAll(RegExp(r'[^A-Za-z0-9 ]'), '').trim();
-  final words = cleaned
+  final words = name
+      .trim()
       .split(RegExp(r'\s+'))
       .where((word) => word.isNotEmpty)
       .toList();
   if (words.isEmpty) return 'AN';
   if (words.length == 1) {
-    final word = words.first;
-    return word.length >= 2
-        ? word.substring(0, 2).toUpperCase()
-        : word.toUpperCase();
+    return words.first.characters.take(2).toString().toUpperCase();
   }
-  return '${words.first[0]}${words[1][0]}'.toUpperCase();
+  return '${words.first.characters.first}${words[1].characters.first}'
+      .toUpperCase();
 }
 
 String _formatMetricValue(LeaderboardMetric metric, double value) {

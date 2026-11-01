@@ -263,7 +263,7 @@ class SettingsScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'PREFERENCES',
+            'settings.eyebrow'.tr(),
             style: theme.textTheme.labelSmall?.copyWith(
               color: colors.onSurfaceVariant,
               fontFamily: 'IBMPlexMono',
@@ -273,7 +273,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Settings',
+            'settings.title'.tr(),
             style: theme.textTheme.displaySmall?.copyWith(
               fontFamily: 'InstrumentSerif',
               fontSize: 32,
@@ -283,7 +283,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Your plan, workspace and app preferences.',
+            'settings.subtitle'.tr(),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colors.onSurfaceVariant,
             ),

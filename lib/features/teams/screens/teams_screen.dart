@@ -63,7 +63,9 @@ class TeamsScreen extends ConsumerWidget {
       );
     }
 
-    if (teamsState.teams.isEmpty && !teamsState.isLoading) {
+    if (teamsState.teams.isEmpty &&
+        !teamsState.isLoading &&
+        teamsState.error == null) {
       return _buildEmptyState(context, ref);
     }
 

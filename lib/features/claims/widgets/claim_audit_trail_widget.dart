@@ -6,6 +6,8 @@ import '../../../shared/models/claim_model.dart';
 import '../providers/claims_provider.dart';
 
 class ClaimAuditTrailWidget extends ConsumerWidget {
+  static final _timestampFormat = DateFormat('dd MMM · HH:mm');
+
   final String claimId;
 
   const ClaimAuditTrailWidget({super.key, required this.claimId});
@@ -187,9 +189,9 @@ class ClaimAuditTrailWidget extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    DateFormat(
-                      'dd MMM · HH:mm',
-                    ).format(audit.createdAt).toUpperCase(),
+                    _timestampFormat
+                        .format(audit.createdAt.toLocal())
+                        .toUpperCase(),
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: colors.onSurfaceVariant,
                       fontFamily: 'IBMPlexMono',

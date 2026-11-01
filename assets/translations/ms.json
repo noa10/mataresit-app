@@ -107,6 +107,8 @@
   },
   "settings": {
     "title": "Tetapan",
+    "eyebrow": "KEUTAMAAN",
+    "subtitle": "Pelan, ruang kerja dan keutamaan aplikasi anda.",
     "description": "Konfigurasikan keutamaan pemprosesan resit anda",
     "tabs": {
       "general": "Umum",
@@ -167,6 +169,8 @@
     "missionsRewards": "Misi & ganjaran",
     "personalWorkspace": "Ruang kerja peribadi",
     "switchWorkspace": "Tukar ruang kerja",
+    "switchingWorkspace": "Menukar ruang kerja...",
+    "switchWorkspaceFailed": "Tidak dapat menukar ruang kerja. Sila cuba lagi.",
     "uploadReceipts": "Muat naik resit",
     "receipts": "Resit",
     "categories": "Kategori",
@@ -602,6 +606,7 @@
   },
   "search": {
     "title": "Carian",
+    "eyebrow": "CARIAN BERSATU",
     "field": {
       "hint": "Cari resit, kategori, perniagaan",
       "clear": "Kosongkan"

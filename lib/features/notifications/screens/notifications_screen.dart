@@ -213,9 +213,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             label: 'Unread',
             selected: unreadOnly,
             onTap: () => _setFilters(
-              unreadOnly
-                  ? const NotificationFilters()
-                  : const NotificationFilters(unreadOnly: true),
+              _copyFilters(
+                unreadOnly: unreadOnly ? null : true,
+                clearUnreadOnly: unreadOnly,
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -223,11 +224,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             label: 'High priority',
             selected: highPriority,
             onTap: () => _setFilters(
-              highPriority
-                  ? const NotificationFilters()
-                  : const NotificationFilters(
-                      priority: NotificationPriority.high,
-                    ),
+              _copyFilters(
+                priority: highPriority ? null : NotificationPriority.high,
+                clearPriority: highPriority,
+              ),
             ),
           ),
         ],
@@ -239,6 +239,22 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     setState(() {
       _filters = filters;
     });
+  }
+
+  NotificationFilters _copyFilters({
+    bool? unreadOnly,
+    bool clearUnreadOnly = false,
+    NotificationPriority? priority,
+    bool clearPriority = false,
+  }) {
+    return NotificationFilters(
+      teamId: _filters.teamId,
+      type: _filters.type,
+      priority: clearPriority ? null : priority ?? _filters.priority,
+      unreadOnly: clearUnreadOnly ? null : unreadOnly ?? _filters.unreadOnly,
+      dateFrom: _filters.dateFrom,
+      dateTo: _filters.dateTo,
+    );
   }
 
   Widget _buildNotificationPanel(
@@ -720,6 +736,27 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   }
 
   Future<void> _handleDelete(String notificationId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete notification'),
+        content: const Text(
+          'Are you sure you want to delete this notification?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || confirmed != true) return;
+
     try {
       final notifier = ref.read(notificationProvider.notifier);
       await notifier.deleteNotification(notificationId);

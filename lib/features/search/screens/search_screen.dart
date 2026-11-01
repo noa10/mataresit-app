@@ -86,32 +86,39 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final notifier = ref.read(searchProvider.notifier);
 
     return Scaffold(
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildPageHeader(searchState, notifier),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-            child: _buildQueryField(searchState),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-            child: SearchSourceFilter(
-              selectedSources: searchState.selectedSources,
-              onToggle: notifier.toggleSource,
+      body: CustomScrollView(
+        controller: _scrollController,
+        slivers: [
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildPageHeader(searchState, notifier),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: _buildQueryField(searchState),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  child: SearchSourceFilter(
+                    selectedSources: searchState.selectedSources,
+                    onToggle: notifier.toggleSource,
+                  ),
+                ),
+                if (searchState.isDegraded)
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    child: _PartialResultsBanner(),
+                  ),
+                if (_showResultCount(searchState))
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    child: _buildResultCount(searchState),
+                  ),
+              ],
             ),
           ),
-          if (searchState.isDegraded)
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
-              child: _PartialResultsBanner(),
-            ),
-          if (_showResultCount(searchState))
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-              child: _buildResultCount(searchState),
-            ),
-          Expanded(child: _buildBody(searchState)),
+          _buildBodySliver(searchState),
         ],
       ),
     );
@@ -126,12 +133,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (GoRouter.maybeOf(context)?.canPop() ?? false)
+            IconButton(
+              onPressed: () => GoRouter.of(context).pop(),
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              icon: const Icon(Icons.arrow_back),
+            ),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'UNIFIED SEARCH',
+                  'search.eyebrow'.tr(),
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: colors.onSurfaceVariant,
                     fontFamily: 'IBMPlexMono',
@@ -284,37 +297,49 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       );
     }
 
-    return _buildResultsList(searchState);
+    return const SizedBox.shrink();
   }
 
-  Widget _buildResultsList(SearchState searchState) {
-    return ListView.builder(
-      controller: _scrollController,
+  Widget _buildBodySliver(SearchState searchState) {
+    if (searchState.results.isNotEmpty) {
+      return _buildResultsSliver(searchState);
+    }
+
+    return SliverFillRemaining(
+      hasScrollBody: false,
+      child: _buildBody(searchState),
+    );
+  }
+
+  Widget _buildResultsSliver(SearchState searchState) {
+    return SliverPadding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-      itemCount: searchState.results.length + (searchState.hasMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index >= searchState.results.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16),
-            child: Center(
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
+      sliver: SliverList.builder(
+        itemCount: searchState.results.length + (searchState.hasMore ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index >= searchState.results.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
               ),
+            );
+          }
+
+          final result = searchState.results[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: SearchResultCard(
+              result: result,
+              onTap: () => _openResult(result),
             ),
           );
-        }
-
-        final result = searchState.results[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: SearchResultCard(
-            result: result,
-            onTap: () => _openResult(result),
-          ),
-        );
-      },
+        },
+      ),
     );
   }
 }

@@ -58,11 +58,7 @@ class _AdaptiveNavigationWrapperState
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
-    final selectedIndex = _destinations.indexWhere(
-      (destination) =>
-          location == destination.route ||
-          location.startsWith('${destination.route}/'),
-    );
+    final selectedIndex = _selectedIndexForLocation(location);
 
     return Scaffold(
       body: SafeArea(
@@ -79,6 +75,31 @@ class _AdaptiveNavigationWrapperState
         selectedIndex: selectedIndex,
       ),
     );
+  }
+
+  int _selectedIndexForLocation(String location) {
+    final exactIndex = _destinations.indexWhere(
+      (destination) =>
+          location == destination.route ||
+          location.startsWith('${destination.route}/'),
+    );
+    if (exactIndex != -1) return exactIndex;
+
+    if (location == AppRoutes.profile ||
+        location == AppRoutes.notifications ||
+        location == AppRoutes.settings ||
+        location.startsWith('${AppRoutes.settings}/')) {
+      return 4;
+    }
+    if (location == AppRoutes.search ||
+        location == AppRoutes.analytics ||
+        location == AppRoutes.duplicates) {
+      return 1;
+    }
+    if (location == AppRoutes.missions || location == AppRoutes.leaderboard) {
+      return 0;
+    }
+    return 0;
   }
 }
 
@@ -198,10 +219,13 @@ class _WorkspaceHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final currentTeam = ref.watch(currentTeamProvider).currentTeam;
+    final currentTeamState = ref.watch(currentTeamProvider);
+    final currentTeam = currentTeamState.currentTeam;
     final teams = ref.watch(teamsProvider).teams;
     final user = ref.watch(currentUserProvider);
-    final name = currentTeam?.name ?? 'navigation.personalWorkspace'.tr();
+    final name = currentTeamState.isLoading
+        ? 'navigation.switchingWorkspace'.tr()
+        : currentTeam?.name ?? 'navigation.personalWorkspace'.tr();
     final trimmedName = name.trim();
     final initial = trimmedName.isEmpty ? 'M' : trimmedName[0].toUpperCase();
     final userName = user?.fullName ?? user?.email ?? 'M';
@@ -221,13 +245,22 @@ class _WorkspaceHeader extends ConsumerWidget {
           Expanded(
             child: PopupMenuButton<String>(
               tooltip: 'navigation.switchWorkspace'.tr(),
-              onSelected: (value) {
+              onSelected: (value) async {
                 if (value == '__manage_teams__') {
                   context.go(AppRoutes.teams);
                 } else {
-                  ref
-                      .read(currentTeamProvider.notifier)
-                      .switchTeam(value.isEmpty ? null : value);
+                  final notifier = ref.read(currentTeamProvider.notifier);
+                  await notifier.switchTeam(value.isEmpty ? null : value);
+                  if (!context.mounted) return;
+
+                  if (ref.read(currentTeamProvider).error != null) {
+                    notifier.clearError();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('navigation.switchWorkspaceFailed'.tr()),
+                      ),
+                    );
+                  }
                 }
               },
               itemBuilder: (context) => [

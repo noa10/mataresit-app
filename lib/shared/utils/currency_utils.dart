@@ -112,6 +112,19 @@ class CurrencyConfigs {
   static List<CurrencyConfig> getSupportedCurrencies() {
     return _configs.values.toList();
   }
+
+  /// Currency codes suitable for a picker.
+  ///
+  /// The selected value is always included so a receipt or claim created with
+  /// a code outside the local configuration cannot break a dropdown assertion.
+  static List<String> getSelectableCurrencyCodes({String? selectedCurrency}) {
+    final codes = _configs.values.map((config) => config.code).toList();
+    if (selectedCurrency != null && selectedCurrency.trim().isNotEmpty) {
+      final normalized = CurrencyUtils.normalizeCurrencyCode(selectedCurrency);
+      if (!codes.contains(normalized)) codes.add(normalized);
+    }
+    return codes;
+  }
 }
 
 /// Calculation result for receipt totals

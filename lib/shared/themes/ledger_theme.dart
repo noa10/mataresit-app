@@ -50,8 +50,9 @@ class LedgerTheme {
           error: danger,
           errorContainer: dangerSoft,
           onErrorContainer: danger,
-          inverseSurface: panel,
-          onInverseSurface: Color(0xFFF1F2EE),
+          inverseSurface: isDark ? const Color(0xFFF1F2EE) : panel,
+          onInverseSurface: Color(isDark ? 0xFF080C0A : 0xFFF1F2EE),
+          inversePrimary: Color(isDark ? 0xFF0B6B4D : 0xFF3FBF8E),
           surfaceTint: Colors.transparent,
         );
     final shape = RoundedRectangleBorder(
@@ -158,6 +159,11 @@ class LedgerTheme {
         labelColor: accent,
         unselectedLabelColor: muted,
         indicatorColor: accent,
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: scheme.inverseSurface,
+        contentTextStyle: TextStyle(color: scheme.onInverseSurface),
+        actionTextColor: scheme.inversePrimary,
       ),
     );
   }

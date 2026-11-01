@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mataresit_app/features/dashboard/providers/dashboard_provider.dart';
 
 void main() {
-  test('keeps the compatibility provider scoped to the loaded overview', () {
+  test('loads the dashboard summary', () async {
     final container = ProviderContainer(
       overrides: [
         dashboardSummaryProvider.overrideWith(
@@ -22,10 +22,9 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    // The adapter never turns a pending read into an invented zero.
-    final before = container.read(dashboardStatsProvider);
-    expect(before.totalReceipts, 0);
-    expect(before.totalAmount, 0);
-    expect(before.recentReceipts, isEmpty);
+    final summary = await container.read(dashboardSummaryProvider.future);
+    expect(summary.receiptCount, 1);
+    expect(summary.spend, 12);
+    expect(summary.recent, hasLength(1));
   });
 }

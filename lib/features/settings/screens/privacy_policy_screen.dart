@@ -447,7 +447,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
     Color color,
   ) {
     return Card(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       child: Padding(
         padding: const EdgeInsets.all(AppConstants.smallPadding),
         child: Column(
@@ -490,7 +490,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
 
   Widget _buildFooter(BuildContext context) {
     return Card(
-      color: Colors.grey.shade100,
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
       child: Padding(
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
         child: Column(

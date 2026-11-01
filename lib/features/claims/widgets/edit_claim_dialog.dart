@@ -119,250 +119,250 @@ class _EditClaimDialogState extends ConsumerState<EditClaimDialog> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 600, maxHeight: 640),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 12, 14),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
+    return PopScope(
+      canPop: !_isLoading,
+      child: Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600, maxHeight: 640),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 12, 14),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'EDIT CLAIM',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colors.onSurfaceVariant,
+                              fontFamily: 'IBMPlexMono',
+                              fontSize: 10,
+                              letterSpacing: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            'Edit Claim',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontFamily: 'InstrumentSerif',
+                              fontSize: 26,
+                              height: 1.05,
+                              color: colors.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close),
+                      tooltip: 'Close',
+                    ),
+                  ],
+                ),
+              ),
+              Divider(height: 1, color: colors.outlineVariant),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
+                  child: Form(
+                    key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'EDIT CLAIM',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: colors.onSurfaceVariant,
-                            fontFamily: 'IBMPlexMono',
-                            fontSize: 10,
-                            letterSpacing: 1.4,
+                        TextFormField(
+                          controller: _titleController,
+                          decoration: const InputDecoration(
+                            labelText: 'Claim Title *',
+                            prefixIcon: Icon(Icons.title),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter a claim title';
+                            }
+                            if (value.trim().length < 3) {
+                              return 'Title must be at least 3 characters';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _descriptionController,
+                          decoration: const InputDecoration(
+                            labelText: 'Description',
+                            prefixIcon: Icon(Icons.description_outlined),
+                          ),
+                          maxLines: 3,
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: TextFormField(
+                                controller: _amountController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Amount *',
+                                  prefixIcon: Icon(Icons.payments_outlined),
+                                ),
+                                keyboardType: TextInputType.number,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Please enter an amount';
+                                  }
+                                  final amount = double.tryParse(value);
+                                  if (amount == null || amount <= 0) {
+                                    return 'Please enter a valid amount';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: DropdownButtonFormField<String>(
+                                initialValue: _currency,
+                                decoration: const InputDecoration(
+                                  labelText: 'Currency',
+                                ),
+                                items:
+                                    CurrencyConfigs.getSelectableCurrencyCodes(
+                                          selectedCurrency: _currency,
+                                        )
+                                        .map(
+                                          (currency) => DropdownMenuItem(
+                                            value: currency,
+                                            child: Text(currency),
+                                          ),
+                                        )
+                                        .toList(),
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    setState(() {
+                                      _currency =
+                                          CurrencyUtils.normalizeCurrencyCode(
+                                            value,
+                                          );
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _categoryController,
+                          decoration: const InputDecoration(
+                            labelText: 'Category',
+                            prefixIcon: Icon(Icons.category_outlined),
                           ),
                         ),
-                        const SizedBox(height: 3),
-                        Text(
-                          'Edit Claim',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontFamily: 'InstrumentSerif',
-                            fontSize: 26,
-                            height: 1.05,
-                            color: colors.onSurface,
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField<ClaimPriority>(
+                          initialValue: _priority,
+                          decoration: const InputDecoration(
+                            labelText: 'Priority',
+                            prefixIcon: Icon(Icons.priority_high),
+                          ),
+                          items: ClaimPriority.values
+                              .map(
+                                (priority) => DropdownMenuItem(
+                                  value: priority,
+                                  child: Text(priority.name.toUpperCase()),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() {
+                                _priority = value;
+                              });
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: colors.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: colors.outlineVariant),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.info_outline,
+                                color: colors.onSurfaceVariant,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Claims can only be edited while in draft status. Once submitted, they cannot be modified.',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colors.onSurfaceVariant,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: _isLoading
-                        ? null
-                        : () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
-                    tooltip: 'Close',
-                  ),
-                ],
-              ),
-            ),
-            Divider(height: 1, color: colors.outlineVariant),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextFormField(
-                        controller: _titleController,
-                        decoration: const InputDecoration(
-                          labelText: 'Claim Title *',
-                          prefixIcon: Icon(Icons.title),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter a claim title';
-                          }
-                          if (value.trim().length < 3) {
-                            return 'Title must be at least 3 characters';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _descriptionController,
-                        decoration: const InputDecoration(
-                          labelText: 'Description',
-                          prefixIcon: Icon(Icons.description_outlined),
-                        ),
-                        maxLines: 3,
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: TextFormField(
-                              controller: _amountController,
-                              decoration: const InputDecoration(
-                                labelText: 'Amount *',
-                                prefixIcon: Icon(Icons.payments_outlined),
-                              ),
-                              keyboardType: TextInputType.number,
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Please enter an amount';
-                                }
-                                final amount = double.tryParse(value);
-                                if (amount == null || amount <= 0) {
-                                  return 'Please enter a valid amount';
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              initialValue: _currency,
-                              decoration: const InputDecoration(
-                                labelText: 'Currency',
-                              ),
-                              items:
-                                  [
-                                        'MYR',
-                                        'USD',
-                                        'EUR',
-                                        'GBP',
-                                        'CAD',
-                                        'AUD',
-                                        'JPY',
-                                        'SGD',
-                                      ]
-                                      .map(
-                                        (currency) => DropdownMenuItem(
-                                          value: currency,
-                                          child: Text(currency),
-                                        ),
-                                      )
-                                      .toList(),
-                              onChanged: (value) {
-                                if (value != null) {
-                                  setState(() {
-                                    _currency =
-                                        CurrencyUtils.normalizeCurrencyCode(
-                                          value,
-                                        );
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _categoryController,
-                        decoration: const InputDecoration(
-                          labelText: 'Category',
-                          prefixIcon: Icon(Icons.category_outlined),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<ClaimPriority>(
-                        initialValue: _priority,
-                        decoration: const InputDecoration(
-                          labelText: 'Priority',
-                          prefixIcon: Icon(Icons.priority_high),
-                        ),
-                        items: ClaimPriority.values
-                            .map(
-                              (priority) => DropdownMenuItem(
-                                value: priority,
-                                child: Text(priority.name.toUpperCase()),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _priority = value;
-                            });
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: colors.surfaceContainerLow,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: colors.outlineVariant),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              Icons.info_outline,
-                              color: colors.onSurfaceVariant,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Claims can only be edited while in draft status. Once submitted, they cannot be modified.',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: colors.onSurfaceVariant,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
-            ),
-            Divider(height: 1, color: colors.outlineVariant),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _isLoading
-                          ? null
-                          : () => Navigator.of(context).pop(),
-                      child: const Text('Cancel'),
+              Divider(height: 1, color: colors.outlineVariant),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _isLoading
+                            ? null
+                            : () => Navigator.of(context).pop(),
+                        child: const Text('Cancel'),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: _isLoading ? null : _updateClaim,
-                      child: _isLoading
-                          ? SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: colors.onPrimary,
-                              ),
-                            )
-                          : const Text('Update Claim'),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: _isLoading ? null : _updateClaim,
+                        style: FilledButton.styleFrom(
+                          disabledBackgroundColor: colors.primary,
+                          disabledForegroundColor: colors.onPrimary,
+                        ),
+                        child: _isLoading
+                            ? SizedBox(
+                                height: 18,
+                                width: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: colors.onPrimary,
+                                ),
+                              )
+                            : const Text('Update Claim'),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

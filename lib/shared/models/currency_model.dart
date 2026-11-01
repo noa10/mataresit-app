@@ -105,7 +105,8 @@ class CurrencyModel extends Equatable {
     if (symbolPosition == 'after') {
       return '$formattedAmount $symbol';
     } else {
-      return '$symbol$formattedAmount';
+      final separator = symbol == code ? ' ' : '';
+      return '$symbol$separator$formattedAmount';
     }
   }
 

@@ -483,6 +483,14 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
   Widget _buildInvitationRow(TeamInvitationModel invitation) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final currentUserRole = widget.team.getUserRole(
+      ref.watch(currentUserProvider)?.id ?? '',
+    );
+    final canManage =
+        currentUserRole == TeamRole.owner || currentUserRole == TeamRole.admin;
+    final showExpired =
+        invitation.status == InvitationStatus.expired ||
+        (invitation.status == InvitationStatus.pending && invitation.isExpired);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
@@ -520,7 +528,7 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
                     fontSize: 11,
                   ),
                 ),
-                if (invitation.isExpired)
+                if (showExpired)
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
@@ -536,7 +544,7 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
-                      'Expires ${_formatTimeAgo(invitation.expiresAt)}',
+                      'Expires in ${_formatTimeUntil(invitation.expiresAt)}',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colors.onSurfaceVariant,
                         fontFamily: 'IBMPlexMono',
@@ -547,15 +555,16 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
               ],
             ),
           ),
-          PopupMenuButton<String>(
-            icon: Icon(
-              Icons.more_horiz,
-              size: 20,
-              color: colors.onSurfaceVariant,
-            ),
-            onSelected: (action) => _handleInvitationAction(action, invitation),
-            itemBuilder: (context) => [
-              if (invitation.isPending) ...[
+          if (canManage && invitation.isPending)
+            PopupMenuButton<String>(
+              icon: Icon(
+                Icons.more_horiz,
+                size: 20,
+                color: colors.onSurfaceVariant,
+              ),
+              onSelected: (action) =>
+                  _handleInvitationAction(action, invitation),
+              itemBuilder: (context) => [
                 const PopupMenuItem(
                   value: 'resend',
                   child: Row(
@@ -581,8 +590,7 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
                   ),
                 ),
               ],
-            ],
-          ),
+            ),
         ],
       ),
     );
@@ -994,6 +1002,21 @@ class _TeamMembersScreenState extends ConsumerState<TeamMembersScreen>
     }
   }
 
+  String _formatTimeUntil(DateTime dateTime) {
+    final difference = dateTime.difference(DateTime.now());
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays} day${difference.inDays == 1 ? '' : 's'}';
+    }
+    if (difference.inHours > 0) {
+      return '${difference.inHours} hour${difference.inHours == 1 ? '' : 's'}';
+    }
+    if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} minute${difference.inMinutes == 1 ? '' : 's'}';
+    }
+    return 'less than a minute';
+  }
+
   void _showDeleteTeamDialog(BuildContext context) {
     // TODO: Implement delete team dialog
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1208,7 +1231,11 @@ class _InvitationStatusPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    final background = invitation.isExpired
+    final showExpired =
+        invitation.status == InvitationStatus.expired ||
+        (invitation.status == InvitationStatus.pending && invitation.isExpired);
+
+    final background = showExpired
         ? colors.errorContainer
         : switch (invitation.status) {
             InvitationStatus.pending => colors.tertiaryContainer,
@@ -1216,7 +1243,7 @@ class _InvitationStatusPill extends StatelessWidget {
             InvitationStatus.expired => colors.errorContainer,
             InvitationStatus.cancelled => colors.surfaceContainerHighest,
           };
-    final foreground = invitation.isExpired
+    final foreground = showExpired
         ? colors.onErrorContainer
         : switch (invitation.status) {
             InvitationStatus.pending => colors.onTertiaryContainer,

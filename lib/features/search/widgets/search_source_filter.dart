@@ -69,24 +69,33 @@ class _SourcePill extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    return Material(
-      color: selected ? colors.primaryContainer : colors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: selected ? colors.primaryContainer : colors.outlineVariant,
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Text(
-            label,
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: selected ? colors.onPrimaryContainer : colors.onSurface,
-              fontWeight: FontWeight.w500,
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Material(
+          color: selected ? colors.primaryContainer : colors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(
+              color: selected ? colors.primaryContainer : colors.outlineVariant,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Text(
+                label,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: selected
+                      ? colors.onPrimaryContainer
+                      : colors.onSurface,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
           ),
         ),

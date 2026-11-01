@@ -159,13 +159,17 @@ class _ClaimDetailScreenState extends ConsumerState<ClaimDetailScreen> {
             ),
           ),
         ),
-        Container(
-          decoration: BoxDecoration(
-            color: colors.surface,
-            border: Border(top: BorderSide(color: colors.outlineVariant)),
+        if (claim.canEdit ||
+            claim.canSubmit ||
+            claim.canApprove ||
+            claim.canReject)
+          Container(
+            decoration: BoxDecoration(
+              color: colors.surface,
+              border: Border(top: BorderSide(color: colors.outlineVariant)),
+            ),
+            child: SafeArea(top: false, child: _buildActionButtons(claim)),
           ),
-          child: SafeArea(top: false, child: _buildActionButtons(claim)),
-        ),
       ],
     );
   }
