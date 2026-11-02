@@ -47,8 +47,7 @@ class ReceiptsState {
     this.isSelectionMode = false,
     this.selectedReceiptIds = const {},
     this.isPerformingBulkOperation = false,
-  }) : dateFilter =
-           dateFilter ?? const DateRange(option: DateFilterOption.last7Days);
+  }) : dateFilter = dateFilter ?? const DateRange(option: DateFilterOption.all);
 
   ReceiptsState copyWith({
     List<ReceiptModel>? receipts,
@@ -113,6 +112,10 @@ class ReceiptsState {
 class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
   final Ref ref;
 
+  /// Identifies the latest load so stale responses (from a previous workspace
+  /// or filter set) are discarded instead of overwriting newer state.
+  int _loadGeneration = 0;
+
   ReceiptsNotifier(this.ref) : super(const ReceiptsState()) {
     // Listen to workspace changes and refresh receipts when workspace switches
     ref.listen<CurrentTeamState>(currentTeamProvider, (previous, next) {
@@ -134,6 +137,44 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
     bool refresh = false,
     CurrentTeamState? teamContext,
   }) async {
+    final previousReceipts = state.receipts;
+    final previousGroupedReceipts = state.groupedReceipts;
+    final previousCurrentPage = state.currentPage;
+    final previousHasMore = state.hasMore;
+    final requestTeamId =
+        (teamContext ?? ref.read(currentTeamProvider))?.currentTeam?.id;
+
+    // A page load must not start while another page is in flight. Refreshes
+    // intentionally supersede any in-flight request.
+    if (!refresh && (state.isLoading || !state.hasMore)) return;
+
+    final generation = ++_loadGeneration;
+
+    void restoreWithError(String message) {
+      if (generation != _loadGeneration) return;
+      if (ref.read(currentTeamProvider).currentTeam?.id != requestTeamId) {
+        // The workspace changed while this request was in flight; never
+        // surface the previous workspace's receipts under the new one.
+        state = state.copyWith(
+          receipts: const [],
+          groupedReceipts: const [],
+          currentPage: 0,
+          hasMore: true,
+          isLoading: false,
+          error: message,
+        );
+        return;
+      }
+      state = state.copyWith(
+        receipts: previousReceipts,
+        groupedReceipts: previousGroupedReceipts,
+        currentPage: previousCurrentPage,
+        hasMore: previousHasMore,
+        isLoading: false,
+        error: message,
+      );
+    }
+
     try {
       if (refresh) {
         state = state.copyWith(
@@ -145,17 +186,12 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
         );
       }
 
-      if (state.isLoading || !state.hasMore) return;
-
       state = state.copyWith(isLoading: true, clearError: true);
 
       final user = ref.read(currentUserProvider);
       if (user == null) {
         AppLogger.warning('⚠️ No authenticated user found');
-        state = state.copyWith(
-          isLoading: false,
-          error: 'User not authenticated',
-        );
+        restoreWithError('User not authenticated');
         return;
       }
 
@@ -169,10 +205,7 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
 
       if (currentUser == null || session == null) {
         AppLogger.error('❌ Session invalid or expired');
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Session expired. Please login again.',
-        );
+        restoreWithError('Session expired. Please login again.');
         return;
       }
 
@@ -326,12 +359,13 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
         AppLogger.info('✅ Successfully mapped ${newReceipts.length} receipts');
       } catch (e) {
         AppLogger.error('❌ Failed to load receipts from database', e);
-        // If database fails, create some mock data for demonstration
-        if (state.receipts.isEmpty) {
-          AppLogger.warning('📝 Using mock data as fallback');
-          newReceipts = _createMockReceipts(user.id);
-        }
+        restoreWithError(
+          'Could not load receipts. Check your connection and try again.',
+        );
+        return;
       }
+
+      if (generation != _loadGeneration) return;
 
       final allReceipts = refresh
           ? newReceipts
@@ -350,7 +384,7 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
         currentPage: state.currentPage + 1,
       );
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      restoreWithError(e.toString());
     }
   }
 
@@ -432,110 +466,6 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
       default:
         return ProcessingStatus.completed;
     }
-  }
-
-  /// Create mock receipts for demonstration
-  List<ReceiptModel> _createMockReceipts(String userId) {
-    final now = DateTime.now();
-    return [
-      ReceiptModel(
-        id: 'mock-1',
-        userId: userId,
-        merchantName: 'Starbucks Coffee',
-        totalAmount: 15.50,
-        currency: 'USD',
-        transactionDate: now.subtract(const Duration(days: 1)),
-        category: 'Food & Beverage',
-        status: ReceiptStatus.reviewed,
-        processingStatus: ProcessingStatus.completed,
-        isExpense: true,
-        isReimbursable: true,
-        createdAt: now.subtract(const Duration(days: 1)),
-        updatedAt: now.subtract(const Duration(days: 1)),
-        lineItems: [
-          LineItemModel(
-            id: 'line-1-1',
-            receiptId: 'mock-1',
-            description: 'Grande Latte',
-            amount: 5.25,
-            createdAt: now.subtract(const Duration(days: 1)),
-            updatedAt: now.subtract(const Duration(days: 1)),
-          ),
-          LineItemModel(
-            id: 'line-1-2',
-            receiptId: 'mock-1',
-            description: 'Blueberry Muffin',
-            amount: 3.75,
-            createdAt: now.subtract(const Duration(days: 1)),
-            updatedAt: now.subtract(const Duration(days: 1)),
-          ),
-          LineItemModel(
-            id: 'line-1-3',
-            receiptId: 'mock-1',
-            description: 'Americano',
-            amount: 4.50,
-            createdAt: now.subtract(const Duration(days: 1)),
-            updatedAt: now.subtract(const Duration(days: 1)),
-          ),
-          LineItemModel(
-            id: 'line-1-4',
-            receiptId: 'mock-1',
-            description: 'Tax',
-            amount: 2.00,
-            createdAt: now.subtract(const Duration(days: 1)),
-            updatedAt: now.subtract(const Duration(days: 1)),
-          ),
-        ],
-      ),
-      ReceiptModel(
-        id: 'mock-2',
-        userId: userId,
-        merchantName: 'Shell Gas Station',
-        totalAmount: 45.20,
-        currency: 'USD',
-        transactionDate: now.subtract(const Duration(days: 3)),
-        category: 'Transportation',
-        status: ReceiptStatus.unreviewed,
-        processingStatus: ProcessingStatus.completed,
-        isExpense: true,
-        isReimbursable: false,
-        createdAt: now.subtract(const Duration(days: 3)),
-        updatedAt: now.subtract(const Duration(days: 3)),
-        lineItems: [
-          LineItemModel(
-            id: 'line-2-1',
-            receiptId: 'mock-2',
-            description: 'Regular Gasoline',
-            amount: 42.50,
-            createdAt: now.subtract(const Duration(days: 3)),
-            updatedAt: now.subtract(const Duration(days: 3)),
-          ),
-          LineItemModel(
-            id: 'line-2-2',
-            receiptId: 'mock-2',
-            description: 'Car Wash',
-            amount: 2.70,
-            createdAt: now.subtract(const Duration(days: 3)),
-            updatedAt: now.subtract(const Duration(days: 3)),
-          ),
-        ],
-      ),
-      ReceiptModel(
-        id: 'mock-3',
-        userId: userId,
-        merchantName: 'Office Depot',
-        totalAmount: 89.99,
-        currency: 'USD',
-        transactionDate: now.subtract(const Duration(days: 5)),
-        category: 'Office Supplies',
-        status: ReceiptStatus.reviewed,
-        processingStatus: ProcessingStatus.pending,
-        isExpense: true,
-        isReimbursable: true,
-        createdAt: now.subtract(const Duration(days: 5)),
-        updatedAt: now.subtract(const Duration(days: 5)),
-      ),
-    ];
   }
 
   /// Add a new receipt to the list

@@ -1,33 +1,80 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_constants.dart';
 
-/// A reusable Mataresit logo widget that can be used across the app
-/// Supports different sizes and contexts (login, dashboard, etc.)
-class MataresitLogo extends StatelessWidget {
-  /// The size of the logo
+/// The receipt mark shared with the web workspace's Mataresit lockup.
+class MataresitMark extends StatelessWidget {
+  const MataresitMark({super.key, this.size = 36, this.color});
+
   final double size;
+  final Color? color;
 
-  /// Whether to show the app title below the logo
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.square(
+      dimension: size,
+      child: CustomPaint(
+        painter: _MataresitMarkPainter(
+          color ?? Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    );
+  }
+}
+
+class _MataresitMarkPainter extends CustomPainter {
+  const _MataresitMarkPainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.save();
+    canvas.scale(size.width / 24, size.height / 24);
+    // Align the centre of the ink with the wordmark, as in the web lockup.
+    canvas.translate(0, -1.075);
+    final path = Path()
+      ..fillType = PathFillType.evenOdd
+      ..moveTo(2.4, 7.05)
+      ..lineTo(4, 5.15)
+      ..lineTo(5.6, 7.05)
+      ..lineTo(7.2, 5.15)
+      ..lineTo(8.8, 7.05)
+      ..lineTo(10.4, 5.15)
+      ..lineTo(12, 7.05)
+      ..lineTo(13.6, 5.15)
+      ..lineTo(15.2, 7.05)
+      ..lineTo(16.8, 5.15)
+      ..lineTo(18.4, 7.05)
+      ..lineTo(20, 5.15)
+      ..lineTo(21.6, 7.05)
+      ..lineTo(21.6, 21)
+      ..lineTo(2.4, 21)
+      ..close()
+      ..addRect(const Rect.fromLTRB(5.2, 9.4, 16.8, 10.9))
+      ..addRect(const Rect.fromLTRB(5.2, 12.7, 20.2, 14.2))
+      ..addRect(const Rect.fromLTRB(5.2, 16, 13.6, 17.5))
+      ..addRect(const Rect.fromLTRB(5.2, 18.8, 18.4, 20.3));
+    canvas.drawPath(path, Paint()..color = color);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_MataresitMarkPainter oldDelegate) =>
+      oldDelegate.color != color;
+}
+
+class MataresitLogo extends StatelessWidget {
+  final double size;
   final bool showTitle;
-
-  /// The title text style
   final TextStyle? titleStyle;
-
-  /// The spacing between logo and title
   final double spacing;
-
-  /// Whether to show the logo in a container with background
   final bool showContainer;
-
-  /// The container background color
   final Color? containerColor;
-
-  /// The container border radius
   final double? borderRadius;
 
   const MataresitLogo({
     super.key,
-    this.size = 80.0,
+    this.size = 80,
     this.showTitle = false,
     this.titleStyle,
     this.spacing = AppConstants.defaultPadding,
@@ -36,104 +83,50 @@ class MataresitLogo extends StatelessWidget {
     this.borderRadius,
   });
 
-  /// Factory constructor for login screen usage
-  factory MataresitLogo.login({double size = 100.0, bool showTitle = true}) {
-    return MataresitLogo(
-      size: size,
-      showTitle: showTitle,
-      showContainer: false,
-      spacing: AppConstants.defaultPadding,
-    );
-  }
+  factory MataresitLogo.login({double size = 100, bool showTitle = true}) =>
+      MataresitLogo(size: size, showTitle: showTitle);
 
-  /// Factory constructor for dashboard/app bar usage
-  factory MataresitLogo.appBar({double size = 32.0, bool showTitle = true}) {
-    return MataresitLogo(
-      size: size,
-      showTitle: showTitle,
-      showContainer: false,
-      spacing: AppConstants.smallPadding,
-    );
-  }
+  factory MataresitLogo.appBar({double size = 32, bool showTitle = true}) =>
+      MataresitLogo(
+        size: size,
+        showTitle: showTitle,
+        spacing: AppConstants.smallPadding,
+      );
 
-  /// Factory constructor for splash screen usage
-  factory MataresitLogo.splash({double size = 120.0, bool showTitle = true}) {
-    return MataresitLogo(
-      size: size,
-      showTitle: showTitle,
-      showContainer: true,
-      spacing: AppConstants.largePadding,
-    );
-  }
+  factory MataresitLogo.splash({double size = 120, bool showTitle = true}) =>
+      MataresitLogo(
+        size: size,
+        showTitle: showTitle,
+        showContainer: true,
+        spacing: AppConstants.largePadding,
+      );
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    Widget logoImage = Image.asset(
-      'assets/mataresit-icon.png',
-      width: size,
-      height: size,
-      fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) {
-        // Fallback to icon if image fails to load
-        return Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            color: theme.primaryColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(
-              borderRadius ?? AppConstants.largeBorderRadius,
-            ),
-          ),
-          child: Icon(
-            Icons.receipt_long,
-            size: size * 0.5,
-            color: theme.primaryColor,
-          ),
-        );
-      },
-    );
-
-    // Wrap in container if requested
+    Widget mark = MataresitMark(size: size);
     if (showContainer) {
-      logoImage = Container(
+      mark = Container(
         padding: EdgeInsets.all(size * 0.1),
         decoration: BoxDecoration(
-          color: containerColor ?? theme.primaryColor.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(
-            borderRadius ?? AppConstants.largeBorderRadius,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          color: containerColor ?? theme.colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(borderRadius ?? 10),
         ),
-        child: logoImage,
+        child: mark,
       );
     }
-
-    // Return just logo if no title
-    if (!showTitle) {
-      return logoImage;
-    }
-
-    // Return logo with title
+    if (!showTitle) return mark;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        logoImage,
+        mark,
         SizedBox(height: spacing),
         Text(
           AppConstants.appName,
           style:
               titleStyle ??
               theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
               ),
           textAlign: TextAlign.center,
         ),
@@ -142,20 +135,14 @@ class MataresitLogo extends StatelessWidget {
   }
 }
 
-/// A horizontal variant of the Mataresit logo with title beside the logo
 class MataresitLogoHorizontal extends StatelessWidget {
-  /// The size of the logo
   final double size;
-
-  /// The title text style
   final TextStyle? titleStyle;
-
-  /// The spacing between logo and title
   final double spacing;
 
   const MataresitLogoHorizontal({
     super.key,
-    this.size = 32.0,
+    this.size = 32,
     this.titleStyle,
     this.spacing = AppConstants.smallPadding,
   });
@@ -163,32 +150,17 @@ class MataresitLogoHorizontal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Image.asset(
-          'assets/mataresit-icon.png',
-          width: size,
-          height: size,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) {
-            // Fallback to icon if image fails to load
-            return Icon(
-              Icons.receipt_long,
-              size: size,
-              color: theme.primaryColor,
-            );
-          },
-        ),
+        MataresitMark(size: size),
         SizedBox(width: spacing),
         Text(
           AppConstants.appName,
           style:
               titleStyle ??
-              theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
+              theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
               ),
         ),
       ],

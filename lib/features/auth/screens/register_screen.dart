@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/constants/app_constants.dart';
-import '../../../shared/widgets/loading_widget.dart';
-import '../../../shared/widgets/google_icon.dart';
 import '../providers/auth_provider.dart';
-import '../../../app/router/app_router.dart';
+import '../widgets/auth_layout.dart';
+
+const _dashboardRoute = '/dashboard';
+const _loginRoute = '/login';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -35,152 +37,205 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final colors = Theme.of(context).colorScheme;
+    final signInLabel = authLabel(context, 'auth.signIn', 'Sign In');
+    final emailLabel = authLabel(context, 'auth.email', 'Email');
+    final passwordLabel = authLabel(context, 'auth.password', 'Password');
 
-    // Listen to auth state changes
     ref.listen<AuthState>(authProvider, (previous, next) {
-      if (next.error != null) {
+      if (next.error != null && previous?.error != next.error) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.error!), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(next.error!, style: TextStyle(color: colors.onError)),
+            backgroundColor: colors.error,
+          ),
         );
       }
 
       if (next.isAuthenticated) {
-        context.go(AppRoutes.dashboard);
+        context.go(_dashboardRoute);
       }
     });
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Account'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppConstants.largePadding),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: AppConstants.largePadding),
-
-                // Welcome Text
-                Text(
-                  'Join ${AppConstants.appName}',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+    return AuthLayout(
+      child: Form(
+        key: _formKey,
+        child: AutofillGroup(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: _goBack,
+                  icon: const Icon(Icons.arrow_back, size: 18),
+                  label: Text(
+                    authLabel(context, 'common.buttons.back', 'Back'),
                   ),
-                  textAlign: TextAlign.center,
                 ),
-
-                const SizedBox(height: AppConstants.smallPadding),
-
-                Text(
-                  'Create your account to get started',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
-                  textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              AuthHeader(
+                title: authCopy(context, 'Create account', 'Cipta akaun'),
+                subtitle: authCopy(
+                  context,
+                  'Create an account and start filing receipts in minutes.',
+                  'Cipta akaun dan mula memfailkan resit dalam beberapa minit.',
                 ),
-
-                const SizedBox(height: AppConstants.largePadding * 2),
-
-                // Full Name Field
-                TextFormField(
+              ),
+              const SizedBox(height: 26),
+              AuthModeSelector(
+                isSignIn: false,
+                onSignIn: _goToLogin,
+                onSignUp: () {},
+              ),
+              const SizedBox(height: 24),
+              AuthField(
+                label: authCopy(context, 'Full name', 'Nama penuh'),
+                child: TextFormField(
                   controller: _fullNameController,
                   textInputAction: TextInputAction.next,
                   textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    labelText: 'Full Name',
-                    hintText: 'Enter your full name',
-                    prefixIcon: Icon(Icons.person_outlined),
-                  ),
+                  autofillHints: const [AutofillHints.name],
+                  decoration: authInputDecoration(context),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your full name';
+                      return authCopy(
+                        context,
+                        'Please enter your full name',
+                        'Sila masukkan nama penuh anda',
+                      );
                     }
                     if (value.length < 2) {
-                      return 'Name must be at least 2 characters';
+                      return authCopy(
+                        context,
+                        'Name must be at least 2 characters',
+                        'Nama mestilah sekurang-kurangnya 2 aksara',
+                      );
                     }
                     return null;
                   },
                 ),
-
-                const SizedBox(height: AppConstants.defaultPadding),
-
-                // Email Field
-                TextFormField(
+              ),
+              const SizedBox(height: 18),
+              AuthField(
+                label: emailLabel,
+                child: TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    hintText: 'Enter your email',
-                    prefixIcon: Icon(Icons.email_outlined),
+                  autofillHints: const [AutofillHints.email],
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  decoration: authInputDecoration(
+                    context,
+                    hintText: authCopy(
+                      context,
+                      'you@company.com',
+                      'anda@syarikat.com',
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
+                      return authCopy(
+                        context,
+                        'Please enter your email',
+                        'Sila masukkan e-mel anda',
+                      );
                     }
                     if (!RegExp(
                       r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
                     ).hasMatch(value)) {
-                      return 'Please enter a valid email';
+                      return authCopy(
+                        context,
+                        'Please enter a valid email',
+                        'Sila masukkan alamat e-mel yang sah',
+                      );
                     }
                     return null;
                   },
                 ),
-
-                const SizedBox(height: AppConstants.defaultPadding),
-
-                // Password Field
-                TextFormField(
+              ),
+              const SizedBox(height: 18),
+              AuthField(
+                label: passwordLabel,
+                child: TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    hintText: 'Enter your password',
-                    prefixIcon: const Icon(Icons.lock_outlined),
+                  autofillHints: const [AutofillHints.newPassword],
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  decoration: authInputDecoration(
+                    context,
                     suffixIcon: IconButton(
+                      tooltip: _obscurePassword
+                          ? authCopy(
+                              context,
+                              'Show password',
+                              'Tunjuk kata laluan',
+                            )
+                          : authCopy(
+                              context,
+                              'Hide password',
+                              'Sembunyi kata laluan',
+                            ),
                       icon: Icon(
                         _obscurePassword
                             ? Icons.visibility
                             : Icons.visibility_off,
                       ),
                       onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
+                        setState(() => _obscurePassword = !_obscurePassword);
                       },
                     ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
+                      return authCopy(
+                        context,
+                        'Please enter your password',
+                        'Sila masukkan kata laluan anda',
+                      );
                     }
                     if (value.length < AppConstants.minPasswordLength) {
-                      return 'Password must be at least ${AppConstants.minPasswordLength} characters';
+                      return authCopy(
+                        context,
+                        'Password must be at least ${AppConstants.minPasswordLength} characters',
+                        'Kata laluan mestilah sekurang-kurangnya ${AppConstants.minPasswordLength} aksara',
+                      );
                     }
                     return null;
                   },
                 ),
-
-                const SizedBox(height: AppConstants.defaultPadding),
-
-                // Confirm Password Field
-                TextFormField(
+              ),
+              const SizedBox(height: 18),
+              AuthField(
+                label: authLabel(
+                  context,
+                  'auth.confirmPassword',
+                  'Confirm Password',
+                ),
+                child: TextFormField(
                   controller: _confirmPasswordController,
                   obscureText: _obscureConfirmPassword,
                   textInputAction: TextInputAction.done,
-                  decoration: InputDecoration(
-                    labelText: 'Confirm Password',
-                    hintText: 'Confirm your password',
-                    prefixIcon: const Icon(Icons.lock_outlined),
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  decoration: authInputDecoration(
+                    context,
                     suffixIcon: IconButton(
+                      tooltip: _obscureConfirmPassword
+                          ? authCopy(
+                              context,
+                              'Show password',
+                              'Tunjuk kata laluan',
+                            )
+                          : authCopy(
+                              context,
+                              'Hide password',
+                              'Sembunyi kata laluan',
+                            ),
                       icon: Icon(
                         _obscureConfirmPassword
                             ? Icons.visibility
@@ -195,82 +250,75 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please confirm your password';
+                      return authCopy(
+                        context,
+                        'Please confirm your password',
+                        'Sila sahkan kata laluan anda',
+                      );
                     }
                     if (value != _passwordController.text) {
-                      return 'Passwords do not match';
+                      return authCopy(
+                        context,
+                        'Passwords do not match',
+                        'Kata laluan tidak sepadan',
+                      );
                     }
                     return null;
                   },
                   onFieldSubmitted: (_) => _handleRegister(),
                 ),
-
-                const SizedBox(height: AppConstants.largePadding * 2),
-
-                // Register Button
-                LoadingButton(
-                  onPressed: _handleRegister,
-                  text: 'Create Account',
-                  isLoading: authState.isLoading,
+              ),
+              const SizedBox(height: 24),
+              AuthSubmitButton(
+                onPressed: _handleRegister,
+                text: authLabel(
+                  context,
+                  'auth.createAccount',
+                  'Create Account',
                 ),
-
-                // OAuth Divider
-                Row(
-                  children: [
-                    Expanded(
-                      child: Divider(color: Theme.of(context).dividerColor),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text('OR'),
-                    ),
-                    Expanded(
-                      child: Divider(color: Theme.of(context).dividerColor),
-                    ),
-                  ],
+                isLoading: authState.isLoading,
+              ),
+              const SizedBox(height: 22),
+              const AuthDivider(),
+              const SizedBox(height: 16),
+              AuthGoogleButton(
+                onPressed: () =>
+                    ref.read(authProvider.notifier).signInWithGoogle(),
+                isLoading: authState.isLoading,
+              ),
+              const SizedBox(height: 12),
+              AuthAccountLink(
+                prompt: authLabel(
+                  context,
+                  'auth.alreadyHaveAccount',
+                  'Already have an account?',
                 ),
-
-                const SizedBox(height: AppConstants.defaultPadding),
-
-                // Continue with Google
-                OutlinedButton.icon(
-                  onPressed: () =>
-                      ref.read(authProvider.notifier).signInWithGoogle(),
-                  icon: const GoogleIcon(size: 20),
-                  label: const Text('Continue with Google'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: AppConstants.largePadding),
-
-                // Sign In Link
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Already have an account? ',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    TextButton(
-                      onPressed: () => context.pop(),
-                      child: const Text('Sign In'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                action: signInLabel,
+                onPressed: _goToLogin,
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
+  void _goBack() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(_loginRoute);
+    }
+  }
+
+  void _goToLogin() {
+    // Registration can be reached from login or an invitation. Always land on
+    // login rather than depending on go_router's internal match stack.
+    context.go(_loginRoute);
+  }
+
   void _handleRegister() {
+    if (ref.read(authProvider).isLoading) return;
     if (_formKey.currentState!.validate()) {
       ref
           .read(authProvider.notifier)

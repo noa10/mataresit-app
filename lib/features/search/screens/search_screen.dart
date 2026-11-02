@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../shared/widgets/app_bar_with_actions.dart';
-import '../../../shared/widgets/empty_state_widget.dart';
-import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
 import '../models/search_result_model.dart';
 import '../providers/search_provider.dart';
@@ -90,67 +86,98 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final notifier = ref.read(searchProvider.notifier);
 
     return Scaffold(
-      appBar: AppBarWithActions(
-        title: 'search.title'.tr(),
-        actions: [
-          if (searchState.hasSearched)
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              tooltip: 'common.buttons.refresh'.tr(),
-              onPressed: searchState.isLoading ? null : () => notifier.retry(),
-            ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(AppConstants.defaultPadding),
+      body: CustomScrollView(
+        controller: _scrollController,
+        slivers: [
+          SliverToBoxAdapter(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildQueryField(searchState),
-                const SizedBox(height: AppConstants.defaultPadding),
-                SearchSourceFilter(
-                  selectedSources: searchState.selectedSources,
-                  onToggle: notifier.toggleSource,
+                _buildPageHeader(searchState, notifier),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: _buildQueryField(searchState),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  child: SearchSourceFilter(
+                    selectedSources: searchState.selectedSources,
+                    onToggle: notifier.toggleSource,
+                  ),
+                ),
+                if (searchState.isDegraded)
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    child: _PartialResultsBanner(),
+                  ),
+                if (_showResultCount(searchState))
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    child: _buildResultCount(searchState),
+                  ),
+              ],
+            ),
+          ),
+          _buildBodySliver(searchState),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPageHeader(SearchState searchState, SearchNotifier notifier) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 8, 0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (GoRouter.maybeOf(context)?.canPop() ?? false)
+            IconButton(
+              onPressed: () => GoRouter.of(context).pop(),
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              icon: const Icon(Icons.arrow_back),
+            ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'search.eyebrow'.tr(),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                    fontFamily: 'IBMPlexMono',
+                    fontSize: 10,
+                    letterSpacing: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'search.title'.tr(),
+                  style: theme.textTheme.displaySmall?.copyWith(
+                    fontFamily: 'InstrumentSerif',
+                    fontSize: 32,
+                    height: 1.05,
+                    color: colors.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'search.initial.message'.tr(),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colors.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
           ),
-          if (searchState.isDegraded)
-            const Padding(
-              padding: EdgeInsets.fromLTRB(
-                AppConstants.defaultPadding,
-                0,
-                AppConstants.defaultPadding,
-                AppConstants.smallPadding,
-              ),
-              child: _PartialResultsBanner(),
+          if (searchState.hasSearched)
+            IconButton(
+              icon: const Icon(Icons.refresh, size: 20),
+              tooltip: 'common.buttons.refresh'.tr(),
+              onPressed: searchState.isLoading ? null : notifier.retry,
             ),
-          if (_showResultCount(searchState))
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppConstants.defaultPadding,
-                0,
-                AppConstants.defaultPadding,
-                AppConstants.smallPadding,
-              ),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'search.total'.tr(
-                    namedArgs: {
-                      'count':
-                          '${searchState.totalResults ?? searchState.results.length}',
-                    },
-                  ),
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ),
-          Expanded(child: _buildBody(searchState)),
         ],
       ),
     );
@@ -163,6 +190,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       state.results.isNotEmpty;
 
   Widget _buildQueryField(SearchState searchState) {
+    final colors = Theme.of(context).colorScheme;
+
     return Row(
       children: [
         Expanded(
@@ -173,34 +202,70 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 controller: _queryController,
                 textInputAction: TextInputAction.search,
                 onSubmitted: _submitQuery,
+                cursorColor: colors.primary,
                 decoration: InputDecoration(
                   hintText: 'search.field.hint'.tr(),
-                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: colors.surface,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 13,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    size: 20,
+                    color: colors.onSurfaceVariant,
+                  ),
                   suffixIcon: value.text.isEmpty
                       ? null
                       : IconButton(
-                          icon: const Icon(Icons.clear),
+                          icon: Icon(
+                            Icons.clear,
+                            size: 20,
+                            color: colors.onSurfaceVariant,
+                          ),
                           tooltip: 'search.field.clear'.tr(),
                           onPressed: _resetSearch,
                         ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(
-                      AppConstants.borderRadius,
-                    ),
-                  ),
+                  border: _queryBorder(colors.outlineVariant),
+                  enabledBorder: _queryBorder(colors.outlineVariant),
+                  focusedBorder: _queryBorder(colors.primary),
                 ),
               );
             },
           ),
         ),
-        const SizedBox(width: AppConstants.smallPadding),
+        const SizedBox(width: 8),
         LoadingButton(
           onPressed: () => _submitQuery(_queryController.text),
           text: 'search.button'.tr(),
           isLoading: searchState.isLoading,
-          icon: const Icon(Icons.search),
         ),
       ],
+    );
+  }
+
+  OutlineInputBorder _queryBorder(Color color) => OutlineInputBorder(
+    borderRadius: BorderRadius.circular(10),
+    borderSide: BorderSide(color: color),
+  );
+
+  Widget _buildResultCount(SearchState searchState) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Text(
+      'search.total'.tr(
+        namedArgs: {
+          'count': '${searchState.totalResults ?? searchState.results.length}',
+        },
+      ),
+      style: theme.textTheme.labelSmall?.copyWith(
+        color: colors.onSurfaceVariant,
+        fontFamily: 'IBMPlexMono',
+        fontSize: 11,
+        letterSpacing: 0.4,
+      ),
     );
   }
 
@@ -210,8 +275,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     }
 
     if (searchState.error != null && searchState.results.isEmpty) {
-      return AppErrorWidget(
-        title: 'search.error.title'.tr(),
+      return _SearchErrorPanel(
         error: searchState.isAuthError
             ? 'search.error.sessionExpired'.tr()
             : searchState.error!,
@@ -227,50 +291,55 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     }
 
     if (searchState.results.isEmpty) {
-      // Scrollable so the empty state cannot overflow on short viewports.
-      return SingleChildScrollView(
-        child: EmptyStateWidget(
-          icon: Icons.search_off,
-          title: 'search.empty.title'.tr(),
-          message: 'search.empty.message'.tr(
-            namedArgs: {'query': searchState.query},
-          ),
-          actionLabel: 'search.empty.action'.tr(),
-          onAction: _resetSearch,
-        ),
+      return _SearchEmptyPanel(
+        query: searchState.query,
+        onNewSearch: _resetSearch,
       );
     }
 
-    return _buildResultsList(searchState);
+    return const SizedBox.shrink();
   }
 
-  Widget _buildResultsList(SearchState searchState) {
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.fromLTRB(
-        AppConstants.defaultPadding,
-        0,
-        AppConstants.defaultPadding,
-        AppConstants.defaultPadding,
-      ),
-      itemCount: searchState.results.length + (searchState.hasMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index >= searchState.results.length) {
-          return const Padding(
-            padding: EdgeInsets.all(AppConstants.defaultPadding),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
+  Widget _buildBodySliver(SearchState searchState) {
+    if (searchState.results.isNotEmpty) {
+      return _buildResultsSliver(searchState);
+    }
 
-        final result = searchState.results[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: AppConstants.smallPadding),
-          child: SearchResultCard(
-            result: result,
-            onTap: () => _openResult(result),
-          ),
-        );
-      },
+    return SliverFillRemaining(
+      hasScrollBody: false,
+      child: _buildBody(searchState),
+    );
+  }
+
+  Widget _buildResultsSliver(SearchState searchState) {
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      sliver: SliverList.builder(
+        itemCount: searchState.results.length + (searchState.hasMore ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index >= searchState.results.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            );
+          }
+
+          final result = searchState.results[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: SearchResultCard(
+              result: result,
+              onTap: () => _openResult(result),
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -289,7 +358,7 @@ class _PartialResultsBanner extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: theme.colorScheme.tertiaryContainer,
-        borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,7 +368,7 @@ class _PartialResultsBanner extends StatelessWidget {
             size: 20,
             color: theme.colorScheme.onTertiaryContainer,
           ),
-          const SizedBox(width: AppConstants.smallPadding),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -321,6 +390,124 @@ class _PartialResultsBanner extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Ledger-styled error state for a failed search.
+class _SearchErrorPanel extends StatelessWidget {
+  const _SearchErrorPanel({required this.error, required this.onRetry});
+
+  final String error;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: colors.surface,
+            border: Border.all(color: colors.outlineVariant),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.error_outline, size: 18, color: colors.error),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'search.error.title'.tr(),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colors.onSurface,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                error,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: onRetry,
+                child: Text('common.buttons.retry'.tr()),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Ledger-styled empty state for a query with no hits.
+class _SearchEmptyPanel extends StatelessWidget {
+  const _SearchEmptyPanel({required this.query, required this.onNewSearch});
+
+  final String query;
+  final VoidCallback onNewSearch;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: colors.surface,
+            border: Border.all(color: colors.outlineVariant),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.search_off, size: 28, color: colors.onSurfaceVariant),
+              const SizedBox(height: 10),
+              Text(
+                'search.empty.title'.tr(),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: colors.onSurface,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'search.empty.message'.tr(namedArgs: {'query': query}),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: onNewSearch,
+                child: Text('search.empty.action'.tr()),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

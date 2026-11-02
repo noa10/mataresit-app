@@ -45,6 +45,7 @@ class ReceiptSummary {
   final double? total;
   final String? merchant;
   final String? paymentMethod;
+  final String? currency;
 
   const ReceiptSummary({
     required this.id,
@@ -52,6 +53,7 @@ class ReceiptSummary {
     this.total,
     this.merchant,
     this.paymentMethod,
+    this.currency,
   });
 
   factory ReceiptSummary.fromJson(Map<String, dynamic> json) {
@@ -61,6 +63,7 @@ class ReceiptSummary {
       total: json['total'] != null ? (json['total'] as num).toDouble() : null,
       merchant: json['merchant'] as String?,
       paymentMethod: json['payment_method'] as String?,
+      currency: json['currency'] as String?,
     );
   }
 }
@@ -241,7 +244,7 @@ class AnalyticsService {
 
       var query = SupabaseService.client
           .from('receipts')
-          .select('id, date, total, merchant, payment_method');
+          .select('id, date, total, currency, merchant, payment_method');
 
       // Add user filter
       if (userId != null) {

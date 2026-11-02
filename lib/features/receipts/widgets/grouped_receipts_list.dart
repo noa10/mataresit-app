@@ -1,20 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+
 import '../../../shared/models/grouped_receipts.dart';
-import '../../../shared/models/receipt_model.dart';
-import '../../../shared/models/category_model.dart';
-import '../../../core/constants/app_constants.dart';
-
-import '../../categories/providers/categories_provider.dart';
 import '../providers/receipts_provider.dart';
-import '../../../shared/widgets/currency_display_widget.dart';
-import '../../../shared/utils/confidence_utils.dart';
-import '../../../shared/widgets/category_display.dart';
-import '../../../shared/widgets/confidence_indicator.dart';
 import 'pagination_widget.dart';
+import 'receipt_ledger_row.dart';
 
-/// Widget that displays receipts grouped by date
+/// Displays the receipt ledger grouped by transaction date.
 class GroupedReceiptsList extends ConsumerStatefulWidget {
   final List<GroupedReceipts> groupedReceipts;
   final ScrollController? scrollController;
@@ -43,10 +35,20 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
   }
 
   @override
-  void dispose() {
-    if (widget.scrollController == null) {
-      _scrollController.dispose();
+  void didUpdateWidget(covariant GroupedReceiptsList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.scrollController != widget.scrollController) {
+      _scrollController.removeListener(_onScroll);
+      if (oldWidget.scrollController == null) _scrollController.dispose();
+      _scrollController = widget.scrollController ?? ScrollController();
+      _scrollController.addListener(_onScroll);
     }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    if (widget.scrollController == null) _scrollController.dispose();
     super.dispose();
   }
 
@@ -59,98 +61,102 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.groupedReceipts.isEmpty) {
-      return _buildEmptyState();
+    final colors = Theme.of(context).colorScheme;
+    final loading = ref.watch(
+      receiptsProvider.select((state) => state.isLoading),
+    );
+    if (widget.groupedReceipts.isEmpty && !loading) {
+      return _buildEmptyState(context);
     }
 
     return Column(
       children: [
-        // Pagination info at the top
-        const PaginationInfoWidget(),
-
-        // Main list
+        const ReceiptLedgerInfo(),
         Expanded(
-          child: ListView.builder(
+          child: CustomScrollView(
             controller: _scrollController,
-            padding: const EdgeInsets.all(AppConstants.defaultPadding),
-            itemCount:
-                widget.groupedReceipts.length + 1, // +1 for pagination widget
-            itemBuilder: (context, index) {
-              if (index >= widget.groupedReceipts.length) {
-                return PaginationWidget(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              for (final group in widget.groupedReceipts)
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                  sliver: DecoratedSliver(
+                    position: DecorationPosition.foreground,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: colors.outlineVariant),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    sliver: SliverMainAxisGroup(
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: _buildDateHeader(context, group),
+                        ),
+                        SliverList.separated(
+                          itemCount: group.receipts.length,
+                          itemBuilder: (context, index) => ReceiptLedgerRow(
+                            receipt: group.receipts[index],
+                            showDate: false,
+                            isLast: index == group.receipts.length - 1,
+                          ),
+                          separatorBuilder: (context, index) => Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: colors.outlineVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              SliverToBoxAdapter(
+                child: PaginationWidget(
                   onLoadMore: widget.onLoadMore,
-                  showLoadMoreButton: false, // Use automatic loading
-                );
-              }
-
-              final group = widget.groupedReceipts[index];
-              return _buildDateGroup(group);
-            },
+                  showLoadMoreButton: false,
+                ),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildDateGroup(GroupedReceipts group) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Date header
-        _buildDateHeader(group),
-
-        const SizedBox(height: 12),
-
-        // Receipts for this date
-        ...group.receipts.map((receipt) => _buildReceiptCard(receipt)),
-
-        const SizedBox(height: 24),
-      ],
-    );
-  }
-
-  Widget _buildDateHeader(GroupedReceipts group) {
+  Widget _buildDateHeader(BuildContext context, GroupedReceipts group) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant,
-          width: 0.5,
-        ),
+        color: colors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+        border: Border(bottom: BorderSide(color: colors.outlineVariant)),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            group.displayName,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
-              borderRadius: BorderRadius.circular(10),
-            ),
+          Expanded(
             child: Text(
-              '${group.count}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onPrimary,
-                fontWeight: FontWeight.bold,
+              group.displayName.toUpperCase(),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: colors.onSurfaceVariant,
+                fontFamily: 'IBMPlexMono',
+                fontSize: 10,
+                letterSpacing: 1.2,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            group.getFormattedTotal(),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
+          Flexible(
+            child: Text(
+              '${group.count} • ${group.getFormattedTotal()}',
+              textAlign: TextAlign.end,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: colors.onSurfaceVariant,
+                fontFamily: 'IBMPlexMono',
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -158,302 +164,41 @@ class _GroupedReceiptsListState extends ConsumerState<GroupedReceiptsList> {
     );
   }
 
-  Widget _buildReceiptCard(ReceiptModel receipt) {
-    final receiptsState = ref.watch(receiptsProvider);
-    final receiptsNotifier = ref.read(receiptsProvider.notifier);
-    final isSelected = receiptsNotifier.isReceiptSelected(receipt.id);
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: isSelected ? 4 : 1,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          border: isSelected
-              ? Border.all(
-                  color: Theme.of(context).colorScheme.primary,
-                  width: 2,
-                )
-              : null,
-        ),
-        child: InkWell(
-          onTap: receiptsState.isSelectionMode
-              ? () => receiptsNotifier.toggleReceiptSelection(receipt.id)
-              : () => context.push('/receipts/${receipt.id}'),
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          child: Padding(
-            padding: const EdgeInsets.all(AppConstants.defaultPadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header row
-                Row(
-                  children: [
-                    // Selection checkbox (only show in selection mode)
-                    if (receiptsState.isSelectionMode) ...[
-                      Checkbox(
-                        value: isSelected,
-                        onChanged: (value) =>
-                            receiptsNotifier.toggleReceiptSelection(receipt.id),
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-
-                    // Merchant name or placeholder
-                    Expanded(
-                      child: Text(
-                        receipt.merchantName ?? 'Unknown Merchant',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
+  Widget _buildEmptyState(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.receipt_long_outlined,
+                    size: 40,
+                    color: colors.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No receipts found',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Try adjusting your filters or add some receipts',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colors.onSurfaceVariant,
                     ),
-
-                    // Amount with currency conversion
-                    CompactCurrencyDisplay(
-                      amount: receipt.totalAmount ?? 0.0,
-                      currencyCode: receipt.currency ?? 'MYR',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 8),
-
-                // Details row
-                Row(
-                  children: [
-                    // Category - Use real category data with fallback
-                    Consumer(
-                      builder: (context, ref, child) {
-                        // Watch the categories state to ensure they're loaded
-                        final categoriesState = ref.watch(categoriesProvider);
-
-                        // Find the category from display categories (includes both team and personal)
-                        CategoryModel? category;
-                        if (receipt.customCategoryId != null) {
-                          category = categoriesState.displayCategories
-                              .where(
-                                (cat) => cat.id == receipt.customCategoryId,
-                              )
-                              .firstOrNull;
-
-                          // If category not found by ID, try to find by name (case-insensitive)
-                          if (category == null && receipt.category != null) {
-                            category = categoriesState.displayCategories
-                                .where(
-                                  (cat) =>
-                                      cat.name.toLowerCase() ==
-                                      receipt.category!.toLowerCase(),
-                                )
-                                .firstOrNull;
-                          }
-
-                          // If still not found, try partial name matching for common variations
-                          if (category == null && receipt.category != null) {
-                            final categoryName = receipt.category!
-                                .toLowerCase();
-
-                            // Handle common category name mappings
-                            if (categoryName.contains('grocer') ||
-                                categoryName.contains('food')) {
-                              category = categoriesState.displayCategories
-                                  .where(
-                                    (cat) =>
-                                        cat.name.toLowerCase().contains(
-                                          'food',
-                                        ) ||
-                                        cat.name.toLowerCase().contains(
-                                          'dining',
-                                        ) ||
-                                        cat.name.toLowerCase().contains(
-                                          'grocer',
-                                        ),
-                                  )
-                                  .firstOrNull;
-                            } else if (categoryName.contains('shop')) {
-                              category = categoriesState.displayCategories
-                                  .where(
-                                    (cat) =>
-                                        cat.name.toLowerCase().contains('shop'),
-                                  )
-                                  .firstOrNull;
-                            }
-                          }
-                        }
-
-                        return CategoryDisplay(
-                          category: category,
-                          size: CategoryDisplaySize.small,
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 8),
-
-                    // Payment method
-                    if (receipt.paymentMethod != null) ...[
-                      Icon(
-                        _getPaymentMethodIcon(receipt.paymentMethod!),
-                        size: 16,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        receipt.paymentMethod!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-
-                    const Spacer(),
-
-                    // Confidence score indicator (match React web aggregate + ai_suggestions fallback)
-                    Flexible(
-                      child: Builder(
-                        builder: (context) {
-                          final hasConfidence =
-                              (receipt.aiSuggestions != null &&
-                                  receipt.aiSuggestions!.containsKey(
-                                    'confidence',
-                                  )) ||
-                              (receipt.confidenceScores != null &&
-                                  receipt.confidenceScores!.isNotEmpty);
-                          return CompactConfidenceIndicator(
-                            score: hasConfidence
-                                ? ConfidenceUtils.calculateAggregateConfidence(
-                                    receipt,
-                                  )
-                                : null,
-                            loading:
-                                !hasConfidence &&
-                                receipt.processingStatus ==
-                                    ProcessingStatus.processing,
-                          );
-                        },
-                      ),
-                    ),
-
-                    const SizedBox(
-                      width: 2,
-                    ), // Further reduced spacing from 4 to 2
-                    // Status indicator
-                    _buildStatusIndicator(receipt.status),
-                  ],
-                ),
-
-                // Review status badge
-                const SizedBox(height: 4),
-                _buildReviewStatusBadge(receipt.status),
-              ],
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusIndicator(ReceiptStatus status) {
-    Color color;
-    IconData icon;
-
-    switch (status) {
-      case ReceiptStatus.reviewed:
-        color = Colors.green;
-        icon = Icons.check_circle;
-        break;
-      case ReceiptStatus.unreviewed:
-        color = Colors.orange;
-        icon = Icons.edit;
-        break;
-    }
-
-    return Icon(icon, size: 16, color: color);
-  }
-
-  IconData _getPaymentMethodIcon(String paymentMethod) {
-    switch (paymentMethod.toLowerCase()) {
-      case 'cash':
-        return Icons.money;
-      case 'card':
-      case 'credit card':
-      case 'debit card':
-        return Icons.credit_card;
-      case 'digital wallet':
-      case 'e-wallet':
-        return Icons.account_balance_wallet;
-      default:
-        return Icons.payment;
-    }
-  }
-
-  Widget _buildReviewStatusBadge(ReceiptStatus status) {
-    String text;
-    Color backgroundColor;
-    Color textColor;
-
-    switch (status) {
-      case ReceiptStatus.reviewed:
-        text = 'Reviewed';
-        backgroundColor = Colors.blue.withValues(alpha: 0.1);
-        textColor = Colors.blue.shade700;
-        break;
-      case ReceiptStatus.unreviewed:
-        text = 'Unreviewed';
-        backgroundColor = Colors.orange.withValues(alpha: 0.1);
-        textColor = Colors.orange.shade700;
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        text,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: textColor,
-          fontWeight: FontWeight.w600,
-          fontSize: 11,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding * 2),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.receipt_long,
-              size: 64,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No receipts found',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Try adjusting your filters or add some receipts',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
         ),
       ),
     );

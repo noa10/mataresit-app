@@ -4,6 +4,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/services/app_logger.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import 'loading_widget.dart';
+import 'mataresit_logo.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -66,21 +67,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
       AppLogger.debug('🔍 SPLASH_SCREEN: About to create Scaffold...');
       final scaffold = Scaffold(
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: const Color(0xFF101614),
         body: AnimatedBuilder(
           animation: _animationController,
           builder: (context, child) {
             return Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Theme.of(context).primaryColor,
-                    Theme.of(context).primaryColor.withValues(alpha: 0.8),
-                  ],
-                ),
-              ),
+              color: const Color(0xFF101614),
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -90,27 +82,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       opacity: _fadeAnimation,
                       child: ScaleTransition(
                         scale: _scaleAnimation,
-                        child: Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(
-                              AppConstants.largeBorderRadius,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.2),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.receipt_long,
-                            size: 60,
-                            color: Color(0xFF2563EB),
-                          ),
+                        child: const MataresitMark(
+                          size: 100,
+                          color: Color(0xFF3FBF8E),
                         ),
                       ),
                     ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import '../../../core/constants/app_constants.dart';
 import '../models/search_result_model.dart';
 
 /// Source filter limited to the free-tier targets the server allows.
@@ -20,31 +19,87 @@ class SearchSourceFilter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'search.sources.label'.tr(),
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
+          'search.sources.label'.tr().toUpperCase(),
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: colors.onSurfaceVariant,
+            fontFamily: 'IBMPlexMono',
+            fontSize: 10,
+            letterSpacing: 1.4,
           ),
         ),
-        const SizedBox(height: AppConstants.smallPadding),
+        const SizedBox(height: 8),
         Wrap(
-          spacing: AppConstants.smallPadding,
-          runSpacing: AppConstants.smallPadding,
-          children: SearchSources.freeTier.map((source) {
-            return FilterChip(
-              label: Text(searchSourceLabel(source)),
-              selected: selectedSources.contains(source),
-              onSelected: (_) => onToggle(source),
-              selectedColor: theme.colorScheme.primaryContainer,
-              checkmarkColor: theme.colorScheme.primary,
-            );
-          }).toList(),
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final source in SearchSources.freeTier)
+              _SourcePill(
+                label: searchSourceLabel(source),
+                selected: selectedSources.contains(source),
+                onTap: () => onToggle(source),
+              ),
+          ],
         ),
       ],
+    );
+  }
+}
+
+/// Ledger pill for one source: neutral surface with a hairline border, or the
+/// accent container when selected.
+class _SourcePill extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _SourcePill({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Material(
+          color: selected ? colors.primaryContainer : colors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(
+              color: selected ? colors.primaryContainer : colors.outlineVariant,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Text(
+                label,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: selected
+                      ? colors.onPrimaryContainer
+                      : colors.onSurface,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

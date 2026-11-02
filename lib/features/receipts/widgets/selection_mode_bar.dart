@@ -138,95 +138,78 @@ class CompactSelectionModeBar extends ConsumerWidget {
     final receiptsState = ref.watch(receiptsProvider);
     final receiptsNotifier = ref.read(receiptsProvider.notifier);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-            width: 1,
-          ),
-        ),
-      ),
+    final colors = Theme.of(context).colorScheme;
+    return SizedBox(
+      height: 40,
       child: Row(
         children: [
+          // Selection info
+          if (receiptsState.isSelectionMode)
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16),
+                child: Row(
+                  children: [
+                    Text(
+                      '${receiptsNotifier.selectedCount} selected',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: colors.onSurface,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    if (receiptsState.receipts.isNotEmpty)
+                      TextButton(
+                        onPressed: receiptsNotifier.isAllSelected
+                            ? receiptsNotifier.clearSelection
+                            : receiptsNotifier.selectAllReceipts,
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          minimumSize: const Size(0, 28),
+                        ),
+                        child: Text(
+                          receiptsNotifier.isAllSelected ? 'None' : 'All',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            )
+          else
+            const Spacer(),
+          // View mode toggle
+          IconButton(
+            onPressed: receiptsNotifier.toggleGroupedView,
+            icon: Icon(
+              receiptsState.isGroupedView
+                  ? Icons.view_list_outlined
+                  : Icons.view_agenda_outlined,
+              size: 20,
+            ),
+            tooltip: receiptsState.isGroupedView ? 'Flat view' : 'Grouped view',
+            style: IconButton.styleFrom(
+              foregroundColor: colors.onSurfaceVariant,
+            ),
+          ),
           // Selection mode toggle
-          IconButton.filled(
+          IconButton(
             onPressed: receiptsNotifier.toggleSelectionMode,
             icon: Icon(
               receiptsState.isSelectionMode ? Icons.close : Icons.checklist,
-              size: 18,
+              size: 20,
             ),
+            tooltip: receiptsState.isSelectionMode
+                ? 'Cancel selection'
+                : 'Select receipts',
             style: IconButton.styleFrom(
-              backgroundColor: receiptsState.isSelectionMode
-                  ? Theme.of(context).colorScheme.error
-                  : Theme.of(context).colorScheme.primary,
               foregroundColor: receiptsState.isSelectionMode
-                  ? Theme.of(context).colorScheme.onError
-                  : Theme.of(context).colorScheme.onPrimary,
-              minimumSize: const Size(36, 36),
+                  ? colors.error
+                  : colors.onSurfaceVariant,
             ),
           ),
-
-          const SizedBox(width: 12),
-
-          // Selection info
-          if (receiptsState.isSelectionMode) ...[
-            Expanded(
-              child: Row(
-                children: [
-                  Text(
-                    '${receiptsNotifier.selectedCount} selected',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  if (receiptsState.receipts.isNotEmpty)
-                    TextButton(
-                      onPressed: receiptsNotifier.isAllSelected
-                          ? receiptsNotifier.clearSelection
-                          : receiptsNotifier.selectAllReceipts,
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        minimumSize: const Size(0, 28),
-                      ),
-                      child: Text(
-                        receiptsNotifier.isAllSelected ? 'None' : 'All',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ] else ...[
-            const Spacer(),
-            // View mode toggle for non-selection mode
-            IconButton(
-              onPressed: receiptsNotifier.toggleGroupedView,
-              icon: Icon(
-                receiptsState.isGroupedView
-                    ? Icons.view_list
-                    : Icons.view_agenda,
-                size: 18,
-              ),
-              tooltip: receiptsState.isGroupedView
-                  ? 'Flat view'
-                  : 'Grouped view',
-              style: IconButton.styleFrom(
-                backgroundColor: Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest,
-                minimumSize: const Size(36, 36),
-              ),
-            ),
-          ],
+          const SizedBox(width: 8),
         ],
       ),
     );

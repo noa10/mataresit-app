@@ -1,8 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:async';
+
 import '../../../shared/models/processing_log_model.dart';
-import '../../../core/constants/app_constants.dart';
 
 /// Processing logs widget with real-time streaming and animations
 class ProcessingLogsWidget extends ConsumerStatefulWidget {
@@ -183,18 +184,20 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.only(top: 16),
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.2)),
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: colors.outlineVariant),
       ),
       child: Column(
         children: [
           _buildHeader(theme),
+          Divider(height: 1, thickness: 1, color: colors.outlineVariant),
           SizeTransition(
             sizeFactor: _expandAnimation,
             child: _buildLogsContent(theme),
@@ -205,60 +208,31 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
   }
 
   Widget _buildHeader(ThemeData theme) {
+    final colors = theme.colorScheme;
+
     return InkWell(
       onTap: _toggleExpanded,
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-      child: Container(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        decoration: BoxDecoration(
-          color: theme.cardColor.withValues(alpha: 0.5),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-          border: Border(
-            bottom: BorderSide(
-              color: theme.dividerColor.withValues(alpha: 0.2),
-            ),
-          ),
-        ),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
         child: Row(
           children: [
             _getStageIcon(theme),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Processing Details',
-                    style: theme.textTheme.titleMedium?.copyWith(
+                    style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
+                      color: colors.onSurface,
                     ),
                   ),
                   if (widget.currentStage != null) ...[
                     const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _getStageColor(
-                          widget.currentStage!,
-                        ).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _getStageColor(
-                            widget.currentStage!,
-                          ).withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Text(
-                        ProcessingStages.getStage(widget.currentStage!).name,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: _getStageColor(widget.currentStage!),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
+                    _buildStagePill(theme, widget.currentStage!),
                   ],
                 ],
               ),
@@ -267,30 +241,36 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: theme.primaryColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: colors.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.circle, size: 8, color: Colors.green),
+                    Container(
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: colors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       'Live',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w500,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colors.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.access_time,
-                      size: 12,
-                      color: theme.textTheme.bodySmall?.color,
-                    ),
-                    const SizedBox(width: 2),
+                    const SizedBox(width: 6),
                     Text(
                       '${_elapsedSeconds}s',
-                      style: theme.textTheme.bodySmall,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontFamily: 'IBMPlexMono',
+                        fontSize: 10,
+                        color: colors.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -299,8 +279,10 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
             ],
             Text(
               '${_displayedLogs.length}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontFamily: 'IBMPlexMono',
+                fontSize: 10,
+                color: colors.onSurfaceVariant,
               ),
             ),
             const SizedBox(width: 4),
@@ -309,7 +291,8 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
               duration: const Duration(milliseconds: 300),
               child: Icon(
                 Icons.keyboard_arrow_down,
-                color: theme.textTheme.bodySmall?.color,
+                size: 20,
+                color: colors.onSurfaceVariant,
               ),
             ),
           ],
@@ -318,10 +301,51 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
     );
   }
 
+  Widget _buildStagePill(ThemeData theme, String stage) {
+    final colors = theme.colorScheme;
+    final foreground = _stageColor(theme, stage);
+    final background = stage == 'ERROR'
+        ? colors.errorContainer
+        : stage == 'COMPLETE'
+        ? colors.primaryContainer
+        : colors.tertiaryContainer;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 5,
+            height: 5,
+            decoration: BoxDecoration(
+              color: foreground,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            ProcessingStages.getStage(stage).name,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: foreground,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              height: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLogsContent(ThemeData theme) {
     return Container(
       height: 200,
-      padding: const EdgeInsets.all(AppConstants.defaultPadding),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
       child: _displayedLogs.isEmpty
           ? _buildEmptyState(theme)
           : _buildLogsList(theme),
@@ -329,23 +353,24 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
   }
 
   Widget _buildEmptyState(ThemeData theme) {
+    final colors = theme.colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           SizedBox(
-            width: 24,
-            height: 24,
+            width: 20,
+            height: 20,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(theme.primaryColor),
+              valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
             ),
           ),
           const SizedBox(height: 12),
           Text(
             'Waiting for processing logs...',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+              color: colors.onSurfaceVariant,
             ),
           ),
         ],
@@ -370,70 +395,75 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
   }
 
   Widget _buildLogItem(ThemeData theme, ProcessingLogModel log, int index) {
+    final colors = theme.colorScheme;
+    final stageColor = _stageColor(theme, log.stepName ?? 'INFO');
+
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: theme.cardColor.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: theme.dividerColor.withValues(alpha: 0.2)),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 6,
-              height: 6,
-              margin: const EdgeInsets.only(top: 6),
-              decoration: BoxDecoration(
-                color: _getStageColor(log.stepName ?? 'INFO'),
-                shape: BoxShape.circle,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (index > 0)
+            Divider(height: 1, thickness: 1, color: colors.outlineVariant),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 5,
+                  height: 5,
+                  margin: const EdgeInsets.only(top: 5),
+                  decoration: BoxDecoration(
+                    color: stageColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        (log.stepName ?? 'INFO').toUpperCase(),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: _getStageColor(log.stepName ?? 'INFO'),
-                          fontSize: 10,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        _formatTime(log.createdAt),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.textTheme.bodySmall?.color?.withValues(
-                            alpha: 0.6,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              (log.stepName ?? 'INFO').toUpperCase(),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: stageColor,
+                                fontFamily: 'IBMPlexMono',
+                                fontSize: 10,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
                           ),
-                          fontSize: 10,
+                          const SizedBox(width: 8),
+                          Text(
+                            _formatTime(log.createdAt),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colors.onSurfaceVariant,
+                              fontFamily: 'IBMPlexMono',
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        log.statusMessage,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colors.onSurface,
+                          height: 1.4,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    log.statusMessage,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.textTheme.bodySmall?.color?.withValues(
-                        alpha: 0.8,
-                      ),
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -443,8 +473,9 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
       return const SizedBox.shrink();
     }
 
-    return Container(
-      padding: const EdgeInsets.all(12),
+    final colors = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -453,14 +484,14 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
             height: 12,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(theme.primaryColor),
+              valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
             ),
           ),
           const SizedBox(width: 8),
           Text(
             'Streaming logs...',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+              color: colors.onSurfaceVariant,
             ),
           ),
         ],
@@ -469,44 +500,60 @@ class _ProcessingLogsWidgetState extends ConsumerState<ProcessingLogsWidget>
   }
 
   Widget _getStageIcon(ThemeData theme) {
+    final colors = theme.colorScheme;
     if (widget.currentStage == null) {
-      return Icon(Icons.info_outline, size: 20, color: theme.primaryColor);
+      return Icon(Icons.info_outline, size: 20, color: colors.onSurfaceVariant);
     }
 
     switch (widget.currentStage) {
       case 'START':
       case 'FETCH':
-        return Icon(Icons.cloud_upload, size: 20, color: Colors.blue);
+        return Icon(
+          Icons.cloud_upload_outlined,
+          size: 20,
+          color: colors.primary,
+        );
       case 'PROCESSING':
       case 'GEMINI':
-        return Icon(Icons.psychology, size: 20, color: Colors.purple);
+        return Icon(
+          Icons.psychology_outlined,
+          size: 20,
+          color: colors.tertiary,
+        );
       case 'SAVE':
-        return Icon(Icons.save, size: 20, color: Colors.orange);
+        return Icon(Icons.save_outlined, size: 20, color: colors.tertiary);
       case 'COMPLETE':
-        return Icon(Icons.check_circle, size: 20, color: Colors.green);
+        return Icon(
+          Icons.check_circle_outline,
+          size: 20,
+          color: colors.primary,
+        );
       case 'ERROR':
-        return Icon(Icons.error, size: 20, color: Colors.red);
+        return Icon(Icons.error_outline, size: 20, color: colors.error);
       default:
-        return Icon(Icons.info_outline, size: 20, color: theme.primaryColor);
+        return Icon(
+          Icons.info_outline,
+          size: 20,
+          color: colors.onSurfaceVariant,
+        );
     }
   }
 
-  Color _getStageColor(String stage) {
+  Color _stageColor(ThemeData theme, String stage) {
+    final colors = theme.colorScheme;
     switch (stage) {
       case 'START':
       case 'FETCH':
-        return Colors.blue;
+      case 'COMPLETE':
+        return colors.primary;
       case 'PROCESSING':
       case 'GEMINI':
-        return Colors.purple;
       case 'SAVE':
-        return Colors.orange;
-      case 'COMPLETE':
-        return Colors.green;
+        return colors.tertiary;
       case 'ERROR':
-        return Colors.red;
+        return colors.error;
       default:
-        return Colors.grey;
+        return colors.onSurfaceVariant;
     }
   }
 

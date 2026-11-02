@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../shared/models/claim_model.dart';
 import '../../../shared/models/claim_requests.dart';
 import '../../../shared/utils/date_utils.dart';
@@ -20,6 +21,8 @@ class ClaimFiltersWidget extends StatefulWidget {
 }
 
 class _ClaimFiltersWidgetState extends State<ClaimFiltersWidget> {
+  static const Object _unset = Object();
+
   late ClaimFilters _currentFilters;
   final TextEditingController _minAmountController = TextEditingController();
   final TextEditingController _maxAmountController = TextEditingController();
@@ -67,28 +70,66 @@ class _ClaimFiltersWidgetState extends State<ClaimFiltersWidget> {
     widget.onClearFilters();
   }
 
+  /// Rebuilds the filter set while allowing nullable fields to be cleared.
+  ClaimFilters _updated({
+    Object? status = _unset,
+    Object? priority = _unset,
+    Object? amountMin = _unset,
+    Object? amountMax = _unset,
+    Object? category = _unset,
+    Object? dateFrom = _unset,
+    Object? dateTo = _unset,
+  }) {
+    return ClaimFilters(
+      status: identical(status, _unset)
+          ? _currentFilters.status
+          : status as ClaimStatus?,
+      priority: identical(priority, _unset)
+          ? _currentFilters.priority
+          : priority as ClaimPriority?,
+      claimantId: _currentFilters.claimantId,
+      dateFrom: identical(dateFrom, _unset)
+          ? _currentFilters.dateFrom
+          : dateFrom as DateTime?,
+      dateTo: identical(dateTo, _unset)
+          ? _currentFilters.dateTo
+          : dateTo as DateTime?,
+      amountMin: identical(amountMin, _unset)
+          ? _currentFilters.amountMin
+          : amountMin as double?,
+      amountMax: identical(amountMax, _unset)
+          ? _currentFilters.amountMax
+          : amountMax as double?,
+      category: identical(category, _unset)
+          ? _currentFilters.category
+          : category as String?,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header
-            Row(
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border.all(color: colors.outlineVariant),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
+            child: Row(
               children: [
-                Icon(
-                  Icons.filter_list,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 8),
                 Text(
                   'Filters',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const Spacer(),
@@ -99,63 +140,70 @@ class _ClaimFiltersWidgetState extends State<ClaimFiltersWidget> {
                   ),
               ],
             ),
-
-            const SizedBox(height: 16),
-
-            // Status filter
-            _buildStatusFilter(),
-
-            const SizedBox(height: 16),
-
-            // Priority filter
-            _buildPriorityFilter(),
-
-            const SizedBox(height: 16),
-
-            // Amount range filter
-            _buildAmountRangeFilter(),
-
-            const SizedBox(height: 16),
-
-            // Category filter
-            _buildCategoryFilter(),
-
-            const SizedBox(height: 16),
-
-            // Date range filter
-            _buildDateRangeFilter(),
-          ],
-        ),
+          ),
+          Divider(height: 1, color: colors.outlineVariant),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildStatusFilter(),
+                const SizedBox(height: 16),
+                _buildPriorityFilter(),
+                const SizedBox(height: 16),
+                _buildAmountRangeFilter(),
+                const SizedBox(height: 16),
+                _buildCategoryFilter(),
+                const SizedBox(height: 16),
+                _buildDateRangeFilter(),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildStatusFilter() {
+    final colors = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Status',
-          style: Theme.of(
-            context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-        ),
+        const _FilterLabel('Status'),
         const SizedBox(height: 8),
         Wrap(
-          spacing: 8,
+          spacing: 6,
+          runSpacing: 6,
           children: ClaimStatus.values.map((status) {
             final isSelected = _currentFilters.status == status;
+            final (background, foreground) = _statusTone(colors, status);
             return FilterChip(
-              label: Text(status.name.toUpperCase()),
+              label: Text(_statusLabel(status)),
               selected: isSelected,
               onSelected: (selected) {
                 setState(() {
-                  _currentFilters = _currentFilters.copyWith(
-                    status: selected ? status : null,
-                  );
+                  _currentFilters = _updated(status: selected ? status : null);
                 });
                 _updateFilters();
               },
+              selectedColor: background,
+              checkmarkColor: foreground,
+              backgroundColor: colors.surface,
+              side: BorderSide(
+                color: isSelected ? background : colors.outlineVariant,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: isSelected ? foreground : colors.onSurfaceVariant,
+                fontFamily: 'IBMPlexMono',
+                fontSize: 10,
+                letterSpacing: 0.6,
+                fontWeight: FontWeight.w600,
+              ),
+              visualDensity: VisualDensity.compact,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             );
           }).toList(),
         ),
@@ -164,49 +212,47 @@ class _ClaimFiltersWidgetState extends State<ClaimFiltersWidget> {
   }
 
   Widget _buildPriorityFilter() {
+    final colors = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Priority',
-          style: Theme.of(
-            context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-        ),
+        const _FilterLabel('Priority'),
         const SizedBox(height: 8),
         Wrap(
-          spacing: 8,
+          spacing: 6,
+          runSpacing: 6,
           children: ClaimPriority.values.map((priority) {
             final isSelected = _currentFilters.priority == priority;
-            Color chipColor;
-            switch (priority) {
-              case ClaimPriority.low:
-                chipColor = Colors.green;
-                break;
-              case ClaimPriority.medium:
-                chipColor = Colors.orange;
-                break;
-              case ClaimPriority.high:
-                chipColor = Colors.red;
-                break;
-              case ClaimPriority.urgent:
-                chipColor = Colors.red.shade700;
-                break;
-            }
-
+            final (background, foreground) = _priorityTone(colors, priority);
             return FilterChip(
               label: Text(priority.name.toUpperCase()),
               selected: isSelected,
-              selectedColor: chipColor.withValues(alpha: 0.2),
-              checkmarkColor: chipColor,
               onSelected: (selected) {
                 setState(() {
-                  _currentFilters = _currentFilters.copyWith(
+                  _currentFilters = _updated(
                     priority: selected ? priority : null,
                   );
                 });
                 _updateFilters();
               },
+              selectedColor: background,
+              checkmarkColor: foreground,
+              backgroundColor: colors.surface,
+              side: BorderSide(
+                color: isSelected ? background : colors.outlineVariant,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: isSelected ? foreground : colors.onSurfaceVariant,
+                fontFamily: 'IBMPlexMono',
+                fontSize: 10,
+                letterSpacing: 0.6,
+                fontWeight: FontWeight.w600,
+              ),
+              visualDensity: VisualDensity.compact,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             );
           }).toList(),
         ),
@@ -218,12 +264,7 @@ class _ClaimFiltersWidgetState extends State<ClaimFiltersWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Amount Range',
-          style: Theme.of(
-            context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-        ),
+        const _FilterLabel('Amount Range'),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -233,38 +274,32 @@ class _ClaimFiltersWidgetState extends State<ClaimFiltersWidget> {
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   labelText: 'Min Amount',
-                  prefixText: '\$',
-                  border: OutlineInputBorder(),
+                  prefixText: 'MYR ',
                   isDense: true,
                 ),
                 onChanged: (value) {
                   final amount = double.tryParse(value);
                   setState(() {
-                    _currentFilters = _currentFilters.copyWith(
-                      amountMin: amount,
-                    );
+                    _currentFilters = _updated(amountMin: amount);
                   });
                   _updateFilters();
                 },
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             Expanded(
               child: TextField(
                 controller: _maxAmountController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   labelText: 'Max Amount',
-                  prefixText: '\$',
-                  border: OutlineInputBorder(),
+                  prefixText: 'MYR ',
                   isDense: true,
                 ),
                 onChanged: (value) {
                   final amount = double.tryParse(value);
                   setState(() {
-                    _currentFilters = _currentFilters.copyWith(
-                      amountMax: amount,
-                    );
+                    _currentFilters = _updated(amountMax: amount);
                   });
                   _updateFilters();
                 },
@@ -280,24 +315,18 @@ class _ClaimFiltersWidgetState extends State<ClaimFiltersWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Category',
-          style: Theme.of(
-            context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-        ),
+        const _FilterLabel('Category'),
         const SizedBox(height: 8),
         TextField(
           controller: _categoryController,
           decoration: const InputDecoration(
             labelText: 'Category',
-            border: OutlineInputBorder(),
             isDense: true,
-            suffixIcon: Icon(Icons.category),
+            suffixIcon: Icon(Icons.category_outlined, size: 18),
           ),
           onChanged: (value) {
             setState(() {
-              _currentFilters = _currentFilters.copyWith(
+              _currentFilters = _updated(
                 category: value.isEmpty ? null : value,
               );
             });
@@ -309,15 +338,15 @@ class _ClaimFiltersWidgetState extends State<ClaimFiltersWidget> {
   }
 
   Widget _buildDateRangeFilter() {
+    final theme = Theme.of(context);
+    final dateStyle = theme.textTheme.labelSmall?.copyWith(
+      fontFamily: 'IBMPlexMono',
+      fontSize: 11,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Date Range',
-          style: Theme.of(
-            context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-        ),
+        const _FilterLabel('Date Range'),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -332,19 +361,17 @@ class _ClaimFiltersWidgetState extends State<ClaimFiltersWidget> {
                   );
                   if (date != null) {
                     setState(() {
-                      _currentFilters = _currentFilters.copyWith(
-                        dateFrom: date,
-                      );
+                      _currentFilters = _updated(dateFrom: date);
                     });
                     _updateFilters();
                   }
                 },
-                icon: const Icon(Icons.calendar_today, size: 16),
+                icon: const Icon(Icons.calendar_today_outlined, size: 15),
                 label: Text(
                   _currentFilters.dateFrom != null
                       ? AppDateUtils.formatDate(_currentFilters.dateFrom!)
                       : 'From Date',
-                  style: const TextStyle(fontSize: 12),
+                  style: dateStyle,
                 ),
               ),
             ),
@@ -360,23 +387,94 @@ class _ClaimFiltersWidgetState extends State<ClaimFiltersWidget> {
                   );
                   if (date != null) {
                     setState(() {
-                      _currentFilters = _currentFilters.copyWith(dateTo: date);
+                      _currentFilters = _updated(dateTo: date);
                     });
                     _updateFilters();
                   }
                 },
-                icon: const Icon(Icons.calendar_today, size: 16),
+                icon: const Icon(Icons.calendar_today_outlined, size: 15),
                 label: Text(
                   _currentFilters.dateTo != null
                       ? AppDateUtils.formatDate(_currentFilters.dateTo!)
                       : 'To Date',
-                  style: const TextStyle(fontSize: 12),
+                  style: dateStyle,
                 ),
               ),
             ),
           ],
         ),
       ],
+    );
+  }
+
+  static String _statusLabel(ClaimStatus status) {
+    switch (status) {
+      case ClaimStatus.draft:
+        return 'DRAFT';
+      case ClaimStatus.submitted:
+        return 'SUBMITTED';
+      case ClaimStatus.pending:
+        return 'PENDING';
+      case ClaimStatus.underReview:
+        return 'UNDER REVIEW';
+      case ClaimStatus.approved:
+        return 'APPROVED';
+      case ClaimStatus.rejected:
+        return 'REJECTED';
+      case ClaimStatus.paid:
+        return 'PAID';
+    }
+  }
+
+  static (Color, Color) _statusTone(ColorScheme colors, ClaimStatus status) {
+    switch (status) {
+      case ClaimStatus.approved:
+      case ClaimStatus.paid:
+        return (colors.primaryContainer, colors.onPrimaryContainer);
+      case ClaimStatus.submitted:
+      case ClaimStatus.pending:
+      case ClaimStatus.underReview:
+        return (colors.tertiaryContainer, colors.onTertiaryContainer);
+      case ClaimStatus.rejected:
+        return (colors.errorContainer, colors.onErrorContainer);
+      case ClaimStatus.draft:
+        return (colors.surfaceContainerHighest, colors.onSurfaceVariant);
+    }
+  }
+
+  static (Color, Color) _priorityTone(
+    ColorScheme colors,
+    ClaimPriority priority,
+  ) {
+    switch (priority) {
+      case ClaimPriority.low:
+        return (colors.surfaceContainerHighest, colors.onSurfaceVariant);
+      case ClaimPriority.medium:
+        return (colors.tertiaryContainer, colors.onTertiaryContainer);
+      case ClaimPriority.high:
+      case ClaimPriority.urgent:
+        return (colors.errorContainer, colors.onErrorContainer);
+    }
+  }
+}
+
+class _FilterLabel extends StatelessWidget {
+  const _FilterLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Text(
+      label.toUpperCase(),
+      style: theme.textTheme.labelSmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+        fontFamily: 'IBMPlexMono',
+        fontSize: 10,
+        letterSpacing: 1.2,
+        fontWeight: FontWeight.w500,
+      ),
     );
   }
 }

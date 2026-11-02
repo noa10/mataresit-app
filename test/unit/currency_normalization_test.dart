@@ -35,4 +35,26 @@ void main() {
       expect(CurrencyUtils.normalizeCurrencyCode('INVALID'), equals('MYR'));
     });
   });
+
+  group('Selectable currencies', () {
+    test('should offer every currency the receipt service can produce', () {
+      final selectable = CurrencyConfigs.getSelectableCurrencyCodes();
+
+      expect(selectable, containsAll(['AUD', 'CAD']));
+    });
+
+    test('should include a selected legacy code outside the config list', () {
+      final selectable = CurrencyConfigs.getSelectableCurrencyCodes(
+        selectedCurrency: 'XYZ',
+      );
+
+      expect(selectable, contains('XYZ'));
+    });
+  });
+
+  group('Bare amount formatting', () {
+    test('should format without a currency symbol or code', () {
+      expect(CurrencyUtils.formatAmountOnly(1234.5), equals('1,234.50'));
+    });
+  });
 }

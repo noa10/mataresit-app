@@ -89,6 +89,22 @@ class CurrencyConfigs {
       locale: 'th_TH',
       position: CurrencyPosition.before,
     ),
+    'AUD': CurrencyConfig(
+      code: 'AUD',
+      symbol: 'A\$',
+      name: 'Australian Dollar',
+      decimals: 2,
+      locale: 'en_AU',
+      position: CurrencyPosition.before,
+    ),
+    'CAD': CurrencyConfig(
+      code: 'CAD',
+      symbol: 'CA\$',
+      name: 'Canadian Dollar',
+      decimals: 2,
+      locale: 'en_CA',
+      position: CurrencyPosition.before,
+    ),
   };
 
   /// Get currency configuration with fallback
@@ -111,6 +127,19 @@ class CurrencyConfigs {
   /// Get list of supported currencies
   static List<CurrencyConfig> getSupportedCurrencies() {
     return _configs.values.toList();
+  }
+
+  /// Currency codes suitable for a picker.
+  ///
+  /// The selected value is always included so a receipt or claim created with
+  /// a code outside the local configuration cannot break a dropdown assertion.
+  static List<String> getSelectableCurrencyCodes({String? selectedCurrency}) {
+    final codes = _configs.values.map((config) => config.code).toList();
+    if (selectedCurrency != null && selectedCurrency.trim().isNotEmpty) {
+      final normalized = CurrencyUtils.normalizeCurrencyCode(selectedCurrency);
+      if (!codes.contains(normalized)) codes.add(normalized);
+    }
+    return codes;
   }
 }
 
@@ -161,6 +190,12 @@ class CurrencyUtils {
   /// [fallbackCurrency] - Fallback currency if the provided one fails
   ///
   /// Returns formatted currency string
+  /// ISO-code symbols such as `MYR` read better with a space before the
+  /// amount, matching the web ledger's `MYR 24.70`.
+  static String _symbolText(CurrencyConfig config) {
+    return config.symbol == config.code ? '${config.symbol} ' : config.symbol;
+  }
+
   static String formatCurrencySafe(
     double? amount,
     String? currencyCode, {
@@ -174,7 +209,7 @@ class CurrencyUtils {
       final config = CurrencyConfigs.getConfig(normalizedCurrency);
       final formatter = NumberFormat.currency(
         locale: locale,
-        symbol: config.symbol,
+        symbol: _symbolText(config),
         decimalDigits: config.decimals,
       );
       return formatter.format(safeAmount);
@@ -184,7 +219,7 @@ class CurrencyUtils {
         final fallbackConfig = CurrencyConfigs.getConfig(fallbackCurrency);
         final fallbackFormatter = NumberFormat.currency(
           locale: locale,
-          symbol: fallbackConfig.symbol,
+          symbol: _symbolText(fallbackConfig),
           decimalDigits: fallbackConfig.decimals,
         );
         return fallbackFormatter.format(safeAmount);
@@ -245,10 +280,11 @@ class CurrencyUtils {
     String result = formattedAmount;
 
     if (showSymbol && config.symbol.isNotEmpty) {
+      final symbol = _symbolText(config);
       if (config.position == CurrencyPosition.before) {
-        result = '${config.symbol}$result';
+        result = '$symbol$result';
       } else {
-        result = '$result ${config.symbol}';
+        result = '$result $symbol';
       }
     }
 
@@ -257,6 +293,22 @@ class CurrencyUtils {
     }
 
     return result;
+  }
+
+  /// Formats a bare amount without a currency symbol or code.
+  ///
+  /// Use this when a value combines several currencies and no exchange-rate
+  /// conversion has been applied, so no single currency label would be true.
+  static String formatAmountOnly(double amount, {int decimals = 2}) {
+    final safeAmount = amount.isNaN || amount.isInfinite ? 0.0 : amount;
+    final pattern = decimals > 0
+        ? '#,##0.${List.filled(decimals, '0').join()}'
+        : '#,##0';
+    try {
+      return NumberFormat(pattern, 'en_US').format(safeAmount);
+    } catch (error) {
+      return safeAmount.toStringAsFixed(decimals);
+    }
   }
 
   /// Parse currency string to number

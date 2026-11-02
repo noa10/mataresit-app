@@ -59,7 +59,7 @@ void main() {
 
           // Check for sign in/sign up buttons
           expect(
-            find.byType(ElevatedButton),
+            find.byType(FilledButton),
             findsAtLeastNWidgets(1),
             reason: 'Should have authentication buttons',
           );

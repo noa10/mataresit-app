@@ -1,17 +1,19 @@
-import 'dart:io';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../app/router/app_router.dart';
 import '../../core/guards/subscription_guard.dart';
+import '../../features/auth/providers/auth_provider.dart';
+import '../../features/teams/providers/teams_provider.dart';
+import 'notification_center.dart';
 
-/// Adaptive navigation wrapper that uses platform-specific navigation patterns
+/// Shared workspace controls and horizontally scrolling navigation.
 class AdaptiveNavigationWrapper extends ConsumerStatefulWidget {
-  final Widget child;
-
   const AdaptiveNavigationWrapper({super.key, required this.child});
+
+  final Widget child;
 
   @override
   ConsumerState<AdaptiveNavigationWrapper> createState() =>
@@ -20,368 +22,393 @@ class AdaptiveNavigationWrapper extends ConsumerStatefulWidget {
 
 class _AdaptiveNavigationWrapperState
     extends ConsumerState<AdaptiveNavigationWrapper> {
-  int _selectedIndex = 0;
-
-  final List<NavigationItem> _navigationItems = [
-    NavigationItem(
-      icon: Icons.dashboard_outlined,
-      selectedIcon: Icons.dashboard,
-      cupertinoIcon: CupertinoIcons.chart_bar_alt_fill,
-      label: 'Dashboard',
-      route: AppRoutes.dashboard,
+  static const _destinations = [
+    _WorkspaceDestination(
+      'navigation.overview',
+      AppRoutes.dashboard,
+      Icons.dashboard_outlined,
+      Icons.dashboard,
     ),
-    NavigationItem(
-      icon: Icons.receipt_long_outlined,
-      selectedIcon: Icons.receipt_long,
-      cupertinoIcon: CupertinoIcons.doc_text_fill,
-      label: 'Receipts',
-      route: AppRoutes.receipts,
+    _WorkspaceDestination(
+      'navigation.receipts',
+      AppRoutes.receipts,
+      Icons.receipt_long_outlined,
+      Icons.receipt_long,
     ),
-    NavigationItem(
-      icon: Icons.request_page_outlined,
-      selectedIcon: Icons.request_page,
-      cupertinoIcon: CupertinoIcons.folder_fill,
-      label: 'Claims',
-      route: AppRoutes.claims,
+    _WorkspaceDestination(
+      'navigation.claims',
+      AppRoutes.claims,
+      Icons.request_page_outlined,
+      Icons.request_page,
     ),
-    NavigationItem(
-      icon: Icons.groups_outlined,
-      selectedIcon: Icons.groups,
-      cupertinoIcon: CupertinoIcons.group_solid,
-      label: 'Teams',
-      route: AppRoutes.teams,
+    _WorkspaceDestination(
+      'navigation.teams',
+      AppRoutes.teams,
+      Icons.groups_outlined,
+      Icons.groups,
     ),
-    NavigationItem(
-      icon: Icons.settings_outlined,
-      selectedIcon: Icons.settings,
-      cupertinoIcon: CupertinoIcons.settings_solid,
-      label: 'Settings',
-      route: AppRoutes.settings,
+    _WorkspaceDestination(
+      'navigation.settings',
+      AppRoutes.settings,
+      Icons.settings_outlined,
+      Icons.settings,
     ),
   ];
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _updateSelectedIndex();
-  }
-
-  void _updateSelectedIndex() {
+  Widget build(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
-    for (int i = 0; i < _navigationItems.length; i++) {
-      if (location.startsWith(_navigationItems[i].route)) {
-        setState(() {
-          _selectedIndex = i;
-        });
-        break;
-      }
-    }
+    final selectedIndex = _selectedIndexForLocation(location);
+
+    return Scaffold(
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            const _WorkspaceHeader(),
+            Expanded(child: widget.child),
+          ],
+        ),
+      ),
+      bottomNavigationBar: _LedgerBottomBar(
+        destinations: _destinations,
+        selectedIndex: selectedIndex,
+      ),
+    );
   }
 
-  void _onItemTapped(int index) {
-    if (index != _selectedIndex) {
-      // Add haptic feedback for iOS
-      if (Platform.isIOS) {
-        HapticFeedback.selectionClick();
-      }
-      context.go(_navigationItems[index].route);
+  int _selectedIndexForLocation(String location) {
+    final exactIndex = _destinations.indexWhere(
+      (destination) =>
+          location == destination.route ||
+          location.startsWith('${destination.route}/'),
+    );
+    if (exactIndex != -1) return exactIndex;
+
+    if (location == AppRoutes.profile ||
+        location == AppRoutes.notifications ||
+        location == AppRoutes.settings ||
+        location.startsWith('${AppRoutes.settings}/')) {
+      return 4;
     }
+    if (location == AppRoutes.search ||
+        location == AppRoutes.analytics ||
+        location == AppRoutes.duplicates) {
+      return 1;
+    }
+    if (location == AppRoutes.missions || location == AppRoutes.leaderboard) {
+      return 0;
+    }
+    return 0;
   }
+}
+
+class _WorkspaceDestination {
+  const _WorkspaceDestination(
+    this.label,
+    this.route,
+    this.icon,
+    this.selectedIcon,
+  );
+
+  final String label;
+  final String route;
+  final IconData icon;
+  final IconData selectedIcon;
+}
+
+/// Standard bottom menu: five primary destinations with a ledger indicator.
+class _LedgerBottomBar extends StatelessWidget {
+  const _LedgerBottomBar({
+    required this.destinations,
+    required this.selectedIndex,
+  });
+
+  final List<_WorkspaceDestination> destinations;
+  final int selectedIndex;
 
   @override
   Widget build(BuildContext context) {
-    debugPrint(
-      '🔍 ADAPTIVE NAVIGATION DEBUG: Platform.isIOS = ${Platform.isIOS}, Platform.isMacOS = ${Platform.isMacOS}',
-    );
-
-    if (Platform.isIOS) {
-      // Use proper Cupertino navigation for iOS
-      debugPrint(
-        '🔍 ADAPTIVE NAVIGATION DEBUG: iOS detected - building Cupertino navigation',
-      );
-      return _buildCupertinoNavigation();
-    }
-
-    if (Platform.isMacOS) {
-      // Use macOS-style navigation
-      debugPrint(
-        '🔍 ADAPTIVE NAVIGATION DEBUG: macOS detected - building macOS navigation',
-      );
-      return _buildMacOSNavigation();
-    }
-
-    debugPrint('🔍 ADAPTIVE NAVIGATION DEBUG: Building Material navigation');
-    return _buildMaterialNavigation();
-  }
-
-  /// Build iOS-style navigation using Scaffold with CupertinoTabBar
-  /// This approach is more compatible with GoRouter than CupertinoTabScaffold
-  Widget _buildCupertinoNavigation() {
-    debugPrint('🔍 iOS NAVIGATION DEBUG: Building Cupertino navigation');
-
-    try {
-      // Get theme colors with safe fallbacks for iOS
-      final materialTheme = Theme.of(context);
-      final colorScheme = materialTheme.colorScheme;
-
-      // Use proper iOS-style colors
-      final backgroundColor = colorScheme.surface.withValues(alpha: 0.9);
-      final activeColor = colorScheme.primary;
-      final inactiveColor = colorScheme.onSurface.withValues(alpha: 0.6);
-
-      debugPrint(
-        '🔍 iOS NAVIGATION DEBUG: Theme colors resolved - backgroundColor: $backgroundColor, activeColor: $activeColor',
-      );
-
-      final scaffold = Scaffold(
-        backgroundColor: materialTheme.scaffoldBackgroundColor,
-        body: widget.child,
-        bottomNavigationBar: CupertinoTabBar(
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-          backgroundColor: backgroundColor,
-          activeColor: activeColor,
-          inactiveColor: inactiveColor,
-          iconSize: 24.0,
-          items: _navigationItems.asMap().entries.map((entry) {
-            final index = entry.key;
-            final item = entry.value;
-            final isSelected = index == _selectedIndex;
-            return BottomNavigationBarItem(
-              icon: Icon(
-                isSelected ? item.selectedIcon : item.icon,
-                size: isSelected ? 26.0 : 24.0,
-                key: ValueKey('cupertino_icon_${item.route}'),
-                color: isSelected ? activeColor : inactiveColor,
-              ),
-              label: item.label,
-            );
-          }).toList(),
-        ),
-        floatingActionButton: _shouldShowFAB()
-            ? _buildFloatingActionButton()
-            : null,
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      );
-
-      debugPrint(
-        '🔍 iOS NAVIGATION DEBUG: Cupertino navigation built successfully',
-      );
-      return scaffold;
-    } catch (e, stackTrace) {
-      debugPrint(
-        '🔍 iOS NAVIGATION ERROR: Failed to build Cupertino navigation: $e',
-      );
-      debugPrint('🔍 iOS NAVIGATION ERROR: Stack trace: $stackTrace');
-
-      // Fallback to Material navigation for iOS if Cupertino fails
-      debugPrint(
-        '🔍 iOS NAVIGATION DEBUG: Falling back to Material navigation for iOS',
-      );
-      return _buildMaterialNavigationForIOS();
-    }
-  }
-
-  /// Build Material Design navigation for Android
-  Widget _buildMaterialNavigation() {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Scaffold(
-      body: widget.child,
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        elevation: 8,
-        selectedItemColor: colorScheme.primary,
-        unselectedItemColor: colorScheme.onSurface.withValues(alpha: 0.6),
-        backgroundColor: colorScheme.surface,
-        selectedFontSize: 12,
-        unselectedFontSize: 12,
-        selectedLabelStyle: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: colorScheme.primary,
-        ),
-        unselectedLabelStyle: TextStyle(
-          fontWeight: FontWeight.w400,
-          color: colorScheme.onSurface.withValues(alpha: 0.6),
-        ),
-        items: _navigationItems.asMap().entries.map((entry) {
-          final index = entry.key;
-          final item = entry.value;
-          final isSelected = index == _selectedIndex;
-          return BottomNavigationBarItem(
-            icon: Icon(
-              isSelected ? item.selectedIcon : item.icon,
-              key: ValueKey('material_icon_${item.route}'),
-              color: isSelected
-                  ? colorScheme.primary
-                  : colorScheme.onSurface.withValues(alpha: 0.6),
-            ),
-            label: item.label,
-          );
-        }).toList(),
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border(top: BorderSide(color: colors.outlineVariant)),
       ),
-      floatingActionButton: _shouldShowFAB()
-          ? _buildFloatingActionButton()
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-    );
-  }
-
-  /// Build Material Design navigation for iOS as fallback
-  /// Used when Cupertino navigation fails to render
-  Widget _buildMaterialNavigationForIOS() {
-    debugPrint('🔍 iOS FALLBACK DEBUG: Building Material navigation for iOS');
-
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: widget.child,
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        elevation: 0, // iOS-style flat design
-        selectedItemColor: Theme.of(context).primaryColor,
-        unselectedItemColor: Colors.grey[600],
-        backgroundColor:
-            Theme.of(context).bottomNavigationBarTheme.backgroundColor ??
-            Theme.of(context).scaffoldBackgroundColor,
-        selectedFontSize: 12,
-        unselectedFontSize: 12,
-        items: _navigationItems.asMap().entries.map((entry) {
-          final index = entry.key;
-          final item = entry.value;
-          final isSelected = index == _selectedIndex;
-          return BottomNavigationBarItem(
-            icon: Icon(
-              isSelected ? item.selectedIcon : item.icon,
-              key: ValueKey('ios_fallback_icon_${item.route}'),
-            ),
-            label: item.label,
-          );
-        }).toList(),
-      ),
-      // No FAB for iOS fallback to maintain iOS design consistency
-    );
-  }
-
-  /// Build macOS-style navigation
-  Widget _buildMacOSNavigation() {
-    debugPrint('🔍 macOS NAVIGATION DEBUG: Building macOS navigation');
-
-    try {
-      final theme = Theme.of(context);
-      final colorScheme = theme.colorScheme;
-
-      return Scaffold(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        body: widget.child,
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            color: colorScheme.surface.withValues(alpha: 0.9),
-            border: Border(
-              top: BorderSide(
-                color: colorScheme.outline.withValues(alpha: 0.2),
-                width: 1,
-              ),
-            ),
-          ),
-          child: BottomNavigationBar(
-            currentIndex: _selectedIndex,
-            onTap: _onItemTapped,
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            selectedItemColor: colorScheme.primary,
-            unselectedItemColor: colorScheme.onSurface.withValues(alpha: 0.6),
-            selectedLabelStyle: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
-            unselectedLabelStyle: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w400,
-            ),
-            items: _navigationItems
-                .map(
-                  (item) => BottomNavigationBarItem(
-                    icon: Icon(item.icon, size: 22),
-                    activeIcon: Icon(item.selectedIcon, size: 22),
-                    label: item.label,
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 62,
+          child: Row(
+            children: [
+              for (var index = 0; index < destinations.length; index++)
+                Expanded(
+                  child: _LedgerBottomBarItem(
+                    destination: destinations[index],
+                    selected: index == selectedIndex,
                   ),
-                )
-                .toList(),
+                ),
+            ],
           ),
         ),
-        floatingActionButton: _shouldShowFAB()
-            ? _buildFloatingActionButton()
-            : null,
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      );
-    } catch (e, stackTrace) {
-      debugPrint(
-        '🔍 macOS NAVIGATION ERROR: Failed to build macOS navigation: $e',
-      );
-      debugPrint('🔍 macOS NAVIGATION ERROR: Stack trace: $stackTrace');
-
-      // Fallback to Material navigation for macOS if custom navigation fails
-      debugPrint(
-        '🔍 macOS NAVIGATION DEBUG: Falling back to Material navigation for macOS',
-      );
-      return _buildMaterialNavigation();
-    }
-  }
-
-  bool _shouldShowFAB() {
-    // FAB removed - capture receipt functionality moved to header
-    return false;
-  }
-
-  Widget _buildFloatingActionButton() {
-    return FloatingActionButton(
-      onPressed: () async {
-        // Check subscription limits before allowing receipt capture
-        final canUpload =
-            await SubscriptionGuard.showReceiptLimitDialogIfNeeded(
-              context,
-              ref,
-              additionalReceipts: 1,
-            );
-
-        if (canUpload && mounted) {
-          context.push(AppRoutes.receiptCapture);
-        }
-      },
-      tooltip: 'Capture Receipt',
-      child: const Icon(Icons.camera_alt),
+      ),
     );
   }
 }
 
-class NavigationItem {
-  final IconData icon;
-  final IconData selectedIcon;
-  final IconData cupertinoIcon;
-  final String label;
-  final String route;
-
-  const NavigationItem({
-    required this.icon,
-    required this.selectedIcon,
-    required this.cupertinoIcon,
-    required this.label,
-    required this.route,
+class _LedgerBottomBarItem extends StatelessWidget {
+  const _LedgerBottomBarItem({
+    required this.destination,
+    required this.selected,
   });
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is NavigationItem &&
-          runtimeType == other.runtimeType &&
-          route == other.route;
+  final _WorkspaceDestination destination;
+  final bool selected;
 
   @override
-  int get hashCode => route.hashCode;
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: InkWell(
+        onTap: selected ? null : () => context.go(destination.route),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              curve: Curves.easeOut,
+              width: 44,
+              height: 26,
+              decoration: BoxDecoration(
+                color: selected ? colors.primaryContainer : Colors.transparent,
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: Icon(
+                selected ? destination.selectedIcon : destination.icon,
+                size: 20,
+                color: selected
+                    ? colors.onPrimaryContainer
+                    : colors.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              destination.label.tr(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontSize: 10,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                color: selected ? colors.primary : colors.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WorkspaceHeader extends ConsumerWidget {
+  const _WorkspaceHeader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final currentTeamState = ref.watch(currentTeamProvider);
+    final currentTeam = currentTeamState.currentTeam;
+    final teams = ref.watch(teamsProvider).teams;
+    final user = ref.watch(currentUserProvider);
+    final name = currentTeamState.isLoading
+        ? 'navigation.switchingWorkspace'.tr()
+        : currentTeam?.name ?? 'navigation.personalWorkspace'.tr();
+    final trimmedName = name.trim();
+    final initial = trimmedName.isEmpty ? 'M' : trimmedName[0].toUpperCase();
+    final userName = user?.fullName ?? user?.email ?? 'M';
+    final userInitial = userName.trim().isEmpty
+        ? 'M'
+        : userName.trim()[0].toUpperCase();
+
+    return Container(
+      height: 64,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: theme.scaffoldBackgroundColor,
+        border: Border(bottom: BorderSide(color: colors.outlineVariant)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: PopupMenuButton<String>(
+              tooltip: 'navigation.switchWorkspace'.tr(),
+              onSelected: (value) async {
+                if (value == '__manage_teams__') {
+                  context.go(AppRoutes.teams);
+                } else {
+                  final notifier = ref.read(currentTeamProvider.notifier);
+                  await notifier.switchTeam(value.isEmpty ? null : value);
+                  if (!context.mounted) return;
+
+                  if (ref.read(currentTeamProvider).error != null) {
+                    notifier.clearError();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('navigation.switchWorkspaceFailed'.tr()),
+                      ),
+                    );
+                  }
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: '',
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text('navigation.personalWorkspace'.tr()),
+                      ),
+                      if (currentTeam == null)
+                        const Icon(Icons.check, size: 18),
+                    ],
+                  ),
+                ),
+                ...teams.map(
+                  (team) => PopupMenuItem(
+                    value: team.id,
+                    child: Row(
+                      children: [
+                        Expanded(child: Text(team.name)),
+                        if (currentTeam?.id == team.id)
+                          const Icon(Icons.check, size: 18),
+                      ],
+                    ),
+                  ),
+                ),
+                const PopupMenuDivider(),
+                PopupMenuItem(
+                  value: '__manage_teams__',
+                  child: Text('navigation.teams'.tr()),
+                ),
+              ],
+              child: Row(
+                children: [
+                  Container(
+                    width: 30,
+                    height: 30,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: colors.surface,
+                      border: Border.all(color: colors.outline),
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                    child: Text(
+                      initial,
+                      style: TextStyle(
+                        fontFamily: 'InstrumentSerif',
+                        fontSize: 16,
+                        color: colors.onSurface,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          DateFormat.yMMMM(
+                            context.locale.toString(),
+                          ).format(DateTime.now()).toUpperCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: colors.onSurfaceVariant,
+                            fontFamily: 'IBMPlexMono',
+                            fontSize: 10,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.expand_more,
+                    size: 18,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (user?.subscriptionTier != null) ...[
+            const SizedBox(width: 4),
+            InkWell(
+              onTap: () => context.push('/settings'),
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  border: Border.all(color: colors.outline),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  user!.subscriptionTier!,
+                  style: theme.textTheme.labelSmall,
+                ),
+              ),
+            ),
+          ],
+          const NotificationCenter(showBadge: true),
+          IconButton.filled(
+            tooltip: 'navigation.uploadReceipts'.tr(),
+            icon: const Icon(Icons.upload_outlined, size: 19),
+            style: IconButton.styleFrom(
+              backgroundColor: colors.primary,
+              foregroundColor: colors.onPrimary,
+              minimumSize: const Size(40, 40),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(7),
+              ),
+            ),
+            onPressed: () async {
+              final allowed =
+                  await SubscriptionGuard.showReceiptLimitDialogIfNeeded(
+                    context,
+                    ref,
+                    additionalReceipts: 1,
+                  );
+              if (allowed && context.mounted) {
+                context.push(AppRoutes.batchUpload);
+              }
+            },
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            tooltip: 'navigation.profile'.tr(),
+            onPressed: () => context.push(AppRoutes.profile),
+            icon: CircleAvatar(
+              radius: 16,
+              backgroundColor: colors.primaryContainer,
+              foregroundColor: colors.primary,
+              child: Text(userInitial, style: const TextStyle(fontSize: 12)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

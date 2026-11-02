@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/config/subscription_config.dart';
+import '../../../shared/utils/currency_utils.dart';
 import '../providers/subscription_provider.dart';
 
 /// Pricing tier card widget
-/// This displays a subscription tier with its features and pricing
+/// This displays a subscription tier with its features and pricing using the
+/// ledger styling shared with the web workspace.
 class PricingTierCard extends ConsumerWidget {
   final SubscriptionTier tier;
   final BillingInterval billingInterval;
@@ -23,116 +25,103 @@ class PricingTierCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final subscriptionState = ref.watch(subscriptionProvider);
-    final isLoading = subscriptionState.isLoading;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isLoading = ref.watch(subscriptionProvider).isLoading;
+    final isHighlighted = isCurrentTier || isPopular;
 
-    return Card(
-      elevation: isPopular ? 8 : 2,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: isPopular
-              ? Border.all(
-                  color: Theme.of(context).colorScheme.primary,
-                  width: 2,
-                )
-              : null,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isHighlighted ? colors.primary : colors.outlineVariant,
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header with tier name and popular badge
-              _buildHeader(context),
-              const SizedBox(height: 16),
-
-              // Pricing
-              _buildPricing(context),
-              const SizedBox(height: 24),
-
-              // Features list
-              _buildFeatures(context),
-              const SizedBox(height: 24),
-
-              // CTA button
-              _buildCTAButton(context, isLoading),
-            ],
-          ),
-        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader(context),
+          const SizedBox(height: 14),
+          _buildPricing(context),
+          const SizedBox(height: 16),
+          _buildCTAButton(context, isLoading),
+          const SizedBox(height: 18),
+          Container(height: 1, color: colors.outlineVariant),
+          const SizedBox(height: 14),
+          _buildFeatures(context),
+        ],
       ),
     );
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Row(
-      children: [
-        // Tier icon
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: _getTierColor(context).withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(_getTierIcon(), color: _getTierColor(context), size: 24),
-        ),
-        const SizedBox(width: 12),
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
-        // Tier name
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Text(
-                    _getTierName(),
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (isPopular) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        'POPULAR',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
+              Text(
+                _getTierName(),
+                style: theme.textTheme.displaySmall?.copyWith(
+                  fontFamily: 'InstrumentSerif',
+                  fontSize: 28,
+                  height: 1.05,
+                  color: colors.onSurface,
+                ),
               ),
+              const SizedBox(height: 4),
               Text(
                 _getTierDescription(),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                  height: 1.4,
                 ),
               ),
             ],
           ),
         ),
+        if (isCurrentTier || isPopular) ...[
+          const SizedBox(width: 10),
+          _MonoPill(
+            label: isCurrentTier ? 'CURRENT' : 'POPULAR',
+            background: colors.primaryContainer,
+            foreground: colors.onPrimaryContainer,
+          ),
+        ],
       ],
     );
   }
 
   Widget _buildPricing(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final price = PricingInfo.getPrice(tier, billingInterval);
-    final monthlyEquivalent = PricingInfo.getMonthlyEquivalentPrice(
-      tier,
-      billingInterval,
-    );
-    final savings = PricingInfo.getAnnualSavingsPercentage(tier);
+    final isFree = tier == SubscriptionTier.free;
+    final isAnnual = billingInterval == BillingInterval.annual;
+
+    final priceText = isFree
+        ? 'Free'
+        : CurrencyUtils.formatCurrency(price, 'MYR', precision: 0);
+    final periodText = isFree
+        ? '/ forever'
+        : isAnnual
+        ? '/ year'
+        : '/ month';
+
+    final noteText = isFree
+        ? 'No card required'
+        : isAnnual
+        ? 'Billed annually · '
+              '${CurrencyUtils.formatCurrency(PricingInfo.getMonthlyEquivalentPrice(tier, billingInterval), 'MYR')} / month'
+        : 'Billed monthly';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,127 +129,133 @@ class PricingTierCard extends ConsumerWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(
-              price == 0 ? 'Free' : '\$${price.toStringAsFixed(0)}',
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: _getTierColor(context),
-              ),
-            ),
-            if (price > 0) ...[
-              const SizedBox(width: 4),
-              Text(
-                '/${billingInterval.value}',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+            Flexible(
+              child: Text(
+                priceText,
+                maxLines: 1,
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontFamily: 'IBMPlexMono',
+                  fontWeight: FontWeight.w500,
+                  fontSize: 32,
+                  height: 1,
+                  letterSpacing: -0.5,
+                  color: colors.onSurface,
                 ),
               ),
-            ],
+            ),
+            const SizedBox(width: 6),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 3),
+              child: Text(
+                periodText,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontFamily: 'IBMPlexMono',
+                  fontSize: 11,
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ),
           ],
         ),
-        if (billingInterval == BillingInterval.annual && price > 0) ...[
-          const SizedBox(height: 4),
-          Text(
-            '\$${monthlyEquivalent.toStringAsFixed(2)}/month',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+        const SizedBox(height: 6),
+        Text(
+          noteText,
+          maxLines: 2,
+          style: theme.textTheme.labelSmall?.copyWith(
+            fontFamily: 'IBMPlexMono',
+            fontSize: 10.5,
+            letterSpacing: 0.2,
+            height: 1.4,
+            color: colors.onSurfaceVariant,
           ),
-          if (savings > 0) ...[
-            const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                'Save ${savings.toStringAsFixed(0)}%',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Colors.green[700],
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ],
+        ),
       ],
     );
   }
 
   Widget _buildFeatures(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final limits = TierConfig.getLimits(tier);
     final features = _getFeatureList(limits);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Features',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 12),
-        ...features.map(
-          (feature) => Padding(
+        for (final feature in features)
+          Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.check_circle,
-                  size: 16,
-                  color: _getTierColor(context),
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Icon(Icons.check, size: 15, color: colors.primary),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     feature,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
+                      height: 1.45,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-        ),
       ],
     );
   }
 
   Widget _buildCTAButton(BuildContext context, bool isLoading) {
-    String buttonText;
-    bool isEnabled = !isLoading;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isFree = tier == SubscriptionTier.free;
+    final isEnabled = !isLoading && !isCurrentTier;
 
-    if (isCurrentTier) {
-      buttonText = 'Current Plan';
-      isEnabled = false;
-    } else if (tier == SubscriptionTier.free) {
-      buttonText = 'Downgrade to Free';
-    } else {
-      buttonText = 'Choose ${_getTierName()}';
-    }
+    final label = isCurrentTier
+        ? 'Current Plan'
+        : isFree
+        ? 'Downgrade to Free'
+        : 'Choose ${_getTierName()}';
+
+    final child = isLoading
+        ? SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: colors.onSurfaceVariant,
+            ),
+          )
+        : Text(label);
+
+    final onPressed = isEnabled ? () => onSelectTier(tier) : null;
 
     return SizedBox(
       width: double.infinity,
-      child: FilledButton(
-        onPressed: isEnabled ? () => onSelectTier(tier) : null,
-        style: FilledButton.styleFrom(
-          backgroundColor: isCurrentTier
-              ? Theme.of(context).colorScheme.surfaceContainerHighest
-              : (isPopular ? Theme.of(context).colorScheme.primary : null),
-          foregroundColor: isCurrentTier
-              ? Theme.of(context).colorScheme.onSurfaceVariant
-              : null,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-        ),
-        child: isLoading
-            ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Text(buttonText),
-      ),
+      height: 44,
+      child: isFree && !isCurrentTier
+          ? OutlinedButton(
+              onPressed: onPressed,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(44),
+              ),
+              child: child,
+            )
+          : FilledButton(
+              onPressed: onPressed,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(44),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                textStyle: theme.textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              child: child,
+            ),
     );
   }
 
@@ -283,28 +278,6 @@ class PricingTierCard extends ConsumerWidget {
         return 'Best for small businesses';
       case SubscriptionTier.max:
         return 'For growing enterprises';
-    }
-  }
-
-  IconData _getTierIcon() {
-    switch (tier) {
-      case SubscriptionTier.free:
-        return Icons.upload;
-      case SubscriptionTier.pro:
-        return Icons.flash_on;
-      case SubscriptionTier.max:
-        return Icons.workspace_premium;
-    }
-  }
-
-  Color _getTierColor(BuildContext context) {
-    switch (tier) {
-      case SubscriptionTier.free:
-        return Colors.green;
-      case SubscriptionTier.pro:
-        return Theme.of(context).colorScheme.primary;
-      case SubscriptionTier.max:
-        return Colors.purple;
     }
   }
 
@@ -367,5 +340,39 @@ class PricingTierCard extends ConsumerWidget {
     }
 
     return features;
+  }
+}
+
+/// Small uppercase mono pill used for plan and status markers.
+class _MonoPill extends StatelessWidget {
+  const _MonoPill({
+    required this.label,
+    required this.background,
+    required this.foreground,
+  });
+
+  final String label;
+  final Color background;
+  final Color foreground;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          fontFamily: 'IBMPlexMono',
+          fontSize: 9,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.8,
+          color: foreground,
+        ),
+      ),
+    );
   }
 }

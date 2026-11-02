@@ -8,7 +8,7 @@ import '../core/services/app_logger.dart';
 import '../features/auth/providers/auth_provider.dart';
 import '../shared/providers/theme_provider.dart';
 
-import '../shared/themes/ios_theme.dart';
+import '../shared/themes/ledger_theme.dart';
 
 import 'router/app_router.dart';
 import '../shared/widgets/loading_widget.dart';
@@ -31,13 +31,6 @@ class MataresitApp extends ConsumerWidget {
       final router = ref.watch(routerProvider);
       AppLogger.debug('🔍 MATARESIT_APP: routerProvider watched successfully');
 
-      AppLogger.debug('🔍 MATARESIT_APP: About to watch themeProvider...');
-      final themeState = ref.watch(themeProvider);
-      AppLogger.debug('🔍 MATARESIT_APP: themeProvider watched successfully');
-
-      AppLogger.debug(
-        '🔍 MATARESIT_APP: About to watch currentThemeModeProvider...',
-      );
       final currentThemeMode = ref.watch(currentThemeModeProvider);
       AppLogger.debug(
         '🔍 MATARESIT_APP: currentThemeModeProvider watched - mode=$currentThemeMode',
@@ -55,15 +48,9 @@ class MataresitApp extends ConsumerWidget {
         supportedLocales: _getSupportedLocales(context),
         locale: _getLocale(context),
 
-        // Theme - Use adaptive theme for iOS compatibility
-        theme: IOSTheme.getAdaptiveTheme(
-          themeState.config.variant,
-          Brightness.light,
-        ),
-        darkTheme: IOSTheme.getAdaptiveTheme(
-          themeState.config.variant,
-          Brightness.dark,
-        ),
+        // The web and mobile workspaces share the ledger palette.
+        theme: LedgerTheme.build(Brightness.light),
+        darkTheme: LedgerTheme.build(Brightness.dark),
         themeMode: currentThemeMode,
 
         // Router
@@ -78,17 +65,20 @@ class MataresitApp extends ConsumerWidget {
           // Handle authentication loading state
           if (authState.isLoading) {
             AppLogger.debug('🔍 MATARESIT_APP: Showing loading screen');
-            return const Scaffold(
-              backgroundColor: Colors.white,
+            final theme = Theme.of(context);
+            return Scaffold(
+              backgroundColor: theme.scaffoldBackgroundColor,
               body: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    LoadingWidget(),
-                    SizedBox(height: 16),
+                    const LoadingWidget(),
+                    const SizedBox(height: 16),
                     Text(
                       'Loading authentication...',
-                      style: TextStyle(fontSize: 16, color: Colors.black87),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),

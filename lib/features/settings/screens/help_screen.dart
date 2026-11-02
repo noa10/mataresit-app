@@ -160,9 +160,9 @@ class _HelpScreenState extends State<HelpScreen> {
                 const SizedBox(height: AppConstants.smallPadding),
                 Text(
                   'How can we help you today?',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: AppConstants.defaultPadding),
                 // Search Bar
@@ -334,9 +334,9 @@ class _HelpScreenState extends State<HelpScreen> {
             padding: const EdgeInsets.all(AppConstants.defaultPadding),
             child: Text(
               item.answer,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ],
@@ -363,9 +363,9 @@ class _HelpScreenState extends State<HelpScreen> {
               _searchQuery.isNotEmpty
                   ? 'No results found for \'$_searchQuery\''
                   : 'No results found in this category',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppConstants.defaultPadding),
@@ -407,9 +407,9 @@ class _HelpScreenState extends State<HelpScreen> {
             const SizedBox(height: AppConstants.smallPadding),
             Text(
               'Our support team is here to help.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppConstants.defaultPadding),

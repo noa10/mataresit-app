@@ -185,7 +185,7 @@ class ReceiptGrouper {
     } else {
       final difference = today.difference(dateOnly).inDays;
 
-      if (difference < 7) {
+      if (difference >= 0 && difference < 7) {
         // Show day name for recent dates
         const dayNames = [
           'Monday',

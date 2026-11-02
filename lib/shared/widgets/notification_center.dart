@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -65,15 +66,28 @@ class _NotificationCenterState extends ConsumerState<NotificationCenter> {
                     .toList()
               : notificationState.notifications;
 
+          final screenSize = MediaQuery.sizeOf(context);
+          final panelWidth = (screenSize.width - 24).clamp(0.0, 380.0);
+          final panelTop = offset.dy + size.height + 8;
+          final rightInset = screenSize.width >= 24 ? 12.0 : 0.0;
+          final panelRight = (screenSize.width - offset.dx - size.width).clamp(
+            rightInset,
+            screenSize.width - panelWidth - rightInset,
+          );
+          final panelHeight = (screenSize.height - panelTop - 16).clamp(
+            0.0,
+            500.0,
+          );
+
           return Positioned(
-            top: offset.dy + size.height + 8,
-            right: MediaQuery.of(context).size.width - offset.dx - size.width,
+            top: panelTop,
+            right: panelRight,
             child: Material(
               elevation: 8,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
               child: Container(
-                width: 380,
-                height: 500,
+                width: panelWidth,
+                height: panelHeight,
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(12),
@@ -339,10 +353,17 @@ class _NotificationCenterState extends ConsumerState<NotificationCenter> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final colors = Theme.of(context).colorScheme;
+
+    return IconButton(
       key: _buttonKey,
-      onTap: _toggleDropdown,
-      child:
+      onPressed: _toggleDropdown,
+      tooltip: 'common.labels.notifications'.tr(),
+      style: IconButton.styleFrom(
+        minimumSize: const Size(48, 48),
+        foregroundColor: colors.onSurface,
+      ),
+      icon:
           widget.child ??
           Consumer(
             builder: (context, ref, child) {
@@ -355,10 +376,7 @@ class _NotificationCenterState extends ConsumerState<NotificationCenter> {
 
               return Stack(
                 children: [
-                  Icon(
-                    Icons.notifications,
-                    color: Theme.of(context).iconTheme.color,
-                  ),
+                  Icon(Icons.notifications_outlined, color: colors.onSurface),
                   if (widget.showBadge && unreadCount > 0)
                     Positioned(
                       right: 0,

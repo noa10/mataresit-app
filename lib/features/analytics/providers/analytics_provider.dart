@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../services/analytics_service.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../shared/utils/currency_utils.dart';
 
 /// Analytics data for charts and reports
 class AnalyticsData {
@@ -17,6 +18,10 @@ class AnalyticsData {
   final double monthOverMonthGrowth;
   final Map<String, double> paymentMethodBreakdown;
 
+  /// Distinct receipt currencies in the loaded range. Totals are only
+  /// meaningful as a single-currency figure when this holds one code.
+  final Set<String> currencies;
+
   const AnalyticsData({
     this.categorySpending = const {},
     this.monthlySpending = const {},
@@ -28,6 +33,7 @@ class AnalyticsData {
     this.topCategory = 'N/A',
     this.monthOverMonthGrowth = 0.0,
     this.paymentMethodBreakdown = const {},
+    this.currencies = const {},
   });
 
   AnalyticsData copyWith({
@@ -41,6 +47,7 @@ class AnalyticsData {
     String? topCategory,
     double? monthOverMonthGrowth,
     Map<String, double>? paymentMethodBreakdown,
+    Set<String>? currencies,
   }) {
     return AnalyticsData(
       categorySpending: categorySpending ?? this.categorySpending,
@@ -54,6 +61,7 @@ class AnalyticsData {
       monthOverMonthGrowth: monthOverMonthGrowth ?? this.monthOverMonthGrowth,
       paymentMethodBreakdown:
           paymentMethodBreakdown ?? this.paymentMethodBreakdown,
+      currencies: currencies ?? this.currencies,
     );
   }
 }
@@ -91,9 +99,7 @@ class AnalyticsState {
 class AnalyticsNotifier extends StateNotifier<AnalyticsState> {
   final Ref ref;
 
-  AnalyticsNotifier(this.ref) : super(const AnalyticsState()) {
-    loadAnalytics();
-  }
+  AnalyticsNotifier(this.ref) : super(const AnalyticsState());
 
   /// Load analytics data from Supabase
   Future<void> loadAnalytics({String? startDate, String? endDate}) async {
@@ -227,6 +233,13 @@ class AnalyticsNotifier extends StateNotifier<AnalyticsState> {
         ? ((currentMonth - lastMonth) / lastMonth) * 100
         : 0.0;
 
+    final currencies = receiptSummaries
+        .map((receipt) => receipt.currency)
+        .whereType<String>()
+        .map(CurrencyUtils.normalizeCurrencyCode)
+        .where((code) => code.isNotEmpty)
+        .toSet();
+
     return AnalyticsData(
       categorySpending: categorySpending,
       monthlySpending: monthlySpending,
@@ -238,6 +251,7 @@ class AnalyticsNotifier extends StateNotifier<AnalyticsState> {
       topCategory: topCategory,
       monthOverMonthGrowth: monthOverMonthGrowth,
       paymentMethodBreakdown: paymentMethodBreakdown,
+      currencies: currencies,
     );
   }
 
@@ -309,36 +323,83 @@ int _getMonthIndex(String monthName) {
   return months.indexOf(monthName);
 }
 
-/// Provider for category pie chart data
-final categoryPieChartProvider = Provider<List<PieChartSectionData>>((ref) {
+class CategoryChartEntry {
+  const CategoryChartEntry({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final double value;
+  final Color color;
+}
+
+class CategoryChartData {
+  const CategoryChartData({this.sections = const [], this.entries = const []});
+
+  final List<PieChartSectionData> sections;
+  final List<CategoryChartEntry> entries;
+
+  bool get isEmpty => sections.isEmpty;
+}
+
+/// Provider for category pie chart data.
+///
+/// The palette has eight colors, so any remaining categories are folded into a
+/// final "Other" slice instead of being silently omitted.
+final categoryPieChartProvider = Provider<CategoryChartData>((ref) {
   final analyticsData = ref.watch(analyticsDataProvider);
 
   if (analyticsData.categorySpending.isEmpty) {
-    return [];
+    return const CategoryChartData();
   }
 
-  final colors = [
-    const Color(0xFF2563EB), // Blue
-    const Color(0xFF10B981), // Green
-    const Color(0xFFF59E0B), // Orange
-    const Color(0xFFEF4444), // Red
-    const Color(0xFF8B5CF6), // Purple
-    const Color(0xFF06B6D4), // Cyan
-    const Color(0xFFF97316), // Orange-600
-    const Color(0xFF84CC16), // Lime
+  const colors = [
+    Color(0xFF2563EB), // Blue
+    Color(0xFF10B981), // Green
+    Color(0xFFF59E0B), // Orange
+    Color(0xFFEF4444), // Red
+    Color(0xFF8B5CF6), // Purple
+    Color(0xFF06B6D4), // Cyan
+    Color(0xFFF97316), // Orange-600
+    Color(0xFF84CC16), // Lime
   ];
 
   final sections = <PieChartSectionData>[];
   final entries = analyticsData.categorySpending.entries.toList()
     ..sort((a, b) => b.value.compareTo(a.value));
 
-  for (int i = 0; i < entries.length && i < colors.length; i++) {
-    final entry = entries[i];
-    final percentage = (entry.value / analyticsData.totalSpending) * 100;
+  final visible = entries.length <= colors.length
+      ? entries
+      : entries.take(colors.length - 1).toList();
+  final chartEntries = <CategoryChartEntry>[
+    for (var i = 0; i < visible.length; i++)
+      CategoryChartEntry(
+        label: visible[i].key,
+        value: visible[i].value,
+        color: colors[i],
+      ),
+  ];
 
+  if (entries.length > colors.length) {
+    final otherValue = entries
+        .skip(colors.length - 1)
+        .fold<double>(0, (sum, entry) => sum + entry.value);
+    chartEntries.add(
+      CategoryChartEntry(label: 'Other', value: otherValue, color: colors.last),
+    );
+  }
+
+  final chartTotal = analyticsData.totalSpending > 0
+      ? analyticsData.totalSpending
+      : chartEntries.fold<double>(0, (sum, entry) => sum + entry.value);
+
+  for (final entry in chartEntries) {
+    final percentage = chartTotal == 0 ? 0.0 : (entry.value / chartTotal) * 100;
     sections.add(
       PieChartSectionData(
-        color: colors[i],
+        color: entry.color,
         value: entry.value,
         title: '${percentage.toStringAsFixed(1)}%',
         radius: 60,
@@ -351,7 +412,7 @@ final categoryPieChartProvider = Provider<List<PieChartSectionData>>((ref) {
     );
   }
 
-  return sections;
+  return CategoryChartData(sections: sections, entries: chartEntries);
 });
 
 /// Provider for spending trend line chart data
@@ -371,7 +432,7 @@ final spendingTrendChartProvider = Provider<LineChartData>((ref) {
           reservedSize: 40,
           getTitlesWidget: (value, meta) {
             return Text(
-              '\$${value.toInt()}',
+              '${value.toInt()}',
               style: const TextStyle(fontSize: 10),
             );
           },

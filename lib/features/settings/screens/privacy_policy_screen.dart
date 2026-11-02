@@ -281,9 +281,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   ),
                   child: Text(
                     text,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ),
@@ -339,7 +339,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                       child: Text(
                         item,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[700],
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ),
@@ -447,7 +447,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
     Color color,
   ) {
     return Card(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       child: Padding(
         padding: const EdgeInsets.all(AppConstants.smallPadding),
         child: Column(
@@ -478,9 +478,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               responseTime,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -490,7 +490,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
 
   Widget _buildFooter(BuildContext context) {
     return Card(
-      color: Colors.grey.shade100,
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
       child: Padding(
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
         child: Column(
@@ -511,9 +511,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     ),
                     Text(
                       'Effective Date: January 15, 2025',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -524,17 +524,17 @@ class PrivacyPolicyScreen extends StatelessWidget {
             const SizedBox(height: AppConstants.smallPadding),
             Text(
               'This Privacy Policy is part of our commitment to transparency and data protection.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppConstants.smallPadding),
             Text(
               '© 2025 Mataresit. All rights reserved. This document is governed by Malaysian privacy laws and international best practices.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppConstants.defaultPadding),
@@ -560,12 +560,16 @@ class PrivacyPolicyScreen extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 12, color: Colors.grey[600]),
+        Icon(
+          icon,
+          size: 12,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         const SizedBox(width: 2),
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Colors.grey[600],
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
             fontSize: 10,
           ),
         ),
