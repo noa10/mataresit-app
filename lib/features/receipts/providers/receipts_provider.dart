@@ -112,6 +112,10 @@ class ReceiptsState {
 class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
   final Ref ref;
 
+  /// Identifies the latest load so stale responses (from a previous workspace
+  /// or filter set) are discarded instead of overwriting newer state.
+  int _loadGeneration = 0;
+
   ReceiptsNotifier(this.ref) : super(const ReceiptsState()) {
     // Listen to workspace changes and refresh receipts when workspace switches
     ref.listen<CurrentTeamState>(currentTeamProvider, (previous, next) {
@@ -137,8 +141,30 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
     final previousGroupedReceipts = state.groupedReceipts;
     final previousCurrentPage = state.currentPage;
     final previousHasMore = state.hasMore;
+    final requestTeamId =
+        (teamContext ?? ref.read(currentTeamProvider))?.currentTeam?.id;
+
+    // A page load must not start while another page is in flight. Refreshes
+    // intentionally supersede any in-flight request.
+    if (!refresh && (state.isLoading || !state.hasMore)) return;
+
+    final generation = ++_loadGeneration;
 
     void restoreWithError(String message) {
+      if (generation != _loadGeneration) return;
+      if (ref.read(currentTeamProvider).currentTeam?.id != requestTeamId) {
+        // The workspace changed while this request was in flight; never
+        // surface the previous workspace's receipts under the new one.
+        state = state.copyWith(
+          receipts: const [],
+          groupedReceipts: const [],
+          currentPage: 0,
+          hasMore: true,
+          isLoading: false,
+          error: message,
+        );
+        return;
+      }
       state = state.copyWith(
         receipts: previousReceipts,
         groupedReceipts: previousGroupedReceipts,
@@ -159,8 +185,6 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
           clearError: true,
         );
       }
-
-      if (state.isLoading || !state.hasMore) return;
 
       state = state.copyWith(isLoading: true, clearError: true);
 
@@ -340,6 +364,8 @@ class ReceiptsNotifier extends StateNotifier<ReceiptsState> {
         );
         return;
       }
+
+      if (generation != _loadGeneration) return;
 
       final allReceipts = refresh
           ? newReceipts

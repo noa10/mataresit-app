@@ -107,7 +107,9 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         IconButton(
-          onPressed: () => context.pop(),
+          onPressed: () => context.canPop()
+              ? context.pop()
+              : context.go('/dashboard'),
           icon: const Icon(Icons.arrow_back, size: 22),
           tooltip: 'Back',
           padding: EdgeInsets.zero,

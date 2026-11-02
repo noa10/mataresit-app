@@ -747,16 +747,21 @@ class _StatusTab extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         customBorder: border,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-          child: Text(
-            label.toUpperCase(),
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: selected ? colors.surface : colors.onSurfaceVariant,
-              fontFamily: 'IBMPlexMono',
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.6,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            child: Center(
+              child: Text(
+                label.toUpperCase(),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: selected ? colors.surface : colors.onSurfaceVariant,
+                  fontFamily: 'IBMPlexMono',
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.6,
+                ),
+              ),
             ),
           ),
         ),

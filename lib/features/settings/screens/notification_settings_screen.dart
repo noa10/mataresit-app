@@ -56,7 +56,11 @@ class _NotificationSettingsScreenState
             _buildEmptyPanel(context)
           else ...[
             if (state.error != null) ...[
-              _buildUpdateError(context, state.error!),
+              _buildUpdateError(
+                context,
+                state.error!,
+                prefix: 'Couldn\'t load your preferences.',
+              ),
               const SizedBox(height: 16),
             ],
             if (state.updateError != null) ...[
@@ -526,8 +530,10 @@ class _NotificationSettingsScreenState
     required ValueChanged<bool>? onChanged,
   }) {
     final colors = Theme.of(context).colorScheme;
-    final effectiveOnChanged =
-        ref.read(notificationPreferencesProvider).isUpdating ? null : onChanged;
+    final isUpdating = ref.watch(
+      notificationPreferencesProvider.select((state) => state.isUpdating),
+    );
+    final effectiveOnChanged = isUpdating ? null : onChanged;
 
     return Switch(
       value: value,
@@ -553,6 +559,9 @@ class _NotificationSettingsScreenState
   ) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final isUpdating = ref.watch(
+      notificationPreferencesProvider.select((state) => state.isUpdating),
+    );
 
     return Material(
       color: colors.surfaceContainerLow,
@@ -561,6 +570,7 @@ class _NotificationSettingsScreenState
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
         onTap: () async {
+          if (isUpdating) return;
           final timeParts = currentTime.split(':');
           final initialTime = TimeOfDay(
             hour: int.parse(timeParts[0]),
@@ -735,7 +745,11 @@ class _NotificationSettingsScreenState
     );
   }
 
-  Widget _buildUpdateError(BuildContext context, String error) {
+  Widget _buildUpdateError(
+    BuildContext context,
+    String error, {
+    String prefix = 'Couldn\'t save your changes.',
+  }) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
@@ -754,7 +768,7 @@ class _NotificationSettingsScreenState
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Couldn\'t save your changes. $error',
+              '$prefix $error',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: colors.onErrorContainer,
                 height: 1.4,

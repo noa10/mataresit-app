@@ -367,9 +367,18 @@ class TeamsScreen extends ConsumerWidget {
             ),
           ),
           child: state.teams.isEmpty
-              ? const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(child: CircularProgressIndicator()),
+              ? Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Center(
+                    child: state.isLoading
+                        ? const CircularProgressIndicator()
+                        : Text(
+                            'No teams to show.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ),
+                  ),
                 )
               : Column(
                   children: [

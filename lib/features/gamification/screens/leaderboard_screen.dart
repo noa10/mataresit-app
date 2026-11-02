@@ -74,7 +74,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           IconButton(
-            onPressed: () => context.pop(),
+            onPressed: () => context.canPop()
+                ? context.pop()
+                : context.go('/dashboard'),
             icon: const Icon(Icons.arrow_back, size: 20),
             tooltip: 'Back',
             style: IconButton.styleFrom(foregroundColor: colors.onSurface),

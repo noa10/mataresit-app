@@ -89,7 +89,9 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         IconButton(
-          onPressed: () => context.pop(),
+          onPressed: () => context.canPop()
+              ? context.pop()
+              : context.go('/dashboard'),
           icon: const Icon(Icons.arrow_back, size: 22),
           tooltip: 'Back',
           padding: EdgeInsets.zero,
@@ -772,7 +774,7 @@ class _UsageRow extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isUnlimited = limit == -1;
-    final percentage = isUnlimited ? 0.0 : (used / limit).clamp(0.0, 1.0);
+    final percentage = limit <= 0 ? 0.0 : (used / limit).clamp(0.0, 1.0);
     final isNearLimit = percentage > 0.8;
     final valueColor = isNearLimit ? colors.tertiary : colors.onSurface;
 

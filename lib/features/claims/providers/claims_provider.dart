@@ -84,7 +84,19 @@ class ClaimsNotifier extends StateNotifier<ClaimsState> {
   final Logger _logger = Logger();
   static const int _pageSize = 20;
 
-  ClaimsNotifier(this._claimService, this._ref) : super(const ClaimsState());
+  ClaimsNotifier(this._claimService, this._ref) : super(const ClaimsState()) {
+    // Workspace switches must not leave the previous team's claims and stats
+    // on screen under the new team's name.
+    _ref.listen<CurrentTeamState>(currentTeamProvider, (previous, next) {
+      if (previous?.currentTeam?.id != next.currentTeam?.id) {
+        state = const ClaimsState();
+        loadClaims(refresh: true);
+        loadClaimStats().catchError((Object error) {
+          _logger.w('Stats loading failed after workspace switch: $error');
+        });
+      }
+    });
+  }
 
   /// Load claims for current team
   Future<void> loadClaims({bool refresh = false}) async {

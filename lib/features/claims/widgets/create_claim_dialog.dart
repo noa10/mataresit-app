@@ -644,7 +644,9 @@ class _ReceiptPickerDialogState extends ConsumerState<_ReceiptPickerDialog> {
                           Divider(height: 1, color: colors.outlineVariant),
                       itemBuilder: (context, index) {
                         final receipt = receiptsState.receipts[index];
-                        final isSelected = _selected.contains(receipt);
+                        final isSelected = _selected.any(
+                          (item) => item.id == receipt.id,
+                        );
 
                         return CheckboxListTile(
                           title: Text(
@@ -667,9 +669,15 @@ class _ReceiptPickerDialogState extends ConsumerState<_ReceiptPickerDialog> {
                               _selected,
                             );
                             if (selected == true) {
-                              newSelection.add(receipt);
+                              if (!newSelection.any(
+                                (item) => item.id == receipt.id,
+                              )) {
+                                newSelection.add(receipt);
+                              }
                             } else {
-                              newSelection.remove(receipt);
+                              newSelection.removeWhere(
+                                (item) => item.id == receipt.id,
+                              );
                             }
                             setState(() {
                               _selected = newSelection;

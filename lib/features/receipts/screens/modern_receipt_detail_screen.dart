@@ -130,14 +130,16 @@ class _ModernReceiptDetailScreenState
     final receipt = receiptAsync.value;
     if (receipt == null) return;
 
-    final effectiveCategory =
-        _selectedCategory ??
-        (!_categoryChanged
-            ? _resolveCategory(
-                receipt,
-                ref.read(categoriesProvider).displayCategories,
-              )
-            : null);
+    // Only write the category when the user changed it. Resolving it from
+    // displayCategories can return null while categories are still loading or
+    // after a workspace switch, which would otherwise clear the receipt's
+    // stored category on an unrelated edit.
+    final categoryId = _categoryChanged
+        ? _selectedCategory?.id
+        : receipt.customCategoryId;
+    final categoryName = _categoryChanged
+        ? _selectedCategory?.name
+        : receipt.category;
 
     try {
       // Validate receipt data
@@ -151,8 +153,8 @@ class _ModernReceiptDetailScreenState
         // Note: 'notes' field removed as it doesn't exist in the receipts table
         // Notes should be handled via receipt_comments table in future implementation
         'status': receipt.status.name,
-        'custom_category_id': effectiveCategory?.id,
-        'category': effectiveCategory?.name,
+        'custom_category_id': categoryId,
+        'category': categoryName,
       };
 
       final validationErrors = ReceiptService.validateReceiptData(receiptData);
