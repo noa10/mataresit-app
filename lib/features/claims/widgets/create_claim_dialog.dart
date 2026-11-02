@@ -35,6 +35,18 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
   List<ReceiptModel> _selectedReceipts = [];
   bool _isLoading = false;
 
+  /// Currencies present among the attached receipts.
+  Set<String> get _receiptCurrencies => _selectedReceipts
+      .map((receipt) => receipt.currency)
+      .whereType<String>()
+      .map(CurrencyUtils.normalizeCurrencyCode)
+      .where((code) => code.isNotEmpty)
+      .toSet();
+
+  /// Receipt totals in different currencies cannot be summed without a
+  /// conversion rate, so such a selection must not become a claim amount.
+  bool get _hasMixedReceiptCurrencies => _receiptCurrencies.length > 1;
+
   @override
   void initState() {
     super.initState();
@@ -54,20 +66,24 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
   }
 
   void _calculateTotalFromReceipts() {
-    if (_selectedReceipts.isNotEmpty) {
-      final total = _selectedReceipts.fold<double>(
-        0.0,
-        (sum, receipt) => sum + (receipt.totalAmount ?? 0.0),
-      );
-      _amountController.text = total.toStringAsFixed(2);
+    if (_selectedReceipts.isEmpty || _hasMixedReceiptCurrencies) {
+      // A mixed-currency selection is shown with an inline warning and is
+      // blocked on submit instead of being summed into a meaningless amount.
+      return;
+    }
 
-      // Set currency from first receipt if available
-      if (_selectedReceipts.first.currency != null &&
-          _selectedReceipts.first.currency!.isNotEmpty) {
-        _currency = CurrencyUtils.normalizeCurrencyCode(
-          _selectedReceipts.first.currency!,
-        );
-      }
+    final total = _selectedReceipts.fold<double>(
+      0.0,
+      (sum, receipt) => sum + (receipt.totalAmount ?? 0.0),
+    );
+    _amountController.text = total.toStringAsFixed(2);
+
+    // Set currency from first receipt if available
+    if (_selectedReceipts.first.currency != null &&
+        _selectedReceipts.first.currency!.isNotEmpty) {
+      _currency = CurrencyUtils.normalizeCurrencyCode(
+        _selectedReceipts.first.currency!,
+      );
     }
   }
 
@@ -87,6 +103,20 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
   }
 
   Future<void> _createClaim() async {
+    if (_hasMixedReceiptCurrencies) {
+      final colors = Theme.of(context).colorScheme;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Selected receipts use different currencies. Keep receipts in one '
+            'currency per claim.',
+            style: TextStyle(color: colors.onError),
+          ),
+          backgroundColor: colors.error,
+        ),
+      );
+      return;
+    }
     if (!_formKey.currentState!.validate()) return;
 
     final currentTeamState = ref.read(currentTeamProvider);
@@ -468,6 +498,14 @@ class _CreateClaimDialogState extends ConsumerState<CreateClaimDialog> {
               ],
             ),
           ),
+        if (_hasMixedReceiptCurrencies) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Selected receipts use different currencies. Remove receipts until '
+            'one currency remains — amounts are not converted.',
+            style: theme.textTheme.bodySmall?.copyWith(color: colors.error),
+          ),
+        ],
       ],
     );
   }
@@ -665,6 +703,37 @@ class _ReceiptPickerDialogState extends ConsumerState<_ReceiptPickerDialog> {
                           ),
                           value: isSelected,
                           onChanged: (selected) {
+                            if (selected == true) {
+                              // Mixed-currency selections would be summed into
+                              // a meaningless claim amount.
+                              final currencies = _selected
+                                  .map((item) => item.currency)
+                                  .whereType<String>()
+                                  .map(CurrencyUtils.normalizeCurrencyCode)
+                                  .where((code) => code.isNotEmpty)
+                                  .toSet();
+                              final receiptCurrency = receipt.currency;
+                              if (receiptCurrency != null) {
+                                currencies.add(
+                                  CurrencyUtils.normalizeCurrencyCode(
+                                    receiptCurrency,
+                                  ),
+                                );
+                              }
+                              if (currencies.length > 1) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Select receipts in one currency at a '
+                                      'time.',
+                                      style: TextStyle(color: colors.onError),
+                                    ),
+                                    backgroundColor: colors.error,
+                                  ),
+                                );
+                                return;
+                              }
+                            }
                             final newSelection = List<ReceiptModel>.from(
                               _selected,
                             );

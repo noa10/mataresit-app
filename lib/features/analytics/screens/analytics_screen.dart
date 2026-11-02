@@ -46,7 +46,18 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final analytics = analyticsState.data;
     final pieChartData = ref.watch(categoryPieChartProvider);
     final lineChartData = ref.watch(spendingTrendChartProvider);
-    final currencyCode = ref.watch(userPreferredCurrencyProvider);
+    final preferredCurrency = ref.watch(userPreferredCurrencyProvider);
+    final currencies = analytics.currencies;
+    final isMixedCurrency = currencies.length > 1;
+    final String? displayCurrency;
+    if (isMixedCurrency) {
+      // No single currency label is true when the totals sum several codes.
+      displayCurrency = null;
+    } else if (currencies.isNotEmpty) {
+      displayCurrency = currencies.first;
+    } else {
+      displayCurrency = preferredCurrency;
+    }
 
     final hasData =
         analytics.totalTransactions > 0 ||
@@ -73,7 +84,11 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     onRetry: _refreshAnalytics,
                   )
                 else ...[
-                  _buildSummaryCards(context, analytics, currencyCode),
+                  if (isMixedCurrency) ...[
+                    _buildMixedCurrencyNotice(context),
+                    const SizedBox(height: 16),
+                  ],
+                  _buildSummaryCards(context, analytics, displayCurrency),
                   const SizedBox(height: 16),
                   if (!hasData)
                     const _AnalyticsEmptyPanel()
@@ -83,7 +98,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         context,
                         analytics,
                         pieChartData,
-                        currencyCode,
+                        displayCurrency,
                       ),
                       const SizedBox(height: 16),
                     ],
@@ -95,7 +110,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       _buildPaymentMethodsPanel(
                         context,
                         analytics,
-                        currencyCode,
+                        displayCurrency,
                       ),
                   ],
                 ],
@@ -360,10 +375,38 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     return '${date.day}/${date.month}/${date.year}';
   }
 
+  /// Formats a value with the range's currency, or as a bare amount when the
+  /// range mixes currencies and no conversion has been applied.
+  String _formatAmount(double amount, String? currencyCode) {
+    if (currencyCode == null) return CurrencyUtils.formatAmountOnly(amount);
+    return CurrencyUtils.formatCurrency(amount, currencyCode);
+  }
+
+  Widget _buildMixedCurrencyNotice(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.secondaryContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        'Receipts in this range use multiple currencies. Totals are summed '
+        'without conversion.',
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: colors.onSecondaryContainer,
+        ),
+      ),
+    );
+  }
+
   Widget _buildSummaryCards(
     BuildContext context,
     AnalyticsData analytics,
-    String currencyCode,
+    String? currencyCode,
   ) {
     final topSpend = analytics.categorySpending[analytics.topCategory] ?? 0.0;
     final topShare = analytics.totalSpending > 0 && topSpend > 0
@@ -378,10 +421,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             Expanded(
               child: _KpiTile(
                 label: 'Total Spending',
-                value: CurrencyUtils.formatCurrency(
-                  analytics.totalSpending,
-                  currencyCode,
-                ),
+                value: _formatAmount(analytics.totalSpending, currencyCode),
                 meta: _rangeLabel,
               ),
             ),
@@ -402,7 +442,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             Expanded(
               child: _KpiTile(
                 label: 'Average',
-                value: CurrencyUtils.formatCurrency(
+                value: _formatAmount(
                   analytics.averageTransaction,
                   currencyCode,
                 ),
@@ -427,7 +467,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     BuildContext context,
     AnalyticsData analytics,
     CategoryChartData chartData,
-    String currencyCode,
+    String? currencyCode,
   ) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -470,7 +510,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                           FittedBox(
                             fit: BoxFit.scaleDown,
                             child: Text(
-                              CurrencyUtils.formatCurrency(
+                              _formatAmount(
                                 analytics.totalSpending,
                                 currencyCode,
                               ),
@@ -502,7 +542,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   Widget _buildCategoryLegend(
     BuildContext context,
     CategoryChartData chartData,
-    String currencyCode,
+    String? currencyCode,
   ) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -532,7 +572,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               ),
               const SizedBox(width: 6),
               Text(
-                CurrencyUtils.formatCurrency(entry.value, currencyCode),
+                _formatAmount(entry.value, currencyCode),
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontFamily: 'IBMPlexMono',
                   color: colors.onSurfaceVariant,
@@ -609,7 +649,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   Widget _buildPaymentMethodsPanel(
     BuildContext context,
     AnalyticsData analytics,
-    String currencyCode,
+    String? currencyCode,
   ) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -640,7 +680,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     BuildContext context,
     MapEntry<String, double> entry,
     double totalSpending,
-    String currencyCode,
+    String? currencyCode,
   ) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -666,7 +706,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               ),
               const SizedBox(width: 12),
               Text(
-                '${CurrencyUtils.formatCurrency(entry.value, currencyCode)} (${percentage.toStringAsFixed(1)}%)',
+                '${_formatAmount(entry.value, currencyCode)} '
+                '(${percentage.toStringAsFixed(1)}%)',
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontFamily: 'IBMPlexMono',
                   fontWeight: FontWeight.w500,

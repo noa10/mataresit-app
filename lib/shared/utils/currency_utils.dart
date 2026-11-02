@@ -89,6 +89,22 @@ class CurrencyConfigs {
       locale: 'th_TH',
       position: CurrencyPosition.before,
     ),
+    'AUD': CurrencyConfig(
+      code: 'AUD',
+      symbol: 'A\$',
+      name: 'Australian Dollar',
+      decimals: 2,
+      locale: 'en_AU',
+      position: CurrencyPosition.before,
+    ),
+    'CAD': CurrencyConfig(
+      code: 'CAD',
+      symbol: 'CA\$',
+      name: 'Canadian Dollar',
+      decimals: 2,
+      locale: 'en_CA',
+      position: CurrencyPosition.before,
+    ),
   };
 
   /// Get currency configuration with fallback
@@ -277,6 +293,22 @@ class CurrencyUtils {
     }
 
     return result;
+  }
+
+  /// Formats a bare amount without a currency symbol or code.
+  ///
+  /// Use this when a value combines several currencies and no exchange-rate
+  /// conversion has been applied, so no single currency label would be true.
+  static String formatAmountOnly(double amount, {int decimals = 2}) {
+    final safeAmount = amount.isNaN || amount.isInfinite ? 0.0 : amount;
+    final pattern = decimals > 0
+        ? '#,##0.${List.filled(decimals, '0').join()}'
+        : '#,##0';
+    try {
+      return NumberFormat(pattern, 'en_US').format(safeAmount);
+    } catch (error) {
+      return safeAmount.toStringAsFixed(decimals);
+    }
   }
 
   /// Parse currency string to number

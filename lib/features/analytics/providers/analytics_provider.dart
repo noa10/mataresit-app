@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../services/analytics_service.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../shared/utils/currency_utils.dart';
 
 /// Analytics data for charts and reports
 class AnalyticsData {
@@ -17,6 +18,10 @@ class AnalyticsData {
   final double monthOverMonthGrowth;
   final Map<String, double> paymentMethodBreakdown;
 
+  /// Distinct receipt currencies in the loaded range. Totals are only
+  /// meaningful as a single-currency figure when this holds one code.
+  final Set<String> currencies;
+
   const AnalyticsData({
     this.categorySpending = const {},
     this.monthlySpending = const {},
@@ -28,6 +33,7 @@ class AnalyticsData {
     this.topCategory = 'N/A',
     this.monthOverMonthGrowth = 0.0,
     this.paymentMethodBreakdown = const {},
+    this.currencies = const {},
   });
 
   AnalyticsData copyWith({
@@ -41,6 +47,7 @@ class AnalyticsData {
     String? topCategory,
     double? monthOverMonthGrowth,
     Map<String, double>? paymentMethodBreakdown,
+    Set<String>? currencies,
   }) {
     return AnalyticsData(
       categorySpending: categorySpending ?? this.categorySpending,
@@ -54,6 +61,7 @@ class AnalyticsData {
       monthOverMonthGrowth: monthOverMonthGrowth ?? this.monthOverMonthGrowth,
       paymentMethodBreakdown:
           paymentMethodBreakdown ?? this.paymentMethodBreakdown,
+      currencies: currencies ?? this.currencies,
     );
   }
 }
@@ -225,6 +233,13 @@ class AnalyticsNotifier extends StateNotifier<AnalyticsState> {
         ? ((currentMonth - lastMonth) / lastMonth) * 100
         : 0.0;
 
+    final currencies = receiptSummaries
+        .map((receipt) => receipt.currency)
+        .whereType<String>()
+        .map(CurrencyUtils.normalizeCurrencyCode)
+        .where((code) => code.isNotEmpty)
+        .toSet();
+
     return AnalyticsData(
       categorySpending: categorySpending,
       monthlySpending: monthlySpending,
@@ -236,6 +251,7 @@ class AnalyticsNotifier extends StateNotifier<AnalyticsState> {
       topCategory: topCategory,
       monthOverMonthGrowth: monthOverMonthGrowth,
       paymentMethodBreakdown: paymentMethodBreakdown,
+      currencies: currencies,
     );
   }
 

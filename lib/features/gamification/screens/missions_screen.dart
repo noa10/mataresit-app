@@ -78,9 +78,13 @@ class _MissionsScreenState extends ConsumerState<MissionsScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           IconButton(
-            onPressed: () => context.canPop()
-                ? context.pop()
-                : context.go('/dashboard'),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/dashboard');
+              }
+            },
             icon: const Icon(Icons.arrow_back, size: 20),
             tooltip: 'Back',
             style: IconButton.styleFrom(foregroundColor: colors.onSurface),

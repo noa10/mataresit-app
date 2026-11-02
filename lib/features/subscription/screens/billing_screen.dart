@@ -89,9 +89,13 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         IconButton(
-          onPressed: () => context.canPop()
-              ? context.pop()
-              : context.go('/dashboard'),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/dashboard');
+            }
+          },
           icon: const Icon(Icons.arrow_back, size: 22),
           tooltip: 'Back',
           padding: EdgeInsets.zero,
